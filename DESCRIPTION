@@ -8,16 +8,15 @@ Authors@R: c(
            comment = "Authors of included htslib library and bcftools command line tools"),
     person(given = "Zilong", family = "Li", email = "zilong.dk@gmail.com", role = c("cph"),
            comment = "Author of the vcfpp library from whom makefiles and configure strategy is borrowed"))
-Description:  `htslib` and `bcftools` libraries, and command line tools wrapper for for reading and writing VCF and BCF files in R.
+Description: `htslib` and `bcftools` libraries, and command line tools wrapper for for reading and writing VCF and BCF files in R.
 License: GPL (>= 3)
 Depends: R (>= 4.4.0)
 Import: processx
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib
 Suggests: tinytest, vcfppR, paws
 OS_type: unix
-URL: https://github.com/RGenomicsETL/RBCFTools
+URL: https://github.com/RGenomicsETL/RBCFTools, https://rgenomicsetl.github.io/RBCFTools/
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-

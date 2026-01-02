@@ -73,3 +73,4 @@ inst/bin/
 inst/htslib
 src/bcftools-1.23/htslib-1.23/test
 src/bcftools-1.23/test
+docs

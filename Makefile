@@ -40,6 +40,9 @@ dev-install:
 test: dev-install
 	R -e 'tinytest::test_package("$(PKGNAME)")'
 
+test-dev: install2
+	R -e 'library("$(PKGNAME)") ; tinytest::run_test_dir("inst/tinytest")'
+
 rdm: dev-install
 	R -e "rmarkdown::render('README.Rmd')"
 .PHONY: all rd build check install_deps install clean dev-install dev-test dev-preprocess-test dev-parse-test dev-all-tests
