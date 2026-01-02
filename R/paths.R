@@ -21,9 +21,9 @@
 #'
 #' @export
 setup_hts_env <- function() {
-    old_value <- Sys.getenv("HTS_PATH", unset = NA)
-    Sys.setenv(HTS_PATH = htslib_plugins_dir())
-    invisible(old_value)
+  old_value <- Sys.getenv("HTS_PATH", unset = NA)
+  Sys.setenv(HTS_PATH = htslib_plugins_dir())
+  invisible(old_value)
 }
 
 #' Get Path to bcftools Executable
@@ -37,7 +37,7 @@ setup_hts_env <- function() {
 #'
 #' @export
 bcftools_path <- function() {
-    system.file("bcftools", "bin", "bcftools", package = "RBCFTools")
+  system.file("bcftools", "bin", "bcftools", package = "RBCFTools")
 }
 
 #' Get Path to bcftools Binary Directory
@@ -65,7 +65,7 @@ bcftools_path <- function() {
 #'
 #' @export
 bcftools_bin_dir <- function() {
-    system.file("bcftools", "bin", package = "RBCFTools")
+  system.file("bcftools", "bin", package = "RBCFTools")
 }
 
 #' Get Path to bcftools Plugins Directory
@@ -80,7 +80,7 @@ bcftools_bin_dir <- function() {
 #'
 #' @export
 bcftools_plugins_dir <- function() {
-    system.file("bcftools", "libexec", "bcftools", package = "RBCFTools")
+  system.file("bcftools", "libexec", "bcftools", package = "RBCFTools")
 }
 
 #' Get Path to htslib Plugins Directory
@@ -96,7 +96,7 @@ bcftools_plugins_dir <- function() {
 #'
 #' @export
 htslib_plugins_dir <- function() {
-    system.file("htslib", "libexec", "htslib", package = "RBCFTools")
+  system.file("htslib", "libexec", "htslib", package = "RBCFTools")
 }
 
 #' Get Path to htslib Binary Directory
@@ -118,7 +118,7 @@ htslib_plugins_dir <- function() {
 #'
 #' @export
 htslib_bin_dir <- function() {
-    system.file("htslib", "bin", package = "RBCFTools")
+  system.file("htslib", "bin", package = "RBCFTools")
 }
 
 #' Get Path to bgzip Executable
@@ -132,7 +132,7 @@ htslib_bin_dir <- function() {
 #'
 #' @export
 bgzip_path <- function() {
-    system.file("htslib", "bin", "bgzip", package = "RBCFTools")
+  system.file("htslib", "bin", "bgzip", package = "RBCFTools")
 }
 
 #' Get Path to tabix Executable
@@ -146,7 +146,7 @@ bgzip_path <- function() {
 #'
 #' @export
 tabix_path <- function() {
-    system.file("htslib", "bin", "tabix", package = "RBCFTools")
+  system.file("htslib", "bin", "tabix", package = "RBCFTools")
 }
 
 #' Get Path to htsfile Executable
@@ -161,7 +161,7 @@ tabix_path <- function() {
 #'
 #' @export
 htsfile_path <- function() {
-    system.file("htslib", "bin", "htsfile", package = "RBCFTools")
+  system.file("htslib", "bin", "htsfile", package = "RBCFTools")
 }
 
 #' Get Path to annot-tsv Executable
@@ -175,7 +175,7 @@ htsfile_path <- function() {
 #'
 #' @export
 annot_tsv_path <- function() {
-    system.file("htslib", "bin", "annot-tsv", package = "RBCFTools")
+  system.file("htslib", "bin", "annot-tsv", package = "RBCFTools")
 }
 
 #' Get Path to ref-cache Executable
@@ -190,7 +190,7 @@ annot_tsv_path <- function() {
 #'
 #' @export
 ref_cache_path <- function() {
-    system.file("htslib", "bin", "ref-cache", package = "RBCFTools")
+  system.file("htslib", "bin", "ref-cache", package = "RBCFTools")
 }
 
 #' List Available bcftools Scripts
@@ -204,12 +204,12 @@ ref_cache_path <- function() {
 #'
 #' @export
 bcftools_tools <- function() {
-    bin_dir <- bcftools_bin_dir()
-    if (nchar(bin_dir) == 0) {
-        return(character(0))
-    }
+  bin_dir <- bcftools_bin_dir()
+  if (nchar(bin_dir) == 0) {
+    return(character(0))
+  }
 
-    list.files(bin_dir)
+  list.files(bin_dir)
 }
 
 #' List Available htslib Tools
@@ -223,9 +223,9 @@ bcftools_tools <- function() {
 #'
 #' @export
 htslib_tools <- function() {
-    bin_dir <- htslib_bin_dir()
-    if (nchar(bin_dir) == 0) {
-        return(character(0))
-    }
-    list.files(bin_dir)
+  bin_dir <- htslib_bin_dir()
+  if (nchar(bin_dir) == 0) {
+    return(character(0))
+  }
+  list.files(bin_dir)
 }

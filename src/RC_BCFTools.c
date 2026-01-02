@@ -7,7 +7,7 @@
 #include <R.h>
 #include <Rinternals.h>
 
-#include "bcftools-1.23/htslib-1.23/htslib/hts.h"
+#include "htslib/hts.h"
 
 /* bcftools version from version.h */
 #include "bcftools-1.23/version.h"
@@ -101,20 +101,20 @@ SEXP RC_htslib_has_feature(SEXP feature_id) {
 SEXP RC_htslib_capabilities(void) {
   unsigned int features = hts_features();
 
-  /* Define capability names and corresponding feature flags */
+  /* Define capability names and corresponding feature flags from hts.h */
   const char *names[] = {"configure", "plugins",   "libcurl", "s3",
                          "gcs",       "libdeflate", "lzma",   "bzip2",
                          "htscodecs"};
   unsigned int flags[] = {
-      1,         /* HTS_FEATURE_CONFIGURE */
-      2,         /* HTS_FEATURE_PLUGINS */
-      (1u << 10), /* HTS_FEATURE_LIBCURL */
-      (1u << 11), /* HTS_FEATURE_S3 */
-      (1u << 12), /* HTS_FEATURE_GCS */
-      (1u << 20), /* HTS_FEATURE_LIBDEFLATE */
-      (1u << 21), /* HTS_FEATURE_LZMA */
-      (1u << 22), /* HTS_FEATURE_BZIP2 */
-      (1u << 23)  /* HTS_FEATURE_HTSCODECS */
+      HTS_FEATURE_CONFIGURE,
+      HTS_FEATURE_PLUGINS,
+      HTS_FEATURE_LIBCURL,
+      HTS_FEATURE_S3,
+      HTS_FEATURE_GCS,
+      HTS_FEATURE_LIBDEFLATE,
+      HTS_FEATURE_LZMA,
+      HTS_FEATURE_BZIP2,
+      HTS_FEATURE_HTSCODECS
   };
 
   int n = sizeof(names) / sizeof(names[0]);

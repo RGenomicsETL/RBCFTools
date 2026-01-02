@@ -4,10 +4,11 @@ UNAME_S := $(shell uname -s)
 
 
 # Set RPATH to include both bcftools/lib and htslib/lib, platform-specific
+# Use --disable-new-dtags to force RPATH instead of RUNPATH (higher priority)
 ifeq ($(UNAME_S),Darwin)
 RPATH = -Wl,-rpath,@loader_path/../bcftools/lib -Wl,-rpath,@loader_path/../htslib/lib
 else
-RPATH = -Wl,-rpath,'$$ORIGIN/../bcftools/lib' -Wl,-rpath,'$$ORIGIN/../htslib/lib'
+RPATH = -Wl,--disable-new-dtags -Wl,-rpath,'$$ORIGIN/../bcftools/lib' -Wl,-rpath,'$$ORIGIN/../htslib/lib'
 endif
 
 # Platform-specific linker flags
@@ -18,8 +19,8 @@ else
 endif
 
 # Base flags - minimal for version functions and HTSlib only
-PKG_CPPFLAGS=-I$(HTSLIB_DIR)/include -I$(HTSLIB_DIR) -I$(BCFTOOLS_DIR)/include @EXTRA_CPPFLAGS@
-PKG_LIBS=-L$(HTSLIB_DIR) -lhts @EXTRA_LIBS@ $(PKG_LIBS_EXTRA) $(RPATH)
+PKG_CPPFLAGS=-I$(HTSLIB_DIR)/include -I$(BCFTOOLS_DIR)/include @EXTRA_CPPFLAGS@
+PKG_LIBS=-L$(HTSLIB_DIR)/lib -lhts @EXTRA_LIBS@ $(PKG_LIBS_EXTRA) $(RPATH)
 
 .PHONY: all
 

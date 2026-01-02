@@ -15,7 +15,7 @@
 #'
 #' @export
 htslib_version <- function() {
-    .Call(RC_htslib_version)
+  .Call(RC_htslib_version)
 }
 
 #' Get bcftools Version
@@ -29,7 +29,7 @@ htslib_version <- function() {
 #'
 #' @export
 bcftools_version <- function() {
-    .Call(RC_bcftools_version)
+  .Call(RC_bcftools_version)
 }
 
 #' Get htslib Features Bitfield
@@ -43,7 +43,7 @@ bcftools_version <- function() {
 #'
 #' @export
 htslib_features <- function() {
-    .Call(RC_htslib_features)
+  .Call(RC_htslib_features)
 }
 
 #' Get htslib Feature String
@@ -57,16 +57,16 @@ htslib_features <- function() {
 #'
 #' @export
 htslib_feature_string <- function() {
-    old_hts_path <- Sys.getenv("HTS_PATH", unset = NA)
-    Sys.setenv(HTS_PATH = htslib_plugins_dir())
-    on.exit({
-        if (is.na(old_hts_path)) {
-            Sys.unsetenv("HTS_PATH")
-        } else {
-            Sys.setenv(HTS_PATH = old_hts_path)
-        }
-    })
-    .Call(RC_htslib_feature_string)
+  old_hts_path <- Sys.getenv("HTS_PATH", unset = NA)
+  Sys.setenv(HTS_PATH = htslib_plugins_dir())
+  on.exit({
+    if (is.na(old_hts_path)) {
+      Sys.unsetenv("HTS_PATH")
+    } else {
+      Sys.setenv(HTS_PATH = old_hts_path)
+    }
+  })
+  .Call(RC_htslib_feature_string)
 }
 
 #' Check for a Specific htslib Feature
@@ -84,8 +84,8 @@ htslib_feature_string <- function() {
 #'
 #' @export
 htslib_has_feature <- function(feature_id) {
-    stopifnot(is.integer(feature_id), length(feature_id) == 1L)
-    .Call(RC_htslib_has_feature, feature_id)
+  stopifnot(is.integer(feature_id), length(feature_id) == 1L)
+  .Call(RC_htslib_has_feature, feature_id)
 }
 
 #' Get htslib Capabilities
@@ -112,7 +112,7 @@ htslib_has_feature <- function(feature_id) {
 #'
 #' @export
 htslib_capabilities <- function() {
-    .Call(RC_htslib_capabilities)
+  .Call(RC_htslib_capabilities)
 }
 
 # Feature ID constants for use with htslib_has_feature()
