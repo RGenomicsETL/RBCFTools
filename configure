@@ -87,7 +87,34 @@ export AR="${AR}"
 export RANLIB="${RANLIB}"
 ${MAKE} libhts.a libhts.${SHLIB_EXT} install
 
-EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl"
+#--------------------- Check for SSL library (needed for S3)
+SSL_LIBS=""
+echo "Checking for SSL library (required for S3 support)..."
+
+# Try OpenSSL/libcrypto first (most common)
+if echo '#include <openssl/hmac.h>
+int main(void) { return 0; }' | \
+   ${CC} ${CFLAGS} -x c - -lcrypto -o /dev/null 2>/dev/null; then
+    SSL_LIBS="-lcrypto"
+    echo "Found OpenSSL/libcrypto"
+# Try GnuTLS
+elif echo '#include <gnutls/gnutls.h>
+int main(void) { gnutls_global_init(); return 0; }' | \
+   ${CC} ${CFLAGS} -x c - -lgnutls -o /dev/null 2>/dev/null; then
+    SSL_LIBS="-lgnutls"
+    echo "Found GnuTLS"
+# Try NSS
+elif echo '#include <nss.h>
+int main(void) { NSS_Init(NULL); return 0; }' | \
+   ${CC} ${CFLAGS} -x c - -lnss3 -o /dev/null 2>/dev/null; then
+    SSL_LIBS="-lnss3"
+    echo "Found NSS"
+else
+    echo "WARNING: No SSL library found. S3/GCS support may not work at runtime."
+    echo "Install one of: libssl-dev, libgnutls-dev, or libnss3-dev"
+fi
+
+EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl ${SSL_LIBS}"
 
 if grep -wq "#define HAVE_LIBDEFLATE 1" config.h;then
     EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
