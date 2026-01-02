@@ -124,7 +124,7 @@ stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 
 # Read first batch
 batch <- stream$get_next()
-nanoarrow::convert_array(batch)
+str(nanoarrow::convert_array(batch))
 ```
 
 ### Convert to Data Frame
