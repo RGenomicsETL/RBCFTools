@@ -1,3 +1,4 @@
+^README.Rmd$
 ^r-svn/.*$
 ^LICENSE\.md$
 ^Makefile$
@@ -41,3 +42,4 @@ DONTCHECKMEIN.R
 ^docs$
 ^pkgdown$
 ^src/bcftools-1.23/bcftools$
+^src/bcftools-1.23/libbcftools.a$

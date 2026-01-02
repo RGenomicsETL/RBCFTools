@@ -19,38 +19,94 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of RBCFTools is to ...
+RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries, so no external installation is required.
 
 ## Installation
 
-You can install the development version of RBCFTools from [GitHub](https://github.com/) with:
-
-``` r
+You can install the development version of RBCFTools from [GitHub](https://github.com/RGenomicsETL/RBCFTools) with:
+ 
+```r
 # install.packages("pak")
 pak::pak("RGenomicsETL/RBCFTools")
 ```
 
-## Example
+## Version Information
 
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
+```{r versions}
 library(RBCFTools)
-## basic example code
+
+# Get library versions
+bcftools_version()
+htslib_version()
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## Tool Paths
 
-```{r cars}
-summary(cars)
+RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables
+
+```{r paths}
+# Main executables
+bcftools_path()
+bgzip_path()
+tabix_path()
+
+# List all available tools
+bcftools_tools()
+htslib_tools()
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+## Capabilities
 
-You can also embed plots, for example:
+Check which features were compiled into htslib
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r capabilities}
+# Get all capabilities as a named list
+htslib_capabilities()
+
+# Human-readable feature string
+htslib_feature_string()
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+### Feature Constants
+
+Use `HTS_FEATURE_*` constants to check for specific features
+ 
+```{r features}
+# Check individual features
+htslib_has_feature(HTS_FEATURE_LIBCURL)  # Remote file access via libcurl
+htslib_has_feature(HTS_FEATURE_S3)       
+htslib_has_feature(HTS_FEATURE_GCS)      # Google Cloud Storage
+htslib_has_feature(HTS_FEATURE_LIBDEFLATE)
+htslib_has_feature(HTS_FEATURE_LZMA)
+htslib_has_feature(HTS_FEATURE_BZIP2)
+```
+
+These are useful for conditionally enabling features in your code.
+
+## Example: Query Remote VCF from S3
+
+With libcurl support, bcftools can directly query remote files. Here we count variants in a small region from the 1000 Genomes cohort VCF on S3:
+
+```{r s3-example, eval=FALSE}
+# Build S3 URL for 1000 Genomes cohort VCF
+s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
+s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
+vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
+vcf_url <- paste0(s3_base, s3_path, vcf_file)
+
+# Query a small region (chr22:20000000-20100000) and count variants
+result <- system2(
+  bcftools_path(),
+  args = c("view", "-H", "-r", "chr22:20000000-20100000", vcf_url),
+  stdout = TRUE,
+  stderr = FALSE
+)
+length(result)  
+```
+
+## References
+
+- [bcftools documentation](https://samtools.github.io/bcftools/)
+- [bcftools GitHub](https://github.com/samtools/bcftools)
+- [htslib GitHub](https://github.com/samtools/htslib)
+- [VCF specification](https://samtools.github.io/hts-specs/VCFv4.3.pdf)

@@ -18,7 +18,7 @@ else
 endif
 
 # Base flags - minimal for version functions and HTSlib only
-PKG_CPPFLAGS=-I$(HTSLIB_DIR) -I$(HTSLIB_DIR) -I$(BCFTOOLS_VERSION_DIR) @EXTRA_CPPFLAGS@
+PKG_CPPFLAGS=-I$(HTSLIB_DIR)/include -I$(HTSLIB_DIR) -I$(BCFTOOLS_DIR)/include @EXTRA_CPPFLAGS@
 PKG_LIBS=-L$(HTSLIB_DIR) -lhts @EXTRA_LIBS@ $(PKG_LIBS_EXTRA) $(RPATH)
 
 .PHONY: all
