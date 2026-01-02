@@ -13,7 +13,7 @@ License: GPL (>= 3)
 Depends: R (>= 4.4.0)
 Import: processx
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
-Suggests: tinytest, vcfppR, paws
+Suggests: tinytest, vcfppR
 OS_type: unix
 URL: https://github.com/RGenomicsETL/RBCFTools, https://rgenomicsetl.github.io/RBCFTools/
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues
