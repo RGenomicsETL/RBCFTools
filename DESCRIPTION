@@ -11,8 +11,14 @@ Authors@R: c(
 Description: `htslib` and `bcftools` libraries, and command line tools wrapper for for reading and writing VCF and BCF files in R.
 License: GPL (>= 3)
 Depends: R (>= 4.4.0)
+Imports: nanoarrow
+LinkingTo: nanoarrow
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
-Suggests: tinytest, vcfppR
+Suggests: 
+    tinytest,
+    vcfppR,
+    arrow,
+    duckdb
 OS_type: unix
 URL: https://github.com/RGenomicsETL/RBCFTools, https://rgenomicsetl.github.io/RBCFTools/
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues

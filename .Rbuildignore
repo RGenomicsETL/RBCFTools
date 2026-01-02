@@ -45,3 +45,4 @@ DONTCHECKMEIN.R
 ^src/bcftools-1.23/bcftools$
 ^src/bcftools-1.23/libbcftools.a$
 ^src/bcftools-1.23/libbcftools.so$
+^arrow-nanoarrow/.*$
