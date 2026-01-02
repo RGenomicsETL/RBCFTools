@@ -59,6 +59,22 @@ bcftools_plugins_dir <- function() {
     system.file("bcftools", "libexec", "bcftools", package = "RBCFTools")
 }
 
+#' Get Path to htslib Plugins Directory
+#'
+#' Returns the path to the directory containing htslib plugins (e.g., for
+#' remote file access via libcurl, S3, GCS).
+#'
+#' @return A character string containing the path to the htslib plugins
+#'   directory.
+#'
+#' @examples
+#' htslib_plugins_dir()
+#'
+#' @export
+htslib_plugins_dir <- function() {
+    system.file("htslib", "libexec", "htslib", package = "RBCFTools")
+}
+
 #' Get Path to htslib Binary Directory
 #'
 #' Returns the path to the directory containing htslib executables.
