@@ -40,3 +40,4 @@ DONTCHECKMEIN.R
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^src/bcftools-1.23/bcftools$
