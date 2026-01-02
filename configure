@@ -155,7 +155,7 @@ fi
 
 ./configure \
     ${BCFTOOLS_CONFIGURE_FLAGS} \
-    CFLAGS="${CFLAGS} -Wno-alloc-size-larger-than" \
+    CFLAGS="${CFLAGS} -Wno-alloc-size-larger-than -Wno-unused-variable" \
     CPPFLAGS="${CPPFLAGS}" \
     LDFLAGS="${LDFLAGS}" \
     --enable-shared
