@@ -1,0 +1,26 @@
+HTSLIB_DIR=$(CURDIR)/../inst/htslib
+BCFTOOLS_DIR=$(CURDIR)/../inst/bcftools
+UNAME_S := $(shell uname -s)
+
+
+# Set RPATH to include both bcftools/lib and htslib/lib, platform-specific
+ifeq ($(UNAME_S),Darwin)
+RPATH = -Wl,-rpath,@loader_path/../bcftools/lib -Wl,-rpath,@loader_path/../htslib/lib
+else
+RPATH = -Wl,-rpath,'$$ORIGIN/../bcftools/lib' -Wl,-rpath,'$$ORIGIN/../htslib/lib'
+endif
+
+# Platform-specific linker flags
+ifeq ($(UNAME_S), Linux)
+  PKG_LIBS_EXTRA=-Wl,--exclude-libs,ALL
+else
+  PKG_LIBS_EXTRA=
+endif
+
+# Base flags - minimal for version functions and HTSlib only
+PKG_CPPFLAGS=-I$(HTSLIB_DIR) -I$(HTSLIB_DIR) -I$(BCFTOOLS_VERSION_DIR) @EXTRA_CPPFLAGS@
+PKG_LIBS=-L$(HTSLIB_DIR) -lhts @EXTRA_LIBS@ $(PKG_LIBS_EXTRA) $(RPATH)
+
+.PHONY: all
+
+all: $(SHLIB)
