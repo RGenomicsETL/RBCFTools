@@ -139,7 +139,14 @@ result <- system2(
   stdout = TRUE,
   stderr = FALSE
 )
+#> Warning in system2(bcftools_path(), args = c("view", "-H", "-r",
+#> "chr22:20000000-20100000", : running command
+#> ''/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools' view -H -r
+#> chr22:20000000-20100000
+#> s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/3202_samples_cohort_gg_chr22.vcf.gz
+#> 2>/dev/null' had status 255
 length(result)  
+#> [1] 0
 ```
 
 ## References
