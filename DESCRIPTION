@@ -11,7 +11,6 @@ Authors@R: c(
 Description: `htslib` and `bcftools` libraries, and command line tools wrapper for for reading and writing VCF and BCF files in R.
 License: GPL (>= 3)
 Depends: R (>= 4.4.0)
-Import: processx
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
 Suggests: tinytest, vcfppR
 OS_type: unix
