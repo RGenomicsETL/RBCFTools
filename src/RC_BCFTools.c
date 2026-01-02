@@ -7,7 +7,7 @@
 #include <R.h>
 #include <Rinternals.h>
 
-#include "htslib/hts.h"
+#include "bcftools-1.23/htslib-1.23/htslib/hts.h"
 
 /* bcftools version from version.h */
 #include "bcftools-1.23/version.h"

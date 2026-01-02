@@ -11,3 +11,6 @@ ${MAKE} clean
 cd ../../
 ${MAKE} clean
 cd ${THISDir}
+rm src/*so || true
+rm src/*dylib || true
+rm src/*o || true

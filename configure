@@ -169,9 +169,16 @@ if [ "$HAVE_GSL" = "yes" ]; then
     export USE_GPL=1
     export GSL_LIBS="${GSL_LIBS}"
 fi
-${MAKE} -f Makefile bcftools libbcftools.a
+${MAKE} -f Makefile bcftools libbcftools.a libbcftools.${SHLIB_EXT}
 ${MAKE} -f Makefile plugins
 ${MAKE} -f Makefile install
+# if inst/bcftools/lib does not exist, create it
+# and copy libbcftools.a there
+if [ ! -d "${THISDir}/inst/bcftools/lib" ]; then
+    mkdir -p "${THISDir}/inst/bcftools/lib"
+fi
+cp "${BCFTOOLS_DIR}/libbcftools.a" "${THISDir}/inst/bcftools/lib/"
+cp "${BCFTOOLS_DIR}/libbcftools.${SHLIB_EXT}" "${THISDir}/inst/bcftools/lib/"
 
 cd ${THISDir} || exit 1
 echo "Create Makevars file"

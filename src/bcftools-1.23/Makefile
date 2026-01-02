@@ -197,6 +197,17 @@ libbcftools.a: $(OBJS)
 	$(AR) -rc $@ $(OBJS)
 	-$(RANLIB) $@
 
+ifeq "$(PLATFORM)" "Darwin"
+SHLIB_EXT = dylib
+SHLIB_FLAGS = -dynamiclib -install_name @rpath/libbcftools.$(SHLIB_EXT)
+else
+SHLIB_EXT = so
+SHLIB_FLAGS = -shared
+endif
+
+libbcftools.$(SHLIB_EXT): $(OBJS)
+	$(CC) $(SHLIB_FLAGS) -fPIC -o $@ $(OBJS) $(ALL_LDFLAGS) $(HTSLIB_LIB) $(ALL_LIBS)
+
 vcfplugin.o: EXTRA_CPPFLAGS += -DPLUGINPATH='"$(pluginpath)"'
 
 %.dll: %.c version.h version.c libbcftools.a $(HTSLIB_DLL)
