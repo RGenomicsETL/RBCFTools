@@ -1,0 +1,155 @@
+#!/bin/sh
+# copied mainly  from https://github.com/Zilong-Li/vcfppR/blob/main/configure 
+# And https://github.com/sounkou-bioinfo/bcflib/blob/main/src/Makevars
+set -eu
+THISDir=`dirname $0`
+THISDir=`realpath ${THISDir}`
+MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
+CC=`"${R_HOME}/bin/R" CMD config CC`
+AR=`"${R_HOME}/bin/R" CMD config AR`
+RANLIB=`"${R_HOME}/bin/R" CMD config RANLIB`
+R_CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
+R_CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
+R_CPICFLAGS=`"${R_HOME}/bin/R" CMD config CPICFLAGS`
+R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
+HTSLIB_BUNDLED_MK=${THISDir}/inst/makefiles/htscodecs_bundled.mk
+RSCRIPT="${R_HOME}/bin/Rscript"
+hstlibversion="1.23"
+#--- get shared library extension
+if [ "$(uname)" = "Darwin" ]; then
+     SHLIB_EXT="dylib"
+else
+     SHLIB_EXT="so"
+fi
+# CFLAGS="${R_CFLAGS} ${R_CPICFLAGS} -fPIC -D_FILE_OFFSET_BITS=64"
+CFLAGS="-Wall -g -O2 -fPIC -D_FILE_OFFSET_BITS=64"
+# remove assert by defining NDEBUG
+CPPFLAGS="${R_CPPFLAGS} -DNDEBUG"
+LDFLAGS="${R_LDFLAGS}"
+HTSLIB_DIR="${THISDir}/src/bcftools-${hstlibversion}/htslib-${hstlibversion}"
+HTS_FILE_ARCHIVE="${THISDir}/src/bcftools-${hstlibversion}/libhts.a"
+HTS_FILE_SO="${THISDir}/src/bcftools-${hstlibversion}/libhts.${SHLIB_EXT}"
+BCFTOOLS_DIR="${THISDir}/src/bcftools-${hstlibversion}"
+#--------------------- Check for GSL
+HAVE_GSL="no"
+USE_GPL=""
+GSL_LIBS=""
+GSL_CFLAGS=""
+
+if command -v gsl-config >/dev/null 2>&1; then
+  echo "Found GSL via gsl-config"
+  echo "GSL version: $(gsl-config --version)"
+  echo "GSL libs: $(gsl-config --libs)"
+  echo "GSL cflags: $(gsl-config --cflags)"
+  # Test if we can actually link against the same GSL function that bcftools tests for
+  echo "Testing if gsl_multifit_gradient function is available..."
+  if echo 'char gsl_multifit_gradient (void);
+int main (void) { 
+  return gsl_multifit_gradient (); 
+}' | \
+     ${CC} ${CFLAGS} $(gsl-config --cflags) -x c - -lgsl -lgslcblas -lm -o /dev/null 2>/dev/null; then
+    HAVE_GSL="yes"
+    USE_GPL="1"
+    GSL_LIBS=$(gsl-config --libs)
+    GSL_CFLAGS=$(gsl-config --cflags)
+    # Add -DUSE_GSL to CPPFLAGS when GSL is available
+    CPPFLAGS="${CPPFLAGS} -DUSE_GSL ${GSL_CFLAGS}"
+    echo "GSL linking test passed - polysomy functionality will be enabled"
+  else
+    echo "GSL found but linking test failed - polysomy functionality will be disabled"
+    echo "This may be due to GSL version incompatibility (GSL 2.x removes gsl_multifit_gradient)"
+    echo "Either configure with --disable-libgsl or resolve this error to build bcftools."
+  fi
+else
+  echo "gsl-config not found, polysomy functionality will be disabled"
+  echo "GSL development files not found. Install libgsl-dev (Debian/Ubuntu) or gsl-devel (RPM-based) for polysomy support."
+  echo "Continuing with --disable-libgsl to prevent build failure."
+fi
+
+
+echo "----------Configuring HTSlib in $HTSLIB_DIR-----------------"
+cd $HTSLIB_DIR
+
+./configure \
+    CFLAGS="${CFLAGS}" \
+    --enable-plugins \
+    --enable-shared \
+    --prefix="${THISDir}/inst/htslib"
+
+## copy file instead of symbolic linking
+rm -f htscodecs.mk && cp "${HTSLIB_BUNDLED_MK}" htscodecs.mk
+
+export CC="${CC}"
+export CPPFLAGS="${CPPFLAGS}"
+export AR="${AR}"
+export RANLIB="${RANLIB}"
+${MAKE} libhts.a libhts.${SHLIB_EXT} install
+
+EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl"
+
+if grep -wq "#define HAVE_LIBDEFLATE 1" config.h;then
+    EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
+fi
+
+# bcftools static library build against htslib static library
+echo "----------Configuring BCFtools in $BCFTOOLS_DIR-----------------"
+cd  ${BCFTOOLS_DIR} || exit 1
+
+# Configure bcftools with proper installation directory and plugin paths
+BCFTOOLS_PREFIX="${THISDir}/inst/bcftools"
+BCFTOOLS_PLUGIN_DIR="plugins"
+
+# Add CHOLMOD and GSL flags if available  
+BCFTOOLS_CONFIGURE_FLAGS="--prefix=${BCFTOOLS_PREFIX}"
+
+echo "HAVE_GSL status: ${HAVE_GSL}"
+if [ "$HAVE_GSL" = "yes" ]; then
+    echo "Enabling GSL in bcftools configure with --enable-libgsl"
+    BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --enable-libgsl"
+else
+    echo "Disabling GSL in bcftools configure with --disable-libgsl"
+    BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --disable-libgsl"
+fi
+echo "Final bcftools configure flags: ${BCFTOOLS_CONFIGURE_FLAGS}"
+
+
+# Add GSL libraries to EXTRA_LIBS for plugin compilation
+if [ "$HAVE_GSL" = "yes" ]; then
+    EXTRA_LIBS="${EXTRA_LIBS} ${GSL_LIBS}"
+fi
+
+# Ensure GSL flags are available for bcftools configure
+if [ "$HAVE_GSL" = "yes" ]; then
+    export GSL_CFLAGS="${GSL_CFLAGS}"
+    export GSL_LIBS="${GSL_LIBS}"
+fi
+
+./configure \
+    ${BCFTOOLS_CONFIGURE_FLAGS} \
+    CFLAGS="${CFLAGS} -Wno-alloc-size-larger-than" \
+    CPPFLAGS="${CPPFLAGS}" \
+    LDFLAGS="${LDFLAGS}" \
+    --enable-shared
+
+# Build the bcftools executable and plugins with dependency flags
+export CC="${CC}"
+export AR="${AR}"
+export RANLIB="${RANLIB}"
+
+if [ "$HAVE_GSL" = "yes" ]; then
+    export USE_GPL=1
+    export GSL_LIBS="${GSL_LIBS}"
+fi
+${MAKE} -f Makefile bcftools libbcftools.a
+${MAKE} -f Makefile plugins
+${MAKE} -f Makefile install
+
+cd ${THISDir} || exit 1
+echo "Create Makevars file"
+sed \
+    -e "s|@EXTRA_CPPFLAGS@|${CPPFLAGS}|g" \
+    -e "s|@EXTRA_LIBS@|${EXTRA_LIBS}|g" \
+    -e "s|@HAVE_GSL@|${HAVE_GSL}|g" \
+    -e "s|@GSL_LIBS@|${GSL_LIBS}|g" \
+    -e "s|@USE_GPL@|${USE_GPL}|g" \
+    src/Makevars.in > src/Makevars

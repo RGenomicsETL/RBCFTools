@@ -1,0 +1,13 @@
+#!/bin/sh
+# cleanup Makefile targets
+set -eu
+THISDir=`dirname $0`
+THISDir=`realpath ${THISDir}`
+MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
+rm -rf inst/bcftools
+rm -rf inst/htslib
+cd src/bcftools-1.23/htslib-1.23
+${MAKE} clean
+cd ../../
+${MAKE} clean
+cd ${THISDir}
