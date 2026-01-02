@@ -131,7 +131,7 @@ vcf_to_arrow <- function(filename,
     }
 
     # For tibble/data.frame, collect and convert
-    result <- nanoarrow::as_tibble(stream)
+    result <- nanoarrow::convert_array_stream(stream)
 
     if (as == "data.frame") {
         result <- as.data.frame(result)
@@ -178,36 +178,20 @@ vcf_to_parquet <- function(input_vcf,
 
     stream <- vcf_open_arrow(input_vcf, ...)
 
-    # Open parquet writer
-    schema <- stream$get_schema()
-    arrow_schema <- arrow::as_arrow_schema(schema)
+    # Convert stream to Arrow Table and write to Parquet
+    # arrow::write_parquet handles nanoarrow streams directly
+    arrow_table <- arrow::as_arrow_table(stream)
 
-    writer <- arrow::ParquetFileWriter$create(
+    arrow::write_parquet(
+        arrow_table,
         sink = output_parquet,
-        schema = arrow_schema,
-        properties = arrow::ParquetWriterProperties$create(
-            compression = compression
-        ),
-        arrow_properties = arrow::ParquetArrowWriterProperties$create()
+        compression = compression,
+        chunk_size = row_group_size
     )
 
-    # Stream batches to parquet
-    batch_count <- 0
-    total_rows <- 0
-
-    while (!is.null(batch <- stream$get_next())) {
-        arrow_batch <- arrow::as_record_batch(batch)
-        writer$WriteRecordBatch(arrow_batch)
-
-        batch_count <- batch_count + 1
-        total_rows <- total_rows + arrow_batch$num_rows
-    }
-
-    writer$Close()
-
     message(sprintf(
-        "Wrote %d rows in %d batches to %s",
-        total_rows, batch_count, output_parquet
+        "Wrote %d rows to %s",
+        arrow_table$num_rows, output_parquet
     ))
 
     invisible(output_parquet)
@@ -250,14 +234,22 @@ vcf_query <- function(vcf_files, query, ...) {
     if (!requireNamespace("duckdb", quietly = TRUE)) {
         stop("Package 'duckdb' is required for SQL query support")
     }
+    if (!requireNamespace("arrow", quietly = TRUE)) {
+        stop("Package 'arrow' is required for SQL query support")
+    }
+    if (!requireNamespace("DBI", quietly = TRUE)) {
+        stop("Package 'DBI' is required for SQL query support")
+    }
 
     con <- duckdb::dbConnect(duckdb::duckdb())
     on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
     # Create union of all VCF files
     if (length(vcf_files) == 1) {
+        # Convert nanoarrow stream to Arrow Table for DuckDB compatibility
         stream <- vcf_open_arrow(vcf_files, ...)
-        duckdb::duckdb_register_arrow(con, "vcf", stream)
+        arrow_table <- arrow::as_arrow_table(stream)
+        duckdb::duckdb_register_arrow(con, "vcf", arrow_table)
     } else {
         # For multiple files, read into memory and union
         all_data <- do.call(rbind, lapply(vcf_files, function(f) {
