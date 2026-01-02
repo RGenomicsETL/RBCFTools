@@ -71,7 +71,7 @@ echo "----------Configuring HTSlib in $HTSLIB_DIR-----------------"
 cd $HTSLIB_DIR
 
 ./configure \
-    CFLAGS="${CFLAGS}" \
+    CFLAGS="${CFLAGS} -Wno-unused-function" \
     --enable-plugins \
     --enable-shared \
     --enable-s3 \

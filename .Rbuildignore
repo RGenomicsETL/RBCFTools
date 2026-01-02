@@ -1,4 +1,5 @@
 ^README.Rmd$
+^README.html$
 ^r-svn/.*$
 ^LICENSE\.md$
 ^Makefile$
