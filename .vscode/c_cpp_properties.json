@@ -5,6 +5,7 @@
             "includePath": [
                 "/usr/share/R/include/**",
                 "${workspaceFolder}/inst/bcftools/include/**",
+                "${workspaceFolder}/inst/htslib/include/**",
                 "${workspaceFolder}/src/**"
             ],
             "defines": [],
