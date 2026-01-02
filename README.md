@@ -95,7 +95,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/htslib:/usr/local/libexec/htslib:/usr/lib/x86_64-linux-gnu/htslib: htscodecs=1.6.0"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.0"
 ```
 
 ### Feature Constants
@@ -126,6 +126,9 @@ With libcurl support, bcftools can directly query remote files. Here we
 count variants in a small region from the 1000 Genomes cohort VCF on S3:
 
 ``` r
+# Setup environment for remote file access (S3/GCS)
+setup_hts_env()
+
 # Build S3 URL for 1000 Genomes cohort VCF
 s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
 s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
@@ -139,14 +142,8 @@ result <- system2(
   stdout = TRUE,
   stderr = FALSE
 )
-#> Warning in system2(bcftools_path(), args = c("view", "-H", "-r",
-#> "chr22:20000000-20100000", : running command
-#> ''/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools' view -H -r
-#> chr22:20000000-20100000
-#> s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/3202_samples_cohort_gg_chr22.vcf.gz
-#> 2>/dev/null' had status 255
-length(result)  
-#> [1] 0
+length(result)
+#> [1] 4622
 ```
 
 ## References

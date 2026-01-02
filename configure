@@ -74,6 +74,8 @@ cd $HTSLIB_DIR
     CFLAGS="${CFLAGS}" \
     --enable-plugins \
     --enable-shared \
+    --enable-s3 \
+    --enable-gcs \
     --prefix="${THISDir}/inst/htslib"
 
 ## copy file instead of symbolic linking

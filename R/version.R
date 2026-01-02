@@ -57,6 +57,15 @@ htslib_features <- function() {
 #'
 #' @export
 htslib_feature_string <- function() {
+    old_hts_path <- Sys.getenv("HTS_PATH", unset = NA)
+    Sys.setenv(HTS_PATH = htslib_plugins_dir())
+    on.exit({
+        if (is.na(old_hts_path)) {
+            Sys.unsetenv("HTS_PATH")
+        } else {
+            Sys.setenv(HTS_PATH = old_hts_path)
+        }
+    })
     .Call(RC_htslib_feature_string)
 }
 

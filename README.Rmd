@@ -88,6 +88,9 @@ These are useful for conditionally enabling features in your code.
 With libcurl support, bcftools can directly query remote files. Here we count variants in a small region from the 1000 Genomes cohort VCF on S3:
 
 ```{r s3-example, eval=TRUE}
+# Setup environment for remote file access (S3/GCS)
+setup_hts_env()
+
 # Build S3 URL for 1000 Genomes cohort VCF
 s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
 s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
@@ -101,7 +104,7 @@ result <- system2(
   stdout = TRUE,
   stderr = FALSE
 )
-length(result)  
+length(result)
 ```
 
 ## References

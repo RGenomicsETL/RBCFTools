@@ -12,6 +12,7 @@
 Useful links:
 \itemize{
   \item \url{https://github.com/RGenomicsETL/RBCFTools}
+  \item \url{https://rgenomicsetl.github.io/RBCFTools/}
   \item Report bugs at \url{https://github.com/RGenomicsETL/RBCFTools/issues}
 }
 

@@ -2,6 +2,30 @@
 #
 # Functions to locate bundled bcftools and htslib executables and directories.
 
+#' Setup Environment for Remote File Access
+#'
+#' Sets the `HTS_PATH` environment variable to point to the bundled htslib
+#' plugins directory. This is required for S3, GCS, and other remote file
+#' access via libcurl.
+#'
+#' @return Invisibly returns the previous value of `HTS_PATH` (or `NA` if unset).
+#'
+#' @details
+#' Call this function before using bcftools/htslib tools with remote URLs
+#' (s3://, gs://, http://, etc.). The function sets `HTS_PATH` to the package's
+#' plugin directory so htslib can find `hfile_libcurl.so` and `hfile_gcs.so`.
+#'
+#' @examples
+#' setup_hts_env()
+#' # Now bcftools can access S3 URLs
+#'
+#' @export
+setup_hts_env <- function() {
+    old_value <- Sys.getenv("HTS_PATH", unset = NA)
+    Sys.setenv(HTS_PATH = htslib_plugins_dir())
+    invisible(old_value)
+}
+
 #' Get Path to bcftools Executable
 #'
 #' Returns the path to the bundled bcftools executable.
