@@ -184,6 +184,7 @@
 <p>Open BCF as Arrow array stream and read the batches</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
+<span><span class="va">bcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, batch_size <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
@@ -293,7 +294,7 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>warn <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span>  <span class="co"># Suppress warnings</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_to_arrow.html">vcf_to_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, as <span class="op">=</span> <span class="st">"data.frame"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>, <span class="st">"QUAL"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>, <span class="st">"QUAL"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM   POS REF ALT QUAL</span></span>
 <span><span class="co">#&gt; 1     1 10583   G   A   NA</span></span>
 <span><span class="co">#&gt; 2     1 11508   A   G   NA</span></span>
@@ -307,12 +308,15 @@
 </h3>
 <p>Arrow IPC (<code>.arrows</code>) format for interoperability with other Arrow tools using nanoarrow’s native streaming writer</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Convert BCF to Arrow IPC</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="co"># Convert BCF to Arrow IPC</span></span>
+<span><span class="va">ipc_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".arrows"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="reference/vcf_to_arrow_ipc.html">vcf_to_arrow_ipc</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">ipc_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Read back with nanoarrow</span></span>
 <span><span class="va">ipc_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/read_nanoarrow.html" class="external-link">read_nanoarrow</a></span><span class="op">(</span><span class="va">ipc_file</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ipc_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">ipc_data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
 <span><span class="co">#&gt; 1     1 10583   G   A</span></span>
 <span><span class="co">#&gt; 2     1 11508   A   G</span></span>
@@ -326,34 +330,114 @@
 </h3>
 <p>Using <a href="https://github.com/duckdb/duckdb-r" class="external-link">duckdb</a> to convert BCF to parquet file and perform queries on the parquet file</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># </span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpHwIECR/file2c263216bfed38.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
+<span>    <span class="va">con</span>, </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM parquet_metadata('%s')"</span>,</span>
+<span>    <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbDisconnect</span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pq_bcf</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">pq_bcf</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
 <span><span class="co">#&gt; 1     1 10583   G   A</span></span>
 <span><span class="co">#&gt; 2     1 11508   A   G</span></span>
 <span><span class="co">#&gt; 3     1 11565   G   T</span></span>
 <span><span class="co">#&gt; 4     1 13116   T   G</span></span>
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span>
-<span><span class="co">#&gt; 6     1 14699   C   G</span></span></code></pre></div>
+<span><span class="co">#&gt; 6     1 14699   C   G</span></span>
+<span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11</span></span>
+<span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
+<span><span class="co">#&gt; 1                    36            2515         0           0         11</span></span>
+<span><span class="co">#&gt; 2                    36            2515         1           0         11</span></span>
+<span><span class="co">#&gt; 3                    36            2515         2           0         11</span></span>
+<span><span class="co">#&gt; 4                    36            2515         3           0         11</span></span>
+<span><span class="co">#&gt; 5                    36            2515         4           0         11</span></span>
+<span><span class="co">#&gt; 6                    36            2515         5           0         11</span></span>
+<span><span class="co">#&gt;       path_in_schema       type  stats_min  stats_max stats_null_count</span></span>
+<span><span class="co">#&gt; 1              CHROM BYTE_ARRAY          1          1                0</span></span>
+<span><span class="co">#&gt; 2                POS     DOUBLE    10583.0    28376.0                0</span></span>
+<span><span class="co">#&gt; 3                 ID BYTE_ARRAY rs58108140 rs58108140               10</span></span>
+<span><span class="co">#&gt; 4                REF BYTE_ARRAY          A          T                0</span></span>
+<span><span class="co">#&gt; 5 ALT, list, element BYTE_ARRAY          A          T               NA</span></span>
+<span><span class="co">#&gt; 6               QUAL     DOUBLE       &lt;NA&gt;       &lt;NA&gt;               11</span></span>
+<span><span class="co">#&gt;   stats_distinct_count stats_min_value stats_max_value compression</span></span>
+<span><span class="co">#&gt; 1                    1               1               1      SNAPPY</span></span>
+<span><span class="co">#&gt; 2                   NA         10583.0         28376.0      SNAPPY</span></span>
+<span><span class="co">#&gt; 3                    1      rs58108140      rs58108140      SNAPPY</span></span>
+<span><span class="co">#&gt; 4                   NA               A               T      SNAPPY</span></span>
+<span><span class="co">#&gt; 5                   NA               A               T      SNAPPY</span></span>
+<span><span class="co">#&gt; 6                   NA            &lt;NA&gt;            &lt;NA&gt;      SNAPPY</span></span>
+<span><span class="co">#&gt;          encodings index_page_offset dictionary_page_offset data_page_offset</span></span>
+<span><span class="co">#&gt; 1 PLAIN_DICTIONARY                NA                      4               24</span></span>
+<span><span class="co">#&gt; 2            PLAIN                NA                     NA               52</span></span>
+<span><span class="co">#&gt; 3 PLAIN_DICTIONARY                NA                    146              175</span></span>
+<span><span class="co">#&gt; 4            PLAIN                NA                     NA              208</span></span>
+<span><span class="co">#&gt; 5            PLAIN                NA                     NA              268</span></span>
+<span><span class="co">#&gt; 6            PLAIN                NA                     NA              335</span></span>
+<span><span class="co">#&gt;   total_compressed_size total_uncompressed_size key_value_metadata</span></span>
+<span><span class="co">#&gt; 1                    48                      44               NULL</span></span>
+<span><span class="co">#&gt; 2                    94                     113               NULL</span></span>
+<span><span class="co">#&gt; 3                    62                      84               NULL</span></span>
+<span><span class="co">#&gt; 4                    60                      78               NULL</span></span>
+<span><span class="co">#&gt; 5                    67                      85               NULL</span></span>
+<span><span class="co">#&gt; 6                    25                      23               NULL</span></span>
+<span><span class="co">#&gt;   bloom_filter_offset bloom_filter_length min_is_exact max_is_exact</span></span>
+<span><span class="co">#&gt; 1                1874                  47         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 2                  NA                  NA         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 3                1921                  47         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 4                  NA                  NA         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 5                  NA                  NA         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 6                  NA                  NA           NA           NA</span></span>
+<span><span class="co">#&gt;   row_group_compressed_bytes geo_bbox.xmin geo_bbox.xmax geo_bbox.ymin</span></span>
+<span><span class="co">#&gt; 1                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 2                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 3                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 4                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 5                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 6                          1            NA            NA            NA</span></span>
+<span><span class="co">#&gt;   geo_bbox.ymax geo_bbox.zmin geo_bbox.zmax geo_bbox.mmin geo_bbox.mmax</span></span>
+<span><span class="co">#&gt; 1            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 2            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 3            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 4            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 5            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt; 6            NA            NA            NA            NA            NA</span></span>
+<span><span class="co">#&gt;   geo_types</span></span>
+<span><span class="co">#&gt; 1      NULL</span></span>
+<span><span class="co">#&gt; 2      NULL</span></span>
+<span><span class="co">#&gt; 3      NULL</span></span>
+<span><span class="co">#&gt; 4      NULL</span></span>
+<span><span class="co">#&gt; 5      NULL</span></span>
+<span><span class="co">#&gt; 6      NULL</span></span></code></pre></div>
 <p>Use <code>streaming = TRUE</code> to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb, trading memory with serialization overhead using the <a href="https://duckdb.org/community_extensions/extensions/nanoarrow.html" class="external-link">duckdb nanoarrow extension</a></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">bcf_larger</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G.ALL.2of4intersection.20100804.genotypes.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
+<span><span class="va">outfile</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span></span>
 <span>    <span class="va">bcf_larger</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span>,</span>
+<span>    <span class="va">outfile</span>,</span>
 <span>    streaming <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    batch_size <span class="op">=</span> <span class="fl">10000L</span>,</span>
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpHwIECR/file2c26323c288402.parquet (streaming mode)</span></span></code></pre></div>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b769b6cc4.parquet (streaming mode)</span></span>
+<span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="query-with-duckdb">Query with duckdb<a class="anchor" aria-label="anchor" href="#query-with-duckdb"></a>
+<h3 id="query-with-vcf-duckdb">Query with VCF duckdb<a class="anchor" aria-label="anchor" href="#query-with-vcf-duckdb"></a>
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># SQL queries on BCF (requires duckdb package)</span></span>
@@ -384,7 +468,7 @@
 <span></span>
 <span><span class="co"># Convert to data.frame</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array_stream.html" class="external-link">convert_array_stream</a></span><span class="op">(</span><span class="va">stream</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM      POS REF                  ALT</span></span>
 <span><span class="co">#&gt; 1 chr22 16050036   A C        , &lt;NON_REF&gt;</span></span>
 <span><span class="co">#&gt; 2 chr22 16050151   T G        , &lt;NON_REF&gt;</span></span>
