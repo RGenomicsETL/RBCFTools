@@ -1,16 +1,12 @@
-# Read VCF/BCF file into an Arrow Table or data frame
+# Read VCF/BCF file into a data frame or list of batches
 
-Convenience function to read an entire VCF file into memory as an
-Arrow-compatible object.
+Convenience function to read an entire VCF file into memory as an R data
+structure.
 
 ## Usage
 
 ``` r
-vcf_to_arrow(
-  filename,
-  as = c("tibble", "data.frame", "arrow_table", "batches"),
-  ...
-)
+vcf_to_arrow(filename, as = c("tibble", "data.frame", "batches"), ...)
 ```
 
 ## Arguments
@@ -21,8 +17,8 @@ vcf_to_arrow(
 
 - as:
 
-  Character string specifying output format: "arrow_table", "tibble",
-  "data.frame", or "batches" (list of arrow arrays)
+  Character string specifying output format: "tibble", "data.frame", or
+  "batches" (list of nanoarrow arrays)
 
 - ...:
 
@@ -31,8 +27,6 @@ vcf_to_arrow(
 ## Value
 
 Depends on `as` parameter:
-
-- "arrow_table": An Arrow Table (requires arrow package)
 
 - "tibble": A tibble
 

@@ -61,18 +61,18 @@ if (FALSE) { # \dontrun{
 stream <- vcf_open_arrow("variants.vcf.gz")
 
 # Read batches
-while (!is.null(batch <- nanoarrow::nanoarrow_array_stream_get_next(stream))) {
+while (!is.null(batch <- stream$get_next())) {
     # Process batch...
-    print(nanoarrow::as_tibble(batch))
+    print(nanoarrow::convert_array(batch))
 }
 
 # With region filter
 stream <- vcf_open_arrow("variants.vcf.gz", region = "chr1:1-1000000")
 
 # Convert to data frame
-df <- vcf_to_arrow_df("variants.vcf.gz")
+df <- vcf_to_arrow("variants.vcf.gz", as = "data.frame")
 
-# Write to parquet (requires arrow package)
-arrow::write_parquet(vcf_to_arrow_df("variants.vcf.gz"), "variants.parquet")
+# Write to parquet (uses DuckDB, no arrow package needed)
+vcf_to_parquet("variants.vcf.gz", "variants.parquet")
 } # }
 ```

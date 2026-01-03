@@ -2,6 +2,7 @@
 
 Converts a VCF/BCF file to Apache Parquet format for efficient storage
 and querying with tools like DuckDB, Spark, or Python pandas/polars.
+Uses DuckDB for Parquet writing (no arrow package required).
 
 ## Usage
 
@@ -27,7 +28,7 @@ vcf_to_parquet(
 
 - compression:
 
-  Compression codec: "snappy", "gzip", "zstd", "lz4", "none"
+  Compression codec: "snappy", "gzip", "zstd", "lz4", "uncompressed"
 
 - row_group_size:
 

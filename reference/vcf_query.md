@@ -1,7 +1,7 @@
-# Query VCF/BCF with DuckDB via Arrow
+# Query VCF/BCF with DuckDB
 
-Enables SQL queries on VCF files using DuckDB's Arrow integration. This
-allows powerful filtering, aggregation, and joining operations.
+Enables SQL queries on VCF files using DuckDB. This allows powerful
+filtering, aggregation, and joining operations.
 
 ## Usage
 
