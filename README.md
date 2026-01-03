@@ -160,6 +160,18 @@ stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 
 # Read first batch
 batch <- stream$get_next()
+#> Warning in x$get_schema(): FORMAT/AD should be declared as Number=R per VCF
+#> spec; correcting schema
+#> Warning in x$get_schema(): FORMAT/GQ should be declared as Type=Integer per VCF
+#> spec; correcting schema
+#> Warning in x$get_schema(): FORMAT/GT should be declared as Number=1 per VCF
+#> spec; correcting schema
+#> Warning in x$get_schema(): FORMAT/AD should be declared as Number=R per VCF
+#> spec; correcting schema
+#> Warning in x$get_schema(): FORMAT/GQ should be declared as Type=Integer per VCF
+#> spec; correcting schema
+#> Warning in x$get_schema(): FORMAT/GT should be declared as Number=1 per VCF
+#> spec; correcting schema
 b <- nanoarrow::convert_array(batch)
 b
 #>    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB
@@ -187,17 +199,17 @@ b
 #> 10          NA          NA          NA    NULL      NA               NULL
 #> 11          NA          NA          NA    NULL      NA               NULL
 #>    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT
-#> 1                  NA               NULL               3.28                   
-#> 2                  NA               NULL               2.22                   
-#> 3                  NA               NULL               1.48                   
-#> 4                  NA               NULL               9.17                   
-#> 5                  NA               NULL              15.80                   
-#> 6                  NA               NULL               6.29                   
-#> 7                  NA               NULL               5.08                   
-#> 8                  NA               NULL               7.01                   
-#> 9                  NA               NULL               5.61                   
-#> 10                 NA               NULL               1.29                   
-#> 11                 NA               NULL               2.68                   
+#> 1                  NA               NULL                 NA                0|0
+#> 2                  NA               NULL                 NA                1|1
+#> 3                  NA               NULL                 NA                0|0
+#> 4                  NA               NULL                 NA                0|0
+#> 5                  NA               NULL                 NA                0|0
+#> 6                  NA               NULL                 NA                0|0
+#> 7                  NA               NULL                 NA                1|1
+#> 8                  NA               NULL                 NA                0|0
+#> 9                  NA               NULL                 NA                0|0
+#> 10                 NA               NULL                 NA                1|1
+#> 11                 NA               NULL                 NA                1|1
 #>    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP
 #> 1                  NA                ./.               NULL                 NA
 #> 2                  NA                ./.               NULL                 NA
@@ -207,45 +219,45 @@ b
 #> 6                  NA                ./.               NULL                 NA
 #> 7                  NA                ./.               NULL                 NA
 #> 8                  NA                ./.               NULL                 NA
-#> 9                  NA                ./.                                     3
-#> 10                 NA                ./.                                     1
+#> 9                  NA                ./.               3, 0                  3
+#> 10                 NA                ./.               3, 1                  1
 #> 11                 NA                ./.               NULL                 NA
-#>    samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD
-#> 1                NULL               3.28                                    NA
-#> 2                NULL               2.22                                    NA
-#> 3                NULL               1.48                                    NA
-#> 4                NULL               9.17                                    NA
-#> 5                NULL              15.80                                    NA
-#> 6                NULL               6.29                                    NA
-#> 7                NULL               5.08                                    NA
-#> 8                NULL               7.01                                    NA
-#> 9                                  13.77                                    NA
-#> 10                                  2.95                                    NA
-#> 11               NULL               2.68                                    NA
-#>    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP samples.HG00106.GL
-#> 1                 ./.               NULL                 NA               NULL
-#> 2                 ./.               NULL                 NA               NULL
-#> 3                 ./.               NULL                 NA               NULL
-#> 4                 ./.               NULL                 NA               NULL
-#> 5                 ./.                                     2                   
-#> 6                 ./.               NULL                 NA               NULL
-#> 7                 ./.               NULL                 NA               NULL
-#> 8                 ./.               NULL                 NA               NULL
-#> 9                 ./.                                     2                   
-#> 10                ./.                                     2                   
-#> 11                ./.               NULL                 NA               NULL
+#>     samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD
+#> 1                 NULL                 NA                0|0                 NA
+#> 2                 NULL                 NA                1|1                 NA
+#> 3                 NULL                 NA                0|0                 NA
+#> 4                 NULL                 NA                0|0                 NA
+#> 5                 NULL                 NA                0|0                 NA
+#> 6                 NULL                 NA                0|0                 NA
+#> 7                 NULL                 NA                1|1                 NA
+#> 8                 NULL                 NA                0|0                 NA
+#> 9  0.00, -0.90, -12.68                 NA                0|0                 NA
+#> 10  0.00, -0.30, -3.86                 NA                0|0                 NA
+#> 11                NULL                 NA                1|1                 NA
+#>    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP  samples.HG00106.GL
+#> 1                 ./.               NULL                 NA                NULL
+#> 2                 ./.               NULL                 NA                NULL
+#> 3                 ./.               NULL                 NA                NULL
+#> 4                 ./.               NULL                 NA                NULL
+#> 5                 ./.               2, 0                  2  0.00, -0.60, -8.78
+#> 6                 ./.               NULL                 NA                NULL
+#> 7                 ./.               NULL                 NA                NULL
+#> 8                 ./.               NULL                 NA                NULL
+#> 9                 ./.               1, 1                  2 -3.65, -0.60, -4.09
+#> 10                ./.               4, 5                  2 -2.70, -0.60, -3.86
+#> 11                ./.               NULL                 NA                NULL
 #>    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG
-#> 1                3.28                                    NA                ./.
-#> 2                2.22                                    NA                ./.
-#> 3                1.48                                    NA                ./.
-#> 4                9.17                                    NA                ./.
-#> 5               21.74                                    NA                ./.
-#> 6                6.29                                    NA                ./.
-#> 7                5.08                                    NA                ./.
-#> 8                7.01                                    NA                ./.
-#> 9               25.82                                    NA                ./.
-#> 10              23.85                                    NA                ./.
-#> 11               2.68                                    NA                ./.
+#> 1                  NA                0|0                 NA                ./.
+#> 2                  NA                1|1                 NA                ./.
+#> 3                  NA                0|0                 NA                ./.
+#> 4                  NA                0|0                 NA                ./.
+#> 5                  NA                0|0                 NA                ./.
+#> 6                  NA                0|0                 NA                ./.
+#> 7                  NA                1|1                 NA                ./.
+#> 8                  NA                0|0                 NA                ./.
+#> 9                  NA                0|1                 NA                ./.
+#> 10                 NA                1|0                 NA                ./.
+#> 11                 NA                1|1                 NA                ./.
 ```
 
 ### Convert to Data Frame
@@ -253,6 +265,18 @@ b
 ``` r
 # Convert entire BCF to data.frame
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be
+#> declared as Number=R per VCF spec; correcting schema
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be
+#> declared as Type=Integer per VCF spec; correcting schema
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be
+#> declared as Number=1 per VCF spec; correcting schema
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be
+#> declared as Number=R per VCF spec; correcting schema
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be
+#> declared as Type=Integer per VCF spec; correcting schema
+#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be
+#> declared as Number=1 per VCF spec; correcting schema
 head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 #>   CHROM   POS REF ALT QUAL
 #> 1     1 10583   G   A   NA
@@ -270,7 +294,19 @@ If you have the arrow package installed
 ``` r
 # Convert BCF to Parquet
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
-#> Wrote 11 rows to /tmp/RtmpDoUyNd/file2b5611764f9c3f.parquet
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
+#> Wrote 11 rows to /tmp/Rtmp04dGr8/file2b6c2444e0d66a.parquet
 
 # Read back with arrow
 pq_bcf <- arrow::read_parquet(parquet_file)
@@ -300,17 +336,17 @@ pq_bcf
 #> 10          NA          NA          NA    NULL      NA               NULL
 #> 11          NA          NA          NA    NULL      NA               NULL
 #>    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT
-#> 1                  NA               NULL               3.28                   
-#> 2                  NA               NULL               2.22                   
-#> 3                  NA               NULL               1.48                   
-#> 4                  NA               NULL               9.17                   
-#> 5                  NA               NULL              15.80                   
-#> 6                  NA               NULL               6.29                   
-#> 7                  NA               NULL               5.08                   
-#> 8                  NA               NULL               7.01                   
-#> 9                  NA               NULL               5.61                   
-#> 10                 NA               NULL               1.29                   
-#> 11                 NA               NULL               2.68                   
+#> 1                  NA               NULL                 NA                0|0
+#> 2                  NA               NULL                 NA                1|1
+#> 3                  NA               NULL                 NA                0|0
+#> 4                  NA               NULL                 NA                0|0
+#> 5                  NA               NULL                 NA                0|0
+#> 6                  NA               NULL                 NA                0|0
+#> 7                  NA               NULL                 NA                1|1
+#> 8                  NA               NULL                 NA                0|0
+#> 9                  NA               NULL                 NA                0|0
+#> 10                 NA               NULL                 NA                1|1
+#> 11                 NA               NULL                 NA                1|1
 #>    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP
 #> 1                  NA                ./.               NULL                 NA
 #> 2                  NA                ./.               NULL                 NA
@@ -320,45 +356,45 @@ pq_bcf
 #> 6                  NA                ./.               NULL                 NA
 #> 7                  NA                ./.               NULL                 NA
 #> 8                  NA                ./.               NULL                 NA
-#> 9                  NA                ./.                                     3
-#> 10                 NA                ./.                                     1
+#> 9                  NA                ./.               3, 0                  3
+#> 10                 NA                ./.               3, 1                  1
 #> 11                 NA                ./.               NULL                 NA
-#>    samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD
-#> 1                NULL               3.28                                    NA
-#> 2                NULL               2.22                                    NA
-#> 3                NULL               1.48                                    NA
-#> 4                NULL               9.17                                    NA
-#> 5                NULL              15.80                                    NA
-#> 6                NULL               6.29                                    NA
-#> 7                NULL               5.08                                    NA
-#> 8                NULL               7.01                                    NA
-#> 9                                  13.77                                    NA
-#> 10                                  2.95                                    NA
-#> 11               NULL               2.68                                    NA
-#>    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP samples.HG00106.GL
-#> 1                 ./.               NULL                 NA               NULL
-#> 2                 ./.               NULL                 NA               NULL
-#> 3                 ./.               NULL                 NA               NULL
-#> 4                 ./.               NULL                 NA               NULL
-#> 5                 ./.                                     2                   
-#> 6                 ./.               NULL                 NA               NULL
-#> 7                 ./.               NULL                 NA               NULL
-#> 8                 ./.               NULL                 NA               NULL
-#> 9                 ./.                                     2                   
-#> 10                ./.                                     2                   
-#> 11                ./.               NULL                 NA               NULL
+#>     samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD
+#> 1                 NULL                 NA                0|0                 NA
+#> 2                 NULL                 NA                1|1                 NA
+#> 3                 NULL                 NA                0|0                 NA
+#> 4                 NULL                 NA                0|0                 NA
+#> 5                 NULL                 NA                0|0                 NA
+#> 6                 NULL                 NA                0|0                 NA
+#> 7                 NULL                 NA                1|1                 NA
+#> 8                 NULL                 NA                0|0                 NA
+#> 9  0.00, -0.90, -12.68                 NA                0|0                 NA
+#> 10  0.00, -0.30, -3.86                 NA                0|0                 NA
+#> 11                NULL                 NA                1|1                 NA
+#>    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP  samples.HG00106.GL
+#> 1                 ./.               NULL                 NA                NULL
+#> 2                 ./.               NULL                 NA                NULL
+#> 3                 ./.               NULL                 NA                NULL
+#> 4                 ./.               NULL                 NA                NULL
+#> 5                 ./.               2, 0                  2  0.00, -0.60, -8.78
+#> 6                 ./.               NULL                 NA                NULL
+#> 7                 ./.               NULL                 NA                NULL
+#> 8                 ./.               NULL                 NA                NULL
+#> 9                 ./.               1, 1                  2 -3.65, -0.60, -4.09
+#> 10                ./.               4, 5                  2 -2.70, -0.60, -3.86
+#> 11                ./.               NULL                 NA                NULL
 #>    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG
-#> 1                3.28                                    NA                ./.
-#> 2                2.22                                    NA                ./.
-#> 3                1.48                                    NA                ./.
-#> 4                9.17                                    NA                ./.
-#> 5               21.74                                    NA                ./.
-#> 6                6.29                                    NA                ./.
-#> 7                5.08                                    NA                ./.
-#> 8                7.01                                    NA                ./.
-#> 9               25.82                                    NA                ./.
-#> 10              23.85                                    NA                ./.
-#> 11               2.68                                    NA                ./.
+#> 1                  NA                0|0                 NA                ./.
+#> 2                  NA                1|1                 NA                ./.
+#> 3                  NA                0|0                 NA                ./.
+#> 4                  NA                0|0                 NA                ./.
+#> 5                  NA                0|0                 NA                ./.
+#> 6                  NA                0|0                 NA                ./.
+#> 7                  NA                1|1                 NA                ./.
+#> 8                  NA                0|0                 NA                ./.
+#> 9                  NA                0|1                 NA                ./.
+#> 10                 NA                1|0                 NA                ./.
+#> 11                 NA                1|1                 NA                ./.
 ```
 
 ### Query with DuckDB
@@ -368,11 +404,35 @@ using duckdb
 ``` r
 # SQL queries on BCF (requires arrow and duckdb packages)
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
 #>   CHROM  n
 #> 1     1 11
 
 # Filter variants by position
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
+#> be declared as Number=R per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
+#> be declared as Type=Integer per VCF spec; correcting schema
+#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
+#> be declared as Number=1 per VCF spec; correcting schema
 #>   CHROM   POS REF ALT
 #> 1     1 10583   G   A
 #> 2     1 11508   A   G
