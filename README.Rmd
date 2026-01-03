@@ -144,7 +144,7 @@ vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
 
 # Read back with arrow
 pq_bcf <- arrow::read_parquet(parquet_file)
-pq_bcf[1:5,1:6]
+pq_bcf[1:5,1:10]
 ```
 
 ### Query with DuckDB
@@ -154,7 +154,7 @@ pq_bcf[1:5,1:6]
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 
 # Filter variants by position
-vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf WHERE POS > 1105400 LIMIT 5")
+vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
 ## References
