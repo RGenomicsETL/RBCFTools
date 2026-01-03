@@ -294,12 +294,13 @@ required):
 ``` r
 # Convert BCF to Parquet
 options(warn = -1)  # Suppress warnings for cleaner README output
-vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
-#> Wrote 11 rows to /tmp/Rtmp2Obfo8/file2bbf3570b3c6c0.parquet
+vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
+#> Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc3265ded010a.parquet
 
-# Read back with DuckDB
+# Query the Parquet file directly with DuckDB SQL
+# DuckDB can read Parquet files without loading them fully into R memory
 con <- duckdb::dbConnect(duckdb::duckdb())
-pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s'", parquet_file))
+pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
 head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 #>   CHROM   POS REF ALT
@@ -311,13 +312,24 @@ head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 #> 6     1 14699   C   G
 ```
 
-**Streaming mode for large files:** Use `streaming = TRUE` to avoid
-loading the entire VCF into R memory. This streams VCF → Arrow IPC
-(nanoarrow) → Parquet (DuckDB), keeping memory usage minimal:
+Use `streaming = TRUE` to avoid loading the entire VCF into R memory.
+This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb
+keeping memory usage minimal
 
 ``` r
-# For very large VCF files
-vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
+# Streaming mode for large VCF files
+# - batch_size: controls how many VCF records are processed per Arrow batch
+# - row_group_size: controls Parquet row group size (affects query performance)
+# - compression: "snappy" (fast), "zstd" (best ratio), "gzip", "lz4", "uncompressed"
+vcf_to_parquet(
+    bcf_larger,
+    tempfile(fileext = ".parquet"),
+    streaming = TRUE,
+    batch_size = 10000L,
+    row_group_size = 100000L,
+    compression = "zstd"
+)
+#> Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc326193b972c.parquet (streaming mode)
 ```
 
 Requires the [DuckDB nanoarrow
