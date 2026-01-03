@@ -1992,11 +1992,8 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
     
     // Set up region filtering if requested
     if (priv->opts.region) {
-        priv->idx = bcf_index_load(filename);
-        if (!priv->idx) {
-            // Try loading with different suffix
-            priv->idx = bcf_index_load2(filename, NULL);
-        }
+        // Use bcf_index_load3 with HTS_IDX_SAVE_REMOTE for remote file support
+        priv->idx = bcf_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
         
         if (priv->idx) {
             priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
@@ -2011,7 +2008,7 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
             }
         } else {
             snprintf(priv->error_msg, sizeof(priv->error_msg), 
-                     "No index available for region query");
+                     "No index available for region query (file: %s)", filename);
             bcf_hdr_destroy(priv->hdr);
             hts_close(priv->fp);
             vcf_arrow_free(priv);

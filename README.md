@@ -12,7 +12,16 @@ RBCFTools provides R bindings to
 [bcftools](https://github.com/samtools/bcftools) and
 [htslib](https://github.com/samtools/htslib), the standard tools for
 reading and manipulating VCF/BCF files. The package bundles these
-libraries, so no external installation is required.
+libraries and command-line tools (bcftools, bgzip, tabix), so no
+external installation is required. When compiled with libcurl, remote
+file access from S3, GCS, and HTTP URLs is supported.
+
+The package also includes experimental support for streaming VCF/BCF to
+Apache Arrow format via
+[nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet
+and Arrow IPC formats using [DuckDB](https://duckdb.org/). This provides
+a lightweight alternative to the `arrow` R package for genomic data
+workflows.
 
 ## Installation
 
@@ -120,7 +129,7 @@ htslib_has_feature(HTS_FEATURE_BZIP2)
 
 These are useful for conditionally enabling features in your code.
 
-## Example: Query Remote VCF from S3
+## Example Query Remote VCF from S3 using bcftools
 
 With libcurl support, bcftools can directly query remote files. Here we
 count variants in a small region from the 1000 Genomes cohort VCF on S3:
@@ -303,7 +312,7 @@ required):
 # Convert BCF to Parquet
 options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc3265ded010a.parquet
+#> Wrote 11 rows to /tmp/RtmpVGxZod/file2bda97185fea41.parquet
 
 # Query the Parquet file directly with DuckDB SQL
 # DuckDB can read Parquet files without loading them fully into R memory
@@ -337,7 +346,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc326193b972c.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpVGxZod/file2bda977f15b929.parquet (streaming mode)
 ```
 
 Requires the [DuckDB nanoarrow
@@ -384,6 +393,22 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 #> 4     1 13116   T   G
 #> 5     1 13327   G   C
 ```
+
+<!--
+### Stream Remote VCF to Arrow
+&#10;
+&#10;``` r
+# Stream remote VCF region directly to Arrow
+stream <- vcf_open_arrow(
+    vcf_url,
+    region = "chr22:20000000-20100000",
+    batch_size = 1000L
+)
+&#10;# Convert to data.frame
+df <- as.data.frame(nanoarrow::convert_array_stream(stream))
+head(df[, c("CHROM", "POS", "REF", "ALT")])
+```
+--->
 
 ## References
 

@@ -19,7 +19,9 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries, so no external installation is required.
+RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported.
+
+The package also includes experimental support for streaming VCF/BCF to Apache Arrow format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet and Arrow IPC formats using [DuckDB](https://duckdb.org/). This provides a lightweight alternative to the `arrow` R package for genomic data workflows.
 
 ## Installation
 
@@ -83,7 +85,7 @@ htslib_has_feature(HTS_FEATURE_BZIP2)
 
 These are useful for conditionally enabling features in your code.
 
-## Example: Query Remote VCF from S3
+## Example Query Remote VCF from S3 using bcftools
 
 With libcurl support, bcftools can directly query remote files. Here we count variants in a small region from the 1000 Genomes cohort VCF on S3:
 
@@ -106,6 +108,7 @@ result <- system2(
 )
 length(result)
 ```
+
 
 ## (Experimental) VCF to Arrow
 
@@ -201,6 +204,23 @@ vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
+<!--
+### Stream Remote VCF to Arrow
+
+
+```{r s3-arrow, eval=FALSE}
+# Stream remote VCF region directly to Arrow
+stream <- vcf_open_arrow(
+    vcf_url,
+    region = "chr22:20000000-20100000",
+    batch_size = 1000L
+)
+
+# Convert to data.frame
+df <- as.data.frame(nanoarrow::convert_array_stream(stream))
+head(df[, c("CHROM", "POS", "REF", "ALT")])
+```
+--->
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)

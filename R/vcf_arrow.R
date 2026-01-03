@@ -58,8 +58,10 @@ vcf_open_arrow <- function(filename,
         stop("Package 'nanoarrow' is required for Arrow stream support")
     }
 
-    # Normalize path
-    filename <- normalizePath(filename, mustWork = TRUE)
+    # Normalize local paths, but allow remote URLs (s3://, gs://, http://, https://, ftp://)
+    if (!grepl("^(s3|gs|http|https|ftp)://", filename)) {
+        filename <- normalizePath(filename, mustWork = TRUE)
+    }
 
     .Call(
         vcf_to_arrow_stream,
