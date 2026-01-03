@@ -1909,7 +1909,12 @@ static void vcf_stream_release(struct ArrowArrayStream* stream) {
         
         if (priv->rec) bcf_destroy(priv->rec);
         if (priv->itr) hts_itr_destroy(priv->itr);
-        if (priv->idx) hts_idx_destroy(priv->idx);
+        // Free index: tbx_destroy handles its own idx, otherwise free idx directly
+        if (priv->tbx) {
+            tbx_destroy(priv->tbx);
+        } else if (priv->idx) {
+            hts_idx_destroy(priv->idx);
+        }
         if (priv->hdr) bcf_hdr_destroy(priv->hdr);
         if (priv->fp) hts_close(priv->fp);
         
@@ -1992,15 +1997,31 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
     
     // Set up region filtering if requested
     if (priv->opts.region) {
-        // Use bcf_index_load3 with HTS_IDX_SAVE_REMOTE for remote file support
-        priv->idx = bcf_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+        // Load the index - use TBI for VCF files, CSI for BCF files
+        // HTS_IDX_SAVE_REMOTE enables remote index caching for S3/HTTP URLs
+        if (priv->fp->format.format == vcf) {
+            // VCF files use tabix (.tbi) index
+            priv->tbx = tbx_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+            if (priv->tbx) {
+                priv->idx = priv->tbx->idx;
+            }
+        } else {
+            // BCF files use CSI index
+            priv->idx = bcf_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+        }
         
         if (priv->idx) {
             priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
             if (!priv->itr) {
                 snprintf(priv->error_msg, sizeof(priv->error_msg), 
                          "Failed to query region: %s", priv->opts.region);
-                hts_idx_destroy(priv->idx);
+                if (priv->tbx) {
+                    tbx_destroy(priv->tbx);
+                    priv->tbx = NULL;
+                } else {
+                    hts_idx_destroy(priv->idx);
+                }
+                priv->idx = NULL;
                 bcf_hdr_destroy(priv->hdr);
                 hts_close(priv->fp);
                 vcf_arrow_free(priv);

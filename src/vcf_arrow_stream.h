@@ -8,6 +8,7 @@
 #include <htslib/vcf.h>
 #include <htslib/hts.h>
 #include <htslib/synced_bcf_reader.h>
+#include <htslib/tbx.h>
 
 // Arrow C Data Interface structures
 // (These are also defined in nanoarrow/r.h but we define them here for standalone use)
@@ -95,6 +96,7 @@ typedef struct {
     bcf_hdr_t* hdr;               // VCF header
     bcf1_t* rec;                  // Current record (reusable)
     hts_idx_t* idx;               // Index (for region queries)
+    tbx_t* tbx;                   // Tabix index (for VCF files)
     hts_itr_t* itr;               // Iterator (for region queries)
     vcf_arrow_options_t opts;     // Options
     char error_msg[256];          // Last error message
