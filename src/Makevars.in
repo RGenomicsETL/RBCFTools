@@ -31,7 +31,3 @@ all: $(SHLIB)
 ifeq ($(UNAME_S),Darwin)
 	install_name_tool -change $(HTSLIB_DIR)/lib/libhts.3.dylib @loader_path/../htslib/lib/libhts.3.dylib $(SHLIB)
 endif
-
-clean:
-  cd bcftools-1.23 && $(MAKE) clean && \
-  cd htslib-1.23 && $(MAKE) clean
