@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmppTpqv4/file2cb5677365fd17.parquet
+#> Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
-#> 2 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
-#> 3 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
-#> 4 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
-#> 5 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
-#> 6 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 1 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 2 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 3 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 4 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 5 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 6 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            2515         0           0         11
 #> 2                    36            2515         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmppTpqv4/file2cb5672f49f5ea.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d1d93ecc7.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -467,7 +467,7 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 6 chr22 16050229   C A        , <NON_REF>
 ```
 
-## Limitations issues
+## Limitations and issues
 
 The Arrow supports involves a lot of copies at the C level, let alone
 additional copies and converstions when converting to parquet including
@@ -484,8 +484,11 @@ We should improve the code, avoid copies, add more tests and maybe
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)
+
 - [bcftools GitHub](https://github.com/samtools/bcftools)
+
 - [htslib GitHub](https://github.com/samtools/htslib)
+
 - [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
 
 # Package index
