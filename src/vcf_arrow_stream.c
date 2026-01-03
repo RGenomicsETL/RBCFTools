@@ -755,7 +755,17 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     int ret;
     while (n_read < batch_size) {
         if (priv->itr) {
-            ret = bcf_itr_next(priv->fp, priv->itr, priv->rec);
+            if (priv->tbx) {
+                // VCF with tabix: read text line then parse
+                ret = tbx_itr_next(priv->fp, priv->tbx, priv->itr, &priv->kstr);
+                if (ret >= 0) {
+                    ret = vcf_parse1(&priv->kstr, priv->hdr, priv->rec);
+                    priv->kstr.l = 0;  // Reset string buffer
+                }
+            } else {
+                // BCF: read binary record directly
+                ret = bcf_itr_next(priv->fp, priv->itr, priv->rec);
+            }
         } else {
             ret = bcf_read(priv->fp, priv->hdr, priv->rec);
         }
@@ -1915,6 +1925,8 @@ static void vcf_stream_release(struct ArrowArrayStream* stream) {
         } else if (priv->idx) {
             hts_idx_destroy(priv->idx);
         }
+        // Free kstring buffer used for VCF text parsing
+        if (priv->kstr.s) free(priv->kstr.s);
         if (priv->hdr) bcf_hdr_destroy(priv->hdr);
         if (priv->fp) hts_close(priv->fp);
         
@@ -2004,36 +2016,33 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
             priv->tbx = tbx_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
             if (priv->tbx) {
                 priv->idx = priv->tbx->idx;
+                // Use tbx_itr_querys for VCF files (reads text lines)
+                priv->itr = tbx_itr_querys(priv->tbx, priv->opts.region);
             }
         } else {
             // BCF files use CSI index
             priv->idx = bcf_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+            if (priv->idx) {
+                // Use bcf_itr_querys for BCF files (reads binary records)
+                priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
+            }
         }
         
-        if (priv->idx) {
-            priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
-            if (!priv->itr) {
-                snprintf(priv->error_msg, sizeof(priv->error_msg), 
-                         "Failed to query region: %s", priv->opts.region);
-                if (priv->tbx) {
-                    tbx_destroy(priv->tbx);
-                    priv->tbx = NULL;
-                } else {
-                    hts_idx_destroy(priv->idx);
-                }
-                priv->idx = NULL;
-                bcf_hdr_destroy(priv->hdr);
-                hts_close(priv->fp);
-                vcf_arrow_free(priv);
-                return EINVAL;
-            }
-        } else {
+        if (!priv->itr) {
             snprintf(priv->error_msg, sizeof(priv->error_msg), 
-                     "No index available for region query (file: %s)", filename);
+                     priv->idx ? "Failed to query region: %s" : "No index available for region query (file: %s)",
+                     priv->idx ? priv->opts.region : filename);
+            if (priv->tbx) {
+                tbx_destroy(priv->tbx);
+                priv->tbx = NULL;
+            } else if (priv->idx) {
+                hts_idx_destroy(priv->idx);
+            }
+            priv->idx = NULL;
             bcf_hdr_destroy(priv->hdr);
             hts_close(priv->fp);
             vcf_arrow_free(priv);
-            return ENOENT;
+            return priv->idx ? EINVAL : ENOENT;
         }
     }
     

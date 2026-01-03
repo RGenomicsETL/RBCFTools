@@ -9,6 +9,7 @@
 #include <htslib/hts.h>
 #include <htslib/synced_bcf_reader.h>
 #include <htslib/tbx.h>
+#include <htslib/kstring.h>
 
 // Arrow C Data Interface structures
 // (These are also defined in nanoarrow/r.h but we define them here for standalone use)
@@ -98,6 +99,7 @@ typedef struct {
     hts_idx_t* idx;               // Index (for region queries)
     tbx_t* tbx;                   // Tabix index (for VCF files)
     hts_itr_t* itr;               // Iterator (for region queries)
+    kstring_t kstr;               // String buffer for tbx_itr_next (VCF text parsing)
     vcf_arrow_options_t opts;     // Options
     char error_msg[256];          // Last error message
     int finished;                 // Stream finished flag

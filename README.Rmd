@@ -196,15 +196,16 @@ vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
-<!--
 ### Stream Remote VCF to Arrow
 
 
-```{r s3-arrow, eval=FALSE}
+```{r url-arrow, eval=TRUE}
 # Stream remote VCF region directly to Arrow
+vcf_url <- paste0("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/",
+"20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr21.filtered.SNV_INDEL_SV_phased_panel.vcf.gz")
 stream <- vcf_open_arrow(
     vcf_url,
-    region = "chr22:20000000-20100000",
+    region = "chr21:20000000-20100000",
     batch_size = 1000L
 )
 
@@ -212,7 +213,6 @@ stream <- vcf_open_arrow(
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 head(df[, c("CHROM", "POS", "REF", "ALT")])
 ```
---->
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)

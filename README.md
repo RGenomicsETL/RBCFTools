@@ -317,7 +317,7 @@ parquet file and perform queries on the parquet file
 ``` r
 # 
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpoi6uF7/file2bee146929d7f0.parquet
+#> Wrote 11 rows to /tmp/RtmpmBxiAm/file2bfa334edbae.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
@@ -346,7 +346,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpoi6uF7/file2bee1451c5321.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpmBxiAm/file2bfa333a72b8a.parquet (streaming mode)
 ```
 
 ### Query with duckdb
@@ -367,21 +367,29 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 #> 5     1 13327   G   C
 ```
 
-<!--
 ### Stream Remote VCF to Arrow
-&#10;
-&#10;``` r
+
+``` r
 # Stream remote VCF region directly to Arrow
+vcf_url <- paste0("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/",
+"20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr21.filtered.SNV_INDEL_SV_phased_panel.vcf.gz")
 stream <- vcf_open_arrow(
     vcf_url,
-    region = "chr22:20000000-20100000",
+    region = "chr21:20000000-20100000",
     batch_size = 1000L
 )
-&#10;# Convert to data.frame
+
+# Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 head(df[, c("CHROM", "POS", "REF", "ALT")])
+#>   CHROM      POS REF ALT
+#> 1 chr21 20000032   G   T
+#> 2 chr21 20000039   C   T
+#> 3 chr21 20000079   T   C
+#> 4 chr21 20000090   A   T
+#> 5 chr21 20000165   T   G
+#> 6 chr21 20000177  TC   T
 ```
---->
 
 ## References
 
