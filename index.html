@@ -51,7 +51,8 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries, so no external installation is required.</p>
+<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported.</p>
+<p>The package also includes experimental support for streaming VCF/BCF to Apache Arrow format via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>, with export to Parquet and Arrow IPC formats using <a href="https://duckdb.org/" class="external-link">DuckDB</a>. This provides a lightweight alternative to the <code>arrow</code> R package for genomic data workflows.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -152,7 +153,7 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="example-query-remote-vcf-from-s3">Example: Query Remote VCF from S3<a class="anchor" aria-label="anchor" href="#example-query-remote-vcf-from-s3"></a>
+<h2 id="example-query-remote-vcf-from-s3-using-bcftools">Example Query Remote VCF from S3 using bcftools<a class="anchor" aria-label="anchor" href="#example-query-remote-vcf-from-s3-using-bcftools"></a>
 </h2>
 <p>With libcurl support, bcftools can directly query remote files. Here we count variants in a small region from the 1000 Genomes cohort VCF on S3:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -323,7 +324,7 @@
 <code class="sourceCode R"><span><span class="co"># Convert BCF to Parquet</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>warn <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span>  <span class="co"># Suppress warnings for cleaner README output</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc3265ded010a.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpVGxZod/file2bda97185fea41.parquet</span></span>
 <span></span>
 <span><span class="co"># Query the Parquet file directly with DuckDB SQL</span></span>
 <span><span class="co"># DuckDB can read Parquet files without loading them fully into R memory</span></span>
@@ -352,7 +353,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpB6UnaQ/file2bc326193b972c.parquet (streaming mode)</span></span></code></pre></div>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpVGxZod/file2bda977f15b929.parquet (streaming mode)</span></span></code></pre></div>
 <p>Requires the <a href="https://duckdb.org/community_extensions/extensions/nanoarrow.html" class="external-link">DuckDB nanoarrow extension</a> (auto-installed on first use).</p>
 </div>
 <div class="section level3">
@@ -392,6 +393,21 @@
 <span><span class="co">#&gt; 3     1 11565   G   T</span></span>
 <span><span class="co">#&gt; 4     1 13116   T   G</span></span>
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span></code></pre></div>
+<!--
+### Stream Remote VCF to Arrow
+&#10;
+&#10;``` r
+# Stream remote VCF region directly to Arrow
+stream <- vcf_open_arrow(
+    vcf_url,
+    region = "chr22:20000000-20100000",
+    batch_size = 1000L
+)
+&#10;# Convert to data.frame
+df <- as.data.frame(nanoarrow::convert_array_stream(stream))
+head(df[, c("CHROM", "POS", "REF", "ALT")])
+```
+--->
 </div>
 </div>
 <div class="section level2">
