@@ -9,7 +9,7 @@ vcf_to_arrow_ipc(input_vcf, output_ipc, ...)
 \arguments{
 \item{input_vcf}{Path to input VCF or BCF file}
 
-\item{output_ipc}{Path for output Arrow IPC file (typically .arrow or .arrows extension)}
+\item{output_ipc}{Path for output Arrow IPC file (typically .arrows extension)}
 
 \item{...}{Additional arguments passed to vcf_open_arrow}
 }
@@ -17,21 +17,22 @@ vcf_to_arrow_ipc(input_vcf, output_ipc, ...)
 Invisibly returns the output path
 }
 \description{
-Converts a VCF/BCF file to Arrow IPC (Feather v2) format for efficient
+Converts a VCF/BCF file to Arrow IPC stream format for efficient
 storage and interoperability with Arrow-compatible tools.
-Uses DuckDB for IPC writing (no arrow package required).
+Uses nanoarrow's native IPC writer for streaming output.
 }
 \examples{
-
-vcf_to_arrow_ipc("variants.vcf.gz", "variants.arrow")
+\dontrun{
+vcf_to_arrow_ipc("variants.vcf.gz", "variants.arrows")
 
 # Read back with nanoarrow
-stream <- nanoarrow::read_nanoarrow("variants.arrow")
+stream <- nanoarrow::read_nanoarrow("variants.arrows")
 df <- as.data.frame(stream)
 
 # Or query with DuckDB
 library(duckdb)
 con <- dbConnect(duckdb())
-dbGetQuery(con, "SELECT * FROM 'variants.arrow' LIMIT 10")
+dbGetQuery(con, "SELECT * FROM 'variants.arrows' LIMIT 10")
+}
 
 }

@@ -138,19 +138,38 @@ vcf_to_arrow <- function(filename,
 #'
 #' Converts a VCF/BCF file to Apache Parquet format for efficient storage
 #' and querying with tools like DuckDB, Spark, or Python pandas/polars.
-#' Uses DuckDB for Parquet writing (no arrow package required).
 #'
 #' @param input_vcf Path to input VCF or BCF file
 #' @param output_parquet Path for output Parquet file
 #' @param compression Compression codec: "snappy", "gzip", "zstd", "lz4", "uncompressed"
 #' @param row_group_size Number of rows per row group (default: 100000)
+#' @param streaming Use streaming mode for large files. When TRUE, writes to
+#'   a temporary Arrow IPC file first (via nanoarrow), then converts to Parquet
+#'   via DuckDB. This avoids loading the entire VCF into R memory. Requires
+#'   the DuckDB nanoarrow community extension. Default is FALSE.
 #' @param ... Additional arguments passed to vcf_open_arrow
 #'
 #' @return Invisibly returns the output path
 #'
+#' @details
+#' By default (`streaming = FALSE`), the function loads the entire VCF into
+#' memory as a data.frame before writing to Parquet. This is fast for small
+#' to medium files.
+#'
+#' For very large VCF files, set `streaming = TRUE` to use a two-stage
+#' streaming approach:
+#' 1. Stream VCF to a temporary Arrow IPC file (via nanoarrow)
+#' 2. Convert IPC to Parquet via DuckDB (with nanoarrow extension)
+#'
+#' This keeps R memory usage minimal regardless of file size.
+#'
 #' @examples
 #' \dontrun{
+#' # Standard mode (fast, loads into memory)
 #' vcf_to_parquet("variants.vcf.gz", "variants.parquet")
+#'
+#' # Streaming mode for large files (low memory)
+#' vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
 #'
 #' # With zstd compression
 #' vcf_to_parquet("variants.vcf.gz", "variants.parquet", compression = "zstd")
@@ -166,6 +185,7 @@ vcf_to_parquet <- function(input_vcf,
                            output_parquet,
                            compression = "snappy",
                            row_group_size = 100000L,
+                           streaming = FALSE,
                            ...) {
     if (!requireNamespace("duckdb", quietly = TRUE)) {
         stop("Package 'duckdb' is required for Parquet support")
@@ -179,10 +199,34 @@ vcf_to_parquet <- function(input_vcf,
     duckdb_compression <- toupper(compression)
     if (duckdb_compression == "LZ4") duckdb_compression <- "LZ4_RAW"
 
-    # Read VCF into data.frame
+    if (streaming) {
+        # Streaming mode: VCF -> IPC (nanoarrow) -> Parquet (DuckDB)
+        vcf_to_parquet_streaming(
+            input_vcf, output_parquet,
+            duckdb_compression, row_group_size, ...
+        )
+    } else {
+        # Standard mode: load into memory
+        vcf_to_parquet_inmemory(
+            input_vcf, output_parquet,
+            duckdb_compression, row_group_size, ...
+        )
+    }
+
+    invisible(output_parquet)
+}
+
+#' @noRd
+vcf_to_parquet_inmemory <- function(input_vcf, output_parquet,
+                                    duckdb_compression, row_group_size, ...) {
+    # Open VCF stream and convert to data.frame
     stream <- vcf_open_arrow(input_vcf, ...)
-    df <- nanoarrow::convert_array_stream(stream)
-    df <- as.data.frame(df)
+    df <- as.data.frame(nanoarrow::convert_array_stream(stream))
+
+    if (nrow(df) == 0L) {
+        warning("No records found in VCF file")
+        return(invisible(NULL))
+    }
 
     # Use DuckDB to write Parquet
     con <- duckdb::dbConnect(duckdb::duckdb())
@@ -190,7 +234,6 @@ vcf_to_parquet <- function(input_vcf,
 
     duckdb::duckdb_register(con, "vcf_data", df)
 
-    # Build COPY statement
     sql <- sprintf(
         "COPY vcf_data TO '%s' (FORMAT PARQUET, COMPRESSION %s, ROW_GROUP_SIZE %d)",
         output_parquet, duckdb_compression, as.integer(row_group_size)
@@ -198,8 +241,62 @@ vcf_to_parquet <- function(input_vcf,
     DBI::dbExecute(con, sql)
 
     message(sprintf("Wrote %d rows to %s", nrow(df), output_parquet))
+}
 
-    invisible(output_parquet)
+#' @noRd
+vcf_to_parquet_streaming <- function(input_vcf, output_parquet,
+                                     duckdb_compression, row_group_size, ...) {
+    # Stage 1: Stream VCF to temporary IPC file via nanoarrow
+    ipc_temp <- tempfile(fileext = ".arrows")
+    on.exit(unlink(ipc_temp), add = TRUE)
+
+    stream <- vcf_open_arrow(input_vcf, ...)
+    nanoarrow::write_nanoarrow(stream, ipc_temp)
+
+    # Check if file was written
+    if (!file.exists(ipc_temp) || file.size(ipc_temp) == 0) {
+        warning("No records found in VCF file")
+        return(invisible(NULL))
+    }
+
+    # Stage 2: Convert IPC to Parquet via DuckDB with nanoarrow extension
+    con <- duckdb::dbConnect(duckdb::duckdb())
+    on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+
+    # Load nanoarrow extension for reading Arrow IPC
+    tryCatch(
+        {
+            DBI::dbExecute(con, "LOAD nanoarrow")
+        },
+        error = function(e) {
+            tryCatch(
+                {
+                    DBI::dbExecute(con, "INSTALL nanoarrow FROM community")
+                    DBI::dbExecute(con, "LOAD nanoarrow")
+                },
+                error = function(e2) {
+                    stop(
+                        "Streaming mode requires the DuckDB nanoarrow extension. ",
+                        "Install with: DBI::dbExecute(con, 'INSTALL nanoarrow FROM community')",
+                        "\nOr use streaming = FALSE for in-memory conversion."
+                    )
+                }
+            )
+        }
+    )
+
+    # Get row count for message
+    count_result <- DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM '%s'", ipc_temp))
+    n_rows <- count_result$n[1]
+
+    # Convert IPC to Parquet
+    sql <- sprintf(
+        "COPY (SELECT * FROM '%s') TO '%s' (FORMAT PARQUET, COMPRESSION %s, ROW_GROUP_SIZE %d)",
+        ipc_temp, output_parquet, duckdb_compression, as.integer(row_group_size)
+    )
+    DBI::dbExecute(con, sql)
+
+    message(sprintf("Wrote %d rows to %s (streaming mode)", n_rows, output_parquet))
 }
 
 #' Query VCF/BCF with DuckDB
@@ -264,79 +361,39 @@ vcf_query <- function(vcf_files, query, ...) {
 
 #' Write VCF/BCF to Arrow IPC format
 #'
-#' Converts a VCF/BCF file to Arrow IPC (Feather v2) format for efficient
+#' Converts a VCF/BCF file to Arrow IPC stream format for efficient
 #' storage and interoperability with Arrow-compatible tools.
-#' Uses DuckDB with the nanoarrow extension for IPC writing.
+#' Uses nanoarrow's native IPC writer for streaming output.
 #'
 #' @param input_vcf Path to input VCF or BCF file
-#' @param output_ipc Path for output Arrow IPC file (typically .arrow or .arrows extension)
+#' @param output_ipc Path for output Arrow IPC file (typically .arrows extension)
 #' @param ... Additional arguments passed to vcf_open_arrow
 #'
 #' @return Invisibly returns the output path
 #'
 #' @examples
 #' \dontrun{
-#' vcf_to_arrow_ipc("variants.vcf.gz", "variants.arrow")
+#' vcf_to_arrow_ipc("variants.vcf.gz", "variants.arrows")
 #'
 #' # Read back with nanoarrow
-#' stream <- nanoarrow::read_nanoarrow("variants.arrow")
+#' stream <- nanoarrow::read_nanoarrow("variants.arrows")
 #' df <- as.data.frame(stream)
 #'
 #' # Or query with DuckDB
 #' library(duckdb)
 #' con <- dbConnect(duckdb())
-#' dbGetQuery(con, "SELECT * FROM 'variants.arrow' LIMIT 10")
+#' dbGetQuery(con, "SELECT * FROM 'variants.arrows' LIMIT 10")
 #' }
 #'
 #' @export
 vcf_to_arrow_ipc <- function(input_vcf,
                              output_ipc,
                              ...) {
-    if (!requireNamespace("duckdb", quietly = TRUE)) {
-        stop("Package 'duckdb' is required for Arrow IPC support")
-    }
-    if (!requireNamespace("DBI", quietly = TRUE)) {
-        stop("Package 'DBI' is required for Arrow IPC support")
-    }
-
-    # Read VCF into data.frame
+    # Open VCF as Arrow stream
     stream <- vcf_open_arrow(input_vcf, ...)
-    df <- nanoarrow::convert_array_stream(stream)
-    df <- as.data.frame(df)
 
-    # Use DuckDB to write Arrow IPC
-    con <- duckdb::dbConnect(duckdb::duckdb())
-    on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
-
-    # Load the nanoarrow extension for Arrow IPC support
-    tryCatch(
-        {
-            DBI::dbExecute(con, "LOAD nanoarrow")
-        },
-        error = function(e) {
-            # Try to install if not available
-            tryCatch(
-                {
-                    DBI::dbExecute(con, "INSTALL nanoarrow FROM community")
-                    DBI::dbExecute(con, "LOAD nanoarrow")
-                },
-                error = function(e2) {
-                    stop(
-                        "DuckDB nanoarrow extension required for Arrow IPC support. ",
-                        "Install with: DBI::dbExecute(con, 'INSTALL nanoarrow FROM community')"
-                    )
-                }
-            )
-        }
-    )
-
-    duckdb::duckdb_register(con, "vcf_data", df)
-
-    # Build COPY statement for Arrow IPC stream format
-    sql <- sprintf("COPY vcf_data TO '%s' (FORMAT ARROWS)", output_ipc)
-    DBI::dbExecute(con, sql)
-
-    message(sprintf("Wrote %d rows to %s", nrow(df), output_ipc))
+    # Write directly to IPC file using nanoarrow
+    nanoarrow::write_nanoarrow(stream, output_ipc)
 
     invisible(output_ipc)
 }

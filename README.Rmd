@@ -155,9 +155,18 @@ duckdb::dbDisconnect(con, shutdown = TRUE)
 head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 ```
 
+**Streaming mode for large files:** Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF → Arrow IPC (nanoarrow) → Parquet (DuckDB), keeping memory usage minimal:
+
+```r
+# For very large VCF files
+vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
+```
+
+Requires the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) (auto-installed on first use).
+
 ### Write to Arrow IPC
 
-Arrow IPC (`.arrows`) format for interoperability with other Arrow tools:
+Arrow IPC (`.arrows`) format for interoperability with other Arrow tools. Uses nanoarrow's native streaming writer (no memory overhead).
 
 ```{r arrow-ipc, eval=TRUE}
 # Convert BCF to Arrow IPC
