@@ -439,6 +439,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     int32_t** fmt_offsets = NULL;     // For lists/strings: offsets per record*sample
     int** fmt_lengths = NULL;         // Actual length per record*sample for lists
     uint8_t** fmt_validity = NULL;    // Validity bitmaps per FORMAT field per sample
+    size_t* fmt_str_sizes = NULL;     // Current total string data size per FORMAT field
+    size_t* fmt_str_capacity = NULL;  // Allocated capacity for string data per FORMAT field
     
     if (priv->opts.include_format && n_samples > 0) {
         // Count FORMAT fields
@@ -457,11 +459,15 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         fmt_offsets = (int32_t**)vcf_arrow_malloc(n_fmt_fields * sizeof(int32_t*));
         fmt_lengths = (int**)vcf_arrow_malloc(n_fmt_fields * sizeof(int*));
         fmt_validity = (uint8_t**)vcf_arrow_malloc(n_fmt_fields * n_samples * sizeof(uint8_t*));
+        fmt_str_sizes = (size_t*)vcf_arrow_malloc(n_fmt_fields * sizeof(size_t));
+        fmt_str_capacity = (size_t*)vcf_arrow_malloc(n_fmt_fields * sizeof(size_t));
         
         memset(fmt_data, 0, n_fmt_fields * sizeof(void*));
         memset(fmt_offsets, 0, n_fmt_fields * sizeof(int32_t*));
         memset(fmt_lengths, 0, n_fmt_fields * sizeof(int*));
         memset(fmt_validity, 0, n_fmt_fields * n_samples * sizeof(uint8_t*));
+        memset(fmt_str_sizes, 0, n_fmt_fields * sizeof(size_t));
+        memset(fmt_str_capacity, 0, n_fmt_fields * sizeof(size_t));
         
         // Populate fmt_ids, fmt_types, fmt_numbers
         int fmt_idx = 0;
@@ -505,6 +511,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(fmt_data);
         vcf_arrow_free(fmt_offsets);
         vcf_arrow_free(fmt_lengths);
+        vcf_arrow_free(fmt_str_sizes);
+        vcf_arrow_free(fmt_str_capacity);
         if (fmt_validity) {
             for (int i = 0; i < n_fmt_fields * n_samples; i++) {
                 vcf_arrow_free(fmt_validity[i]);
@@ -725,12 +733,44 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                     int ret_fmt = bcf_get_format_string(priv->hdr, priv->rec, tag, &values, &n_values);
                     
                     if (ret_fmt > 0 && values) {
-                        // String data - mark valid samples
+                        // Store string data for each sample
                         for (int s = 0; s < n_samples; s++) {
                             const char* val = values[s];
+                            int idx = n_read * n_samples + s;
+                            
                             if (val && strcmp(val, ".") != 0 && val[0] != '\0') {
+                                size_t len = strlen(val);
+                                
+                                // Grow string buffer if needed
+                                size_t needed = fmt_str_sizes[f] + len;
+                                if (needed > fmt_str_capacity[f]) {
+                                    size_t new_cap = fmt_str_capacity[f] == 0 ? 4096 : fmt_str_capacity[f] * 2;
+                                    while (new_cap < needed) new_cap *= 2;
+                                    char* new_data = (char*)vcf_arrow_realloc(fmt_data[f], new_cap);
+                                    if (!new_data) {
+                                        // Allocation failed, skip this value
+                                        fmt_offsets[f][idx + 1] = fmt_offsets[f][idx];
+                                        continue;
+                                    }
+                                    fmt_data[f] = new_data;
+                                    fmt_str_capacity[f] = new_cap;
+                                }
+                                
+                                // Copy string data
+                                memcpy((char*)fmt_data[f] + fmt_str_sizes[f], val, len);
+                                fmt_str_sizes[f] += len;
+                                fmt_offsets[f][idx + 1] = (int32_t)fmt_str_sizes[f];
                                 fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                            } else {
+                                // Missing or null - offset stays same
+                                fmt_offsets[f][idx + 1] = fmt_offsets[f][idx];
                             }
+                        }
+                    } else {
+                        // No data returned - fill offsets as missing
+                        for (int s = 0; s < n_samples; s++) {
+                            int idx = n_read * n_samples + s;
+                            fmt_offsets[f][idx + 1] = fmt_offsets[f][idx];
                         }
                     }
                     if (values) free(values[0]);
@@ -779,6 +819,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(fmt_data);
         vcf_arrow_free(fmt_offsets);
         vcf_arrow_free(fmt_lengths);
+        vcf_arrow_free(fmt_str_sizes);
+        vcf_arrow_free(fmt_str_capacity);
         
         return 0;
     }
@@ -1390,14 +1432,54 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                         fmt_arr->buffers[0] = validity;
                         fmt_arr->buffers[1] = data;
                     } else {
-                        // String type (BCF_HT_STR) - empty for now
+                        // String type (BCF_HT_STR) - extract this sample's strings
                         fmt_arr->n_buffers = 3;
+                        
+                        // Build offsets and concatenated string data for this sample
                         int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                        memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                        offsets[0] = 0;
+                        
+                        // First pass: calculate total string length for this sample
+                        size_t total_len = 0;
+                        if (fmt_data[f] != NULL && fmt_offsets[f] != NULL) {
+                            for (int64_t r = 0; r < n_read; r++) {
+                                int idx = r * n_samples + s;
+                                int32_t str_start = fmt_offsets[f][idx];
+                                int32_t str_end = fmt_offsets[f][idx + 1];
+                                total_len += (str_end - str_start);
+                            }
+                        }
+                        
+                        // Allocate string data buffer
+                        char* str_data = (char*)vcf_arrow_malloc(total_len + 1);
+                        int32_t cur_offset = 0;
+                        
+                        // Second pass: copy strings
+                        if (fmt_data[f] != NULL && fmt_offsets[f] != NULL) {
+                            char* src_data = (char*)fmt_data[f];
+                            for (int64_t r = 0; r < n_read; r++) {
+                                int idx = r * n_samples + s;
+                                int32_t str_start = fmt_offsets[f][idx];
+                                int32_t str_end = fmt_offsets[f][idx + 1];
+                                int32_t len = str_end - str_start;
+                                
+                                if (len > 0) {
+                                    memcpy(str_data + cur_offset, src_data + str_start, len);
+                                }
+                                cur_offset += len;
+                                offsets[r + 1] = cur_offset;
+                            }
+                        } else {
+                            // No data - all offsets are 0
+                            for (int64_t r = 0; r < n_read; r++) {
+                                offsets[r + 1] = 0;
+                            }
+                        }
+                        
                         fmt_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
                         fmt_arr->buffers[0] = validity;
                         fmt_arr->buffers[1] = offsets;
-                        fmt_arr->buffers[2] = vcf_arrow_malloc(1);
+                        fmt_arr->buffers[2] = str_data;
                     }
                 }
             }
@@ -1422,6 +1504,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     vcf_arrow_free(fmt_data);
     vcf_arrow_free(fmt_offsets);
     vcf_arrow_free(fmt_lengths);
+    vcf_arrow_free(fmt_str_sizes);
+    vcf_arrow_free(fmt_str_capacity);
     
     out->dictionary = NULL;
     

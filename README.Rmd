@@ -109,10 +109,10 @@ length(result)
 
 ## (Experimental) VCF to Arrow
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with modern analytics tools like DuckDB, Polars, and Parquet.
+RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like duckdb, and parquet format
 
 ```{r arrow-setup, include=FALSE}
-bcf_file <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 parquet_file <- tempfile(fileext = ".parquet")
 ```
 
@@ -125,7 +125,7 @@ stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 # Read first batch
 batch <- stream$get_next()
 b <- nanoarrow::convert_array(batch)
-b[1:5,1:min(7, dim(b)[2])]
+b
 ```
 
 ### Convert to Data Frame
@@ -138,16 +138,20 @@ head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 
 ### Write to Parquet
 
+If you have the arrow package installed
+
 ```{r parquet, eval=TRUE}
-# Convert BCF to Parquet (requires arrow package)
+# Convert BCF to Parquet
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
 
 # Read back with arrow
 pq_bcf <- arrow::read_parquet(parquet_file)
-pq_bcf[1:5,1:min(8,dim(pq_bcf)[2])]
+pq_bcf
 ```
 
 ### Query with DuckDB
+
+using duckdb 
 
 ```{r duckdb, eval=TRUE}
 # SQL queries on BCF (requires arrow and duckdb packages)
@@ -162,4 +166,4 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 - [bcftools documentation](https://samtools.github.io/bcftools/)
 - [bcftools GitHub](https://github.com/samtools/bcftools)
 - [htslib GitHub](https://github.com/samtools/htslib)
-- [VCF specification](https://samtools.github.io/hts-specs/VCFv4.3.pdf)
+- [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
