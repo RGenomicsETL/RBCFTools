@@ -332,7 +332,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -351,12 +351,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            2515         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            2515         1           0         11</span></span>
@@ -432,7 +432,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d1d93ecc7.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6725cf433.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -476,6 +476,33 @@
 <span><span class="co">#&gt; 4 chr22 16050219   C A        , &lt;NON_REF&gt;</span></span>
 <span><span class="co">#&gt; 5 chr22 16050224   A C        , &lt;NON_REF&gt;</span></span>
 <span><span class="co">#&gt; 6 chr22 16050229   C A        , &lt;NON_REF&gt;</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>
+</h3>
+<p>For region queries, an index file is required. By default, RBCFTools looks for <code>.tbi</code> (tabix) or <code>.csi</code> indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the <code>index</code> parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try <code>.tbi</code> first then fall back to <code>.csi</code>, while BCF files use <code>.csi</code> only.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Explicit index file path</span></span>
+<span><span class="va">bcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
+<span><span class="va">csi_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf.csi"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, index <span class="op">=</span> <span class="va">csi_index</span><span class="op">)</span></span>
+<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM   POS REF</span></span>
+<span><span class="co">#&gt; 1     1 10583   G</span></span>
+<span><span class="co">#&gt; 2     1 11508   A</span></span>
+<span><span class="co">#&gt; 3     1 11565   G</span></span>
+<span></span>
+<span><span class="co"># Alternative: htslib ##idx## syntax in filename</span></span>
+<span><span class="va">filename_with_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"##idx##"</span>, <span class="va">csi_index</span><span class="op">)</span></span>
+<span><span class="va">stream2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">filename_with_idx</span><span class="op">)</span></span>
+<span><span class="va">batch2</span> <span class="op">&lt;-</span> <span class="va">stream2</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch2</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM   POS REF</span></span>
+<span><span class="co">#&gt; 1     1 10583   G</span></span>
+<span><span class="co">#&gt; 2     1 11508   A</span></span>
+<span><span class="co">#&gt; 3     1 11565   G</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
