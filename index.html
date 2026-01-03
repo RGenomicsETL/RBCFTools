@@ -190,14 +190,14 @@
 <span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/AD should be declared as Number=R per VCF</span></span>
 <span><span class="co">#&gt; spec; correcting schema</span></span>
-<span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GQ should be declared as Type=Integer per VCF</span></span>
-<span><span class="co">#&gt; spec; correcting schema</span></span>
+<span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GQ should be Type=Integer per VCF spec, but</span></span>
+<span><span class="co">#&gt; header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GT should be declared as Number=1 per VCF</span></span>
 <span><span class="co">#&gt; spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/AD should be declared as Number=R per VCF</span></span>
 <span><span class="co">#&gt; spec; correcting schema</span></span>
-<span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GQ should be declared as Type=Integer per VCF</span></span>
-<span><span class="co">#&gt; spec; correcting schema</span></span>
+<span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GQ should be Type=Integer per VCF spec, but</span></span>
+<span><span class="co">#&gt; header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in x$get_schema(): FORMAT/GT should be declared as Number=1 per VCF</span></span>
 <span><span class="co">#&gt; spec; correcting schema</span></span>
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span></span>
@@ -227,17 +227,17 @@
 <span><span class="co">#&gt; 10          NA          NA          NA    NULL      NA               NULL</span></span>
 <span><span class="co">#&gt; 11          NA          NA          NA    NULL      NA               NULL</span></span>
 <span><span class="co">#&gt;    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT</span></span>
-<span><span class="co">#&gt; 1                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 2                  NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 3                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 4                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 5                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 6                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 7                  NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 8                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 9                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 10                 NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 11                 NA               NULL                 NA                1|1</span></span>
+<span><span class="co">#&gt; 1                  NA               NULL               3.28                0|0</span></span>
+<span><span class="co">#&gt; 2                  NA               NULL               2.22                1|1</span></span>
+<span><span class="co">#&gt; 3                  NA               NULL               1.48                0|0</span></span>
+<span><span class="co">#&gt; 4                  NA               NULL               9.17                0|0</span></span>
+<span><span class="co">#&gt; 5                  NA               NULL              15.80                0|0</span></span>
+<span><span class="co">#&gt; 6                  NA               NULL               6.29                0|0</span></span>
+<span><span class="co">#&gt; 7                  NA               NULL               5.08                1|1</span></span>
+<span><span class="co">#&gt; 8                  NA               NULL               7.01                0|0</span></span>
+<span><span class="co">#&gt; 9                  NA               NULL               5.61                0|0</span></span>
+<span><span class="co">#&gt; 10                 NA               NULL               1.29                1|1</span></span>
+<span><span class="co">#&gt; 11                 NA               NULL               2.68                1|1</span></span>
 <span><span class="co">#&gt;    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP</span></span>
 <span><span class="co">#&gt; 1                  NA                ./.               NULL                 NA</span></span>
 <span><span class="co">#&gt; 2                  NA                ./.               NULL                 NA</span></span>
@@ -251,17 +251,17 @@
 <span><span class="co">#&gt; 10                 NA                ./.               3, 1                  1</span></span>
 <span><span class="co">#&gt; 11                 NA                ./.               NULL                 NA</span></span>
 <span><span class="co">#&gt;     samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD</span></span>
-<span><span class="co">#&gt; 1                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 2                 NULL                 NA                1|1                 NA</span></span>
-<span><span class="co">#&gt; 3                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 4                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 5                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 6                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 7                 NULL                 NA                1|1                 NA</span></span>
-<span><span class="co">#&gt; 8                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 9  0.00, -0.90, -12.68                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 10  0.00, -0.30, -3.86                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 11                NULL                 NA                1|1                 NA</span></span>
+<span><span class="co">#&gt; 1                 NULL               3.28                0|0                 NA</span></span>
+<span><span class="co">#&gt; 2                 NULL               2.22                1|1                 NA</span></span>
+<span><span class="co">#&gt; 3                 NULL               1.48                0|0                 NA</span></span>
+<span><span class="co">#&gt; 4                 NULL               9.17                0|0                 NA</span></span>
+<span><span class="co">#&gt; 5                 NULL              15.80                0|0                 NA</span></span>
+<span><span class="co">#&gt; 6                 NULL               6.29                0|0                 NA</span></span>
+<span><span class="co">#&gt; 7                 NULL               5.08                1|1                 NA</span></span>
+<span><span class="co">#&gt; 8                 NULL               7.01                0|0                 NA</span></span>
+<span><span class="co">#&gt; 9  0.00, -0.90, -12.68              13.77                0|0                 NA</span></span>
+<span><span class="co">#&gt; 10  0.00, -0.30, -3.86               2.95                0|0                 NA</span></span>
+<span><span class="co">#&gt; 11                NULL               2.68                1|1                 NA</span></span>
 <span><span class="co">#&gt;    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP  samples.HG00106.GL</span></span>
 <span><span class="co">#&gt; 1                 ./.               NULL                 NA                NULL</span></span>
 <span><span class="co">#&gt; 2                 ./.               NULL                 NA                NULL</span></span>
@@ -275,17 +275,17 @@
 <span><span class="co">#&gt; 10                ./.               4, 5                  2 -2.70, -0.60, -3.86</span></span>
 <span><span class="co">#&gt; 11                ./.               NULL                 NA                NULL</span></span>
 <span><span class="co">#&gt;    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG</span></span>
-<span><span class="co">#&gt; 1                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 2                  NA                1|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 3                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 4                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 5                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 6                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 7                  NA                1|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 8                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 9                  NA                0|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 10                 NA                1|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 11                 NA                1|1                 NA                ./.</span></span></code></pre></div>
+<span><span class="co">#&gt; 1                3.28                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 2                2.22                1|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 3                1.48                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 4                9.17                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 5               21.74                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 6                6.29                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 7                5.08                1|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 8                7.01                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 9               25.82                0|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 10              23.85                1|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 11               2.68                1|1                 NA                ./.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="convert-to-data-frame">Convert to Data Frame<a class="anchor" aria-label="anchor" href="#convert-to-data-frame"></a>
@@ -296,13 +296,13 @@
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be</span></span>
 <span><span class="co">#&gt; declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be</span></span>
-<span><span class="co">#&gt; declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be</span></span>
 <span><span class="co">#&gt; declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be</span></span>
 <span><span class="co">#&gt; declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be</span></span>
-<span><span class="co">#&gt; declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be</span></span>
 <span><span class="co">#&gt; declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>, <span class="st">"QUAL"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
@@ -324,16 +324,16 @@
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp04dGr8/file2b6c2444e0d66a.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpajVBL0/file2b748f2197f7c5.parquet</span></span>
 <span></span>
 <span><span class="co"># Read back with arrow</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">parquet_file</span><span class="op">)</span></span>
@@ -363,17 +363,17 @@
 <span><span class="co">#&gt; 10          NA          NA          NA    NULL      NA               NULL</span></span>
 <span><span class="co">#&gt; 11          NA          NA          NA    NULL      NA               NULL</span></span>
 <span><span class="co">#&gt;    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT</span></span>
-<span><span class="co">#&gt; 1                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 2                  NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 3                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 4                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 5                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 6                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 7                  NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 8                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 9                  NA               NULL                 NA                0|0</span></span>
-<span><span class="co">#&gt; 10                 NA               NULL                 NA                1|1</span></span>
-<span><span class="co">#&gt; 11                 NA               NULL                 NA                1|1</span></span>
+<span><span class="co">#&gt; 1                  NA               NULL               3.28                0|0</span></span>
+<span><span class="co">#&gt; 2                  NA               NULL               2.22                1|1</span></span>
+<span><span class="co">#&gt; 3                  NA               NULL               1.48                0|0</span></span>
+<span><span class="co">#&gt; 4                  NA               NULL               9.17                0|0</span></span>
+<span><span class="co">#&gt; 5                  NA               NULL              15.80                0|0</span></span>
+<span><span class="co">#&gt; 6                  NA               NULL               6.29                0|0</span></span>
+<span><span class="co">#&gt; 7                  NA               NULL               5.08                1|1</span></span>
+<span><span class="co">#&gt; 8                  NA               NULL               7.01                0|0</span></span>
+<span><span class="co">#&gt; 9                  NA               NULL               5.61                0|0</span></span>
+<span><span class="co">#&gt; 10                 NA               NULL               1.29                1|1</span></span>
+<span><span class="co">#&gt; 11                 NA               NULL               2.68                1|1</span></span>
 <span><span class="co">#&gt;    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP</span></span>
 <span><span class="co">#&gt; 1                  NA                ./.               NULL                 NA</span></span>
 <span><span class="co">#&gt; 2                  NA                ./.               NULL                 NA</span></span>
@@ -387,17 +387,17 @@
 <span><span class="co">#&gt; 10                 NA                ./.               3, 1                  1</span></span>
 <span><span class="co">#&gt; 11                 NA                ./.               NULL                 NA</span></span>
 <span><span class="co">#&gt;     samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD</span></span>
-<span><span class="co">#&gt; 1                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 2                 NULL                 NA                1|1                 NA</span></span>
-<span><span class="co">#&gt; 3                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 4                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 5                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 6                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 7                 NULL                 NA                1|1                 NA</span></span>
-<span><span class="co">#&gt; 8                 NULL                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 9  0.00, -0.90, -12.68                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 10  0.00, -0.30, -3.86                 NA                0|0                 NA</span></span>
-<span><span class="co">#&gt; 11                NULL                 NA                1|1                 NA</span></span>
+<span><span class="co">#&gt; 1                 NULL               3.28                0|0                 NA</span></span>
+<span><span class="co">#&gt; 2                 NULL               2.22                1|1                 NA</span></span>
+<span><span class="co">#&gt; 3                 NULL               1.48                0|0                 NA</span></span>
+<span><span class="co">#&gt; 4                 NULL               9.17                0|0                 NA</span></span>
+<span><span class="co">#&gt; 5                 NULL              15.80                0|0                 NA</span></span>
+<span><span class="co">#&gt; 6                 NULL               6.29                0|0                 NA</span></span>
+<span><span class="co">#&gt; 7                 NULL               5.08                1|1                 NA</span></span>
+<span><span class="co">#&gt; 8                 NULL               7.01                0|0                 NA</span></span>
+<span><span class="co">#&gt; 9  0.00, -0.90, -12.68              13.77                0|0                 NA</span></span>
+<span><span class="co">#&gt; 10  0.00, -0.30, -3.86               2.95                0|0                 NA</span></span>
+<span><span class="co">#&gt; 11                NULL               2.68                1|1                 NA</span></span>
 <span><span class="co">#&gt;    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP  samples.HG00106.GL</span></span>
 <span><span class="co">#&gt; 1                 ./.               NULL                 NA                NULL</span></span>
 <span><span class="co">#&gt; 2                 ./.               NULL                 NA                NULL</span></span>
@@ -411,17 +411,17 @@
 <span><span class="co">#&gt; 10                ./.               4, 5                  2 -2.70, -0.60, -3.86</span></span>
 <span><span class="co">#&gt; 11                ./.               NULL                 NA                NULL</span></span>
 <span><span class="co">#&gt;    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG</span></span>
-<span><span class="co">#&gt; 1                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 2                  NA                1|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 3                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 4                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 5                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 6                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 7                  NA                1|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 8                  NA                0|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 9                  NA                0|1                 NA                ./.</span></span>
-<span><span class="co">#&gt; 10                 NA                1|0                 NA                ./.</span></span>
-<span><span class="co">#&gt; 11                 NA                1|1                 NA                ./.</span></span></code></pre></div>
+<span><span class="co">#&gt; 1                3.28                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 2                2.22                1|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 3                1.48                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 4                9.17                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 5               21.74                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 6                6.29                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 7                5.08                1|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 8                7.01                0|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 9               25.82                0|1                 NA                ./.</span></span>
+<span><span class="co">#&gt; 10              23.85                1|0                 NA                ./.</span></span>
+<span><span class="co">#&gt; 11               2.68                1|1                 NA                ./.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="query-with-duckdb">Query with DuckDB<a class="anchor" aria-label="anchor" href="#query-with-duckdb"></a>
@@ -433,13 +433,13 @@
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt;   CHROM  n</span></span>
@@ -450,13 +450,13 @@
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should</span></span>
 <span><span class="co">#&gt; be declared as Number=R per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should</span></span>
-<span><span class="co">#&gt; be declared as Type=Integer per VCF spec; correcting schema</span></span>
+<span><span class="co">#&gt; be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
 <span><span class="co">#&gt; Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should</span></span>
 <span><span class="co">#&gt; be declared as Number=1 per VCF spec; correcting schema</span></span>
 <span><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
