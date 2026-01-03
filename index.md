@@ -309,7 +309,7 @@ parquet file and perform queries on the parquet file
 ``` r
 # 
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmp1U1N8F/file2bfdcc2c0aa2b.parquet
+#> Wrote 11 rows to /tmp/RtmpkxKHNf/file2c1b6d1a4128b.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
@@ -338,7 +338,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmp1U1N8F/file2bfdcc7c5bd08f.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpkxKHNf/file2c1b6d5b730a18.parquet (streaming mode)
 ```
 
 ### Query with duckdb
