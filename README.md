@@ -19,7 +19,7 @@ file access from S3, GCS, and HTTP URLs is supported.
 The package also includes experimental support for streaming VCF/BCF to
 Apache Arrow (IPC) format via
 [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet
-format using [DuckDB](https://duckdb.org/)
+format using [duckdb](https://duckdb.org/)
 
 ## Installation
 
@@ -276,19 +276,8 @@ nanoarrow::convert_array(batch)
 Convert entire BCF to data.frame
 
 ``` r
+options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be
-#> declared as Number=R per VCF spec; correcting schema
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be
-#> Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be
-#> declared as Number=1 per VCF spec; correcting schema
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/AD should be
-#> declared as Number=R per VCF spec; correcting schema
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GQ should be
-#> Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in nanoarrow::convert_array_stream(stream): FORMAT/GT should be
-#> declared as Number=1 per VCF spec; correcting schema
 head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 #>   CHROM   POS REF ALT QUAL
 #> 1     1 10583   G   A   NA
@@ -307,18 +296,6 @@ using nanoarrow’s native streaming writer
 ``` r
 # Convert BCF to Arrow IPC
 vcf_to_arrow_ipc(bcf_file, ipc_file)
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/AD should be declared
-#> as Number=R per VCF spec; correcting schema
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/GQ should be
-#> Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/GT should be declared
-#> as Number=1 per VCF spec; correcting schema
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/AD should be declared
-#> as Number=R per VCF spec; correcting schema
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/GQ should be
-#> Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in write_nanoarrow.connection(data, con): FORMAT/GT should be declared
-#> as Number=1 per VCF spec; correcting schema
 
 # Read back with nanoarrow
 ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
@@ -339,9 +316,8 @@ parquet file and perform queries on the parquet file
 
 ``` r
 # 
-options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpVBMfZp/file2be923e924aee.parquet
+#> Wrote 11 rows to /tmp/Rtmpoi6uF7/file2bee146929d7f0.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
@@ -357,7 +333,7 @@ head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 
 Use `streaming = TRUE` to avoid loading the entire VCF into R memory.
 This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via
-duckdb, trading memory with serialization overhead using the [DuckDB
+duckdb, trading memory with serialization overhead using the [duckdb
 nanoarrow
 extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
@@ -370,12 +346,10 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpVBMfZp/file2be9235c3d283a.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmpoi6uF7/file2bee1451c5321.parquet (streaming mode)
 ```
 
-### Query with DuckDB
-
-Using [{duckdb}](https://github.com/duckdb/duckdb-r):
+### Query with duckdb
 
 ``` r
 # SQL queries on BCF (requires duckdb package)

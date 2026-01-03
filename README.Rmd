@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported.
 
-The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [DuckDB](https://duckdb.org/)
+The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/)
 
 ## Installation
 
@@ -141,6 +141,7 @@ nanoarrow::convert_array(batch)
 Convert entire BCF to data.frame
 
 ```{r arrow-df, eval=TRUE}
+options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
 head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 ```
@@ -165,7 +166,6 @@ Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet fi
 
 ```{r parquet, eval=TRUE}
 # 
-options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
@@ -173,7 +173,7 @@ duckdb::dbDisconnect(con, shutdown = TRUE)
 head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 ```
 
-Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb, trading memory with serialization overhead using the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
+Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb, trading memory with serialization overhead using the [duckdb nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
 ```{r streaming, eval = TRUE}
 vcf_to_parquet(
@@ -186,9 +186,7 @@ vcf_to_parquet(
 )
 ```
 
-### Query with DuckDB
-
-Using [{duckdb}](https://github.com/duckdb/duckdb-r):
+### Query with duckdb
 
 ```{r duckdb, eval=TRUE}
 # SQL queries on BCF (requires duckdb package)
