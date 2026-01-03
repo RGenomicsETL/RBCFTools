@@ -113,12 +113,6 @@ RBCFTools provides streaming VCF/BCF to Apache Arrow (IPC) conversion via [nanoa
 
 The Arrow conversion performs VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warnings when correcting non-conformant fields
 
-```{r arrow-setup, include=FALSE}
-bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
-bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools") 
-parquet_file <- tempfile(fileext = ".parquet")
-ipc_file <- tempfile(fileext = ".arrows")
-```
 
 ### Read VCF as Arrow Stream
 
@@ -127,6 +121,7 @@ Open BCF as Arrow array stream and read the batches
 
 ```{r arrow-stream, eval=TRUE}
 
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 
 batch <- stream$get_next()
@@ -142,7 +137,7 @@ Convert entire BCF to data.frame
 ```{r arrow-df, eval=TRUE}
 options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
-head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
+df[, c("CHROM", "POS", "REF", "ALT", "QUAL")] |> head()
 ```
 
 
@@ -151,12 +146,15 @@ head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 Arrow IPC (`.arrows`) format for interoperability with other Arrow tools using nanoarrow's native streaming writer 
 
 ```{r arrow-ipc, eval=TRUE}
+
 # Convert BCF to Arrow IPC
+ipc_file <- tempfile(fileext = ".arrows")
+
 vcf_to_arrow_ipc(bcf_file, ipc_file)
 
 # Read back with nanoarrow
 ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
-head(ipc_data[, c("CHROM", "POS", "REF", "ALT")])
+ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
 
 ### Write to Parquet
@@ -164,28 +162,39 @@ head(ipc_data[, c("CHROM", "POS", "REF", "ALT")])
 Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet file and perform queries on the parquet file
 
 ```{r parquet, eval=TRUE}
-# 
+
+parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
+pq_me <- DBI::dbGetQuery(
+    con, 
+    sprintf("SELECT * FROM parquet_metadata('%s')",
+    parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
-head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
+pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
+  head()
+pq_me |> head()
 ```
 
 Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb, trading memory with serialization overhead using the [duckdb nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
 ```{r streaming, eval = TRUE}
+bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
+outfile <-  tempfile(fileext = ".parquet")
 vcf_to_parquet(
     bcf_larger,
-    tempfile(fileext = ".parquet"),
+    outfile,
     streaming = TRUE,
     batch_size = 10000L,
     row_group_size = 100000L,
     compression = "zstd"
 )
+# describe using duckdb
+
 ```
 
-### Query with duckdb
+### Query with VCF duckdb
 
 ```{r duckdb, eval=TRUE}
 # SQL queries on BCF (requires duckdb package)
@@ -209,7 +218,7 @@ stream <- vcf_open_arrow(
 
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
-head(df[, c("CHROM", "POS", "REF", "ALT")])
+df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
 ## References
 

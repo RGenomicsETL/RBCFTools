@@ -167,6 +167,7 @@ Open BCF as Arrow array stream and read the batches
 
 ``` r
 
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 
 batch <- stream$get_next()
@@ -277,7 +278,7 @@ Convert entire BCF to data.frame
 ``` r
 options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
-head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
+df[, c("CHROM", "POS", "REF", "ALT", "QUAL")] |> head()
 #>   CHROM   POS REF ALT QUAL
 #> 1     1 10583   G   A   NA
 #> 2     1 11508   A   G   NA
@@ -293,12 +294,15 @@ Arrow IPC (`.arrows`) format for interoperability with other Arrow tools
 using nanoarrow’s native streaming writer
 
 ``` r
+
 # Convert BCF to Arrow IPC
+ipc_file <- tempfile(fileext = ".arrows")
+
 vcf_to_arrow_ipc(bcf_file, ipc_file)
 
 # Read back with nanoarrow
 ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
-head(ipc_data[, c("CHROM", "POS", "REF", "ALT")])
+ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #>   CHROM   POS REF ALT
 #> 1     1 10583   G   A
 #> 2     1 11508   A   G
@@ -314,13 +318,19 @@ Using [duckdb](https://github.com/duckdb/duckdb-r) to convert BCF to
 parquet file and perform queries on the parquet file
 
 ``` r
-# 
+
+parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpHwIECR/file2c263216bfed38.parquet
+#> Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
+pq_me <- DBI::dbGetQuery(
+    con, 
+    sprintf("SELECT * FROM parquet_metadata('%s')",
+    parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
-head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
+pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
+  head()
 #>   CHROM   POS REF ALT
 #> 1     1 10583   G   A
 #> 2     1 11508   A   G
@@ -328,6 +338,77 @@ head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 #> 4     1 13116   T   G
 #> 5     1 13327   G   C
 #> 6     1 14699   C   G
+pq_me |> head()
+#>                                    file_name row_group_id row_group_num_rows
+#> 1 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 2 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 3 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 4 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 5 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 6 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#>   row_group_num_columns row_group_bytes column_id file_offset num_values
+#> 1                    36            2515         0           0         11
+#> 2                    36            2515         1           0         11
+#> 3                    36            2515         2           0         11
+#> 4                    36            2515         3           0         11
+#> 5                    36            2515         4           0         11
+#> 6                    36            2515         5           0         11
+#>       path_in_schema       type  stats_min  stats_max stats_null_count
+#> 1              CHROM BYTE_ARRAY          1          1                0
+#> 2                POS     DOUBLE    10583.0    28376.0                0
+#> 3                 ID BYTE_ARRAY rs58108140 rs58108140               10
+#> 4                REF BYTE_ARRAY          A          T                0
+#> 5 ALT, list, element BYTE_ARRAY          A          T               NA
+#> 6               QUAL     DOUBLE       <NA>       <NA>               11
+#>   stats_distinct_count stats_min_value stats_max_value compression
+#> 1                    1               1               1      SNAPPY
+#> 2                   NA         10583.0         28376.0      SNAPPY
+#> 3                    1      rs58108140      rs58108140      SNAPPY
+#> 4                   NA               A               T      SNAPPY
+#> 5                   NA               A               T      SNAPPY
+#> 6                   NA            <NA>            <NA>      SNAPPY
+#>          encodings index_page_offset dictionary_page_offset data_page_offset
+#> 1 PLAIN_DICTIONARY                NA                      4               24
+#> 2            PLAIN                NA                     NA               52
+#> 3 PLAIN_DICTIONARY                NA                    146              175
+#> 4            PLAIN                NA                     NA              208
+#> 5            PLAIN                NA                     NA              268
+#> 6            PLAIN                NA                     NA              335
+#>   total_compressed_size total_uncompressed_size key_value_metadata
+#> 1                    48                      44               NULL
+#> 2                    94                     113               NULL
+#> 3                    62                      84               NULL
+#> 4                    60                      78               NULL
+#> 5                    67                      85               NULL
+#> 6                    25                      23               NULL
+#>   bloom_filter_offset bloom_filter_length min_is_exact max_is_exact
+#> 1                1874                  47         TRUE         TRUE
+#> 2                  NA                  NA         TRUE         TRUE
+#> 3                1921                  47         TRUE         TRUE
+#> 4                  NA                  NA         TRUE         TRUE
+#> 5                  NA                  NA         TRUE         TRUE
+#> 6                  NA                  NA           NA           NA
+#>   row_group_compressed_bytes geo_bbox.xmin geo_bbox.xmax geo_bbox.ymin
+#> 1                          1            NA            NA            NA
+#> 2                          1            NA            NA            NA
+#> 3                          1            NA            NA            NA
+#> 4                          1            NA            NA            NA
+#> 5                          1            NA            NA            NA
+#> 6                          1            NA            NA            NA
+#>   geo_bbox.ymax geo_bbox.zmin geo_bbox.zmax geo_bbox.mmin geo_bbox.mmax
+#> 1            NA            NA            NA            NA            NA
+#> 2            NA            NA            NA            NA            NA
+#> 3            NA            NA            NA            NA            NA
+#> 4            NA            NA            NA            NA            NA
+#> 5            NA            NA            NA            NA            NA
+#> 6            NA            NA            NA            NA            NA
+#>   geo_types
+#> 1      NULL
+#> 2      NULL
+#> 3      NULL
+#> 4      NULL
+#> 5      NULL
+#> 6      NULL
 ```
 
 Use `streaming = TRUE` to avoid loading the entire VCF into R memory.
@@ -337,18 +418,21 @@ nanoarrow
 extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
 ``` r
+bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
+outfile <-  tempfile(fileext = ".parquet")
 vcf_to_parquet(
     bcf_larger,
-    tempfile(fileext = ".parquet"),
+    outfile,
     streaming = TRUE,
     batch_size = 10000L,
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpHwIECR/file2c26323c288402.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b769b6cc4.parquet (streaming mode)
+# describe using duckdb
 ```
 
-### Query with duckdb
+### Query with VCF duckdb
 
 ``` r
 # SQL queries on BCF (requires duckdb package)
@@ -379,7 +463,7 @@ stream <- vcf_open_arrow(
 
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
-head(df[, c("CHROM", "POS", "REF", "ALT")])
+df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #>   CHROM      POS REF                  ALT
 #> 1 chr22 16050036   A C        , <NON_REF>
 #> 2 chr22 16050151   T G        , <NON_REF>
