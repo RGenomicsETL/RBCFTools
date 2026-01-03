@@ -17,7 +17,7 @@ vcf_to_parquet(
 
 \item{output_parquet}{Path for output Parquet file}
 
-\item{compression}{Compression codec: "snappy", "gzip", "zstd", "lz4", "none"}
+\item{compression}{Compression codec: "snappy", "gzip", "zstd", "lz4", "uncompressed"}
 
 \item{row_group_size}{Number of rows per row group (default: 100000)}
 
@@ -29,6 +29,7 @@ Invisibly returns the output path
 \description{
 Converts a VCF/BCF file to Apache Parquet format for efficient storage
 and querying with tools like DuckDB, Spark, or Python pandas/polars.
+Uses DuckDB for Parquet writing (no arrow package required).
 }
 \examples{
 \dontrun{

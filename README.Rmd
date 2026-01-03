@@ -109,13 +109,14 @@ length(result)
 
 ## (Experimental) VCF to Arrow
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r), and parquet format.
+RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r), Parquet format, and Arrow IPC format—all without requiring the heavy `arrow` R package.
 
 The Arrow conversion performs VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warnings when correcting non-conformant fields. In the examples below, we suppress these warnings for cleaner output.
 
 ```{r arrow-setup, include=FALSE}
 bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 parquet_file <- tempfile(fileext = ".parquet")
+ipc_file <- tempfile(fileext = ".arrows")
 ```
 
 ### Read VCF as Arrow Stream
@@ -140,24 +141,39 @@ head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
 
 ### Write to Parquet
 
-If you have the arrow package installed
+Using [duckdb](https://github.com/duckdb/duckdb-r) (no arrow package required):
 
 ```{r parquet, eval=TRUE}
 # Convert BCF to Parquet
 options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
 
-# Read back with arrow
-pq_bcf <- arrow::read_parquet(parquet_file)
-pq_bcf
+# Read back with DuckDB
+con <- duckdb::dbConnect(duckdb::duckdb())
+pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s'", parquet_file))
+duckdb::dbDisconnect(con, shutdown = TRUE)
+head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
+```
+
+### Write to Arrow IPC
+
+Arrow IPC (`.arrows`) format for interoperability with other Arrow tools:
+
+```{r arrow-ipc, eval=TRUE}
+# Convert BCF to Arrow IPC
+vcf_to_arrow_ipc(bcf_file, ipc_file)
+
+# Read back with nanoarrow
+ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
+head(ipc_data[, c("CHROM", "POS", "REF", "ALT")])
 ```
 
 ### Query with DuckDB
 
-using [{duckdb}](https://github.com/duckdb/duckdb-r) 
+Using [{duckdb}](https://github.com/duckdb/duckdb-r):
 
 ```{r duckdb, eval=TRUE}
-# SQL queries on BCF (requires arrow and duckdb packages)
+# SQL queries on BCF (requires duckdb package)
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 
 # Filter variants by position

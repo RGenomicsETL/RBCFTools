@@ -2,7 +2,7 @@
 % Please edit documentation in R/vcf_arrow.R
 \name{vcf_query}
 \alias{vcf_query}
-\title{Query VCF/BCF with DuckDB via Arrow}
+\title{Query VCF/BCF with DuckDB}
 \usage{
 vcf_query(vcf_files, query, ...)
 }
@@ -17,7 +17,7 @@ vcf_query(vcf_files, query, ...)
 Query result as a data frame
 }
 \description{
-Enables SQL queries on VCF files using DuckDB's Arrow integration.
+Enables SQL queries on VCF files using DuckDB.
 This allows powerful filtering, aggregation, and joining operations.
 }
 \examples{

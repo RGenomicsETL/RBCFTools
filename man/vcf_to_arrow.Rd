@@ -2,26 +2,21 @@
 % Please edit documentation in R/vcf_arrow.R
 \name{vcf_to_arrow}
 \alias{vcf_to_arrow}
-\title{Read VCF/BCF file into an Arrow Table or data frame}
+\title{Read VCF/BCF file into a data frame or list of batches}
 \usage{
-vcf_to_arrow(
-  filename,
-  as = c("tibble", "data.frame", "arrow_table", "batches"),
-  ...
-)
+vcf_to_arrow(filename, as = c("tibble", "data.frame", "batches"), ...)
 }
 \arguments{
 \item{filename}{Path to VCF or BCF file}
 
-\item{as}{Character string specifying output format: "arrow_table",
-"tibble", "data.frame", or "batches" (list of arrow arrays)}
+\item{as}{Character string specifying output format:
+"tibble", "data.frame", or "batches" (list of nanoarrow arrays)}
 
 \item{...}{Additional arguments passed to vcf_open_arrow}
 }
 \value{
 Depends on \code{as} parameter:
 \itemize{
-\item "arrow_table": An Arrow Table (requires arrow package)
 \item "tibble": A tibble
 \item "data.frame": A data.frame
 \item "batches": A list of nanoarrow_array objects
@@ -29,5 +24,5 @@ Depends on \code{as} parameter:
 }
 \description{
 Convenience function to read an entire VCF file into memory as an
-Arrow-compatible object.
+R data structure.
 }
