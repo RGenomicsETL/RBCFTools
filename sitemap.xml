@@ -32,5 +32,10 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/setup_hts_env.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/tabix_path.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.html</loc></url>
 </urlset>
 

@@ -138,6 +138,78 @@ length(result)
 #> [1] 4622
 ```
 
+## VCF to Arrow
+
+RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via
+[nanoarrow](https://arrow.apache.org/nanoarrow/). This enables
+integration with modern analytics tools like DuckDB, Polars, and
+Parquet.
+
+### Read VCF as Arrow Stream
+
+``` r
+# Open BCF as Arrow array stream
+stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
+
+# Read first batch
+batch <- stream$get_next()
+b <- nanoarrow::convert_array(batch)
+b[1:5,1:6]
+#>   CHROM   POS         ID REF ALT QUAL
+#> 1     1 10583 rs58108140   G   A   NA
+#> 2     1 11508       <NA>   A   G   NA
+#> 3     1 11565       <NA>   G   T   NA
+#> 4     1 13116       <NA>   T   G   NA
+#> 5     1 13327       <NA>   G   C   NA
+```
+
+### Convert to Data Frame
+
+``` r
+# Convert entire BCF to data.frame
+df <- vcf_to_arrow(bcf_file, as = "data.frame")
+head(df[, c("CHROM", "POS", "REF", "ALT", "QUAL")])
+#>   CHROM   POS REF ALT QUAL
+#> 1     1 10583   G   A   NA
+#> 2     1 11508   A   G   NA
+#> 3     1 11565   G   T   NA
+#> 4     1 13116   T   G   NA
+#> 5     1 13327   G   C   NA
+#> 6     1 14699   C   G   NA
+```
+
+### Write to Parquet
+
+``` r
+# Convert BCF to Parquet (requires arrow package)
+vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
+#> Wrote 11 rows to /tmp/RtmpzGkmfs/file2b285016e5ed3e.parquet
+
+# Read back with arrow
+pq_bcf <- arrow::read_parquet(parquet_file)
+pq_bcf[1:5,1:6]
+#>   CHROM   POS         ID REF ALT QUAL
+#> 1     1 10583 rs58108140   G   A   NA
+#> 2     1 11508       <NA>   A   G   NA
+#> 3     1 11565       <NA>   G   T   NA
+#> 4     1 13116       <NA>   T   G   NA
+#> 5     1 13327       <NA>   G   C   NA
+```
+
+### Query with DuckDB
+
+``` r
+# SQL queries on BCF (requires arrow and duckdb packages)
+vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
+#>   CHROM  n
+#> 1     1 11
+
+# Filter variants by position
+vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf WHERE POS > 1105400 LIMIT 5")
+#> [1] CHROM POS   REF   ALT  
+#> <0 rows> (or 0-length row.names)
+```
+
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)
@@ -212,4 +284,14 @@ length(result)
   : Setup Environment for Remote File Access
 - [`tabix_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/tabix_path.md)
   : Get Path to tabix Executable
+- [`vcf_arrow_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.md)
+  : Get the Arrow schema for a VCF file
+- [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
+  : Create an Arrow stream from a VCF/BCF file
+- [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md)
+  : Query VCF/BCF with DuckDB via Arrow
+- [`vcf_to_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.md)
+  : Read VCF/BCF file into an Arrow Table or data frame
+- [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)
+  : Write VCF/BCF to Parquet format
 

@@ -65,3 +65,13 @@
   : Setup Environment for Remote File Access
 - [`tabix_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/tabix_path.md)
   : Get Path to tabix Executable
+- [`vcf_arrow_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.md)
+  : Get the Arrow schema for a VCF file
+- [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
+  : Create an Arrow stream from a VCF/BCF file
+- [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md)
+  : Query VCF/BCF with DuckDB via Arrow
+- [`vcf_to_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.md)
+  : Read VCF/BCF file into an Arrow Table or data frame
+- [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)
+  : Write VCF/BCF to Parquet format

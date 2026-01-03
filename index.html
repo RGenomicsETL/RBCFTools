@@ -175,6 +175,76 @@
 <span><span class="co">#&gt; [1] 4622</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="vcf-to-arrow">VCF to Arrow<a class="anchor" aria-label="anchor" href="#vcf-to-arrow"></a>
+</h2>
+<p>RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>. This enables integration with modern analytics tools like DuckDB, Polars, and Parquet.</p>
+<div class="section level3">
+<h3 id="read-vcf-as-arrow-stream">Read VCF as Arrow Stream<a class="anchor" aria-label="anchor" href="#read-vcf-as-arrow-stream"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Open BCF as Arrow array stream</span></span>
+<span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, batch_size <span class="op">=</span> <span class="fl">100L</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Read first batch</span></span>
+<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span></span>
+<span><span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span></span>
+<span><span class="co">#&gt;   CHROM   POS         ID REF ALT QUAL</span></span>
+<span><span class="co">#&gt; 1     1 10583 rs58108140   G   A   NA</span></span>
+<span><span class="co">#&gt; 2     1 11508       &lt;NA&gt;   A   G   NA</span></span>
+<span><span class="co">#&gt; 3     1 11565       &lt;NA&gt;   G   T   NA</span></span>
+<span><span class="co">#&gt; 4     1 13116       &lt;NA&gt;   T   G   NA</span></span>
+<span><span class="co">#&gt; 5     1 13327       &lt;NA&gt;   G   C   NA</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="convert-to-data-frame">Convert to Data Frame<a class="anchor" aria-label="anchor" href="#convert-to-data-frame"></a>
+</h3>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Convert entire BCF to data.frame</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_to_arrow.html">vcf_to_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, as <span class="op">=</span> <span class="st">"data.frame"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>, <span class="st">"QUAL"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM   POS REF ALT QUAL</span></span>
+<span><span class="co">#&gt; 1     1 10583   G   A   NA</span></span>
+<span><span class="co">#&gt; 2     1 11508   A   G   NA</span></span>
+<span><span class="co">#&gt; 3     1 11565   G   T   NA</span></span>
+<span><span class="co">#&gt; 4     1 13116   T   G   NA</span></span>
+<span><span class="co">#&gt; 5     1 13327   G   C   NA</span></span>
+<span><span class="co">#&gt; 6     1 14699   C   G   NA</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="write-to-parquet">Write to Parquet<a class="anchor" aria-label="anchor" href="#write-to-parquet"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Convert BCF to Parquet (requires arrow package)</span></span>
+<span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"gzip"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpzGkmfs/file2b285016e5ed3e.parquet</span></span>
+<span></span>
+<span><span class="co"># Read back with arrow</span></span>
+<span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">parquet_file</span><span class="op">)</span></span>
+<span><span class="va">pq_bcf</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span></span>
+<span><span class="co">#&gt;   CHROM   POS         ID REF ALT QUAL</span></span>
+<span><span class="co">#&gt; 1     1 10583 rs58108140   G   A   NA</span></span>
+<span><span class="co">#&gt; 2     1 11508       &lt;NA&gt;   A   G   NA</span></span>
+<span><span class="co">#&gt; 3     1 11565       &lt;NA&gt;   G   T   NA</span></span>
+<span><span class="co">#&gt; 4     1 13116       &lt;NA&gt;   T   G   NA</span></span>
+<span><span class="co">#&gt; 5     1 13327       &lt;NA&gt;   G   C   NA</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="query-with-duckdb">Query with DuckDB<a class="anchor" aria-label="anchor" href="#query-with-duckdb"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># SQL queries on BCF (requires arrow and duckdb packages)</span></span>
+<span><span class="fu"><a href="reference/vcf_query.html">vcf_query</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM  n</span></span>
+<span><span class="co">#&gt; 1     1 11</span></span>
+<span></span>
+<span><span class="co"># Filter variants by position</span></span>
+<span><span class="fu"><a href="reference/vcf_query.html">vcf_query</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, POS, REF, ALT FROM vcf WHERE POS &gt; 1105400 LIMIT 5"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] CHROM POS   REF   ALT  </span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
