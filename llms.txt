@@ -19,8 +19,7 @@ You can install the development version of RBCFTools from
 [GitHub](https://github.com/RGenomicsETL/RBCFTools) with:
 
 ``` r
-# install.packages("pak")
-pak::pak("RGenomicsETL/RBCFTools")
+install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))
 ```
 
 ## Version Information
@@ -309,7 +308,7 @@ parquet file and perform queries on the parquet file
 ``` r
 # 
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpsN6WZM/file2c212c42a57d5c.parquet
+#> Wrote 11 rows to /tmp/RtmpHwIECR/file2c263216bfed38.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
@@ -338,7 +337,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpsN6WZM/file2c212c4252b84f.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpHwIECR/file2c26323c288402.parquet (streaming mode)
 ```
 
 ### Query with duckdb
