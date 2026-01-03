@@ -109,7 +109,9 @@ length(result)
 
 ## (Experimental) VCF to Arrow
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like duckdb, and parquet format
+RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r), and parquet format.
+
+The Arrow conversion performs VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warnings when correcting non-conformant fields. In the examples below, we suppress these warnings for cleaner output.
 
 ```{r arrow-setup, include=FALSE}
 bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
@@ -142,6 +144,7 @@ If you have the arrow package installed
 
 ```{r parquet, eval=TRUE}
 # Convert BCF to Parquet
+options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
 
 # Read back with arrow
@@ -151,7 +154,7 @@ pq_bcf
 
 ### Query with DuckDB
 
-using duckdb 
+using [{duckdb}](https://github.com/duckdb/duckdb-r) 
 
 ```{r duckdb, eval=TRUE}
 # SQL queries on BCF (requires arrow and duckdb packages)

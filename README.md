@@ -150,7 +150,13 @@ length(result)
 
 RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via
 [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables
-integration with tools like duckdb, and parquet format
+integration with tools like
+[duckdb](https://github.com/duckdb/duckdb-r), and parquet format.
+
+The Arrow conversion performs VCF spec conformance checks on headers
+(similar to htslib’s `bcf_hdr_check_sanity()`) and emits R warnings when
+correcting non-conformant fields. In the examples below, we suppress
+these warnings for cleaner output.
 
 ### Read VCF as Arrow Stream
 
@@ -293,20 +299,9 @@ If you have the arrow package installed
 
 ``` r
 # Convert BCF to Parquet
+options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
-#> Wrote 11 rows to /tmp/RtmpajVBL0/file2b748f2197f7c5.parquet
+#> Wrote 11 rows to /tmp/RtmpT8T7fp/file2b7af4ff1de00.parquet
 
 # Read back with arrow
 pq_bcf <- arrow::read_parquet(parquet_file)
@@ -399,40 +394,16 @@ pq_bcf
 
 ### Query with DuckDB
 
-using duckdb
+using [{duckdb}](https://github.com/duckdb/duckdb-r)
 
 ``` r
 # SQL queries on BCF (requires arrow and duckdb packages)
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
 #>   CHROM  n
 #> 1     1 11
 
 # Filter variants by position
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/AD should
-#> be declared as Number=R per VCF spec; correcting schema
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GQ should
-#> be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> Warning in arrow::RecordBatchReader$import_from_c(stream_out): FORMAT/GT should
-#> be declared as Number=1 per VCF spec; correcting schema
 #>   CHROM   POS REF ALT
 #> 1     1 10583   G   A
 #> 2     1 11508   A   G
