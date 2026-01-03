@@ -107,7 +107,7 @@ result <- system2(
 length(result)
 ```
 
-## VCF to Arrow
+## (Experimental) VCF to Arrow
 
 RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with modern analytics tools like DuckDB, Polars, and Parquet.
 
