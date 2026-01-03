@@ -6,12 +6,10 @@ RBCFTools provides R bindings to
 reading and manipulating VCF/BCF files. The package bundles these
 libraries and command-line tools (bcftools, bgzip, tabix), so no
 external installation is required. When compiled with libcurl, remote
-file access from S3, GCS, and HTTP URLs is supported.
-
-The package also includes experimental support for streaming VCF/BCF to
-Apache Arrow (IPC) format via
-[nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet
-format using [duckdb](https://duckdb.org/)
+file access from S3, GCS, and HTTP URLs is supported. The package also
+includes experimental support for streaming VCF/BCF to Apache Arrow
+(IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with
+export to Parquet format using [duckdb](https://duckdb.org/)
 
 ## Installation
 
@@ -313,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet
+#> Wrote 11 rows to /tmp/RtmppTpqv4/file2cb5677365fd17.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -332,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
-#> 2 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
-#> 3 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
-#> 4 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
-#> 5 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
-#> 6 /tmp/RtmpoQyoDr/file2caf0b35298e18.parquet            0                 11
+#> 1 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 2 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 3 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 4 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 5 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
+#> 6 /tmp/RtmppTpqv4/file2cb5677365fd17.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            2515         0           0         11
 #> 2                    36            2515         1           0         11
@@ -420,14 +418,16 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpoQyoDr/file2caf0b769b6cc4.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmppTpqv4/file2cb5672f49f5ea.parquet (streaming mode)
 # describe using duckdb
 ```
 
-### Query with VCF duckdb
+### Query VCF with duckdb
+
+SQL queries on BCF using duckdb package. For now this is somehow limited
+due to convertion from arrow streams to data frame
 
 ``` r
-# SQL queries on BCF (requires duckdb package)
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 #>   CHROM  n
 #> 1     1 11
@@ -444,8 +444,10 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 
 ### Stream Remote VCF to Arrow
 
+Stream remote VCF region directly to Arrow from S3
+
 ``` r
-# Stream remote VCF region directly to Arrow from S3
+
 vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
@@ -464,6 +466,20 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 5 chr22 16050224   A C        , <NON_REF>
 #> 6 chr22 16050229   C A        , <NON_REF>
 ```
+
+## Limitations issues
+
+The Arrow supports involves a lot of copies at the C level, let alone
+additional copies and converstions when converting to parquet including
+Arrow IPC file serialization. Same limitation applies to the SQL query
+interface. In theory we can use the arrow package to get `arrow_table`
+format that can be registered by `duckdb` but this is an additional
+dependency.
+
+## Future directions
+
+We should improve the code, avoid copies, add more tests and maybe
+[ducklake](https://github.com/duckdb/ducklake) support
 
 ## References
 
