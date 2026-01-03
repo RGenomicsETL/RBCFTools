@@ -478,6 +478,7 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
                     const vcf_fmt_spec_t* spec = vcf_lookup_fmt_spec(field_name);
                     if (spec) {
                         // Check and correct Number (using vl_type from bcf_hdr_id2length)
+                        // This affects whether the field is scalar or list
                         if (vcf_check_number(spec, vl_type)) {
                             // Only warn once per field (first sample)
                             if (s == 0) {
@@ -488,13 +489,13 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
                             vl_type = spec->vl_type;
                         }
                         
-                        // Check and correct Type
+                        // Warn about Type mismatch but don't correct (data is stored per header)
                         if (type != spec->type) {
                             if (s == 0) {
-                                Rf_warning("FORMAT/%s should be declared as Type=%s per VCF spec; correcting schema",
-                                           field_name, vcf_type_str[spec->type]);
+                                Rf_warning("FORMAT/%s should be Type=%s per VCF spec, but header declares Type=%s; using header type",
+                                           field_name, vcf_type_str[spec->type], vcf_type_str[type]);
                             }
-                            type = spec->type;
+                            // Don't change type - keep using header's type to match data
                         }
                     }
                     
@@ -608,6 +609,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     size_t* fmt_str_capacity = NULL;  // Allocated capacity for string data per FORMAT field
     size_t* fmt_list_sizes = NULL;    // Current total list element count per FORMAT field
     size_t* fmt_list_capacity = NULL; // Allocated capacity for list data per FORMAT field
+    int* fmt_header_types = NULL;     // Original types from header (for reading data)
     
     if (priv->opts.include_format && n_samples > 0) {
         // Count FORMAT fields
@@ -622,6 +624,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         fmt_ids = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
         fmt_types = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
         fmt_numbers = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
+        fmt_header_types = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
         fmt_names = (const char**)vcf_arrow_malloc(n_fmt_fields * sizeof(const char*));
         fmt_data = (void**)vcf_arrow_malloc(n_fmt_fields * sizeof(void*));
         fmt_offsets = (int32_t**)vcf_arrow_malloc(n_fmt_fields * sizeof(int32_t*));
@@ -652,7 +655,9 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                 int vl_type = bcf_hdr_id2length(priv->hdr, BCF_HL_FMT, i);
                 
                 fmt_ids[fmt_idx] = i;
-                // Apply corrections based on VCF spec
+                // Store original header type for reading data
+                fmt_header_types[fmt_idx] = type;
+                // Apply corrections based on VCF spec (for Arrow schema)
                 fmt_types[fmt_idx] = vcf_arrow_correct_format_type(field_name, type);
                 fmt_numbers[fmt_idx] = vcf_arrow_correct_format_number(field_name, vl_type);
                 fmt_names[fmt_idx] = field_name;  // Points to header memory, don't free
@@ -715,9 +720,9 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     // For lists: we'll use dynamic arrays per FORMAT field
     if (priv->opts.include_format && n_samples > 0) {
         for (int f = 0; f < n_fmt_fields; f++) {
-            int type = fmt_types[f];
-            int number = fmt_numbers[f];
-            int is_list = (number != 1 && number != 0);
+            int type = fmt_header_types[f];  // Use header type for allocation
+            int vl_type = fmt_numbers[f];
+            int is_list = (vl_type != BCF_VL_FIXED);
             
             if (is_list) {
                 // For lists, allocate offset arrays and length tracking
@@ -822,14 +827,14 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         if (priv->opts.include_format && n_samples > 0) {
             for (int f = 0; f < n_fmt_fields; f++) {
                 int id = fmt_ids[f];
-                int type = fmt_types[f];
+                int header_type = fmt_header_types[f];  // Use original type for reading data
                 int vl_type = fmt_numbers[f];  // This is actually BCF_VL_* type after correction
                 // is_list: variable length fields (BCF_VL_VAR, BCF_VL_A, BCF_VL_G, BCF_VL_R, etc.)
                 // BCF_VL_FIXED (0) is for scalar/fixed-size fields
                 int is_list = (vl_type != BCF_VL_FIXED);
                 const char* tag = bcf_hdr_int2id(priv->hdr, BCF_DT_ID, id);
                 
-                if (type == BCF_HT_INT) {
+                if (header_type == BCF_HT_INT) {
                     int32_t* values = NULL;
                     int n_values = 0;
                     int ret_fmt = bcf_get_format_int32(priv->hdr, priv->rec, tag, &values, &n_values);
@@ -895,7 +900,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                     }
                     free(values);
                     
-                } else if (type == BCF_HT_REAL) {
+                } else if (header_type == BCF_HT_REAL) {
                     float* values = NULL;
                     int n_values = 0;
                     int ret_fmt = bcf_get_format_float(priv->hdr, priv->rec, tag, &values, &n_values);
