@@ -1652,7 +1652,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                 
                 int type = fmt_types[f];
                 int number = fmt_numbers[f];
-                int is_list = (number != 1 && number != 0);
+                // is_list must match the data reading logic: BCF_VL_FIXED (0) is scalar, all others are lists
+                int is_list = (number != BCF_VL_FIXED);
                 
                 fmt_arr->length = n_read;
                 fmt_arr->offset = 0;
