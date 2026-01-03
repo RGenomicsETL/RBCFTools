@@ -295,7 +295,7 @@ required):
 # Convert BCF to Parquet
 options(warn = -1)  # Suppress warnings for cleaner README output
 vcf_to_parquet(bcf_file, parquet_file, compression = "gzip")
-#> Wrote 11 rows to /tmp/RtmpZdj6gM/file2b93ee161a8e1f.parquet
+#> Wrote 11 rows to /tmp/Rtmp2Obfo8/file2bbf3570b3c6c0.parquet
 
 # Read back with DuckDB
 con <- duckdb::dbConnect(duckdb::duckdb())
@@ -311,15 +311,27 @@ head(pq_bcf[, c("CHROM", "POS", "REF", "ALT")])
 #> 6     1 14699   C   G
 ```
 
+**Streaming mode for large files:** Use `streaming = TRUE` to avoid
+loading the entire VCF into R memory. This streams VCF → Arrow IPC
+(nanoarrow) → Parquet (DuckDB), keeping memory usage minimal:
+
+``` r
+# For very large VCF files
+vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
+```
+
+Requires the [DuckDB nanoarrow
+extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
+(auto-installed on first use).
+
 ### Write to Arrow IPC
 
 Arrow IPC (`.arrows`) format for interoperability with other Arrow
-tools:
+tools. Uses nanoarrow’s native streaming writer (no memory overhead).
 
 ``` r
 # Convert BCF to Arrow IPC
 vcf_to_arrow_ipc(bcf_file, ipc_file)
-#> Wrote 11 rows to /tmp/RtmpZdj6gM/file2b93ee952616.arrows
 
 # Read back with nanoarrow
 ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
