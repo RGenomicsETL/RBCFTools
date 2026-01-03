@@ -1,3 +1,5 @@
+^.*tbi$
+^.*csi$
 ^README.Rmd$
 ^README.html$
 ^r-svn/.*$

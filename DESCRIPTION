@@ -8,11 +8,10 @@ Authors@R: c(
            comment = "Authors of included htslib library and bcftools command line tools"),
     person(given = "Zilong", family = "Li", email = "zilong.dk@gmail.com", role = c("cph"),
            comment = "Author of the vcfpp library from whom makefiles and configure strategy is borrowed"))
-Description: Provides R bindings to 'htslib' and 'bcftools' for reading and
+Description: Bundles the 'htslib' and 'bcftools' libraries and command lines tools for reading and
     manipulating VCF/BCF files. Includes experimental streaming facilities from VCF to Apache Arrow 
-    via 'nanoarrow', enabling efficient export to Parquet and Arrow IPC formats
-    using 'DuckDB' without requiring the heavy 'arrow' package. Bundles
-    'htslib' and 'bcftools' libraries and command-line tools.
+    via 'nanoarrow', enabling export to Arrow IPC format and  Parquet format
+    using 'duckdb'.
 License: GPL (>= 3)
 Depends: R (>= 4.4.0)
 Imports: nanoarrow
