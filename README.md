@@ -319,7 +319,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet
+#> Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -338,12 +338,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
-#> 2 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
-#> 3 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
-#> 4 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
-#> 5 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
-#> 6 /tmp/RtmpnM62YL/file2cb80d46befa2e.parquet            0                 11
+#> 1 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 2 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 3 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 4 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 5 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 6 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            2515         0           0         11
 #> 2                    36            2515         1           0         11
@@ -426,7 +426,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpnM62YL/file2cb80d1d93ecc7.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6725cf433.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -473,6 +473,40 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 4 chr22 16050219   C A        , <NON_REF>
 #> 5 chr22 16050224   A C        , <NON_REF>
 #> 6 chr22 16050229   C A        , <NON_REF>
+```
+
+### Custom Index File Path
+
+For region queries, an index file is required. By default, RBCFTools
+looks for `.tbi` (tabix) or `.csi` indexes using standard naming
+conventions. For non-standard index locations such as presigned URLs or
+custom paths, use the `index` parameter. Index files are only required
+for region queries; when reading an entire file without a region filter,
+no index is needed. VCF files try `.tbi` first then fall back to `.csi`,
+while BCF files use `.csi` only.
+
+``` r
+# Explicit index file path
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
+csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
+
+stream <- vcf_open_arrow(bcf_file, index = csi_index)
+batch <- stream$get_next()
+nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
+#>   CHROM   POS REF
+#> 1     1 10583   G
+#> 2     1 11508   A
+#> 3     1 11565   G
+
+# Alternative: htslib ##idx## syntax in filename
+filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
+stream2 <- vcf_open_arrow(filename_with_idx)
+batch2 <- stream2$get_next()
+nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
+#>   CHROM   POS REF
+#> 1     1 10583   G
+#> 2     1 11508   A
+#> 3     1 11565   G
 ```
 
 ## Limitations and issues
