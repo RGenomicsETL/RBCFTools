@@ -28,8 +28,7 @@ The package also includes experimental support for streaming VCF/BCF to Apache A
 You can install the development version of RBCFTools from [GitHub](https://github.com/RGenomicsETL/RBCFTools) with:
  
 ```r
-# install.packages("pak")
-pak::pak("RGenomicsETL/RBCFTools")
+install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))
 ```
 
 ## Version Information
