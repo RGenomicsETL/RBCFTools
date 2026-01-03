@@ -178,7 +178,7 @@
 <div class="section level2">
 <h2 id="experimental-vcf-to-arrow">(Experimental) VCF to Arrow<a class="anchor" aria-label="anchor" href="#experimental-vcf-to-arrow"></a>
 </h2>
-<p>RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>. This enables integration with modern analytics tools like DuckDB, Polars, and Parquet.</p>
+<p>RBCFTools provides streaming VCF/BCF to Apache Arrow conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>. This enables integration with tools like duckdb, and parquet format</p>
 <div class="section level3">
 <h3 id="read-vcf-as-arrow-stream">Read VCF as Arrow Stream<a class="anchor" aria-label="anchor" href="#read-vcf-as-arrow-stream"></a>
 </h3>
@@ -189,13 +189,91 @@
 <span><span class="co"># Read first batch</span></span>
 <span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span></span>
-<span><span class="va">b</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;   CHROM   POS         ID REF ALT QUAL FILTER</span></span>
-<span><span class="co">#&gt; 1     1 10583 rs58108140   G   A   NA   PASS</span></span>
-<span><span class="co">#&gt; 2     1 11508       &lt;NA&gt;   A   G   NA   PASS</span></span>
-<span><span class="co">#&gt; 3     1 11565       &lt;NA&gt;   G   T   NA   PASS</span></span>
-<span><span class="co">#&gt; 4     1 13116       &lt;NA&gt;   T   G   NA   PASS</span></span>
-<span><span class="co">#&gt; 5     1 13327       &lt;NA&gt;   G   C   NA   PASS</span></span></code></pre></div>
+<span><span class="va">b</span></span>
+<span><span class="co">#&gt;    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB</span></span>
+<span><span class="co">#&gt; 1      1 10583 rs58108140   G   A   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 2      1 11508       &lt;NA&gt;   A   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 3      1 11565       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 4      1 13116       &lt;NA&gt;   T   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 5      1 13327       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 6      1 14699       &lt;NA&gt;   C   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 7      1 15274       &lt;NA&gt;   A   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 8      1 15820       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 9      1 16257       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 10     1 16378       &lt;NA&gt;   T   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 11     1 28376       &lt;NA&gt;   G   A   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt;    INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2 INFO.AC INFO.AN samples.HG00098.AD</span></span>
+<span><span class="co">#&gt; 1           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 2           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 3           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 4           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 5           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 6           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 7           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 8           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 9           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 10          NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 11          NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt;    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT</span></span>
+<span><span class="co">#&gt; 1                  NA               NULL               3.28                   </span></span>
+<span><span class="co">#&gt; 2                  NA               NULL               2.22                   </span></span>
+<span><span class="co">#&gt; 3                  NA               NULL               1.48                   </span></span>
+<span><span class="co">#&gt; 4                  NA               NULL               9.17                   </span></span>
+<span><span class="co">#&gt; 5                  NA               NULL              15.80                   </span></span>
+<span><span class="co">#&gt; 6                  NA               NULL               6.29                   </span></span>
+<span><span class="co">#&gt; 7                  NA               NULL               5.08                   </span></span>
+<span><span class="co">#&gt; 8                  NA               NULL               7.01                   </span></span>
+<span><span class="co">#&gt; 9                  NA               NULL               5.61                   </span></span>
+<span><span class="co">#&gt; 10                 NA               NULL               1.29                   </span></span>
+<span><span class="co">#&gt; 11                 NA               NULL               2.68                   </span></span>
+<span><span class="co">#&gt;    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP</span></span>
+<span><span class="co">#&gt; 1                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 2                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 3                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 4                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 5                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 6                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 7                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 8                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 9                  NA                ./.                                     3</span></span>
+<span><span class="co">#&gt; 10                 NA                ./.                                     1</span></span>
+<span><span class="co">#&gt; 11                 NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt;    samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD</span></span>
+<span><span class="co">#&gt; 1                NULL               3.28                                    NA</span></span>
+<span><span class="co">#&gt; 2                NULL               2.22                                    NA</span></span>
+<span><span class="co">#&gt; 3                NULL               1.48                                    NA</span></span>
+<span><span class="co">#&gt; 4                NULL               9.17                                    NA</span></span>
+<span><span class="co">#&gt; 5                NULL              15.80                                    NA</span></span>
+<span><span class="co">#&gt; 6                NULL               6.29                                    NA</span></span>
+<span><span class="co">#&gt; 7                NULL               5.08                                    NA</span></span>
+<span><span class="co">#&gt; 8                NULL               7.01                                    NA</span></span>
+<span><span class="co">#&gt; 9                                  13.77                                    NA</span></span>
+<span><span class="co">#&gt; 10                                  2.95                                    NA</span></span>
+<span><span class="co">#&gt; 11               NULL               2.68                                    NA</span></span>
+<span><span class="co">#&gt;    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP samples.HG00106.GL</span></span>
+<span><span class="co">#&gt; 1                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 2                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 3                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 4                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 5                 ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 6                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 7                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 8                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 9                 ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 10                ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 11                ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt;    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG</span></span>
+<span><span class="co">#&gt; 1                3.28                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 2                2.22                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 3                1.48                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 4                9.17                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 5               21.74                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 6                6.29                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 7                5.08                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 8                7.01                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 9               25.82                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 10              23.85                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 11               2.68                                    NA                ./.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="convert-to-data-frame">Convert to Data Frame<a class="anchor" aria-label="anchor" href="#convert-to-data-frame"></a>
@@ -215,30 +293,104 @@
 <div class="section level3">
 <h3 id="write-to-parquet">Write to Parquet<a class="anchor" aria-label="anchor" href="#write-to-parquet"></a>
 </h3>
+<p>If you have the arrow package installed</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Convert BCF to Parquet (requires arrow package)</span></span>
+<code class="sourceCode R"><span><span class="co"># Convert BCF to Parquet</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"gzip"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp2hsJAm/file2b341a56a20ecd.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpDoUyNd/file2b5611764f9c3f.parquet</span></span>
 <span></span>
 <span><span class="co"># Read back with arrow</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">arrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/docs/r/reference/read_parquet.html" class="external-link">read_parquet</a></span><span class="op">(</span><span class="va">parquet_file</span><span class="op">)</span></span>
-<span><span class="va">pq_bcf</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>,<span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fl">8</span>,<span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pq_bcf</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;   CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB</span></span>
-<span><span class="co">#&gt; 1     1 10583 rs58108140   G   A   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 2     1 11508       &lt;NA&gt;   A   G   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 3     1 11565       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 4     1 13116       &lt;NA&gt;   T   G   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 5     1 13327       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt;   INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2</span></span>
-<span><span class="co">#&gt; 1          NA          NA          NA</span></span>
-<span><span class="co">#&gt; 2          NA          NA          NA</span></span>
-<span><span class="co">#&gt; 3          NA          NA          NA</span></span>
-<span><span class="co">#&gt; 4          NA          NA          NA</span></span>
-<span><span class="co">#&gt; 5          NA          NA          NA</span></span></code></pre></div>
+<span><span class="va">pq_bcf</span></span>
+<span><span class="co">#&gt;    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB</span></span>
+<span><span class="co">#&gt; 1      1 10583 rs58108140   G   A   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 2      1 11508       &lt;NA&gt;   A   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 3      1 11565       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 4      1 13116       &lt;NA&gt;   T   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 5      1 13327       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 6      1 14699       &lt;NA&gt;   C   G   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 7      1 15274       &lt;NA&gt;   A   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 8      1 15820       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 9      1 16257       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 10     1 16378       &lt;NA&gt;   T   C   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt; 11     1 28376       &lt;NA&gt;   G   A   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt;    INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2 INFO.AC INFO.AN samples.HG00098.AD</span></span>
+<span><span class="co">#&gt; 1           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 2           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 3           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 4           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 5           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 6           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 7           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 8           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 9           NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 10          NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 11          NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt;    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT</span></span>
+<span><span class="co">#&gt; 1                  NA               NULL               3.28                   </span></span>
+<span><span class="co">#&gt; 2                  NA               NULL               2.22                   </span></span>
+<span><span class="co">#&gt; 3                  NA               NULL               1.48                   </span></span>
+<span><span class="co">#&gt; 4                  NA               NULL               9.17                   </span></span>
+<span><span class="co">#&gt; 5                  NA               NULL              15.80                   </span></span>
+<span><span class="co">#&gt; 6                  NA               NULL               6.29                   </span></span>
+<span><span class="co">#&gt; 7                  NA               NULL               5.08                   </span></span>
+<span><span class="co">#&gt; 8                  NA               NULL               7.01                   </span></span>
+<span><span class="co">#&gt; 9                  NA               NULL               5.61                   </span></span>
+<span><span class="co">#&gt; 10                 NA               NULL               1.29                   </span></span>
+<span><span class="co">#&gt; 11                 NA               NULL               2.68                   </span></span>
+<span><span class="co">#&gt;    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP</span></span>
+<span><span class="co">#&gt; 1                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 2                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 3                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 4                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 5                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 6                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 7                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 8                  NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt; 9                  NA                ./.                                     3</span></span>
+<span><span class="co">#&gt; 10                 NA                ./.                                     1</span></span>
+<span><span class="co">#&gt; 11                 NA                ./.               NULL                 NA</span></span>
+<span><span class="co">#&gt;    samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD</span></span>
+<span><span class="co">#&gt; 1                NULL               3.28                                    NA</span></span>
+<span><span class="co">#&gt; 2                NULL               2.22                                    NA</span></span>
+<span><span class="co">#&gt; 3                NULL               1.48                                    NA</span></span>
+<span><span class="co">#&gt; 4                NULL               9.17                                    NA</span></span>
+<span><span class="co">#&gt; 5                NULL              15.80                                    NA</span></span>
+<span><span class="co">#&gt; 6                NULL               6.29                                    NA</span></span>
+<span><span class="co">#&gt; 7                NULL               5.08                                    NA</span></span>
+<span><span class="co">#&gt; 8                NULL               7.01                                    NA</span></span>
+<span><span class="co">#&gt; 9                                  13.77                                    NA</span></span>
+<span><span class="co">#&gt; 10                                  2.95                                    NA</span></span>
+<span><span class="co">#&gt; 11               NULL               2.68                                    NA</span></span>
+<span><span class="co">#&gt;    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP samples.HG00106.GL</span></span>
+<span><span class="co">#&gt; 1                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 2                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 3                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 4                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 5                 ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 6                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 7                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 8                 ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt; 9                 ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 10                ./.                                     2                   </span></span>
+<span><span class="co">#&gt; 11                ./.               NULL                 NA               NULL</span></span>
+<span><span class="co">#&gt;    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG</span></span>
+<span><span class="co">#&gt; 1                3.28                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 2                2.22                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 3                1.48                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 4                9.17                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 5               21.74                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 6                6.29                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 7                5.08                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 8                7.01                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 9               25.82                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 10              23.85                                    NA                ./.</span></span>
+<span><span class="co">#&gt; 11               2.68                                    NA                ./.</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="query-with-duckdb">Query with DuckDB<a class="anchor" aria-label="anchor" href="#query-with-duckdb"></a>
 </h3>
+<p>using duckdb</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># SQL queries on BCF (requires arrow and duckdb packages)</span></span>
 <span><span class="fu"><a href="reference/vcf_query.html">vcf_query</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"</span><span class="op">)</span></span>
@@ -262,7 +414,7 @@
 <li><a href="https://samtools.github.io/bcftools/" class="external-link">bcftools documentation</a></li>
 <li><a href="https://github.com/samtools/bcftools" class="external-link">bcftools GitHub</a></li>
 <li><a href="https://github.com/samtools/htslib" class="external-link">htslib GitHub</a></li>
-<li><a href="https://samtools.github.io/hts-specs/VCFv4.3.pdf" class="external-link">VCF specification</a></li>
+<li><a href="https://arrow.apache.org/nanoarrow/" class="external-link">arrow-nanoarrow</a></li>
 </ul>
 </div>
 </div>
