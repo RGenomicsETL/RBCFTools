@@ -34,7 +34,13 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.0.9000" id="rbcftools-123-0009000-development-version">RBCFTools 1.23-0.0.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0009000-development-version"></a></h2>
-<ul><li>Vendor and provide minimal CLI wrappers of bcftools/htlsib</li>
+<ul><li>Vendor and provide minimal CLI wrappers of bcftools/htslib</li>
+<li>VCF to Arrow stream implementation with FORMAT field extraction:
+<ul><li>Proper GT field decoding (genotype integers to strings like “0|0”, “0/1”)</li>
+<li>List-type FORMAT fields (AD, GL, PL) now correctly extracted</li>
+<li>Header sanity checking based on VCF spec (matching htslib’s <code>bcf_hdr_check_sanity()</code>)</li>
+<li>R warnings emitted when correcting non-conformant headers (Number, Type)</li>
+</ul></li>
 </ul></div>
   </main></div>
 
