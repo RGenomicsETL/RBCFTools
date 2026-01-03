@@ -219,7 +219,7 @@ stream <- vcf_open_arrow(
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
-## Limitations issues
+## Limitations and issues
 
 The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. 
 
@@ -231,6 +231,9 @@ We should improve the code, avoid copies, add more tests and maybe [ducklake](ht
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)
+
 - [bcftools GitHub](https://github.com/samtools/bcftools)
+
 - [htslib GitHub](https://github.com/samtools/htslib)
+
 - [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
