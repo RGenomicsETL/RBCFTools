@@ -19,9 +19,7 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RGenomicsETL/RBCFTools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported.
-
-The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/)
+RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/)
 
 ## Installation
 
@@ -194,10 +192,10 @@ vcf_to_parquet(
 
 ```
 
-### Query with VCF duckdb
+### Query VCF with duckdb
 
+SQL queries on BCF using duckdb package. For now this is somehow limited due to convertion from arrow streams to data frame
 ```{r duckdb, eval=TRUE}
-# SQL queries on BCF (requires duckdb package)
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 
 # Filter variants by position
@@ -206,9 +204,10 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 
 ### Stream Remote VCF to Arrow
 
+Stream remote VCF region directly to Arrow from S3
 
 ```{r url-arrow, eval=TRUE}
-# Stream remote VCF region directly to Arrow from S3
+
 vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
@@ -220,6 +219,15 @@ stream <- vcf_open_arrow(
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
+## Limitations issues
+
+The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. 
+
+## Future directions
+
+We should improve the code, avoid copies, add more tests and maybe [ducklake](https://github.com/duckdb/ducklake) support
+
+
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)
