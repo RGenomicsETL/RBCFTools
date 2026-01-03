@@ -200,12 +200,11 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 
 
 ```{r url-arrow, eval=TRUE}
-# Stream remote VCF region directly to Arrow
-vcf_url <- paste0("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/",
-"20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr21.filtered.SNV_INDEL_SV_phased_panel.vcf.gz")
+# Stream remote VCF region directly to Arrow from S3
+vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
-    region = "chr21:20000000-20100000",
+    region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
 
