@@ -424,6 +424,66 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     char*** filter_data = (char***)vcf_arrow_malloc(batch_size * sizeof(char**));
     int* filter_counts = (int*)vcf_arrow_malloc(batch_size * sizeof(int));
     
+    // FORMAT data storage - will be allocated per FORMAT field if needed
+    int n_samples = bcf_hdr_nsamples(priv->hdr);
+    int n_fmt_fields = 0;
+    int* fmt_ids = NULL;       // header IDs for each FORMAT field
+    int* fmt_types = NULL;     // BCF_HT_* type for each FORMAT field
+    int* fmt_numbers = NULL;   // Number (1=scalar, else list)
+    
+    // Per-FORMAT-field data arrays (indexed by format field)
+    // For int/float scalar: [batch_size * n_samples] values
+    // For int/float list: [batch_size * n_samples * max_len] values + counts
+    // For string: concatenated strings + offsets
+    void** fmt_data = NULL;           // Raw data arrays per FORMAT field
+    int32_t** fmt_offsets = NULL;     // For lists/strings: offsets per record*sample
+    int** fmt_lengths = NULL;         // Actual length per record*sample for lists
+    uint8_t** fmt_validity = NULL;    // Validity bitmaps per FORMAT field per sample
+    
+    if (priv->opts.include_format && n_samples > 0) {
+        // Count FORMAT fields
+        for (int i = 0; i < priv->hdr->n[BCF_DT_ID]; i++) {
+            if (priv->hdr->id[BCF_DT_ID][i].val && 
+                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+                n_fmt_fields++;
+            }
+        }
+        if (n_fmt_fields == 0) n_fmt_fields = 1;  // At least GT
+        
+        fmt_ids = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
+        fmt_types = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
+        fmt_numbers = (int*)vcf_arrow_malloc(n_fmt_fields * sizeof(int));
+        fmt_data = (void**)vcf_arrow_malloc(n_fmt_fields * sizeof(void*));
+        fmt_offsets = (int32_t**)vcf_arrow_malloc(n_fmt_fields * sizeof(int32_t*));
+        fmt_lengths = (int**)vcf_arrow_malloc(n_fmt_fields * sizeof(int*));
+        fmt_validity = (uint8_t**)vcf_arrow_malloc(n_fmt_fields * n_samples * sizeof(uint8_t*));
+        
+        memset(fmt_data, 0, n_fmt_fields * sizeof(void*));
+        memset(fmt_offsets, 0, n_fmt_fields * sizeof(int32_t*));
+        memset(fmt_lengths, 0, n_fmt_fields * sizeof(int*));
+        memset(fmt_validity, 0, n_fmt_fields * n_samples * sizeof(uint8_t*));
+        
+        // Populate fmt_ids, fmt_types, fmt_numbers
+        int fmt_idx = 0;
+        for (int i = 0; i < priv->hdr->n[BCF_DT_ID] && fmt_idx < n_fmt_fields; i++) {
+            if (priv->hdr->id[BCF_DT_ID][i].val && 
+                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+                fmt_ids[fmt_idx] = i;
+                fmt_types[fmt_idx] = bcf_hdr_id2type(priv->hdr, BCF_HL_FMT, i);
+                fmt_numbers[fmt_idx] = bcf_hdr_id2number(priv->hdr, BCF_HL_FMT, i);
+                fmt_idx++;
+            }
+        }
+        
+        // Allocate validity arrays for each sample for each FORMAT field
+        for (int f = 0; f < n_fmt_fields; f++) {
+            for (int s = 0; s < n_samples; s++) {
+                fmt_validity[f * n_samples + s] = (uint8_t*)vcf_arrow_malloc((batch_size + 7) / 8);
+                memset(fmt_validity[f * n_samples + s], 0, (batch_size + 7) / 8);
+            }
+        }
+    }
+    
     if (!chrom_data || !pos_data || !id_data || !ref_data || !qual_data || !qual_validity ||
         !alt_list_offsets || !alt_data || !alt_counts ||
         !filter_list_offsets || !filter_data || !filter_counts) {
@@ -439,6 +499,18 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(filter_list_offsets);
         vcf_arrow_free(filter_data);
         vcf_arrow_free(filter_counts);
+        vcf_arrow_free(fmt_ids);
+        vcf_arrow_free(fmt_types);
+        vcf_arrow_free(fmt_numbers);
+        vcf_arrow_free(fmt_data);
+        vcf_arrow_free(fmt_offsets);
+        vcf_arrow_free(fmt_lengths);
+        if (fmt_validity) {
+            for (int i = 0; i < n_fmt_fields * n_samples; i++) {
+                vcf_arrow_free(fmt_validity[i]);
+            }
+            vcf_arrow_free(fmt_validity);
+        }
         snprintf(priv->error_msg, sizeof(priv->error_msg), "Failed to allocate batch buffers");
         return ENOMEM;
     }
@@ -448,6 +520,42 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     memset(filter_data, 0, batch_size * sizeof(char**));
     alt_list_offsets[0] = 0;
     filter_list_offsets[0] = 0;
+    
+    // Allocate FORMAT data storage based on types
+    // For scalars: batch_size * n_samples elements
+    // For lists: we'll use dynamic arrays per FORMAT field
+    if (priv->opts.include_format && n_samples > 0) {
+        for (int f = 0; f < n_fmt_fields; f++) {
+            int type = fmt_types[f];
+            int number = fmt_numbers[f];
+            int is_list = (number != 1 && number != 0);
+            
+            if (is_list) {
+                // For lists, allocate offset arrays and length tracking
+                // Data will be accumulated with realloc
+                fmt_offsets[f] = (int32_t*)vcf_arrow_malloc((batch_size * n_samples + 1) * sizeof(int32_t));
+                memset(fmt_offsets[f], 0, (batch_size * n_samples + 1) * sizeof(int32_t));
+                fmt_lengths[f] = (int*)vcf_arrow_malloc(batch_size * n_samples * sizeof(int));
+                memset(fmt_lengths[f], 0, batch_size * n_samples * sizeof(int));
+                // fmt_data[f] will grow as needed
+                fmt_data[f] = NULL;
+            } else {
+                // Scalar: fixed size allocation
+                if (type == BCF_HT_INT) {
+                    fmt_data[f] = vcf_arrow_malloc(batch_size * n_samples * sizeof(int32_t));
+                    memset(fmt_data[f], 0, batch_size * n_samples * sizeof(int32_t));
+                } else if (type == BCF_HT_REAL) {
+                    fmt_data[f] = vcf_arrow_malloc(batch_size * n_samples * sizeof(float));
+                    memset(fmt_data[f], 0, batch_size * n_samples * sizeof(float));
+                } else {
+                    // String scalar - use offsets and concatenated data
+                    fmt_offsets[f] = (int32_t*)vcf_arrow_malloc((batch_size * n_samples + 1) * sizeof(int32_t));
+                    memset(fmt_offsets[f], 0, (batch_size * n_samples + 1) * sizeof(int32_t));
+                    fmt_data[f] = NULL;  // Will grow as needed
+                }
+            }
+        }
+    }
     
     // Read records
     int ret;
@@ -521,6 +629,116 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         }
         filter_list_offsets[n_read + 1] = filter_list_offsets[n_read] + n_flt;
         
+        // Extract FORMAT data for all samples
+        if (priv->opts.include_format && n_samples > 0) {
+            for (int f = 0; f < n_fmt_fields; f++) {
+                int id = fmt_ids[f];
+                int type = fmt_types[f];
+                int number = fmt_numbers[f];
+                int is_list = (number != 1 && number != 0);
+                const char* tag = bcf_hdr_int2id(priv->hdr, BCF_DT_ID, id);
+                
+                if (type == BCF_HT_INT) {
+                    int32_t* values = NULL;
+                    int n_values = 0;
+                    int ret_fmt = bcf_get_format_int32(priv->hdr, priv->rec, tag, &values, &n_values);
+                    
+                    if (ret_fmt > 0 && values) {
+                        int vals_per_sample = ret_fmt / n_samples;
+                        
+                        if (is_list) {
+                            // List of integers
+                            // Accumulate into fmt_data[f] with offsets
+                            // ... complex list handling - for now mark as valid if we got data
+                            for (int s = 0; s < n_samples; s++) {
+                                int base_idx = n_read * n_samples + s;
+                                int valid_count = 0;
+                                for (int v = 0; v < vals_per_sample; v++) {
+                                    int32_t val = values[s * vals_per_sample + v];
+                                    if (val != bcf_int32_missing && val != bcf_int32_vector_end) {
+                                        valid_count++;
+                                    }
+                                }
+                                fmt_lengths[f][base_idx] = valid_count;
+                                if (valid_count > 0) {
+                                    fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                                }
+                            }
+                        } else {
+                            // Scalar integer
+                            int32_t* data = (int32_t*)fmt_data[f];
+                            for (int s = 0; s < n_samples; s++) {
+                                int32_t val = values[s * vals_per_sample];
+                                int idx = n_read * n_samples + s;
+                                if (val != bcf_int32_missing && val != bcf_int32_vector_end) {
+                                    data[idx] = val;
+                                    fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                                }
+                            }
+                        }
+                    }
+                    free(values);
+                    
+                } else if (type == BCF_HT_REAL) {
+                    float* values = NULL;
+                    int n_values = 0;
+                    int ret_fmt = bcf_get_format_float(priv->hdr, priv->rec, tag, &values, &n_values);
+                    
+                    if (ret_fmt > 0 && values) {
+                        int vals_per_sample = ret_fmt / n_samples;
+                        
+                        if (is_list) {
+                            // List of floats
+                            for (int s = 0; s < n_samples; s++) {
+                                int base_idx = n_read * n_samples + s;
+                                int valid_count = 0;
+                                for (int v = 0; v < vals_per_sample; v++) {
+                                    float val = values[s * vals_per_sample + v];
+                                    if (!bcf_float_is_missing(val) && !bcf_float_is_vector_end(val)) {
+                                        valid_count++;
+                                    }
+                                }
+                                fmt_lengths[f][base_idx] = valid_count;
+                                if (valid_count > 0) {
+                                    fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                                }
+                            }
+                        } else {
+                            // Scalar float
+                            float* data = (float*)fmt_data[f];
+                            for (int s = 0; s < n_samples; s++) {
+                                float val = values[s * vals_per_sample];
+                                int idx = n_read * n_samples + s;
+                                if (!bcf_float_is_missing(val) && !bcf_float_is_vector_end(val)) {
+                                    data[idx] = val;
+                                    fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                                }
+                            }
+                        }
+                    }
+                    free(values);
+                    
+                } else {
+                    // String type (BCF_HT_STR)
+                    char** values = NULL;
+                    int n_values = 0;
+                    int ret_fmt = bcf_get_format_string(priv->hdr, priv->rec, tag, &values, &n_values);
+                    
+                    if (ret_fmt > 0 && values) {
+                        // String data - mark valid samples
+                        for (int s = 0; s < n_samples; s++) {
+                            const char* val = values[s];
+                            if (val && strcmp(val, ".") != 0 && val[0] != '\0') {
+                                fmt_validity[f * n_samples + s][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                        }
+                    }
+                    if (values) free(values[0]);
+                    free(values);
+                }
+            }
+        }
+        
         n_read++;
     }
     
@@ -542,6 +760,26 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(filter_list_offsets);
         vcf_arrow_free(filter_data);
         vcf_arrow_free(filter_counts);
+        
+        // Free FORMAT data storage
+        if (fmt_validity) {
+            for (int i = 0; i < n_fmt_fields * n_samples; i++) {
+                vcf_arrow_free(fmt_validity[i]);
+            }
+            vcf_arrow_free(fmt_validity);
+        }
+        for (int f = 0; f < n_fmt_fields; f++) {
+            vcf_arrow_free(fmt_data[f]);
+            vcf_arrow_free(fmt_offsets[f]);
+            vcf_arrow_free(fmt_lengths[f]);
+        }
+        vcf_arrow_free(fmt_ids);
+        vcf_arrow_free(fmt_types);
+        vcf_arrow_free(fmt_numbers);
+        vcf_arrow_free(fmt_data);
+        vcf_arrow_free(fmt_offsets);
+        vcf_arrow_free(fmt_lengths);
+        
         return 0;
     }
     
@@ -560,7 +798,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         }
     }
     
-    int n_samples = bcf_hdr_nsamples(priv->hdr);
+    // n_samples was already computed earlier
     int include_samples = priv->opts.include_format && n_samples > 0;
     
     int64_t n_children = n_core;
@@ -1021,16 +1259,6 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         samples_arr->buffers = (const void**)vcf_arrow_malloc(sizeof(void*));
         samples_arr->buffers[0] = NULL;
         
-        // Count FORMAT fields
-        int n_fmt_fields = 0;
-        for (int i = 0; i < priv->hdr->n[BCF_DT_ID]; i++) {
-            if (priv->hdr->id[BCF_DT_ID][i].val && 
-                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
-                n_fmt_fields++;
-            }
-        }
-        if (n_fmt_fields == 0) n_fmt_fields = 1;  // At least GT
-        
         samples_arr->children = (struct ArrowArray**)vcf_arrow_malloc(n_samples * sizeof(struct ArrowArray*));
         
         for (int s = 0; s < n_samples; s++) {
@@ -1050,140 +1278,150 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             
             sample_arr->children = (struct ArrowArray**)vcf_arrow_malloc(n_fmt_fields * sizeof(struct ArrowArray*));
             
-            // Create null arrays for each FORMAT field - must match schema types exactly
-            int fmt_idx = 0;
-            for (int i = 0; i < priv->hdr->n[BCF_DT_ID] && fmt_idx < n_fmt_fields; i++) {
-                if (priv->hdr->id[BCF_DT_ID][i].val && 
-                    priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+            // Build arrays for each FORMAT field using pre-collected data
+            for (int f = 0; f < n_fmt_fields; f++) {
+                struct ArrowArray* fmt_arr = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
+                memset(fmt_arr, 0, sizeof(struct ArrowArray));
+                fmt_arr->release = &release_array_simple;
+                sample_arr->children[f] = fmt_arr;
+                
+                int type = fmt_types[f];
+                int number = fmt_numbers[f];
+                int is_list = (number != 1 && number != 0);
+                
+                fmt_arr->length = n_read;
+                fmt_arr->offset = 0;
+                
+                // Use pre-collected validity bitmap for this sample
+                // Transfer ownership of the validity array
+                uint8_t* validity = fmt_validity[f * n_samples + s];
+                fmt_validity[f * n_samples + s] = NULL;  // Ownership transferred
+                
+                // Count nulls
+                int64_t null_count = 0;
+                for (int64_t r = 0; r < n_read; r++) {
+                    if (!(validity[r / 8] & (1 << (r % 8)))) {
+                        null_count++;
+                    }
+                }
+                fmt_arr->null_count = null_count;
+                
+                if (is_list) {
+                    // List type
+                    fmt_arr->n_buffers = 2;
+                    fmt_arr->n_children = 1;
                     
-                    struct ArrowArray* fmt_arr = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
-                    memset(fmt_arr, 0, sizeof(struct ArrowArray));
-                    fmt_arr->release = &release_array_simple;
-                    sample_arr->children[fmt_idx] = fmt_arr;
+                    int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                    memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
                     
-                    int type = bcf_hdr_id2type(priv->hdr, BCF_HL_FMT, i);
-                    int number = bcf_hdr_id2number(priv->hdr, BCF_HL_FMT, i);
+                    fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                    fmt_arr->buffers[0] = validity;
+                    fmt_arr->buffers[1] = offsets;
                     
-                    fmt_arr->length = n_read;
-                    fmt_arr->null_count = n_read;
-                    fmt_arr->offset = 0;
+                    // Create child array for list items (empty for now)
+                    fmt_arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
+                    fmt_arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
+                    memset(fmt_arr->children[0], 0, sizeof(struct ArrowArray));
+                    fmt_arr->children[0]->release = &release_array_simple;
+                    fmt_arr->children[0]->length = 0;
+                    fmt_arr->children[0]->null_count = 0;
+                    fmt_arr->children[0]->offset = 0;
+                    fmt_arr->children[0]->n_children = 0;
                     
-                    uint8_t* validity = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-                    memset(validity, 0, (n_read + 7) / 8);
+                    if (type == BCF_HT_INT) {
+                        fmt_arr->children[0]->n_buffers = 2;
+                        fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        fmt_arr->children[0]->buffers[0] = NULL;
+                        fmt_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
+                    } else if (type == BCF_HT_REAL) {
+                        fmt_arr->children[0]->n_buffers = 2;
+                        fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        fmt_arr->children[0]->buffers[0] = NULL;
+                        fmt_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
+                    } else {
+                        // String type
+                        fmt_arr->children[0]->n_buffers = 3;
+                        fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                        fmt_arr->children[0]->buffers[0] = NULL;
+                        int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
+                        child_offsets[0] = 0;
+                        fmt_arr->children[0]->buffers[1] = child_offsets;
+                        fmt_arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+                    }
+                } else {
+                    // Scalar type
+                    fmt_arr->n_children = 0;
+                    fmt_arr->children = NULL;
                     
-                    if (number != 1 && number != 0) {
-                        // List type
+                    if (type == BCF_HT_FLAG) {
+                        // Boolean
                         fmt_arr->n_buffers = 2;
-                        fmt_arr->n_children = 1;
-                        
-                        int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                        memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-                        
+                        uint8_t* data = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
+                        memset(data, 0, (n_read + 7) / 8);
                         fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
                         fmt_arr->buffers[0] = validity;
-                        fmt_arr->buffers[1] = offsets;
-                        
-                        // Create child array for list items
-                        fmt_arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
-                        fmt_arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
-                        memset(fmt_arr->children[0], 0, sizeof(struct ArrowArray));
-                        fmt_arr->children[0]->release = &release_array_simple;
-                        fmt_arr->children[0]->length = 0;
-                        fmt_arr->children[0]->null_count = 0;
-                        fmt_arr->children[0]->offset = 0;
-                        fmt_arr->children[0]->n_children = 0;
-                        
-                        if (type == BCF_HT_INT) {
-                            fmt_arr->children[0]->n_buffers = 2;
-                            fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                            fmt_arr->children[0]->buffers[0] = NULL;
-                            fmt_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
-                        } else if (type == BCF_HT_REAL) {
-                            fmt_arr->children[0]->n_buffers = 2;
-                            fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                            fmt_arr->children[0]->buffers[0] = NULL;
-                            fmt_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
-                        } else {
-                            // String type
-                            fmt_arr->children[0]->n_buffers = 3;
-                            fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                            fmt_arr->children[0]->buffers[0] = NULL;
-                            int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
-                            child_offsets[0] = 0;
-                            fmt_arr->children[0]->buffers[1] = child_offsets;
-                            fmt_arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+                        fmt_arr->buffers[1] = data;
+                    } else if (type == BCF_HT_INT) {
+                        // Integer - copy this sample's data from collected data
+                        fmt_arr->n_buffers = 2;
+                        int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
+                        memset(data, 0, n_read * sizeof(int32_t));
+                        if (fmt_data[f] != NULL) {
+                            int32_t* src_data = (int32_t*)fmt_data[f];
+                            for (int64_t r = 0; r < n_read; r++) {
+                                data[r] = src_data[r * n_samples + s];
+                            }
                         }
+                        fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        fmt_arr->buffers[0] = validity;
+                        fmt_arr->buffers[1] = data;
+                    } else if (type == BCF_HT_REAL) {
+                        // Float - copy this sample's data from collected data
+                        fmt_arr->n_buffers = 2;
+                        float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
+                        memset(data, 0, n_read * sizeof(float));
+                        if (fmt_data[f] != NULL) {
+                            float* src_data = (float*)fmt_data[f];
+                            for (int64_t r = 0; r < n_read; r++) {
+                                data[r] = src_data[r * n_samples + s];
+                            }
+                        }
+                        fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        fmt_arr->buffers[0] = validity;
+                        fmt_arr->buffers[1] = data;
                     } else {
-                        // Scalar type - match schema exactly
-                        fmt_arr->n_children = 0;
-                        fmt_arr->children = NULL;
-                        
-                        if (type == BCF_HT_FLAG) {
-                            // Boolean
-                            fmt_arr->n_buffers = 2;
-                            uint8_t* data = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-                            memset(data, 0, (n_read + 7) / 8);
-                            fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                            fmt_arr->buffers[0] = validity;
-                            fmt_arr->buffers[1] = data;
-                        } else if (type == BCF_HT_INT) {
-                            // Integer
-                            fmt_arr->n_buffers = 2;
-                            int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
-                            memset(data, 0, n_read * sizeof(int32_t));
-                            fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                            fmt_arr->buffers[0] = validity;
-                            fmt_arr->buffers[1] = data;
-                        } else if (type == BCF_HT_REAL) {
-                            // Float
-                            fmt_arr->n_buffers = 2;
-                            float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
-                            memset(data, 0, n_read * sizeof(float));
-                            fmt_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                            fmt_arr->buffers[0] = validity;
-                            fmt_arr->buffers[1] = data;
-                        } else {
-                            // String type (BCF_HT_STR)
-                            fmt_arr->n_buffers = 3;
-                            int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                            memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-                            fmt_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                            fmt_arr->buffers[0] = validity;
-                            fmt_arr->buffers[1] = offsets;
-                            fmt_arr->buffers[2] = vcf_arrow_malloc(1);
-                        }
+                        // String type (BCF_HT_STR) - empty for now
+                        fmt_arr->n_buffers = 3;
+                        int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                        memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                        fmt_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                        fmt_arr->buffers[0] = validity;
+                        fmt_arr->buffers[1] = offsets;
+                        fmt_arr->buffers[2] = vcf_arrow_malloc(1);
                     }
-                    
-                    fmt_idx++;
                 }
-            }
-            
-            // Fallback if no FORMAT fields found - GT as string
-            if (fmt_idx == 0) {
-                struct ArrowArray* gt_arr = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
-                memset(gt_arr, 0, sizeof(struct ArrowArray));
-                gt_arr->release = &release_array_simple;
-                sample_arr->children[0] = gt_arr;
-                
-                gt_arr->length = n_read;
-                gt_arr->null_count = n_read;
-                gt_arr->offset = 0;
-                gt_arr->n_buffers = 3;
-                gt_arr->n_children = 0;
-                gt_arr->children = NULL;
-                
-                uint8_t* validity = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-                memset(validity, 0, (n_read + 7) / 8);
-                int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-                
-                gt_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                gt_arr->buffers[0] = validity;
-                gt_arr->buffers[1] = offsets;
-                gt_arr->buffers[2] = vcf_arrow_malloc(1);
             }
         }
     }
+    
+    // Free remaining FORMAT data storage (data that wasn't transferred)
+    if (fmt_validity) {
+        for (int i = 0; i < n_fmt_fields * n_samples; i++) {
+            vcf_arrow_free(fmt_validity[i]);  // May be NULL if transferred
+        }
+        vcf_arrow_free(fmt_validity);
+    }
+    for (int f = 0; f < n_fmt_fields; f++) {
+        vcf_arrow_free(fmt_data[f]);
+        vcf_arrow_free(fmt_offsets[f]);
+        vcf_arrow_free(fmt_lengths[f]);
+    }
+    vcf_arrow_free(fmt_ids);
+    vcf_arrow_free(fmt_types);
+    vcf_arrow_free(fmt_numbers);
+    vcf_arrow_free(fmt_data);
+    vcf_arrow_free(fmt_offsets);
+    vcf_arrow_free(fmt_lengths);
     
     out->dictionary = NULL;
     
