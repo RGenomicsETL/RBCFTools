@@ -11,6 +11,7 @@ vcf_open_arrow(
   samples = NULL,
   include_info = TRUE,
   include_format = TRUE,
+  index = NULL,
   threads = 0L
 )
 }
@@ -26,6 +27,12 @@ vcf_open_arrow(
 \item{include_info}{Include INFO fields in output (default: TRUE)}
 
 \item{include_format}{Include FORMAT/sample data in output (default: TRUE)}
+
+\item{index}{Optional index file path. If NULL (default), uses auto-detection:
+VCF files try .tbi first, then .csi; BCF files use .csi only.
+Useful for non-standard index locations or presigned URLs with different paths.
+Alternatively, use htslib ##idx## syntax in filename (e.g., "file.vcf.gz##idx##custom.tbi").
+Note: Index is only required for region queries; whole-file streaming needs no index.}
 
 \item{threads}{Number of decompression threads (default: 0 = auto)}
 }
@@ -50,6 +57,9 @@ while (!is.null(batch <- stream$get_next())) {
 
 # With region filter
 stream <- vcf_open_arrow("variants.vcf.gz", region = "chr1:1-1000000")
+
+# With custom index file (useful for presigned URLs or non-standard locations)
+stream <- vcf_open_arrow("variants.vcf.gz", index = "custom_path.tbi", region = "chr1")
 
 # Convert to data frame
 df <- vcf_to_arrow("variants.vcf.gz", as = "data.frame")

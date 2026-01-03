@@ -219,6 +219,31 @@ stream <- vcf_open_arrow(
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
+
+### Custom Index File Path
+
+For region queries, an index file is required. By default, RBCFTools looks for `.tbi` (tabix) or `.csi` indexes using standard naming conventions. For non-standard index locations (e.g., presigned URLs, custom paths), use the `index` parameter:
+
+```{r index-param, eval=FALSE}
+# Explicit index file path (useful for presigned URLs or non-standard locations)
+stream <- vcf_open_arrow(
+    "s3://bucket/data.vcf.gz",
+    region = "chr1:1000-2000",
+    index = "s3://bucket/indexes/custom.tbi"
+)
+
+# Alternative: Use htslib ##idx## syntax in filename
+stream <- vcf_open_arrow(
+    "s3://bucket/data.vcf.gz##idx##s3://bucket/indexes/custom.tbi",
+    region = "chr1:1000-2000"
+)
+```
+
+**Note:** Index files are only required for region queries. When reading an entire file without a region filter, no index is needed.
+
+**Index formats:**
+- VCF files: Tries `.tbi` (tabix) first, then falls back to `.csi`
+- BCF files: Uses `.csi` index only
 ## Limitations and issues
 
 The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. 

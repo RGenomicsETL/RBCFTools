@@ -88,6 +88,9 @@ typedef struct {
     int include_format;           // Include FORMAT/sample fields (default: 1)
     const char* region;           // Region filter (e.g., "chr1:1000-2000")
     const char* samples;          // Sample filter (comma-separated or file)
+    const char* index;            // Index file path (NULL for auto-detection)
+                                  // VCF: tries .tbi first, then .csi
+                                  // BCF: uses .csi only
     int threads;                  // Number of threads for decompression
 } vcf_arrow_options_t;
 
@@ -161,9 +164,18 @@ void vcf_arrow_options_init(vcf_arrow_options_t* opts);
  * library (nanoarrow, pyarrow, arrow-rs, etc.)
  * 
  * @param stream Output stream (must be pre-allocated)
- * @param filename Path to VCF/BCF file
+ * @param filename Path to VCF/BCF file. Supports htslib ##idx## syntax for 
+ *                 non-standard index locations (e.g., "file.vcf.gz##idx##custom.tbi")
  * @param opts Options (NULL for defaults)
  * @return 0 on success, non-zero on error
+ * 
+ * @note Index files (.tbi for VCF, .csi for BCF) are only required for region queries.
+ *       For whole-file streaming, no index is needed.
+ * 
+ * @note Non-standard index paths can be specified either via:
+ *       1. opts.index parameter, or
+ *       2. Using htslib ##idx## syntax in filename (e.g., "file.vcf.gz##idx##path/to/index.tbi")
+ *       Useful for presigned URLs or non-standard index locations.
  * 
  * Example usage:
  * @code

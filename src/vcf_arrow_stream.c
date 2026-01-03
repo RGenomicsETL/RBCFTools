@@ -2010,19 +2010,27 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
     
     // Set up region filtering if requested
     if (priv->opts.region) {
-        // Load the index - use TBI for VCF files, CSI for BCF files
+        // Load the index
         // HTS_IDX_SAVE_REMOTE enables remote index caching for S3/HTTP URLs
         if (priv->fp->format.format == vcf) {
-            // VCF files use tabix (.tbi) index
-            priv->tbx = tbx_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+            // VCF files can have either TBI (.tbi) or CSI (.csi) index
+            // Try TBI first (more common), then fall back to CSI
+            priv->tbx = tbx_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
             if (priv->tbx) {
                 priv->idx = priv->tbx->idx;
-                // Use tbx_itr_querys for VCF files (reads text lines)
+                // Use tbx_itr_querys for VCF files with TBI (reads text lines)
                 priv->itr = tbx_itr_querys(priv->tbx, priv->opts.region);
+            } else {
+                // TBI not found, try CSI index
+                priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
+                if (priv->idx) {
+                    // Use bcf_itr_querys for VCF files with CSI index
+                    priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
+                }
             }
         } else {
-            // BCF files use CSI index
-            priv->idx = bcf_index_load3(filename, NULL, HTS_IDX_SAVE_REMOTE);
+            // BCF files use CSI index only
+            priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
             if (priv->idx) {
                 // Use bcf_itr_querys for BCF files (reads binary records)
                 priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);

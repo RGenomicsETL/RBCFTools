@@ -21,6 +21,11 @@
 #' @param samples Optional sample filter (comma-separated names or "-" prefixed to exclude)
 #' @param include_info Include INFO fields in output (default: TRUE)
 #' @param include_format Include FORMAT/sample data in output (default: TRUE)
+#' @param index Optional index file path. If NULL (default), uses auto-detection:
+#'   VCF files try .tbi first, then .csi; BCF files use .csi only.
+#'   Useful for non-standard index locations or presigned URLs with different paths.
+#'   Alternatively, use htslib ##idx## syntax in filename (e.g., "file.vcf.gz##idx##custom.tbi").
+#'   Note: Index is only required for region queries; whole-file streaming needs no index.
 #' @param threads Number of decompression threads (default: 0 = auto)
 #'
 #' @return A nanoarrow_array_stream object
@@ -39,6 +44,9 @@
 #' # With region filter
 #' stream <- vcf_open_arrow("variants.vcf.gz", region = "chr1:1-1000000")
 #'
+#' # With custom index file (useful for presigned URLs or non-standard locations)
+#' stream <- vcf_open_arrow("variants.vcf.gz", index = "custom_path.tbi", region = "chr1")
+#'
 #' # Convert to data frame
 #' df <- vcf_to_arrow("variants.vcf.gz", as = "data.frame")
 #'
@@ -53,13 +61,16 @@ vcf_open_arrow <- function(filename,
                            samples = NULL,
                            include_info = TRUE,
                            include_format = TRUE,
+                           index = NULL,
                            threads = 0L) {
     if (!requireNamespace("nanoarrow", quietly = TRUE)) {
         stop("Package 'nanoarrow' is required for Arrow stream support")
     }
 
-    # Normalize local paths, but allow remote URLs (s3://, gs://, http://, https://, ftp://)
-    if (!grepl("^(s3|gs|http|https|ftp)://", filename)) {
+    # Normalize local paths, but allow:
+    # - Remote URLs (s3://, gs://, http://, https://, ftp://)
+    # - htslib ##idx## syntax for custom index paths
+    if (!grepl("^(s3|gs|http|https|ftp)://", filename) && !grepl("##idx##", filename)) {
         filename <- normalizePath(filename, mustWork = TRUE)
     }
 
@@ -71,6 +82,7 @@ vcf_open_arrow <- function(filename,
         samples,
         as.logical(include_info),
         as.logical(include_format),
+        index,
         as.integer(threads)
     )
 }

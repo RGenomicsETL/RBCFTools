@@ -31,7 +31,7 @@
 SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
                          SEXP region_sexp, SEXP samples_sexp,
                          SEXP include_info_sexp, SEXP include_format_sexp,
-                         SEXP threads_sexp) {
+                         SEXP index_sexp, SEXP threads_sexp) {
     // Validate inputs
     if (TYPEOF(filename_sexp) != STRSXP || Rf_length(filename_sexp) != 1) {
         Rf_error("filename must be a single character string");
@@ -52,6 +52,10 @@ SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
     
     if (!Rf_isNull(region_sexp) && TYPEOF(region_sexp) == STRSXP) {
         opts.region = CHAR(STRING_ELT(region_sexp, 0));
+    }
+    
+    if (!Rf_isNull(index_sexp) && TYPEOF(index_sexp) == STRSXP) {
+        opts.index = CHAR(STRING_ELT(index_sexp, 0));
     }
     
     if (!Rf_isNull(samples_sexp) && TYPEOF(samples_sexp) == STRSXP) {

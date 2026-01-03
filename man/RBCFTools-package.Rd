@@ -6,7 +6,7 @@
 \alias{RBCFTools-package}
 \title{RBCFTools: `htslib` And `bcftools` Libraries And Command Line Tools Wrapper}
 \description{
-Provides R bindings to 'htslib' and 'bcftools' for reading and manipulating VCF/BCF files. Includes experimental streaming facilities from VCF to Apache Arrow via 'nanoarrow', enabling efficient export to Parquet and Arrow IPC formats using 'DuckDB' without requiring the heavy 'arrow' package. Bundles 'htslib' and 'bcftools' libraries and command-line tools.
+Bundles the 'htslib' and 'bcftools' libraries and command lines tools for reading and manipulating VCF/BCF files. Includes experimental streaming facilities from VCF to Apache Arrow via 'nanoarrow', enabling export to Arrow IPC format and Parquet format using 'duckdb'.
 }
 \seealso{
 Useful links:
