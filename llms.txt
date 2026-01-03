@@ -309,7 +309,7 @@ parquet file and perform queries on the parquet file
 ``` r
 # 
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpkxKHNf/file2c1b6d1a4128b.parquet
+#> Wrote 11 rows to /tmp/RtmpsN6WZM/file2c212c42a57d5c.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 duckdb::dbDisconnect(con, shutdown = TRUE)
@@ -338,7 +338,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpkxKHNf/file2c1b6d5b730a18.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpsN6WZM/file2c212c4252b84f.parquet (streaming mode)
 ```
 
 ### Query with duckdb
@@ -362,25 +362,24 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ### Stream Remote VCF to Arrow
 
 ``` r
-# Stream remote VCF region directly to Arrow
-vcf_url <- paste0("https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/",
-"20220422_3202_phased_SNV_INDEL_SV/1kGP_high_coverage_Illumina.chr21.filtered.SNV_INDEL_SV_phased_panel.vcf.gz")
+# Stream remote VCF region directly to Arrow from S3
+vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
-    region = "chr21:20000000-20100000",
+    region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
 
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 head(df[, c("CHROM", "POS", "REF", "ALT")])
-#>   CHROM      POS REF ALT
-#> 1 chr21 20000032   G   T
-#> 2 chr21 20000039   C   T
-#> 3 chr21 20000079   T   C
-#> 4 chr21 20000090   A   T
-#> 5 chr21 20000165   T   G
-#> 6 chr21 20000177  TC   T
+#>   CHROM      POS REF                  ALT
+#> 1 chr22 16050036   A C        , <NON_REF>
+#> 2 chr22 16050151   T G        , <NON_REF>
+#> 3 chr22 16050213   C T        , <NON_REF>
+#> 4 chr22 16050219   C A        , <NON_REF>
+#> 5 chr22 16050224   A C        , <NON_REF>
+#> 6 chr22 16050229   C A        , <NON_REF>
 ```
 
 ## References
