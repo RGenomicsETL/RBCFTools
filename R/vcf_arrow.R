@@ -56,19 +56,15 @@
 #'
 #' @export
 vcf_open_arrow <- function(
-    filename,
-    batch_size = 10000L,
-    region = NULL,
-    samples = NULL,
-    include_info = TRUE,
-    include_format = TRUE,
-    index = NULL,
-    threads = 0L
+  filename,
+  batch_size = 10000L,
+  region = NULL,
+  samples = NULL,
+  include_info = TRUE,
+  include_format = TRUE,
+  index = NULL,
+  threads = 0L
 ) {
-    if (!requireNamespace("nanoarrow", quietly = TRUE)) {
-        stop("Package 'nanoarrow' is required for Arrow stream support")
-    }
-
     # Normalize local paths, but allow:
     # - Remote URLs (s3://, gs://, http://, https://, ftp://)
     # - htslib ##idx## syntax for custom index paths
@@ -103,10 +99,6 @@ vcf_open_arrow <- function(
 #'
 #' @export
 vcf_arrow_schema <- function(filename) {
-    if (!requireNamespace("nanoarrow", quietly = TRUE)) {
-        stop("Package 'nanoarrow' is required for Arrow stream support")
-    }
-
     filename <- normalizePath(filename, mustWork = TRUE)
     .Call(vcf_arrow_get_schema, filename)
 }
@@ -128,9 +120,9 @@ vcf_arrow_schema <- function(filename) {
 #'
 #' @export
 vcf_to_arrow <- function(
-    filename,
-    as = c("tibble", "data.frame", "batches"),
-    ...
+  filename,
+  as = c("tibble", "data.frame", "batches"),
+  ...
 ) {
     as <- match.arg(as)
 
@@ -216,14 +208,14 @@ vcf_to_arrow <- function(
 #'
 #' @export
 vcf_to_parquet <- function(
-    input_vcf,
-    output_parquet,
-    compression = "zstd",
-    row_group_size = 100000L,
-    streaming = FALSE,
-    threads = 1L,
-    index = NULL,
-    ...
+  input_vcf,
+  output_parquet,
+  compression = "zstd",
+  row_group_size = 100000L,
+  streaming = FALSE,
+  threads = 1L,
+  index = NULL,
+  ...
 ) {
     if (!requireNamespace("duckdb", quietly = TRUE)) {
         stop("Package 'duckdb' is required for Parquet support")
@@ -282,11 +274,11 @@ vcf_to_parquet <- function(
 
 #' @noRd
 vcf_to_parquet_inmemory <- function(
-    input_vcf,
-    output_parquet,
-    duckdb_compression,
-    row_group_size,
-    ...
+  input_vcf,
+  output_parquet,
+  duckdb_compression,
+  row_group_size,
+  ...
 ) {
     # Open VCF stream and convert to data.frame
     stream <- vcf_open_arrow(input_vcf, ...)
@@ -316,11 +308,11 @@ vcf_to_parquet_inmemory <- function(
 
 #' @noRd
 vcf_to_parquet_streaming <- function(
-    input_vcf,
-    output_parquet,
-    duckdb_compression,
-    row_group_size,
-    ...
+  input_vcf,
+  output_parquet,
+  duckdb_compression,
+  row_group_size,
+  ...
 ) {
     # Stage 1: Stream VCF to temporary IPC file via nanoarrow
     ipc_temp <- tempfile(fileext = ".arrow")
