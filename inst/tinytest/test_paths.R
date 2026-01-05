@@ -513,10 +513,17 @@ int main(void) {
     return(FALSE)
   }
 
-  # Set LD_LIBRARY_PATH and try to run
+  # Set LD_LIBRARY_PATH (Linux) or DYLD_LIBRARY_PATH (macOS) and try to run
   lib_dir <- htslib_lib_dir()
-  old_ldpath <- Sys.getenv("LD_LIBRARY_PATH")
-  Sys.setenv(LD_LIBRARY_PATH = paste0(lib_dir, ":", old_ldpath))
+  is_macos <- Sys.info()["sysname"] == "Darwin"
+  
+  if (is_macos) {
+    old_ldpath <- Sys.getenv("DYLD_LIBRARY_PATH")
+    Sys.setenv(DYLD_LIBRARY_PATH = paste0(lib_dir, ":", old_ldpath))
+  } else {
+    old_ldpath <- Sys.getenv("LD_LIBRARY_PATH")
+    Sys.setenv(LD_LIBRARY_PATH = paste0(lib_dir, ":", old_ldpath))
+  }
 
   run_output <- tryCatch(
     {
@@ -525,11 +532,19 @@ int main(void) {
     error = function(e) NULL
   )
 
-  # Restore LD_LIBRARY_PATH
-  if (nchar(old_ldpath) > 0) {
-    Sys.setenv(LD_LIBRARY_PATH = old_ldpath)
+  # Restore library path
+  if (is_macos) {
+    if (nchar(old_ldpath) > 0) {
+      Sys.setenv(DYLD_LIBRARY_PATH = old_ldpath)
+    } else {
+      Sys.unsetenv("DYLD_LIBRARY_PATH")
+    }
   } else {
-    Sys.unsetenv("LD_LIBRARY_PATH")
+    if (nchar(old_ldpath) > 0) {
+      Sys.setenv(LD_LIBRARY_PATH = old_ldpath)
+    } else {
+      Sys.unsetenv("LD_LIBRARY_PATH")
+    }
   }
 
   # Clean up
