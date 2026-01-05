@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpDsYgYV/file3b68725342b002.parquet
+#> Wrote 11 rows to /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
-#> 2 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
-#> 3 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
-#> 4 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
-#> 5 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
-#> 6 /tmp/RtmpDsYgYV/file3b68725342b002.parquet            0                 11
+#> 1 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 2 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 3 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 4 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 5 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 6 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,8 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Writing temporary Arrow IPC file to : /tmp/RtmpDsYgYV/file3b68721dcc50d8.arrow
-#> Wrote 11 rows to /tmp/RtmpDsYgYV/file3b6872202ef24f.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpyCZd4N/file3c19e33ec67ab.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -488,7 +487,7 @@ $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
 
 # Show schema
-$SCRIPT schema -i $BCF | head -15
+$SCRIPT schema -i $BCF | head -40
 
 # File info
 $SCRIPT info -i $OUT_PQ | head -10
@@ -496,7 +495,7 @@ $SCRIPT info -i $OUT_PQ | head -10
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.0s2tmSrdn7.parquet 
+#>   Output: /tmp/tmp.5GIOHdEptk.parquet 
 #>   Compression: snappy 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -506,10 +505,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.0s2tmSrdn7.parquet
+#> Wrote 11 rows to /tmp/tmp.5GIOHdEptk.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.71 seconds
+#>   Time: 0.70 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -567,6 +566,31 @@ rm -f $OUT_PQ
 #>   .. ..$ flags     : int 0
 #>   .. ..$ children  : list()
 #>   .. ..$ dictionary: NULL
+#>   ..$ POS    :<nanoarrow_schema int64>
+#>   .. ..$ format    : chr "l"
+#>   .. ..$ name      : chr "POS"
+#>   .. ..$ metadata  : list()
+#>   .. ..$ flags     : int 0
+#>   .. ..$ children  : list()
+#>   .. ..$ dictionary: NULL
+#>   ..$ ID     :<nanoarrow_schema string>
+#>   .. ..$ format    : chr "u"
+#>   .. ..$ name      : chr "ID"
+#>   .. ..$ metadata  : list()
+#>   .. ..$ flags     : int 2
+#>   .. ..$ children  : list()
+#>   .. ..$ dictionary: NULL
+#>   ..$ REF    :<nanoarrow_schema string>
+#>   .. ..$ format    : chr "u"
+#>   .. ..$ name      : chr "REF"
+#>   .. ..$ metadata  : list()
+#>   .. ..$ flags     : int 0
+#>   .. ..$ children  : list()
+#>   .. ..$ dictionary: NULL
+#>   ..$ ALT    :<nanoarrow_schema list>
+#>   .. ..$ format    : chr "+l"
+#>   .. ..$ name      : chr "ALT"
+#>   .. ..$ metadata  : list()
 #> Warning messages:
 #> 1: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
@@ -574,7 +598,7 @@ rm -f $OUT_PQ
 #>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
 #> 3: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
-#> Parquet File Information: /tmp/tmp.0s2tmSrdn7.parquet 
+#> Parquet File Information: /tmp/tmp.5GIOHdEptk.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 

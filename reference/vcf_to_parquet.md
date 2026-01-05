@@ -9,7 +9,7 @@ and querying with tools like DuckDB, Spark, or Python pandas/polars.
 vcf_to_parquet(
   input_vcf,
   output_parquet,
-  compression = "snappy",
+  compression = "zstd",
   row_group_size = 100000L,
   streaming = FALSE,
   threads = 1L,
