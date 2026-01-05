@@ -68,7 +68,7 @@ For static linking, also includes the dependent libraries:
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">htslib_libs</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts"</span>
 <span class="r-in"><span><span class="fu">htslib_libs</span><span class="op">(</span>static <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts -lpthread -lz -lm -lbz2 -llzma -ldeflate"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl"</span>
 <span class="r-in"><span><span class="co"># Use in Makevars: PKG_LIBS = $(shell Rscript -e "cat(RBCFTools::htslib_libs())")</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

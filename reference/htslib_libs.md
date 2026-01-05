@@ -32,6 +32,6 @@ also includes the dependent libraries:
 htslib_libs()
 #> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts"
 htslib_libs(static = TRUE)
-#> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts -lpthread -lz -lm -lbz2 -llzma -ldeflate"
+#> [1] "-L/home/runner/work/_temp/Library/RBCFTools/htslib/lib -lhts -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl"
 # Use in Makevars: PKG_LIBS = $(shell Rscript -e "cat(RBCFTools::htslib_libs())")
 ```

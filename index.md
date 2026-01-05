@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e76d021998.parquet
+#> Wrote 11 rows to /tmp/RtmpmUF715/file38c12e60409eec.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
-#> 2 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
-#> 3 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
-#> 4 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
-#> 5 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
-#> 6 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 1 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 2 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 3 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 4 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 5 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 6 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e732948d06.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpmUF715/file38c12e7ec80dcf.parquet (streaming mode)
 # describe using duckdb
 ```
 
