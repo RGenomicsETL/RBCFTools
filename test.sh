@@ -177,16 +177,28 @@ cat(sprintf("Queries/second: %.2f\n",
 
 # === Method 2: UNION ALL of interval queries (parallel execution) ===
 cat("\n=== Method 2: UNION ALL Parallel Queries ===\n")
+
+# Limit UNION ALL to avoid DuckDB's max expression depth limit
+max_union_queries <- 500
+if (num_queries > max_union_queries) {
+    cat(sprintf("Limiting UNION ALL to %d queries (out of %d) due to DuckDB expression depth limit\n", 
+                max_union_queries, num_queries))
+    union_subset_idx <- seq(1, num_queries, length.out = max_union_queries)
+    union_subset_idx <- as.integer(union_subset_idx)
+} else {
+    union_subset_idx <- seq_len(num_queries)
+}
+
 union_start <- Sys.time()
 
-# Build a single query with UNION ALL for all intervals
+# Build a single query with UNION ALL for subset of intervals
 if (!is.null(chrom_col) && "chrom" %in% names(intervals)) {
-    union_queries <- sapply(seq_len(num_queries), function(i) {
+    union_queries <- sapply(union_subset_idx, function(i) {
         sprintf("SELECT %d AS query_id, COUNT(*) AS row_count FROM variants WHERE %s = '%s' AND %s >= %d AND %s <= %d",
                 i, chrom_col, intervals$chrom[i], pos_col, intervals$start_pos[i], pos_col, intervals$end_pos[i])
     })
 } else {
-    union_queries <- sapply(seq_len(num_queries), function(i) {
+    union_queries <- sapply(union_subset_idx, function(i) {
         sprintf("SELECT %d AS query_id, COUNT(*) AS row_count FROM variants WHERE %s >= %d AND %s <= %d",
                 i, pos_col, intervals$start_pos[i], pos_col, intervals$end_pos[i])
     })
@@ -196,11 +208,13 @@ union_query <- paste(union_queries, collapse = " UNION ALL ")
 result2 <- dbGetQuery(con, union_query)
 union_end <- Sys.time()
 
+union_queries_run <- length(union_subset_idx)
 cat(sprintf("UNION ALL elapsed time: %.4f seconds\n", 
     as.numeric(difftime(union_end, union_start, units = "secs"))))
 cat(sprintf("Total rows matched: %d\n", sum(result2$row_count)))
+cat(sprintf("Queries executed: %d\n", union_queries_run))
 cat(sprintf("Queries/second: %.2f\n", 
-    num_queries / as.numeric(difftime(union_end, union_start, units = "secs"))))
+    union_queries_run / as.numeric(difftime(union_end, union_start, units = "secs"))))
 
 # === Method 3: Fetch actual data (not just counts) ===
 cat("\n=== Method 3: Fetch All Matching Rows ===\n")
@@ -238,9 +252,10 @@ cat(sprintf("Interval width: %d bp\n", interval_width))
 cat(sprintf("\nMethod 1 (Range Join counts):  %.4f sec (%.2f queries/sec)\n", 
     as.numeric(difftime(range_join_end, range_join_start, units = "secs")),
     num_queries / as.numeric(difftime(range_join_end, range_join_start, units = "secs"))))
-cat(sprintf("Method 2 (UNION ALL counts):   %.4f sec (%.2f queries/sec)\n", 
+cat(sprintf("Method 2 (UNION ALL counts):   %.4f sec (%.2f queries/sec) [%d queries]\n", 
     as.numeric(difftime(union_end, union_start, units = "secs")),
-    num_queries / as.numeric(difftime(union_end, union_start, units = "secs"))))
+    union_queries_run / as.numeric(difftime(union_end, union_start, units = "secs")),
+    union_queries_run))
 fetch_time <- as.numeric(difftime(fetch_end, fetch_start, units = "secs"))
 if (nrow(all_data) > 0 && fetch_time > 0) {
     cat(sprintf("Method 3 (Fetch all data):     %.4f sec (%.0f rows/sec)\n", fetch_time,
