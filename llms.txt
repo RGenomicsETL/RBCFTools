@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet
+#> Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
-#> 2 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
-#> 3 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
-#> 4 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
-#> 5 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
-#> 6 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 1 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 2 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 3 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 4 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 5 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 6 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c055baba5e.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af74e8a317.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -483,6 +483,9 @@ $SCRIPT convert -i $BCF -o $OUT_PQ
 # Query with DuckDB SQL
 $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
 
+# Describe table structure
+$SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
+
 # Show schema
 $SCRIPT schema -i $BCF | head -15
 
@@ -492,7 +495,7 @@ $SCRIPT info -i $OUT_PQ | head -10
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.p3QxGjLMD0.parquet 
+#>   Output: /tmp/tmp.tqamAHejTc.parquet 
 #>   Compression: snappy 
 #>   Batch size: 10000 
 #>   Streaming: FALSE 
@@ -501,10 +504,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.p3QxGjLMD0.parquet
+#> Wrote 11 rows to /tmp/tmp.tqamAHejTc.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.73 seconds
+#>   Time: 0.74 seconds
 #>   Output size: 0.01 MB
 #> Warning messages:
 #> 1: In nanoarrow::convert_array_stream(stream) :
@@ -526,10 +529,40 @@ rm -f $OUT_PQ
 #> 3     1 11565   G   T
 #> 4     1 13116   T   G
 #> 5     1 13327   G   C
+#> Running query on Parquet file(s)...
+#>   column_name
+#> 1       CHROM
+#> 2         POS
+#> 3          ID
+#> 4         REF
+#> 5         ALT
+#> 6        QUAL
+#> 7      FILTER
+#> 8        INFO
+#> 9     samples
+#>                                                                                                                                                                                                                                                                                                    column_type
+#> 1                                                                                                                                                                                                                                                                                                      VARCHAR
+#> 2                                                                                                                                                                                                                                                                                                       DOUBLE
+#> 3                                                                                                                                                                                                                                                                                                      VARCHAR
+#> 4                                                                                                                                                                                                                                                                                                      VARCHAR
+#> 5                                                                                                                                                                                                                                                                                                    VARCHAR[]
+#> 6                                                                                                                                                                                                                                                                                                       DOUBLE
+#> 7                                                                                                                                                                                                                                                                                                    VARCHAR[]
+#> 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)
+#> 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))
+#>   null  key default extra
+#> 1  YES <NA>    <NA>  <NA>
+#> 2  YES <NA>    <NA>  <NA>
+#> 3  YES <NA>    <NA>  <NA>
+#> 4  YES <NA>    <NA>  <NA>
+#> 5  YES <NA>    <NA>  <NA>
+#> 6  YES <NA>    <NA>  <NA>
+#> 7  YES <NA>    <NA>  <NA>
+#> 8  YES <NA>    <NA>  <NA>
+#> 9  YES <NA>    <NA>  <NA>
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Warning messages:
 #> VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
 #> 
 #> <nanoarrow_schema struct>
@@ -545,13 +578,14 @@ rm -f $OUT_PQ
 #>   .. ..$ flags     : int 0
 #>   .. ..$ children  : list()
 #>   .. ..$ dictionary: NULL
+#> Warning messages:
 #> 1: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
 #> 2: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
 #> 3: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
-#> Parquet File Information: /tmp/tmp.p3QxGjLMD0.parquet 
+#> Parquet File Information: /tmp/tmp.tqamAHejTc.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
