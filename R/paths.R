@@ -344,7 +344,7 @@ htslib_libs <- function(static = FALSE) {
 
   if (static) {
     # Additional libraries needed for static linking
-    static_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate"
+    static_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl"
     paste(base_libs, static_deps)
   } else {
     base_libs

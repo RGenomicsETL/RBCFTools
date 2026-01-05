@@ -1,5 +1,6 @@
 # Test path functions
-
+library(RBCFTools)
+library(tinytest)
 # Test bcftools_path returns a string
 expect_true(
   is.character(bcftools_path()),
@@ -297,15 +298,16 @@ int main(void) {
 '
   writeLines(test_code, test_c_file)
 
-  # Build the compile command
+  # Build the compile command using static library directly
+  lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    htslib_libs(static = TRUE)
+    lib_path
   )
 
   # Try to compile
@@ -378,15 +380,16 @@ int main(void) {
 '
   writeLines(test_code, test_c_file)
 
-  # Build the compile command (static linking for portability)
+  # Build the compile command using static library directly
+  lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    htslib_libs(static = TRUE)
+    lib_path
   )
 
   # Try to compile
@@ -497,14 +500,16 @@ int main(void) {
 '
   writeLines(test_code, test_c_file)
 
+  # Use static library directly
+  lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    htslib_libs(static = TRUE)
+    lib_path
   )
 
   compile_result <- system(

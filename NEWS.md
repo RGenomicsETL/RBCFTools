@@ -12,7 +12,9 @@
   streams VCF -> Arrow IPC -> Parquet without loading into R memory.
   Requires DuckDB nanoarrow extension (auto-installed on first use).
 
-- **FORMAT field extraction**:
+- **INFO and FORMAT field extraction**:
+  - INFO fields properly parsed in Arrow streams as nested `INFO` data.frame column
+  - FORMAT fields extracted as nested `samples` data.frame with sample names as columns
   - Proper GT field decoding (genotype integers to strings like "0|0", "0/1")
   - List-type FORMAT fields (AD, GL, PL) correctly extracted as Arrow list arrays
   - Header sanity checking based on VCF spec (matching htslib's `bcf_hdr_check_sanity()`)
