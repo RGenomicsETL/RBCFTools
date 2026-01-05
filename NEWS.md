@@ -9,7 +9,7 @@
   - `vcf_query()`: SQL queries on VCF files via DuckDB
 
 - **Streaming mode for large files**: `vcf_to_parquet(..., streaming = TRUE)` 
-  streams VCF → Arrow IPC → Parquet without loading into R memory.
+  streams VCF -> Arrow IPC -> Parquet without loading into R memory.
   Requires DuckDB nanoarrow extension (auto-installed on first use).
 
 - **FORMAT field extraction**:
