@@ -194,18 +194,21 @@ merge_parquet_files <- function(
         as.integer(row_group_size)
     )
 
-    message(sprintf(
-        "Merging %d parquet files into %s...",
-        length(input_files),
-        basename(output_file)
-    ))
-    DBI::dbExecute(con, sql)
+    # Suppress messages during merge to avoid worker process I/O conflicts
+    suppressMessages({
+        DBI::dbExecute(con, sql)
+    })
 
     # Get total row count
     count_sql <- sprintf("SELECT COUNT(*) as n FROM '%s'", output_file)
     n_rows <- DBI::dbGetQuery(con, count_sql)$n[1]
 
-    message(sprintf("Wrote %d total rows", n_rows))
+    message(sprintf(
+        "Merged %d parquet files -> %s (%d rows)",
+        length(input_files),
+        basename(output_file),
+        n_rows
+    ))
 }
 
 #' Parallel VCF to Parquet conversion
@@ -324,6 +327,21 @@ vcf_to_parquet_parallel <- function(
         threads
     ))
 
+    # If only 1 thread needed, use single-threaded path directly
+    if (threads == 1) {
+        message("Using single-threaded mode (1 work unit)")
+        return(vcf_to_parquet(
+            input_vcf,
+            output_parquet,
+            compression = compression,
+            row_group_size = row_group_size,
+            streaming = streaming,
+            threads = 1,
+            index = index,
+            ...
+        ))
+    }
+
     # Create temporary directory for per-contig parquet files
     temp_dir <- tempfile("vcf_parallel_")
     dir.create(temp_dir, recursive = TRUE)
@@ -342,85 +360,78 @@ vcf_to_parquet_parallel <- function(
 
         tryCatch(
             {
-                if (length(unit) == 1) {
-                    # Single contig
-                    region <- unit
-                    message(sprintf(
-                        "[Thread %d] Processing contig: %s",
-                        i,
-                        region
-                    ))
-                } else {
-                    # Multiple small contigs - process separately and combine
-                    region <- NULL
-                    message(sprintf(
-                        "[Thread %d] Processing %d small contigs",
-                        i,
-                        length(unit)
-                    ))
-                }
+                # Suppress messages in worker processes to avoid I/O conflicts
+                suppressMessages({
+                    if (length(unit) == 1) {
+                        # Single contig
+                        region <- unit
+                    } else {
+                        # Multiple small contigs
+                        region <- NULL
+                    }
 
-                # Process this region
-                if (streaming) {
-                    vcf_to_parquet_streaming(
-                        input_vcf,
-                        temp_file,
-                        duckdb_compression,
-                        row_group_size,
-                        region = if (length(unit) == 1) unit else NULL,
-                        index = index,
-                        ...
-                    )
-                } else {
-                    vcf_to_parquet_inmemory(
-                        input_vcf,
-                        temp_file,
-                        duckdb_compression,
-                        row_group_size,
-                        region = if (length(unit) == 1) unit else NULL,
-                        index = index,
-                        ...
-                    )
-                }
-
-                # For multiple small contigs, process each and merge
-                if (length(unit) > 1) {
-                    small_files <- lapply(seq_along(unit), function(j) {
-                        small_file <- file.path(
-                            temp_dir,
-                            sprintf("small_%04d_%04d.parquet", i, j)
+                    # Process this region
+                    if (streaming) {
+                        vcf_to_parquet_streaming(
+                            input_vcf,
+                            temp_file,
+                            duckdb_compression,
+                            row_group_size,
+                            region = if (length(unit) == 1) unit else NULL,
+                            index = index,
+                            ...
                         )
-                        if (streaming) {
-                            vcf_to_parquet_streaming(
-                                input_vcf,
-                                small_file,
-                                duckdb_compression,
-                                row_group_size,
-                                region = unit[j],
-                                index = index,
-                                ...
+                    } else {
+                        vcf_to_parquet_inmemory(
+                            input_vcf,
+                            temp_file,
+                            duckdb_compression,
+                            row_group_size,
+                            region = if (length(unit) == 1) unit else NULL,
+                            index = index,
+                            ...
+                        )
+                    }
+
+                    # For multiple small contigs, process each and merge
+                    if (length(unit) > 1) {
+                        small_files <- lapply(seq_along(unit), function(j) {
+                            small_file <- file.path(
+                                temp_dir,
+                                sprintf("small_%04d_%04d.parquet", i, j)
                             )
-                        } else {
-                            vcf_to_parquet_inmemory(
-                                input_vcf,
-                                small_file,
-                                duckdb_compression,
-                                row_group_size,
-                                region = unit[j],
-                                index = index,
-                                ...
-                            )
-                        }
-                        small_file
-                    })
-                    # Merge small files into temp_file
-                    merge_parquet_files(
-                        unlist(small_files),
-                        temp_file,
-                        duckdb_compression,
-                        row_group_size
-                    )
-                }
+                            if (streaming) {
+                                vcf_to_parquet_streaming(
+                                    input_vcf,
+                                    small_file,
+                                    duckdb_compression,
+                                    row_group_size,
+                                    region = unit[j],
+                                    index = index,
+                                    ...
+                                )
+                            } else {
+                                vcf_to_parquet_inmemory(
+                                    input_vcf,
+                                    small_file,
+                                    duckdb_compression,
+                                    row_group_size,
+                                    region = unit[j],
+                                    index = index,
+                                    ...
+                                )
+                            }
+                            small_file
+                        })
+                        # Merge small files into temp_file
+                        merge_parquet_files(
+                            unlist(small_files),
+                            temp_file,
+                            duckdb_compression,
+                            row_group_size
+                        )
+                    }
+                })
 
                 temp_file
             },
