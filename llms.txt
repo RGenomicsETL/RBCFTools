@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet
+#> Wrote 11 rows to /tmp/RtmpGo07MW/file3c358839185444.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
-#> 2 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
-#> 3 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
-#> 4 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
-#> 5 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
-#> 6 /tmp/RtmpyCZd4N/file3c19e37aee073a.parquet            0                 11
+#> 1 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
+#> 2 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
+#> 3 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
+#> 4 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
+#> 5 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
+#> 6 /tmp/RtmpGo07MW/file3c358839185444.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpyCZd4N/file3c19e33ec67ab.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpGo07MW/file3c3588101bf4fe.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -487,15 +487,15 @@ $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
 
 # Show schema
-$SCRIPT schema -i $BCF | head -40
+$SCRIPT schema 0 --quiet -i $BCF
 
 # File info
-$SCRIPT info -i $OUT_PQ | head -10
+$SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.5GIOHdEptk.parquet 
+#>   Output: /tmp/tmp.4HSSGGyAqh.parquet 
 #>   Compression: snappy 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -505,10 +505,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.5GIOHdEptk.parquet
+#> Wrote 11 rows to /tmp/tmp.4HSSGGyAqh.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.70 seconds
+#>   Time: 0.71 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -548,57 +548,8 @@ rm -f $OUT_PQ
 #> 7  YES <NA>    <NA>  <NA>
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
-#> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
-#> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
-#> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#> 
-#> <nanoarrow_schema struct>
-#>  $ format    : chr "+s"
-#>  $ name      : chr ""
-#>  $ metadata  : list()
-#>  $ flags     : int 0
-#>  $ children  :List of 9
-#>   ..$ CHROM  :<nanoarrow_schema string>
-#>   .. ..$ format    : chr "u"
-#>   .. ..$ name      : chr "CHROM"
-#>   .. ..$ metadata  : list()
-#>   .. ..$ flags     : int 0
-#>   .. ..$ children  : list()
-#>   .. ..$ dictionary: NULL
-#>   ..$ POS    :<nanoarrow_schema int64>
-#>   .. ..$ format    : chr "l"
-#>   .. ..$ name      : chr "POS"
-#>   .. ..$ metadata  : list()
-#>   .. ..$ flags     : int 0
-#>   .. ..$ children  : list()
-#>   .. ..$ dictionary: NULL
-#>   ..$ ID     :<nanoarrow_schema string>
-#>   .. ..$ format    : chr "u"
-#>   .. ..$ name      : chr "ID"
-#>   .. ..$ metadata  : list()
-#>   .. ..$ flags     : int 2
-#>   .. ..$ children  : list()
-#>   .. ..$ dictionary: NULL
-#>   ..$ REF    :<nanoarrow_schema string>
-#>   .. ..$ format    : chr "u"
-#>   .. ..$ name      : chr "REF"
-#>   .. ..$ metadata  : list()
-#>   .. ..$ flags     : int 0
-#>   .. ..$ children  : list()
-#>   .. ..$ dictionary: NULL
-#>   ..$ ALT    :<nanoarrow_schema list>
-#>   .. ..$ format    : chr "+l"
-#>   .. ..$ name      : chr "ALT"
-#>   .. ..$ metadata  : list()
-#> Warning messages:
-#> 1: In vcf_arrow_schema(opts$input) :
-#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
-#> 2: In vcf_arrow_schema(opts$input) :
-#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> 3: In vcf_arrow_schema(opts$input) :
-#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
-#> Parquet File Information: /tmp/tmp.5GIOHdEptk.parquet 
+#> Unknown option: 0 
+#> Parquet File Information: /tmp/tmp.4HSSGGyAqh.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
@@ -608,6 +559,45 @@ rm -f $OUT_PQ
 #>     name       type
 #>    CHROM BYTE_ARRAY
 #>      POS     DOUBLE
+#>       ID BYTE_ARRAY
+#>      REF BYTE_ARRAY
+#>      ALT       <NA>
+#>     QUAL     DOUBLE
+#>   FILTER       <NA>
+#>     INFO       <NA>
+#>       DP      INT32
+#>       AF       <NA>
+#>       CB       <NA>
+#>   EUR_R2     DOUBLE
+#>   AFR_R2     DOUBLE
+#>   ASN_R2     DOUBLE
+#>       AC       <NA>
+#>       AN      INT32
+#>  samples       <NA>
+#>  HG00098       <NA>
+#>       AD BYTE_ARRAY
+#>       DP      INT32
+#>       GL BYTE_ARRAY
+#>       GQ     DOUBLE
+#>       GT BYTE_ARRAY
+#>       GD     DOUBLE
+#>       OG BYTE_ARRAY
+#>  HG00100       <NA>
+#>       AD       <NA>
+#>       DP      INT32
+#>       GL       <NA>
+#>       GQ     DOUBLE
+#>       GT BYTE_ARRAY
+#>       GD     DOUBLE
+#>       OG BYTE_ARRAY
+#>  HG00106       <NA>
+#>       AD       <NA>
+#>       DP      INT32
+#>       GL       <NA>
+#>       GQ     DOUBLE
+#>       GT BYTE_ARRAY
+#>       GD     DOUBLE
+#>       OG BYTE_ARRAY
 ```
 
 ### Custom Index File Path
