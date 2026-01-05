@@ -231,7 +231,7 @@ BCF=$(Rscript -e "cat(system.file('extdata', '1000G_3samples.bcf', package='RBCF
 OUT_PQ=$(mktemp --suffix=.parquet)
 
 # Convert BCF to Parquet
-$SCRIPT convert -i $BCF -o $OUT_PQ
+$SCRIPT convert --quiet -i $BCF -o $OUT_PQ
 
 # Query with DuckDB SQL
 $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
