@@ -22,7 +22,8 @@ export to Parquet format using [duckdb](https://duckdb.org/)
 ## Installation
 
 You can install the development version of RBCFTools from
-[GitHub](https://github.com/RGenomicsETL/RBCFTools) with:
+[GitHub](https://github.com/RGenomicsETL/RBCFTools)
+with:
 
 ``` r
 install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))
@@ -47,11 +48,11 @@ functions to locate the executables
 
 ``` r
 bcftools_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"
 # List all available tools
 bcftools_tools()
 #>  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     
@@ -97,7 +98,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
 ### Feature Constants
@@ -183,30 +184,30 @@ batch <- stream$get_next()
 #> spec; correcting schema
 
 nanoarrow::convert_array(batch)
-#>    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB
-#> 1      1 10583 rs58108140   G   A   NA   PASS      NA    NULL    NULL
-#> 2      1 11508       <NA>   A   G   NA   PASS      NA    NULL    NULL
-#> 3      1 11565       <NA>   G   T   NA   PASS      NA    NULL    NULL
-#> 4      1 13116       <NA>   T   G   NA   PASS      NA    NULL    NULL
-#> 5      1 13327       <NA>   G   C   NA   PASS      NA    NULL    NULL
-#> 6      1 14699       <NA>   C   G   NA   PASS      NA    NULL    NULL
-#> 7      1 15274       <NA>   A   T   NA   PASS      NA    NULL    NULL
-#> 8      1 15820       <NA>   G   T   NA   PASS      NA    NULL    NULL
-#> 9      1 16257       <NA>   G   C   NA   PASS      NA    NULL    NULL
-#> 10     1 16378       <NA>   T   C   NA   PASS      NA    NULL    NULL
-#> 11     1 28376       <NA>   G   A   NA   PASS      NA    NULL    NULL
+#>    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF       INFO.CB
+#> 1      1 10583 rs58108140   G   A   NA   PASS    1557   0.162 UM,BI,BC,NCBI
+#> 2      1 11508       <NA>   A   G   NA   PASS      23    0.72         BI,BC
+#> 3      1 11565       <NA>   G   T   NA   PASS      45       0         BI,BC
+#> 4      1 13116       <NA>   T   G   NA   PASS    2400   0.016         UM,BI
+#> 5      1 13327       <NA>   G   C   NA   PASS    2798    0.01         BI,BC
+#> 6      1 14699       <NA>   C   G   NA   PASS     408    0.02         BI,BC
+#> 7      1 15274       <NA>   A   T   NA   PASS    1739    0.91         UM,BI
+#> 8      1 15820       <NA>   G   T   NA   PASS    1643   0.114      UM,BI,BC
+#> 9      1 16257       <NA>   G   C   NA   PASS    5301    0.12    BI,BC,NCBI
+#> 10     1 16378       <NA>   T   C   NA   PASS     820    0.51    BI,BC,NCBI
+#> 11     1 28376       <NA>   G   A   NA   PASS    2943   0.026         UM,BI
 #>    INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2 INFO.AC INFO.AN samples.HG00098.AD
-#> 1           NA          NA          NA    NULL      NA               NULL
-#> 2           NA          NA          NA    NULL      NA               NULL
-#> 3           NA          NA          NA    NULL      NA               NULL
-#> 4           NA          NA          NA    NULL      NA               NULL
-#> 5           NA          NA          NA    NULL      NA               NULL
-#> 6           NA          NA          NA    NULL      NA               NULL
-#> 7           NA          NA          NA    NULL      NA               NULL
-#> 8           NA          NA          NA    NULL      NA               NULL
-#> 9           NA          NA          NA    NULL      NA               NULL
-#> 10          NA          NA          NA    NULL      NA               NULL
-#> 11          NA          NA          NA    NULL      NA               NULL
+#> 1        0.248          NA          NA       0       6               NULL
+#> 2        0.001          NA          NA       6       6               NULL
+#> 3           NA       0.003          NA       0       6               NULL
+#> 4        0.106       0.286          NA       0       6               NULL
+#> 5        0.396       0.481          NA       0       6               NULL
+#> 6        0.061       0.184          NA       0       6               NULL
+#> 7        0.063       0.194          NA       6       6               NULL
+#> 8        0.147       0.209          NA       0       6               NULL
+#> 9        0.627       0.719          NA       1       6               NULL
+#> 10       0.107       0.174          NA       3       6               NULL
+#> 11       0.004       0.020          NA       6       6               NULL
 #>    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT
 #> 1                  NA               NULL               3.28                0|0
 #> 2                  NA               NULL               2.22                1|1
@@ -319,7 +320,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet
+#> Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e76d021998.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -338,19 +339,19 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
-#> 2 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
-#> 3 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
-#> 4 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
-#> 5 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
-#> 6 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11
+#> 1 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 2 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 3 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 4 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 5 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
+#> 6 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
-#> 1                    36            2515         0           0         11
-#> 2                    36            2515         1           0         11
-#> 3                    36            2515         2           0         11
-#> 4                    36            2515         3           0         11
-#> 5                    36            2515         4           0         11
-#> 6                    36            2515         5           0         11
+#> 1                    36            3135         0           0         11
+#> 2                    36            3135         1           0         11
+#> 3                    36            3135         2           0         11
+#> 4                    36            3135         3           0         11
+#> 5                    36            3135         4           0         11
+#> 6                    36            3135         5           0         11
 #>       path_in_schema       type  stats_min  stats_max stats_null_count
 #> 1              CHROM BYTE_ARRAY          1          1                0
 #> 2                POS     DOUBLE    10583.0    28376.0                0
@@ -380,9 +381,9 @@ pq_me |> head()
 #> 5                    67                      85               NULL
 #> 6                    25                      23               NULL
 #>   bloom_filter_offset bloom_filter_length min_is_exact max_is_exact
-#> 1                1874                  47         TRUE         TRUE
+#> 1                2261                  47         TRUE         TRUE
 #> 2                  NA                  NA         TRUE         TRUE
-#> 3                1921                  47         TRUE         TRUE
+#> 3                2308                  47         TRUE         TRUE
 #> 4                  NA                  NA         TRUE         TRUE
 #> 5                  NA                  NA         TRUE         TRUE
 #> 6                  NA                  NA           NA           NA
@@ -426,14 +427,15 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6725cf433.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e732948d06.parquet (streaming mode)
 # describe using duckdb
 ```
 
 ### Query VCF with duckdb
 
 SQL queries on BCF using duckdb package. For now this is somehow limited
-due to convertion from arrow streams to data frame
+due to convertion from arrow streams to data
+frame
 
 ``` r
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
@@ -525,10 +527,10 @@ We should improve the code, avoid copies, add more tests and maybe
 
 ## References
 
-- [bcftools documentation](https://samtools.github.io/bcftools/)
+  - [bcftools documentation](https://samtools.github.io/bcftools/)
 
-- [bcftools GitHub](https://github.com/samtools/bcftools)
+  - [bcftools GitHub](https://github.com/samtools/bcftools)
 
-- [htslib GitHub](https://github.com/samtools/htslib)
+  - [htslib GitHub](https://github.com/samtools/htslib)
 
-- [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
+  - [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)

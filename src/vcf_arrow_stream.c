@@ -345,6 +345,16 @@ static int vcf_arrow_correct_format_type(const char* field_name, int original_ty
     return original_type;
 }
 
+// Get corrected vl_type for INFO field based on VCF spec
+// Returns the spec-defined vl_type if correction needed, or original if not standard or correct
+static int vcf_arrow_correct_info_number(const char* field_name, int original_vl_type) {
+    const vcf_fmt_spec_t* spec = vcf_lookup_info_spec(field_name);
+    if (spec && vcf_check_number(spec, original_vl_type)) {
+        return spec->vl_type;
+    }
+    return original_vl_type;
+}
+
 // =============================================================================
 // Core Schema Creation
 // =============================================================================
@@ -420,15 +430,38 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
             if (hdr->id[BCF_DT_ID][i].val && 
                 hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
                 bcf_hrec_t* hrec = hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO];
+                (void)hrec;  // May be used for future metadata
                 const char* field_name = hdr->id[BCF_DT_ID][i].key;
                 
                 // Get type from header
                 int type = bcf_hdr_id2type(hdr, BCF_HL_INFO, i);
-                int number = bcf_hdr_id2number(hdr, BCF_HL_INFO, i);
-                const char* format = bcf_type_to_arrow_format(type, number);
+                int vl_type = bcf_hdr_id2length(hdr, BCF_HL_INFO, i);
                 
-                // If Number != 1, wrap in list
-                if (number != 1 && number != 0) {
+                // Check against VCF spec and emit warnings + apply corrections
+                // This mimics htslib's bcf_hdr_check_sanity() behavior for INFO fields
+                const vcf_fmt_spec_t* spec = vcf_lookup_info_spec(field_name);
+                if (spec) {
+                    // Check and correct Number
+                    if (vcf_check_number(spec, vl_type)) {
+                        Rf_warning("INFO/%s should be declared as Number=%s per VCF spec; correcting schema",
+                                   field_name, spec->number_str);
+                        vl_type = spec->vl_type;
+                    }
+                    
+                    // Warn about Type mismatch but don't correct (data is stored per header)
+                    if (type != spec->type) {
+                        Rf_warning("INFO/%s should be Type=%s per VCF spec, but header declares Type=%s; using header type",
+                                   field_name, vcf_type_str[spec->type], vcf_type_str[type]);
+                    }
+                }
+                
+                const char* format = bcf_type_to_arrow_format(type, vl_type);
+                
+                // Determine if list type based on BCF_VL_* type
+                // BCF_VL_FIXED (0) = scalar, all others = variable length (list)
+                int is_list = (vl_type != BCF_VL_FIXED);
+                
+                if (is_list) {
                     RETURN_IF_ERROR(init_schema_list(info_schema->children[info_idx],
                                                      field_name, format, "item"));
                 } else {
@@ -589,6 +622,112 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     char*** filter_data = (char***)vcf_arrow_malloc(batch_size * sizeof(char**));
     int* filter_counts = (int*)vcf_arrow_malloc(batch_size * sizeof(int));
     
+    // INFO data storage - will be allocated per INFO field if include_info is set
+    int n_info_fields = 0;
+    int* info_ids = NULL;        // header IDs for each INFO field
+    int* info_types = NULL;      // BCF_HT_* type for each INFO field (from header)
+    int* info_vl_types = NULL;   // BCF_VL_* number type (corrected per VCF spec)
+    const char** info_names = NULL;  // Field names
+    
+    // Per-INFO-field data arrays
+    void** info_data = NULL;           // Raw data arrays per INFO field
+    int32_t** info_offsets = NULL;     // For lists/strings: offsets per record
+    int** info_lengths = NULL;         // Actual length per record for lists
+    uint8_t** info_validity = NULL;    // Validity bitmaps per INFO field
+    size_t* info_str_sizes = NULL;     // Current total string data size per INFO field
+    size_t* info_str_capacity = NULL;  // Allocated capacity for string data per INFO field
+    size_t* info_list_sizes = NULL;    // Current total list element count per INFO field
+    size_t* info_list_capacity = NULL; // Allocated capacity for list data per INFO field
+    
+    if (priv->opts.include_info) {
+        // Count INFO fields
+        for (int i = 0; i < priv->hdr->n[BCF_DT_ID]; i++) {
+            if (priv->hdr->id[BCF_DT_ID][i].val && 
+                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
+                n_info_fields++;
+            }
+        }
+        
+        if (n_info_fields > 0) {
+            info_ids = (int*)vcf_arrow_malloc(n_info_fields * sizeof(int));
+            info_types = (int*)vcf_arrow_malloc(n_info_fields * sizeof(int));
+            info_vl_types = (int*)vcf_arrow_malloc(n_info_fields * sizeof(int));
+            info_names = (const char**)vcf_arrow_malloc(n_info_fields * sizeof(const char*));
+            info_data = (void**)vcf_arrow_malloc(n_info_fields * sizeof(void*));
+            info_offsets = (int32_t**)vcf_arrow_malloc(n_info_fields * sizeof(int32_t*));
+            info_lengths = (int**)vcf_arrow_malloc(n_info_fields * sizeof(int*));
+            info_validity = (uint8_t**)vcf_arrow_malloc(n_info_fields * sizeof(uint8_t*));
+            info_str_sizes = (size_t*)vcf_arrow_malloc(n_info_fields * sizeof(size_t));
+            info_str_capacity = (size_t*)vcf_arrow_malloc(n_info_fields * sizeof(size_t));
+            info_list_sizes = (size_t*)vcf_arrow_malloc(n_info_fields * sizeof(size_t));
+            info_list_capacity = (size_t*)vcf_arrow_malloc(n_info_fields * sizeof(size_t));
+            
+            memset(info_data, 0, n_info_fields * sizeof(void*));
+            memset(info_offsets, 0, n_info_fields * sizeof(int32_t*));
+            memset(info_lengths, 0, n_info_fields * sizeof(int*));
+            memset(info_validity, 0, n_info_fields * sizeof(uint8_t*));
+            memset(info_str_sizes, 0, n_info_fields * sizeof(size_t));
+            memset(info_str_capacity, 0, n_info_fields * sizeof(size_t));
+            memset(info_list_sizes, 0, n_info_fields * sizeof(size_t));
+            memset(info_list_capacity, 0, n_info_fields * sizeof(size_t));
+            memset(info_names, 0, n_info_fields * sizeof(const char*));
+            
+            // Populate info_ids, info_types, info_vl_types with corrections applied
+            int info_idx = 0;
+            for (int i = 0; i < priv->hdr->n[BCF_DT_ID] && info_idx < n_info_fields; i++) {
+                if (priv->hdr->id[BCF_DT_ID][i].val && 
+                    priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
+                    const char* field_name = priv->hdr->id[BCF_DT_ID][i].key;
+                    int type = bcf_hdr_id2type(priv->hdr, BCF_HL_INFO, i);
+                    int vl_type = bcf_hdr_id2length(priv->hdr, BCF_HL_INFO, i);
+                    
+                    info_ids[info_idx] = i;
+                    info_types[info_idx] = type;
+                    info_vl_types[info_idx] = vcf_arrow_correct_info_number(field_name, vl_type);
+                    info_names[info_idx] = field_name;  // Points to header memory
+                    info_idx++;
+                }
+            }
+            
+            // Allocate validity arrays and data storage for each INFO field
+            for (int f = 0; f < n_info_fields; f++) {
+                info_validity[f] = (uint8_t*)vcf_arrow_malloc((batch_size + 7) / 8);
+                memset(info_validity[f], 0, (batch_size + 7) / 8);
+                
+                int type = info_types[f];
+                int vl_type = info_vl_types[f];
+                int is_list = (vl_type != BCF_VL_FIXED);
+                
+                if (is_list) {
+                    // For lists, allocate offset arrays and length tracking
+                    info_offsets[f] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
+                    memset(info_offsets[f], 0, (batch_size + 1) * sizeof(int32_t));
+                    info_lengths[f] = (int*)vcf_arrow_malloc(batch_size * sizeof(int));
+                    memset(info_lengths[f], 0, batch_size * sizeof(int));
+                    info_data[f] = NULL;  // Will grow as needed
+                } else {
+                    // Scalar: fixed size allocation
+                    if (type == BCF_HT_FLAG) {
+                        // Boolean - just use validity bitmap, data is 1 bit per value
+                        info_data[f] = vcf_arrow_malloc((batch_size + 7) / 8);
+                        memset(info_data[f], 0, (batch_size + 7) / 8);
+                    } else if (type == BCF_HT_INT) {
+                        info_data[f] = vcf_arrow_malloc(batch_size * sizeof(int32_t));
+                        memset(info_data[f], 0, batch_size * sizeof(int32_t));
+                    } else if (type == BCF_HT_REAL) {
+                        info_data[f] = vcf_arrow_malloc(batch_size * sizeof(float));
+                        memset(info_data[f], 0, batch_size * sizeof(float));
+                    } else {
+                        // String scalar - use offsets and concatenated data
+                        info_offsets[f] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
+                        memset(info_offsets[f], 0, (batch_size + 1) * sizeof(int32_t));
+                        info_data[f] = NULL;  // Will grow as needed
+                    }
+                }
+            }
+        }
+    }
+    
     // FORMAT data storage - will be allocated per FORMAT field if needed
     int n_samples = bcf_hdr_nsamples(priv->hdr);
     int n_fmt_fields = 0;
@@ -689,6 +828,30 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(filter_list_offsets);
         vcf_arrow_free(filter_data);
         vcf_arrow_free(filter_counts);
+        // Free INFO data storage
+        if (info_validity) {
+            for (int i = 0; i < n_info_fields; i++) {
+                vcf_arrow_free(info_validity[i]);
+            }
+            vcf_arrow_free(info_validity);
+        }
+        for (int f = 0; f < n_info_fields; f++) {
+            vcf_arrow_free(info_data ? info_data[f] : NULL);
+            vcf_arrow_free(info_offsets ? info_offsets[f] : NULL);
+            vcf_arrow_free(info_lengths ? info_lengths[f] : NULL);
+        }
+        vcf_arrow_free(info_ids);
+        vcf_arrow_free(info_types);
+        vcf_arrow_free(info_vl_types);
+        vcf_arrow_free(info_names);
+        vcf_arrow_free(info_data);
+        vcf_arrow_free(info_offsets);
+        vcf_arrow_free(info_lengths);
+        vcf_arrow_free(info_str_sizes);
+        vcf_arrow_free(info_str_capacity);
+        vcf_arrow_free(info_list_sizes);
+        vcf_arrow_free(info_list_capacity);
+        // Free FORMAT data storage
         vcf_arrow_free(fmt_ids);
         vcf_arrow_free(fmt_types);
         vcf_arrow_free(fmt_numbers);
@@ -832,6 +995,195 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             filter_data[n_read] = NULL;
         }
         filter_list_offsets[n_read + 1] = filter_list_offsets[n_read] + n_flt;
+        
+        // Extract INFO fields for this record
+        if (priv->opts.include_info && n_info_fields > 0) {
+            for (int f = 0; f < n_info_fields; f++) {
+                int id = info_ids[f];
+                int type = info_types[f];
+                int vl_type = info_vl_types[f];
+                int is_list = (vl_type != BCF_VL_FIXED);
+                const char* tag = bcf_hdr_int2id(priv->hdr, BCF_DT_ID, id);
+                
+                if (type == BCF_HT_FLAG) {
+                    // Flag type - check if present using bcf_get_info_flag
+                    // bcf_get_info_flag returns 1 if flag is set, 0 if not, negative on error
+                    // dst and ndst can be NULL for flags
+                    int* dummy = NULL;
+                    int ndummy = 0;
+                    int ret_info = bcf_get_info_flag(priv->hdr, priv->rec, tag, &dummy, &ndummy);
+                    free(dummy);  // Free even though it should be NULL for flags
+                    if (ret_info == 1) {
+                        // Flag is present
+                        info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                        // Set data bit to 1 (true)
+                        ((uint8_t*)info_data[f])[n_read / 8] |= (1 << (n_read % 8));
+                    }
+                    // If ret_info <= 0, flag not present - validity and data stay 0
+                    
+                } else if (type == BCF_HT_INT) {
+                    int32_t* values = NULL;
+                    int n_values = 0;
+                    int ret_info = bcf_get_info_int32(priv->hdr, priv->rec, tag, &values, &n_values);
+                    
+                    if (ret_info > 0 && values) {
+                        if (is_list) {
+                            // List of integers
+                            int valid_count = 0;
+                            
+                            // Count valid values (not missing, not vector end)
+                            for (int v = 0; v < ret_info; v++) {
+                                if (values[v] != bcf_int32_missing && values[v] != bcf_int32_vector_end) {
+                                    valid_count++;
+                                }
+                            }
+                            
+                            if (valid_count > 0) {
+                                // Grow data buffer if needed
+                                size_t needed = info_list_sizes[f] + valid_count;
+                                if (needed > info_list_capacity[f]) {
+                                    size_t new_cap = info_list_capacity[f] == 0 ? 1024 : info_list_capacity[f] * 2;
+                                    while (new_cap < needed) new_cap *= 2;
+                                    int32_t* new_data = (int32_t*)vcf_arrow_realloc(info_data[f], new_cap * sizeof(int32_t));
+                                    if (new_data) {
+                                        info_data[f] = new_data;
+                                        info_list_capacity[f] = new_cap;
+                                    }
+                                }
+                                
+                                // Store valid values
+                                int32_t* data = (int32_t*)info_data[f];
+                                for (int v = 0; v < ret_info; v++) {
+                                    if (values[v] != bcf_int32_missing && values[v] != bcf_int32_vector_end) {
+                                        if (info_list_sizes[f] < info_list_capacity[f]) {
+                                            data[info_list_sizes[f]++] = values[v];
+                                        }
+                                    }
+                                }
+                                
+                                info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                            info_offsets[f][n_read + 1] = (int32_t)info_list_sizes[f];
+                            info_lengths[f][n_read] = valid_count;
+                        } else {
+                            // Scalar integer
+                            if (ret_info >= 1 && values[0] != bcf_int32_missing) {
+                                ((int32_t*)info_data[f])[n_read] = values[0];
+                                info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                        }
+                    } else if (is_list) {
+                        // No data - record empty list
+                        info_offsets[f][n_read + 1] = info_offsets[f][n_read];
+                        info_lengths[f][n_read] = 0;
+                    }
+                    free(values);
+                    
+                } else if (type == BCF_HT_REAL) {
+                    float* values = NULL;
+                    int n_values = 0;
+                    int ret_info = bcf_get_info_float(priv->hdr, priv->rec, tag, &values, &n_values);
+                    
+                    if (ret_info > 0 && values) {
+                        if (is_list) {
+                            // List of floats
+                            int valid_count = 0;
+                            
+                            // Count valid values
+                            for (int v = 0; v < ret_info; v++) {
+                                if (!bcf_float_is_missing(values[v]) && !bcf_float_is_vector_end(values[v])) {
+                                    valid_count++;
+                                }
+                            }
+                            
+                            if (valid_count > 0) {
+                                // Grow data buffer if needed
+                                size_t needed = info_list_sizes[f] + valid_count;
+                                if (needed > info_list_capacity[f]) {
+                                    size_t new_cap = info_list_capacity[f] == 0 ? 1024 : info_list_capacity[f] * 2;
+                                    while (new_cap < needed) new_cap *= 2;
+                                    float* new_data = (float*)vcf_arrow_realloc(info_data[f], new_cap * sizeof(float));
+                                    if (new_data) {
+                                        info_data[f] = new_data;
+                                        info_list_capacity[f] = new_cap;
+                                    }
+                                }
+                                
+                                // Store valid values
+                                float* data = (float*)info_data[f];
+                                for (int v = 0; v < ret_info; v++) {
+                                    if (!bcf_float_is_missing(values[v]) && !bcf_float_is_vector_end(values[v])) {
+                                        if (info_list_sizes[f] < info_list_capacity[f]) {
+                                            data[info_list_sizes[f]++] = values[v];
+                                        }
+                                    }
+                                }
+                                
+                                info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                            info_offsets[f][n_read + 1] = (int32_t)info_list_sizes[f];
+                            info_lengths[f][n_read] = valid_count;
+                        } else {
+                            // Scalar float
+                            if (ret_info >= 1 && !bcf_float_is_missing(values[0])) {
+                                ((float*)info_data[f])[n_read] = values[0];
+                                info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                        }
+                    } else if (is_list) {
+                        // No data - record empty list
+                        info_offsets[f][n_read + 1] = info_offsets[f][n_read];
+                        info_lengths[f][n_read] = 0;
+                    }
+                    free(values);
+                    
+                } else {
+                    // String type (BCF_HT_STR)
+                    char* value = NULL;
+                    int n_value = 0;
+                    int ret_info = bcf_get_info_string(priv->hdr, priv->rec, tag, &value, &n_value);
+                    
+                    if (ret_info > 0 && value && strcmp(value, ".") != 0 && value[0] != '\0') {
+                        size_t len = strlen(value);
+                        
+                        // Grow string buffer if needed
+                        size_t needed = info_str_sizes[f] + len;
+                        if (needed > info_str_capacity[f]) {
+                            size_t new_cap = info_str_capacity[f] == 0 ? 4096 : info_str_capacity[f] * 2;
+                            while (new_cap < needed) new_cap *= 2;
+                            char* new_data = (char*)vcf_arrow_realloc(info_data[f], new_cap);
+                            if (new_data) {
+                                info_data[f] = new_data;
+                                info_str_capacity[f] = new_cap;
+                            }
+                        }
+                        
+                        // Copy string data
+                        if (info_str_sizes[f] + len <= info_str_capacity[f]) {
+                            memcpy((char*)info_data[f] + info_str_sizes[f], value, len);
+                            info_str_sizes[f] += len;
+                        }
+                        
+                        if (is_list) {
+                            info_offsets[f][n_read + 1] = (int32_t)info_str_sizes[f];
+                            info_lengths[f][n_read] = (int)len;
+                        } else {
+                            info_offsets[f][n_read + 1] = (int32_t)info_str_sizes[f];
+                        }
+                        info_validity[f][n_read / 8] |= (1 << (n_read % 8));
+                    } else {
+                        // No data or missing - update offsets
+                        if (info_offsets[f]) {
+                            info_offsets[f][n_read + 1] = info_offsets[f][n_read];
+                        }
+                        if (info_lengths && info_lengths[f]) {
+                            info_lengths[f][n_read] = 0;
+                        }
+                    }
+                    free(value);
+                }
+            }
+        }
         
         // Extract FORMAT data for all samples
         if (priv->opts.include_format && n_samples > 0) {
@@ -1122,6 +1474,30 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vcf_arrow_free(filter_data);
         vcf_arrow_free(filter_counts);
         
+        // Free INFO data storage
+        if (info_validity) {
+            for (int i = 0; i < n_info_fields; i++) {
+                vcf_arrow_free(info_validity[i]);
+            }
+            vcf_arrow_free(info_validity);
+        }
+        for (int f = 0; f < n_info_fields; f++) {
+            if (info_data) vcf_arrow_free(info_data[f]);
+            if (info_offsets) vcf_arrow_free(info_offsets[f]);
+            if (info_lengths) vcf_arrow_free(info_lengths[f]);
+        }
+        vcf_arrow_free(info_ids);
+        vcf_arrow_free(info_types);
+        vcf_arrow_free(info_vl_types);
+        vcf_arrow_free(info_names);
+        vcf_arrow_free(info_data);
+        vcf_arrow_free(info_offsets);
+        vcf_arrow_free(info_lengths);
+        vcf_arrow_free(info_str_sizes);
+        vcf_arrow_free(info_str_capacity);
+        vcf_arrow_free(info_list_sizes);
+        vcf_arrow_free(info_list_capacity);
+        
         // Free FORMAT data storage
         if (fmt_validity) {
             for (int i = 0; i < n_fmt_fields * n_samples; i++) {
@@ -1130,13 +1506,15 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             vcf_arrow_free(fmt_validity);
         }
         for (int f = 0; f < n_fmt_fields; f++) {
-            vcf_arrow_free(fmt_data[f]);
-            vcf_arrow_free(fmt_offsets[f]);
-            vcf_arrow_free(fmt_lengths[f]);
+            if (fmt_data) vcf_arrow_free(fmt_data[f]);
+            if (fmt_offsets) vcf_arrow_free(fmt_offsets[f]);
+            if (fmt_lengths) vcf_arrow_free(fmt_lengths[f]);
         }
         vcf_arrow_free(fmt_ids);
         vcf_arrow_free(fmt_types);
         vcf_arrow_free(fmt_numbers);
+        vcf_arrow_free(fmt_names);
+        vcf_arrow_free(fmt_header_types);
         vcf_arrow_free(fmt_data);
         vcf_arrow_free(fmt_offsets);
         vcf_arrow_free(fmt_lengths);
@@ -1150,24 +1528,14 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     
     // Determine number of children to match schema
     // This must match the logic in vcf_arrow_schema_from_header
+    // n_info_fields was counted during data collection phase and should match schema
     int n_core = 7;  // CHROM, POS, ID, REF, ALT, QUAL, FILTER
-    int n_info = 0;
-    
-    if (priv->opts.include_info) {
-        // Count INFO fields in header (same logic as schema creation)
-        for (int i = 0; i < priv->hdr->n[BCF_DT_ID]; i++) {
-            if (priv->hdr->id[BCF_DT_ID][i].val && 
-                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
-                n_info++;
-            }
-        }
-    }
     
     // n_samples was already computed earlier
     int include_samples = priv->opts.include_format && n_samples > 0;
     
     int64_t n_children = n_core;
-    if (n_info > 0) n_children++;  // INFO struct
+    if (n_info_fields > 0) n_children++;  // INFO struct
     if (include_samples) n_children++;  // samples struct
     
     // Build the output array
@@ -1482,138 +1850,223 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     
     // =========================================================================
     // Child 7: INFO struct (if include_info and INFO fields exist)
+    // Populated with actual INFO field data extracted during record reading
+    // Note: We use n_info_fields from data collection phase for consistency
     // =========================================================================
-    if (n_info > 0) {
+    if (n_info_fields > 0) {
         struct ArrowArray* info_arr = out->children[7];
         info_arr->length = n_read;
         info_arr->null_count = 0;
         info_arr->offset = 0;
         info_arr->n_buffers = 1;  // Struct has only validity buffer
-        info_arr->n_children = n_info;
+        info_arr->n_children = n_info_fields;
         
         info_arr->buffers = (const void**)vcf_arrow_malloc(sizeof(void*));
         info_arr->buffers[0] = NULL;  // All valid at struct level
         
         // Allocate children for INFO fields
-        info_arr->children = (struct ArrowArray**)vcf_arrow_malloc(n_info * sizeof(struct ArrowArray*));
+        info_arr->children = (struct ArrowArray**)vcf_arrow_malloc(n_info_fields * sizeof(struct ArrowArray*));
         
-        int info_idx = 0;
-        for (int i = 0; i < priv->hdr->n[BCF_DT_ID] && info_idx < n_info; i++) {
-            if (priv->hdr->id[BCF_DT_ID][i].val && 
-                priv->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
+        // Build arrays for each INFO field using pre-collected data
+        for (int f = 0; f < n_info_fields; f++) {
+            struct ArrowArray* field_arr = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
+            memset(field_arr, 0, sizeof(struct ArrowArray));
+            field_arr->release = &release_array_simple;
+            info_arr->children[f] = field_arr;
+            
+            int type = info_types[f];
+            int vl_type = info_vl_types[f];
+            int is_list = (vl_type != BCF_VL_FIXED);
+            
+            field_arr->length = n_read;
+            field_arr->offset = 0;
+            
+            // Use pre-collected validity bitmap - transfer ownership
+            uint8_t* validity = info_validity[f];
+            info_validity[f] = NULL;  // Ownership transferred
+            
+            // Count nulls
+            int64_t null_count = 0;
+            for (int64_t r = 0; r < n_read; r++) {
+                if (!(validity[r / 8] & (1 << (r % 8)))) {
+                    null_count++;
+                }
+            }
+            field_arr->null_count = null_count;
+            
+            if (is_list) {
+                // List type - use collected offsets and data
+                field_arr->n_buffers = 2;
+                field_arr->n_children = 1;
                 
-                struct ArrowArray* field_arr = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
-                memset(field_arr, 0, sizeof(struct ArrowArray));
-                field_arr->release = &release_array_simple;
-                info_arr->children[info_idx] = field_arr;
-                
-                int type = bcf_hdr_id2type(priv->hdr, BCF_HL_INFO, i);
-                int number = bcf_hdr_id2number(priv->hdr, BCF_HL_INFO, i);
-                
-                // Create empty/null arrays for INFO fields
-                // In production this should be populated with actual INFO values
-                // For now, create properly typed null arrays to match schema
-                
-                field_arr->length = n_read;
-                field_arr->null_count = n_read;  // All null
-                field_arr->offset = 0;
-                
-                // Allocate validity bitmap (all zeros = all null)
-                uint8_t* validity = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-                memset(validity, 0, (n_read + 7) / 8);
-                
-                if (number != 1 && number != 0) {
-                    // List type - need offsets buffer and child array
-                    field_arr->n_buffers = 2;
-                    field_arr->n_children = 1;
+                if (type == BCF_HT_STR) {
+                    // STRING LIST: info_offsets contains byte positions, not element counts
+                    // We need to build parent list offsets (element counts per row)
+                    // For INFO strings, each row has 0 or 1 string
+                    int32_t* list_offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                    list_offsets[0] = 0;
+                    int64_t n_strings = 0;
+                    for (int64_t r = 0; r < n_read; r++) {
+                        int has_string = (info_offsets[f] && 
+                                         info_offsets[f][r + 1] > info_offsets[f][r]) ? 1 : 0;
+                        n_strings += has_string;
+                        list_offsets[r + 1] = (int32_t)n_strings;
+                    }
                     
-                    int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                    memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                    field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                    field_arr->buffers[0] = validity;
+                    field_arr->buffers[1] = list_offsets;
+                    
+                    // Create child string array
+                    field_arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
+                    field_arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
+                    memset(field_arr->children[0], 0, sizeof(struct ArrowArray));
+                    field_arr->children[0]->release = &release_array_simple;
+                    field_arr->children[0]->length = n_strings;
+                    field_arr->children[0]->offset = 0;
+                    field_arr->children[0]->null_count = 0;
+                    field_arr->children[0]->n_children = 0;
+                    field_arr->children[0]->n_buffers = 3;
+                    field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                    field_arr->children[0]->buffers[0] = NULL;
+                    
+                    // Build string offsets and copy data
+                    size_t total_str_len = info_str_sizes[f];
+                    int32_t* str_offsets = (int32_t*)vcf_arrow_malloc((n_strings + 1) * sizeof(int32_t));
+                    char* str_data = (char*)vcf_arrow_malloc(total_str_len + 1);
+                    str_offsets[0] = 0;
+                    
+                    int64_t str_idx = 0;
+                    int32_t cur_byte = 0;
+                    if (info_offsets[f] && info_data[f]) {
+                        char* src = (char*)info_data[f];
+                        for (int64_t r = 0; r < n_read && str_idx < n_strings; r++) {
+                            int32_t start = info_offsets[f][r];
+                            int32_t end = info_offsets[f][r + 1];
+                            int32_t len = end - start;
+                            if (len > 0) {
+                                memcpy(str_data + cur_byte, src + start, len);
+                                cur_byte += len;
+                                str_offsets[str_idx + 1] = cur_byte;
+                                str_idx++;
+                            }
+                        }
+                    }
+                    
+                    field_arr->children[0]->buffers[1] = str_offsets;
+                    field_arr->children[0]->buffers[2] = str_data;
+                    
+                    // Free original data
+                    vcf_arrow_free(info_offsets[f]);
+                    info_offsets[f] = NULL;
+                    vcf_arrow_free(info_data[f]);
+                    info_data[f] = NULL;
+                } else {
+                    // INT/FLOAT LIST: info_offsets contains element counts (correct for list)
+                    int32_t* offsets = info_offsets[f];
+                    info_offsets[f] = NULL;  // Ownership transferred
                     
                     field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
                     field_arr->buffers[0] = validity;
                     field_arr->buffers[1] = offsets;
                     
-                    // Create empty child array for list items
+                    // Create child array for list items
                     field_arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
                     field_arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
                     memset(field_arr->children[0], 0, sizeof(struct ArrowArray));
                     field_arr->children[0]->release = &release_array_simple;
-                    field_arr->children[0]->length = 0;
-                    field_arr->children[0]->null_count = 0;
                     field_arr->children[0]->offset = 0;
-                    
-                    // Set up child buffers based on type
-                    if (type == BCF_HT_INT) {
-                        field_arr->children[0]->n_buffers = 2;
-                        field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                        field_arr->children[0]->buffers[0] = NULL;
-                        field_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);  // Empty data
-                    } else if (type == BCF_HT_REAL) {
-                        field_arr->children[0]->n_buffers = 2;
-                        field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                        field_arr->children[0]->buffers[0] = NULL;
-                        field_arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
-                    } else {
-                        // String type
-                        field_arr->children[0]->n_buffers = 3;
-                        field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                        field_arr->children[0]->buffers[0] = NULL;
-                        int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
-                        child_offsets[0] = 0;
-                        field_arr->children[0]->buffers[1] = child_offsets;
-                        field_arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
-                    }
+                    field_arr->children[0]->null_count = 0;
                     field_arr->children[0]->n_children = 0;
-                } else {
-                    // Scalar type
-                    field_arr->n_children = 0;
                     
-                    if (type == BCF_HT_FLAG) {
-                        // Boolean - 1 validity buffer + 1 data buffer
-                        field_arr->n_buffers = 2;
-                        uint8_t* data = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-                        memset(data, 0, (n_read + 7) / 8);
-                        field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                        field_arr->buffers[0] = validity;
-                        field_arr->buffers[1] = data;
-                    } else if (type == BCF_HT_INT) {
-                        field_arr->n_buffers = 2;
-                        int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
-                        memset(data, 0, n_read * sizeof(int32_t));
-                        field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                        field_arr->buffers[0] = validity;
-                        field_arr->buffers[1] = data;
-                    } else if (type == BCF_HT_REAL) {
-                        field_arr->n_buffers = 2;
-                        float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
-                        memset(data, 0, n_read * sizeof(float));
-                        field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                        field_arr->buffers[0] = validity;
-                        field_arr->buffers[1] = data;
-                    } else {
-                        // String type
-                        field_arr->n_buffers = 3;
-                        int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                        memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-                        field_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                        field_arr->buffers[0] = validity;
-                        field_arr->buffers[1] = offsets;
-                        field_arr->buffers[2] = vcf_arrow_malloc(1);  // Empty data
+                    if (type == BCF_HT_INT) {
+                        int64_t total_elements = info_list_sizes[f];
+                        field_arr->children[0]->length = total_elements;
+                        field_arr->children[0]->n_buffers = 2;
+                        field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        field_arr->children[0]->buffers[0] = NULL;
+                        field_arr->children[0]->buffers[1] = info_data[f] ? info_data[f] : vcf_arrow_malloc(1);
+                        info_data[f] = NULL;
+                    } else { // BCF_HT_REAL
+                        int64_t total_elements = info_list_sizes[f];
+                        field_arr->children[0]->length = total_elements;
+                        field_arr->children[0]->n_buffers = 2;
+                        field_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                        field_arr->children[0]->buffers[0] = NULL;
+                        field_arr->children[0]->buffers[1] = info_data[f] ? info_data[f] : vcf_arrow_malloc(1);
+                        info_data[f] = NULL;
                     }
                 }
+            } else {
+                // Scalar type
+                field_arr->n_children = 0;
+                field_arr->children = NULL;
                 
-                info_idx++;
+                if (type == BCF_HT_FLAG) {
+                    // Boolean - data was stored in a bitmap
+                    field_arr->n_buffers = 2;
+                    field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                    field_arr->buffers[0] = validity;
+                    field_arr->buffers[1] = info_data[f] ? info_data[f] : vcf_arrow_malloc((n_read + 7) / 8);
+                    info_data[f] = NULL;
+                } else if (type == BCF_HT_INT) {
+                    // Integer scalar
+                    field_arr->n_buffers = 2;
+                    field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                    field_arr->buffers[0] = validity;
+                    field_arr->buffers[1] = info_data[f] ? info_data[f] : vcf_arrow_malloc(n_read * sizeof(int32_t));
+                    info_data[f] = NULL;
+                } else if (type == BCF_HT_REAL) {
+                    // Float scalar
+                    field_arr->n_buffers = 2;
+                    field_arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                    field_arr->buffers[0] = validity;
+                    field_arr->buffers[1] = info_data[f] ? info_data[f] : vcf_arrow_malloc(n_read * sizeof(float));
+                    info_data[f] = NULL;
+                } else {
+                    // String scalar
+                    field_arr->n_buffers = 3;
+                    field_arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                    field_arr->buffers[0] = validity;
+                    field_arr->buffers[1] = info_offsets[f] ? info_offsets[f] : vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                    info_offsets[f] = NULL;
+                    field_arr->buffers[2] = info_data[f] ? info_data[f] : vcf_arrow_malloc(1);
+                    info_data[f] = NULL;
+                }
             }
         }
     }
+    
+    // Free remaining INFO data storage that wasn't transferred
+    if (info_validity) {
+        for (int i = 0; i < n_info_fields; i++) {
+            vcf_arrow_free(info_validity[i]);
+        }
+        vcf_arrow_free(info_validity);
+    }
+    for (int f = 0; f < n_info_fields; f++) {
+        if (info_data) vcf_arrow_free(info_data[f]);
+        if (info_offsets) vcf_arrow_free(info_offsets[f]);
+        if (info_lengths) vcf_arrow_free(info_lengths[f]);
+    }
+    vcf_arrow_free(info_ids);
+    vcf_arrow_free(info_types);
+    vcf_arrow_free(info_vl_types);
+    vcf_arrow_free(info_names);
+    vcf_arrow_free(info_data);
+    vcf_arrow_free(info_offsets);
+    vcf_arrow_free(info_lengths);
+    vcf_arrow_free(info_str_sizes);
+    vcf_arrow_free(info_str_capacity);
+    vcf_arrow_free(info_list_sizes);
+    vcf_arrow_free(info_list_capacity);
     
     // =========================================================================
     // Child 8: samples struct (if include_format and samples exist)
     // Note: index is 7 if no INFO, 8 if INFO exists
     // =========================================================================
     if (include_samples) {
-        int samples_child_idx = n_info > 0 ? 8 : 7;
+        int samples_child_idx = n_info_fields > 0 ? 8 : 7;
         struct ArrowArray* samples_arr = out->children[samples_child_idx];
         samples_arr->length = n_read;
         samples_arr->null_count = 0;
@@ -1747,14 +2200,54 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                         fmt_arr->children[0]->buffers[0] = NULL;
                         fmt_arr->children[0]->buffers[1] = child_data;
                     } else {
-                        // String list - for now empty (rare case)
+                        // String list - extract this sample's string list values from collected data
+                        // For FORMAT string lists, each "element" in the list is the entire string
+                        // for that sample at that record (typically comma-separated in the VCF)
                         fmt_arr->children[0]->n_buffers = 3;
+                        
+                        // Calculate total string data length for this sample
+                        size_t total_str_len = 0;
+                        int64_t n_strings = 0;
+                        if (fmt_data[f] != NULL && fmt_offsets[f] != NULL) {
+                            for (int64_t r = 0; r < n_read; r++) {
+                                int idx = r * n_samples + s;
+                                int32_t str_start = fmt_offsets[f][idx];
+                                int32_t str_end = fmt_offsets[f][idx + 1];
+                                if (str_end > str_start) {
+                                    total_str_len += (str_end - str_start);
+                                    n_strings++;
+                                }
+                            }
+                        }
+                        
+                        // Allocate and populate string offsets and data
+                        int32_t* child_str_offsets = (int32_t*)vcf_arrow_malloc((n_strings + 1) * sizeof(int32_t));
+                        char* child_str_data = (char*)vcf_arrow_malloc(total_str_len + 1);
+                        child_str_offsets[0] = 0;
+                        
+                        int64_t str_idx = 0;
+                        int32_t cur_offset = 0;
+                        if (fmt_data[f] != NULL && fmt_offsets[f] != NULL) {
+                            char* src_data = (char*)fmt_data[f];
+                            for (int64_t r = 0; r < n_read; r++) {
+                                int idx = r * n_samples + s;
+                                int32_t str_start = fmt_offsets[f][idx];
+                                int32_t str_end = fmt_offsets[f][idx + 1];
+                                int32_t len = str_end - str_start;
+                                if (len > 0 && str_idx < n_strings) {
+                                    memcpy(child_str_data + cur_offset, src_data + str_start, len);
+                                    cur_offset += len;
+                                    child_str_offsets[str_idx + 1] = cur_offset;
+                                    str_idx++;
+                                }
+                            }
+                        }
+                        
+                        fmt_arr->children[0]->length = n_strings;
                         fmt_arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
                         fmt_arr->children[0]->buffers[0] = NULL;
-                        int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
-                        child_offsets[0] = 0;
-                        fmt_arr->children[0]->buffers[1] = child_offsets;
-                        fmt_arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+                        fmt_arr->children[0]->buffers[1] = child_str_offsets;
+                        fmt_arr->children[0]->buffers[2] = child_str_data;
                     }
                 } else {
                     // Scalar type
@@ -1868,6 +2361,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     vcf_arrow_free(fmt_types);
     vcf_arrow_free(fmt_numbers);
     vcf_arrow_free(fmt_names);
+    vcf_arrow_free(fmt_header_types);
     vcf_arrow_free(fmt_data);
     vcf_arrow_free(fmt_offsets);
     vcf_arrow_free(fmt_lengths);
@@ -1906,6 +2400,56 @@ cleanup_error:
     vcf_arrow_free(filter_list_offsets);
     vcf_arrow_free(filter_data);
     vcf_arrow_free(filter_counts);
+    
+    // Free INFO data storage on error
+    if (info_validity) {
+        for (int i = 0; i < n_info_fields; i++) {
+            vcf_arrow_free(info_validity[i]);
+        }
+        vcf_arrow_free(info_validity);
+    }
+    for (int f = 0; f < n_info_fields; f++) {
+        if (info_data) vcf_arrow_free(info_data[f]);
+        if (info_offsets) vcf_arrow_free(info_offsets[f]);
+        if (info_lengths) vcf_arrow_free(info_lengths[f]);
+    }
+    vcf_arrow_free(info_ids);
+    vcf_arrow_free(info_types);
+    vcf_arrow_free(info_vl_types);
+    vcf_arrow_free(info_names);
+    vcf_arrow_free(info_data);
+    vcf_arrow_free(info_offsets);
+    vcf_arrow_free(info_lengths);
+    vcf_arrow_free(info_str_sizes);
+    vcf_arrow_free(info_str_capacity);
+    vcf_arrow_free(info_list_sizes);
+    vcf_arrow_free(info_list_capacity);
+    
+    // Free FORMAT data storage on error
+    if (fmt_validity) {
+        for (int i = 0; i < n_fmt_fields * n_samples; i++) {
+            vcf_arrow_free(fmt_validity[i]);
+        }
+        vcf_arrow_free(fmt_validity);
+    }
+    for (int f = 0; f < n_fmt_fields; f++) {
+        if (fmt_data) vcf_arrow_free(fmt_data[f]);
+        if (fmt_offsets) vcf_arrow_free(fmt_offsets[f]);
+        if (fmt_lengths) vcf_arrow_free(fmt_lengths[f]);
+    }
+    vcf_arrow_free(fmt_ids);
+    vcf_arrow_free(fmt_types);
+    vcf_arrow_free(fmt_numbers);
+    vcf_arrow_free(fmt_names);
+    vcf_arrow_free(fmt_header_types);
+    vcf_arrow_free(fmt_data);
+    vcf_arrow_free(fmt_offsets);
+    vcf_arrow_free(fmt_lengths);
+    vcf_arrow_free(fmt_str_sizes);
+    vcf_arrow_free(fmt_str_capacity);
+    vcf_arrow_free(fmt_list_sizes);
+    vcf_arrow_free(fmt_list_capacity);
+    
     return EIO;
 }
 
