@@ -11,7 +11,7 @@ all: check
 
 
 rd:
-	R -e 'roxygen2::roxygenize()'
+	LD_LIBRARY_PATH=$(CURDIR)/inst/htslib/lib:$(CURDIR)/inst/bcftools/lib:$$LD_LIBRARY_PATH R -e 'roxygen2::roxygenize()'
 build: install_deps
 	R CMD build .
 

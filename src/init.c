@@ -24,6 +24,11 @@ extern SEXP vcf_arrow_get_schema(SEXP filename_sexp);
 extern SEXP vcf_arrow_read_next_batch(SEXP stream_xptr);
 extern SEXP vcf_arrow_collect_batches(SEXP stream_xptr, SEXP max_batches_sexp);
 
+/* Declare external functions from vcf_index_utils.c */
+extern SEXP RC_vcf_has_index(SEXP filename_sexp, SEXP index_sexp);
+extern SEXP RC_vcf_get_contigs(SEXP filename_sexp);
+extern SEXP RC_vcf_get_contig_lengths(SEXP filename_sexp);
+
 /* Registration table for .Call routines */
 static const R_CallMethodDef CallEntries[] = {
     {"RC_htslib_version", (DL_FUNC)&RC_htslib_version, 0},
@@ -37,6 +42,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"vcf_arrow_get_schema", (DL_FUNC)&vcf_arrow_get_schema, 1},
     {"vcf_arrow_read_next_batch", (DL_FUNC)&vcf_arrow_read_next_batch, 1},
     {"vcf_arrow_collect_batches", (DL_FUNC)&vcf_arrow_collect_batches, 2},
+    /* VCF index utilities */
+    {"RC_vcf_has_index", (DL_FUNC)&RC_vcf_has_index, 2},
+    {"RC_vcf_get_contigs", (DL_FUNC)&RC_vcf_get_contigs, 1},
+    {"RC_vcf_get_contig_lengths", (DL_FUNC)&RC_vcf_get_contig_lengths, 1},
     {NULL, NULL, 0}};
 
 /* Package initialization */

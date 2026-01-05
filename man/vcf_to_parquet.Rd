@@ -10,6 +10,8 @@ vcf_to_parquet(
   compression = "snappy",
   row_group_size = 100000L,
   streaming = FALSE,
+  threads = 1L,
+  index = NULL,
   ...
 )
 }
@@ -27,6 +29,14 @@ a temporary Arrow IPC file first (via nanoarrow), then converts to Parquet
 via DuckDB. This avoids loading the entire VCF into R memory. Requires
 the DuckDB nanoarrow community extension. Default is FALSE.}
 
+\item{threads}{Number of parallel threads for processing (default: 1).
+When threads > 1 and file is indexed, uses parallel processing by splitting
+work across chromosomes/contigs. Each thread processes different regions
+simultaneously. Requires indexed file. See \code{\link{vcf_to_parquet_parallel}}
+for details.}
+
+\item{index}{Optional explicit index file path}
+
 \item{...}{Additional arguments passed to vcf_open_arrow}
 }
 \value{
@@ -37,18 +47,16 @@ Converts a VCF/BCF file to Apache Parquet format for efficient storage
 and querying with tools like DuckDB, Spark, or Python pandas/polars.
 }
 \details{
-By default (\code{streaming = FALSE}), the function loads the entire VCF into
-memory as a data.frame before writing to Parquet. This is fast for small
-to medium files.
-
-For very large VCF files, set \code{streaming = TRUE} to use a two-stage
-streaming approach:
+\strong{Processing Modes:}
 \enumerate{
-\item Stream VCF to a temporary Arrow IPC file (via nanoarrow)
-\item Convert IPC to Parquet via DuckDB (with nanoarrow extension)
+\item \strong{Standard mode} (\verb{streaming = FALSE, threads = 1}): Loads entire VCF
+into memory as data.frame before writing. Fast for small-medium files.
+\item \strong{Streaming mode} (\verb{streaming = TRUE, threads = 1}): Two-stage streaming
+via temporary Arrow IPC file. Minimal memory usage for large files.
+\item \strong{Parallel mode} (\code{threads > 1}): Requires indexed file. Splits work by
+chromosomes, processing multiple regions simultaneously. Near-linear
+speedup with thread count. Best for whole-genome VCFs.
 }
-
-This keeps R memory usage minimal regardless of file size.
 }
 \examples{
 \dontrun{
@@ -57,6 +65,12 @@ vcf_to_parquet("variants.vcf.gz", "variants.parquet")
 
 # Streaming mode for large files (low memory)
 vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
+
+# Parallel mode for whole-genome VCF (requires index)
+vcf_to_parquet("wgs.vcf.gz", "wgs.parquet", threads = 8)
+
+# Parallel + streaming for massive files
+vcf_to_parquet("wgs.vcf.gz", "wgs.parquet", threads = 16, streaming = TRUE)
 
 # With zstd compression
 vcf_to_parquet("variants.vcf.gz", "variants.parquet", compression = "zstd")
