@@ -222,7 +222,7 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 
 ### Command-Line Tool
 
-A CLI tool is provided for VCF to Parquet conversion and querying
+A CLI tool is provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs
 
 ```{bash cli-tool, eval=TRUE}
 # Get paths using system.file

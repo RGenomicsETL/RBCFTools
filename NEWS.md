@@ -1,6 +1,7 @@
 # RBCFTools 1.23-0.0.0.9000 (development version)
 
 
+- to parquet conversion now support parrallel threading based conversion
 - vcf2parquet.R script in inst/
 
 - **VCF to Arrow streaming** via nanoarrow (no `arrow` package required):

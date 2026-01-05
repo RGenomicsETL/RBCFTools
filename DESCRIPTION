@@ -13,7 +13,7 @@ Description: Bundles the 'htslib' and 'bcftools' libraries and command lines too
     via 'nanoarrow', enabling export to Arrow IPC format and  Parquet format
     using 'duckdb'.
 License: GPL (>= 3)
-Depends: R (>= 4.4.0)
+Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow
 LinkingTo: nanoarrow
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
