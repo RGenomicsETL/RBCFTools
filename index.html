@@ -332,7 +332,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpyaPlmn/file3a8130688798f9.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -351,12 +351,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -432,7 +432,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af74e8a317.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpyaPlmn/file3a813023513e1e.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -487,7 +487,7 @@
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
 <span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a></span>
 <span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
-<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="va">$SCRIPT</span> convert <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="va">$SCRIPT</span> convert <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a></span>
 <span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
 <span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
@@ -504,7 +504,7 @@
 <span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.tqamAHejTc.parquet </span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.DbXuCaQQte.parquet </span></span>
 <span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a><span class="co">#&gt;   Compression: snappy </span></span>
 <span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
@@ -513,97 +513,84 @@
 <span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.tqamAHejTc.parquet</span></span>
+<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.DbXuCaQQte.parquet</span></span>
 <span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a><span class="co">#&gt;   Time: 0.74 seconds</span></span>
+<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a><span class="co">#&gt;   Time: 0.76 seconds</span></span>
 <span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
-<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a><span class="co">#&gt; Warning messages:</span></span>
-<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a><span class="co">#&gt; 1: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
-<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt; 2: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
-<span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a><span class="co">#&gt; 3: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
-<span id="cb14-45"><a href="#cb14-45" tabindex="-1"></a><span class="co">#&gt; 4: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-46"><a href="#cb14-46" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
-<span id="cb14-47"><a href="#cb14-47" tabindex="-1"></a><span class="co">#&gt; 5: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-48"><a href="#cb14-48" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
-<span id="cb14-49"><a href="#cb14-49" tabindex="-1"></a><span class="co">#&gt; 6: In nanoarrow::convert_array_stream(stream) :</span></span>
-<span id="cb14-50"><a href="#cb14-50" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
-<span id="cb14-51"><a href="#cb14-51" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb14-52"><a href="#cb14-52" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
-<span id="cb14-53"><a href="#cb14-53" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
-<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
-<span id="cb14-55"><a href="#cb14-55" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
-<span id="cb14-56"><a href="#cb14-56" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
-<span id="cb14-57"><a href="#cb14-57" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
-<span id="cb14-58"><a href="#cb14-58" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb14-59"><a href="#cb14-59" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
-<span id="cb14-60"><a href="#cb14-60" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
-<span id="cb14-61"><a href="#cb14-61" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
-<span id="cb14-62"><a href="#cb14-62" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
-<span id="cb14-63"><a href="#cb14-63" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
-<span id="cb14-64"><a href="#cb14-64" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
-<span id="cb14-65"><a href="#cb14-65" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
-<span id="cb14-66"><a href="#cb14-66" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
-<span id="cb14-67"><a href="#cb14-67" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
-<span id="cb14-68"><a href="#cb14-68" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
-<span id="cb14-69"><a href="#cb14-69" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
-<span id="cb14-70"><a href="#cb14-70" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb14-71"><a href="#cb14-71" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb14-72"><a href="#cb14-72" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb14-73"><a href="#cb14-73" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb14-74"><a href="#cb14-74" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb14-75"><a href="#cb14-75" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb14-76"><a href="#cb14-76" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb14-77"><a href="#cb14-77" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
-<span id="cb14-78"><a href="#cb14-78" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
-<span id="cb14-79"><a href="#cb14-79" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
-<span id="cb14-80"><a href="#cb14-80" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-81"><a href="#cb14-81" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-82"><a href="#cb14-82" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-83"><a href="#cb14-83" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-84"><a href="#cb14-84" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-85"><a href="#cb14-85" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-86"><a href="#cb14-86" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-87"><a href="#cb14-87" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-88"><a href="#cb14-88" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb14-89"><a href="#cb14-89" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
-<span id="cb14-90"><a href="#cb14-90" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
-<span id="cb14-91"><a href="#cb14-91" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb14-92"><a href="#cb14-92" tabindex="-1"></a><span class="co">#&gt; VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb14-93"><a href="#cb14-93" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb14-94"><a href="#cb14-94" tabindex="-1"></a><span class="co">#&gt; &lt;nanoarrow_schema struct&gt;</span></span>
-<span id="cb14-95"><a href="#cb14-95" tabindex="-1"></a><span class="co">#&gt;  $ format    : chr "+s"</span></span>
-<span id="cb14-96"><a href="#cb14-96" tabindex="-1"></a><span class="co">#&gt;  $ name      : chr ""</span></span>
-<span id="cb14-97"><a href="#cb14-97" tabindex="-1"></a><span class="co">#&gt;  $ metadata  : list()</span></span>
-<span id="cb14-98"><a href="#cb14-98" tabindex="-1"></a><span class="co">#&gt;  $ flags     : int 0</span></span>
-<span id="cb14-99"><a href="#cb14-99" tabindex="-1"></a><span class="co">#&gt;  $ children  :List of 9</span></span>
-<span id="cb14-100"><a href="#cb14-100" tabindex="-1"></a><span class="co">#&gt;   ..$ CHROM  :&lt;nanoarrow_schema string&gt;</span></span>
-<span id="cb14-101"><a href="#cb14-101" tabindex="-1"></a><span class="co">#&gt;   .. ..$ format    : chr "u"</span></span>
-<span id="cb14-102"><a href="#cb14-102" tabindex="-1"></a><span class="co">#&gt;   .. ..$ name      : chr "CHROM"</span></span>
-<span id="cb14-103"><a href="#cb14-103" tabindex="-1"></a><span class="co">#&gt;   .. ..$ metadata  : list()</span></span>
-<span id="cb14-104"><a href="#cb14-104" tabindex="-1"></a><span class="co">#&gt;   .. ..$ flags     : int 0</span></span>
-<span id="cb14-105"><a href="#cb14-105" tabindex="-1"></a><span class="co">#&gt;   .. ..$ children  : list()</span></span>
-<span id="cb14-106"><a href="#cb14-106" tabindex="-1"></a><span class="co">#&gt;   .. ..$ dictionary: NULL</span></span>
-<span id="cb14-107"><a href="#cb14-107" tabindex="-1"></a><span class="co">#&gt; Warning messages:</span></span>
-<span id="cb14-108"><a href="#cb14-108" tabindex="-1"></a><span class="co">#&gt; 1: In vcf_arrow_schema(opts$input) :</span></span>
-<span id="cb14-109"><a href="#cb14-109" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
-<span id="cb14-110"><a href="#cb14-110" tabindex="-1"></a><span class="co">#&gt; 2: In vcf_arrow_schema(opts$input) :</span></span>
-<span id="cb14-111"><a href="#cb14-111" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
-<span id="cb14-112"><a href="#cb14-112" tabindex="-1"></a><span class="co">#&gt; 3: In vcf_arrow_schema(opts$input) :</span></span>
-<span id="cb14-113"><a href="#cb14-113" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
-<span id="cb14-114"><a href="#cb14-114" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.tqamAHejTc.parquet </span></span>
-<span id="cb14-115"><a href="#cb14-115" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb14-116"><a href="#cb14-116" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
-<span id="cb14-117"><a href="#cb14-117" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
-<span id="cb14-118"><a href="#cb14-118" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
-<span id="cb14-119"><a href="#cb14-119" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb14-120"><a href="#cb14-120" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb14-121"><a href="#cb14-121" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
-<span id="cb14-122"><a href="#cb14-122" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
-<span id="cb14-123"><a href="#cb14-123" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span></code></pre></div>
+<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
+<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
+<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
+<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
+<span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
+<span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
+<span id="cb14-45"><a href="#cb14-45" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb14-46"><a href="#cb14-46" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
+<span id="cb14-47"><a href="#cb14-47" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
+<span id="cb14-48"><a href="#cb14-48" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
+<span id="cb14-49"><a href="#cb14-49" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
+<span id="cb14-50"><a href="#cb14-50" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
+<span id="cb14-51"><a href="#cb14-51" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
+<span id="cb14-52"><a href="#cb14-52" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
+<span id="cb14-53"><a href="#cb14-53" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
+<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
+<span id="cb14-55"><a href="#cb14-55" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
+<span id="cb14-56"><a href="#cb14-56" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
+<span id="cb14-57"><a href="#cb14-57" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb14-58"><a href="#cb14-58" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb14-59"><a href="#cb14-59" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb14-60"><a href="#cb14-60" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb14-61"><a href="#cb14-61" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb14-62"><a href="#cb14-62" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb14-63"><a href="#cb14-63" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb14-64"><a href="#cb14-64" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
+<span id="cb14-65"><a href="#cb14-65" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
+<span id="cb14-66"><a href="#cb14-66" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
+<span id="cb14-67"><a href="#cb14-67" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-68"><a href="#cb14-68" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-69"><a href="#cb14-69" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-70"><a href="#cb14-70" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-71"><a href="#cb14-71" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-72"><a href="#cb14-72" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-73"><a href="#cb14-73" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-74"><a href="#cb14-74" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-75"><a href="#cb14-75" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb14-76"><a href="#cb14-76" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb14-77"><a href="#cb14-77" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb14-78"><a href="#cb14-78" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb14-79"><a href="#cb14-79" tabindex="-1"></a><span class="co">#&gt; VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb14-80"><a href="#cb14-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-81"><a href="#cb14-81" tabindex="-1"></a><span class="co">#&gt; &lt;nanoarrow_schema struct&gt;</span></span>
+<span id="cb14-82"><a href="#cb14-82" tabindex="-1"></a><span class="co">#&gt;  $ format    : chr "+s"</span></span>
+<span id="cb14-83"><a href="#cb14-83" tabindex="-1"></a><span class="co">#&gt;  $ name      : chr ""</span></span>
+<span id="cb14-84"><a href="#cb14-84" tabindex="-1"></a><span class="co">#&gt;  $ metadata  : list()</span></span>
+<span id="cb14-85"><a href="#cb14-85" tabindex="-1"></a><span class="co">#&gt;  $ flags     : int 0</span></span>
+<span id="cb14-86"><a href="#cb14-86" tabindex="-1"></a><span class="co">#&gt;  $ children  :List of 9</span></span>
+<span id="cb14-87"><a href="#cb14-87" tabindex="-1"></a><span class="co">#&gt;   ..$ CHROM  :&lt;nanoarrow_schema string&gt;</span></span>
+<span id="cb14-88"><a href="#cb14-88" tabindex="-1"></a><span class="co">#&gt;   .. ..$ format    : chr "u"</span></span>
+<span id="cb14-89"><a href="#cb14-89" tabindex="-1"></a><span class="co">#&gt;   .. ..$ name      : chr "CHROM"</span></span>
+<span id="cb14-90"><a href="#cb14-90" tabindex="-1"></a><span class="co">#&gt;   .. ..$ metadata  : list()</span></span>
+<span id="cb14-91"><a href="#cb14-91" tabindex="-1"></a><span class="co">#&gt;   .. ..$ flags     : int 0</span></span>
+<span id="cb14-92"><a href="#cb14-92" tabindex="-1"></a><span class="co">#&gt;   .. ..$ children  : list()</span></span>
+<span id="cb14-93"><a href="#cb14-93" tabindex="-1"></a><span class="co">#&gt;   .. ..$ dictionary: NULL</span></span>
+<span id="cb14-94"><a href="#cb14-94" tabindex="-1"></a><span class="co">#&gt; Warning messages:</span></span>
+<span id="cb14-95"><a href="#cb14-95" tabindex="-1"></a><span class="co">#&gt; 1: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-96"><a href="#cb14-96" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
+<span id="cb14-97"><a href="#cb14-97" tabindex="-1"></a><span class="co">#&gt; 2: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-98"><a href="#cb14-98" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
+<span id="cb14-99"><a href="#cb14-99" tabindex="-1"></a><span class="co">#&gt; 3: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-100"><a href="#cb14-100" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
+<span id="cb14-101"><a href="#cb14-101" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.DbXuCaQQte.parquet </span></span>
+<span id="cb14-102"><a href="#cb14-102" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-103"><a href="#cb14-103" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
+<span id="cb14-104"><a href="#cb14-104" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
+<span id="cb14-105"><a href="#cb14-105" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
+<span id="cb14-106"><a href="#cb14-106" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-107"><a href="#cb14-107" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb14-108"><a href="#cb14-108" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
+<span id="cb14-109"><a href="#cb14-109" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
+<span id="cb14-110"><a href="#cb14-110" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>

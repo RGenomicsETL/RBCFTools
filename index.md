@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet
+#> Wrote 11 rows to /tmp/RtmpyaPlmn/file3a8130688798f9.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
-#> 2 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
-#> 3 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
-#> 4 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
-#> 5 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
-#> 6 /tmp/Rtmpv04SPR/file3a54af268ec0d1.parquet            0                 11
+#> 1 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
+#> 2 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
+#> 3 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
+#> 4 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
+#> 5 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
+#> 6 /tmp/RtmpyaPlmn/file3a8130688798f9.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpv04SPR/file3a54af74e8a317.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpyaPlmn/file3a813023513e1e.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -478,7 +478,7 @@ BCF=$(Rscript -e "cat(system.file('extdata', '1000G_3samples.bcf', package='RBCF
 OUT_PQ=$(mktemp --suffix=.parquet)
 
 # Convert BCF to Parquet
-$SCRIPT convert -i $BCF -o $OUT_PQ
+$SCRIPT convert --quiet -i $BCF -o $OUT_PQ
 
 # Query with DuckDB SQL
 $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
@@ -495,7 +495,7 @@ $SCRIPT info -i $OUT_PQ | head -10
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.tqamAHejTc.parquet 
+#>   Output: /tmp/tmp.DbXuCaQQte.parquet 
 #>   Compression: snappy 
 #>   Batch size: 10000 
 #>   Streaming: FALSE 
@@ -504,24 +504,11 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.tqamAHejTc.parquet
+#> Wrote 11 rows to /tmp/tmp.DbXuCaQQte.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.74 seconds
+#>   Time: 0.76 seconds
 #>   Output size: 0.01 MB
-#> Warning messages:
-#> 1: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
-#> 2: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> 3: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
-#> 4: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
-#> 5: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
-#> 6: In nanoarrow::convert_array_stream(stream) :
-#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
 #> 1     1 10583   G   A
@@ -585,7 +572,7 @@ rm -f $OUT_PQ
 #>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
 #> 3: In vcf_arrow_schema(opts$input) :
 #>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
-#> Parquet File Information: /tmp/tmp.tqamAHejTc.parquet 
+#> Parquet File Information: /tmp/tmp.DbXuCaQQte.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
