@@ -8,7 +8,7 @@ vcf_to_parquet_parallel(
   input_vcf,
   output_parquet,
   threads = parallel::detectCores(),
-  compression = "snappy",
+  compression = "zstd",
   row_group_size = 100000L,
   streaming = FALSE,
   index = NULL,

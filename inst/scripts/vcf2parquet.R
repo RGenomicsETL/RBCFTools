@@ -165,7 +165,7 @@ if (!is.null(opts$quiet) && opts$quiet) {
 
 # Set defaults
 if (is.null(opts$compression)) {
-  opts$compression <- "snappy"
+  opts$compression <- "zstd"
 }
 if (is.null(opts$batch_size)) {
   opts$batch_size <- 10000L
