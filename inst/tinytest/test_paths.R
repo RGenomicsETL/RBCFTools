@@ -302,16 +302,28 @@ int main(void) {
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
-  compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
-    cc,
-    cflags,
-    htslib_cflags(),
-    test_exe,
-    test_c_file,
-    lib_path,
-    ldl_flag
-  )
+  if (nchar(ldl_flag) > 0) {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path,
+      ldl_flag
+    )
+  } else {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path
+    )
+  }
 
   # Try to compile
   compile_result <- system(
@@ -590,16 +602,28 @@ int main(void) {
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
-  compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
-    cc,
-    cflags,
-    htslib_cflags(),
-    test_exe,
-    test_c_file,
-    lib_path,
-    ldl_flag
-  )
+  if (nchar(ldl_flag) > 0) {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path,
+      ldl_flag
+    )
+  } else {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path
+    )
+  }
 
   # Try to compile
   compile_result <- system(
@@ -713,16 +737,28 @@ int main(void) {
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
   # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
-  compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
-    cc,
-    cflags,
-    htslib_cflags(),
-    test_exe,
-    test_c_file,
-    lib_path,
-    ldl_flag
-  )
+  if (nchar(ldl_flag) > 0) {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path,
+      ldl_flag
+    )
+  } else {
+    compile_cmd <- sprintf(
+      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      cc,
+      cflags,
+      htslib_cflags(),
+      test_exe,
+      test_c_file,
+      lib_path
+    )
+  }
 
   compile_result <- system(
     compile_cmd,
