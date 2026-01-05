@@ -1,3 +1,4 @@
+^test\.sh$
 ^.*tbi$
 ^.*csi$
 ^README.Rmd$
