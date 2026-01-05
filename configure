@@ -4,6 +4,10 @@
 set -eu
 THISDir=`dirname $0`
 THISDir=`realpath ${THISDir}`
+
+# Capture configure arguments (--host, --build, etc.)
+CONFIGURE_ARGS="$@"
+
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 CC=`"${R_HOME}/bin/R" CMD config CC`
 AR=`"${R_HOME}/bin/R" CMD config AR`
@@ -78,6 +82,7 @@ if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
 fi
 
 ./configure \
+    ${CONFIGURE_ARGS} \
     CFLAGS="${CFLAGS} -Wno-unused-function" \
     --enable-plugins \
     --enable-shared \
@@ -270,6 +275,7 @@ if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
 fi
 
 ./configure \
+    ${CONFIGURE_ARGS} \
     ${BCFTOOLS_CONFIGURE_FLAGS} \
     CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
     CPPFLAGS="${CPPFLAGS}" \
