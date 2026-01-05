@@ -6,7 +6,8 @@ UNAME_S := $(shell uname -s)
 # Set RPATH to include both bcftools/lib and htslib/lib, platform-specific
 # Use --disable-new-dtags to force RPATH instead of RUNPATH (higher priority)
 ifeq ($(UNAME_S),Darwin)
-RPATH =
+# macOS: use @loader_path relative paths with -rpath
+RPATH = -Wl,-rpath,@loader_path/../bcftools/lib -Wl,-rpath,@loader_path/../htslib/lib
 else
 RPATH = -Wl,--disable-new-dtags -Wl,-rpath,'$$ORIGIN/../bcftools/lib' -Wl,-rpath,'$$ORIGIN/../htslib/lib'
 endif
@@ -29,5 +30,6 @@ PKG_LIBS=-L$(HTSLIB_DIR)/lib -lhts @EXTRA_LIBS@ $(PKG_LIBS_EXTRA) $(RPATH)
 all: $(SHLIB)
 
 ifeq ($(UNAME_S),Darwin)
-	install_name_tool -change $(HTSLIB_DIR)/lib/libhts.3.dylib @loader_path/../htslib/lib/libhts.3.dylib $(SHLIB)
+# Fix the reference to libhts to use @rpath instead of absolute path
+	install_name_tool -change $(HTSLIB_DIR)/lib/libhts.3.dylib @rpath/libhts.3.dylib $(SHLIB)
 endif

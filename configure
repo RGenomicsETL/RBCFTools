@@ -87,6 +87,23 @@ export AR="${AR}"
 export RANLIB="${RANLIB}"
 ${MAKE} libhts.a libhts.${SHLIB_EXT} install
 
+# Fix dylib install names on macOS
+if [ "$(uname)" = "Darwin" ]; then
+    echo "Fixing dylib install names for macOS..."
+    HTSLIB_INSTALL_DIR="${THISDir}/inst/htslib/lib"
+    
+    # Fix libhts.3.dylib install name to use @rpath
+    if [ -f "${HTSLIB_INSTALL_DIR}/libhts.3.dylib" ]; then
+        install_name_tool -id @rpath/libhts.3.dylib "${HTSLIB_INSTALL_DIR}/libhts.3.dylib"
+        echo "Fixed libhts.3.dylib install name"
+    fi
+    
+    # Also fix libhts.dylib symlink target if it exists
+    if [ -f "${HTSLIB_INSTALL_DIR}/libhts.dylib" ] && [ ! -L "${HTSLIB_INSTALL_DIR}/libhts.dylib" ]; then
+        install_name_tool -id @rpath/libhts.dylib "${HTSLIB_INSTALL_DIR}/libhts.dylib"
+    fi
+fi
+
 #--------------------- Check for SSL library (needed for S3)
 SSL_LIBS=""
 echo "Checking for SSL library (required for S3 support)..."
