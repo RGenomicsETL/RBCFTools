@@ -220,6 +220,33 @@ df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
 
+### Command-Line Tool
+
+A CLI tool is provided for VCF to Parquet conversion and querying
+
+```{bash cli-tool, eval=TRUE}
+# Get paths using system.file
+SCRIPT=$(Rscript -e "cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))")
+BCF=$(Rscript -e "cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))")
+OUT_PQ=$(mktemp --suffix=.parquet)
+
+# Convert BCF to Parquet
+$SCRIPT convert -i $BCF -o $OUT_PQ
+
+# Query with DuckDB SQL
+$SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
+
+# Show schema
+$SCRIPT schema -i $BCF | head -15
+
+# File info
+$SCRIPT info -i $OUT_PQ | head -10
+
+rm -f $OUT_PQ
+```
+
+
+
 ### Custom Index File Path
 
 For region queries, an index file is required. By default, RBCFTools looks for `.tbi` (tabix) or `.csi` indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the `index` parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try `.tbi` first then fall back to `.csi`, while BCF files use `.csi` only.
@@ -242,7 +269,7 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 
 ## Limitations and issues
 
-The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. 
+The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. There is no particular attempt to parse further vep/snpeff/annovar info fields.
 
 ## Future directions
 
