@@ -293,7 +293,7 @@ vcf_to_parquet_streaming <- function(
     ...
 ) {
     # Stage 1: Stream VCF to temporary IPC file via nanoarrow
-    ipc_temp <- tempfile(fileext = ".arrows")
+    ipc_temp <- tempfile(fileext = ".arrow")
     on.exit(unlink(ipc_temp), add = TRUE)
 
     stream <- vcf_open_arrow(input_vcf, ...)
