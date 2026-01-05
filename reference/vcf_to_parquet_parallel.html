@@ -52,7 +52,6 @@ then results are merged into a single Parquet file.</p>
 <span>  compression <span class="op">=</span> <span class="st">"snappy"</span>,</span>
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  streaming <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  min_variants_per_contig <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -86,11 +85,6 @@ then results are merged into a single Parquet file.</p>
 <dd><p>Use streaming mode</p></dd>
 
 
-<dt id="arg-min-variants-per-contig">min_variants_per_contig<a class="anchor" aria-label="anchor" href="#arg-min-variants-per-contig"></a></dt>
-<dd><p>Minimum variants to process a contig (default: 100)
-Contigs with fewer variants are grouped together to avoid overhead</p></dd>
-
-
 <dt id="arg-index">index<a class="anchor" aria-label="anchor" href="#arg-index"></a></dt>
 <dd><p>Optional explicit index path</p></dd>
 
@@ -110,8 +104,7 @@ Contigs with fewer variants are grouped together to avoid overhead</p></dd>
 <li><p>Processes each contig in parallel using multiple R processes</p></li>
 <li><p>Writes each contig to a temporary Parquet file</p></li>
 <li><p>Merges all temporary files into final output using DuckDB</p></li>
-</ol><p>Performance scales nearly linearly with number of chromosomes (up to thread count).
-Best for whole-genome VCFs with many chromosomes.</p>
+</ol><p>Contigs that return no variants are skipped automatically.</p>
     </div>
 
     <div class="section level2">

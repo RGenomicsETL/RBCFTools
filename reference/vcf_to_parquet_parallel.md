@@ -15,7 +15,6 @@ vcf_to_parquet_parallel(
   compression = "snappy",
   row_group_size = 100000L,
   streaming = FALSE,
-  min_variants_per_contig = 100L,
   index = NULL,
   ...
 )
@@ -47,11 +46,6 @@ vcf_to_parquet_parallel(
 
   Use streaming mode
 
-- min_variants_per_contig:
-
-  Minimum variants to process a contig (default: 100) Contigs with fewer
-  variants are grouped together to avoid overhead
-
 - index:
 
   Optional explicit index path
@@ -78,8 +72,7 @@ This function:
 
 5.  Merges all temporary files into final output using DuckDB
 
-Performance scales nearly linearly with number of chromosomes (up to
-thread count). Best for whole-genome VCFs with many chromosomes.
+Contigs that return no variants are skipped automatically.
 
 ## Examples
 
