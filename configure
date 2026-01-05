@@ -186,7 +186,7 @@ int main(void) { return 0; }' | \
 fi
 
 if [ -z "${SSL_LIBS}" ]; then
-    echo "WARNING: No SSL library found. S3/GCS support may not work at runtime."
+    echo "NOTE: No SSL library found. S3/GCS support may not work at runtime."
     if [ "$(uname)" = "Darwin" ]; then
         echo "Install OpenSSL via Homebrew: brew install openssl@3"
         echo "Or install wolfSSL: brew install wolfssl"
