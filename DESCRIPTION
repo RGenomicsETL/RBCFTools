@@ -21,7 +21,8 @@ Suggests:
     tinytest,
     vcfppR,
     duckdb,
-    DBI
+    DBI,
+    vctrs
 OS_type: unix
 URL: https://github.com/RGenomicsETL/RBCFTools, https://rgenomicsetl.github.io/RBCFTools/
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues

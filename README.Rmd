@@ -236,6 +236,9 @@ $SCRIPT convert -i $BCF -o $OUT_PQ
 # Query with DuckDB SQL
 $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
 
+# Describe table structure
+$SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
+
 # Show schema
 $SCRIPT schema -i $BCF | head -15
 
