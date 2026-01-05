@@ -335,7 +335,210 @@ expect_true(
 )
 
 # =============================================================================
-# Compilation Test: hts_version() execution
+# Dynamic Linking Tests with RPATH
+# =============================================================================
+# Test that dynamic linking works when RPATH is properly set
+
+test_dynamic_linking_with_rpath <- function() {
+  # Skip if we don't have the necessary directories
+  if (nchar(htslib_include_dir()) == 0 || nchar(htslib_lib_dir()) == 0) {
+    return(TRUE) # Skip silently
+  }
+
+  # Get R's compiler configuration
+  cc <- system2(
+    file.path(R.home("bin"), "R"),
+    c("CMD", "config", "CC"),
+    stdout = TRUE,
+    stderr = FALSE
+  )
+  cflags <- system2(
+    file.path(R.home("bin"), "R"),
+    c("CMD", "config", "CFLAGS"),
+    stdout = TRUE,
+    stderr = FALSE
+  )
+
+  tmp_dir <- tempdir()
+  test_c_file <- file.path(tmp_dir, "test_dynamic_rpath.c")
+  test_exe <- file.path(tmp_dir, "test_dynamic_rpath")
+
+  # Simple test program
+  test_code <- '
+#include <stdio.h>
+#include <htslib/hts.h>
+
+int main(void) {
+    const char *version = hts_version();
+    if (version != NULL) {
+        printf("%s", version);
+        return 0;
+    }
+    return 1;
+}
+'
+  writeLines(test_code, test_c_file)
+
+  # Dynamic linking with RPATH embedded
+  lib_dir <- htslib_lib_dir()
+  compile_cmd <- sprintf(
+    "%s %s %s -Wl,-rpath,%s -o %s %s %s",
+    cc,
+    cflags,
+    htslib_cflags(),
+    lib_dir,
+    test_exe,
+    test_c_file,
+    htslib_libs(static = FALSE)
+  )
+
+  # Try to compile
+  compile_result <- system(
+    compile_cmd,
+    ignore.stdout = TRUE,
+    ignore.stderr = TRUE
+  )
+
+  if (compile_result != 0) {
+    if (file.exists(test_c_file)) {
+      file.remove(test_c_file)
+    }
+    return(FALSE)
+  }
+
+  # Try to run - should work without LD_LIBRARY_PATH thanks to RPATH
+  run_output <- tryCatch(
+    {
+      system2(test_exe, stdout = TRUE, stderr = FALSE)
+    },
+    error = function(e) NULL
+  )
+
+  # Clean up
+  if (file.exists(test_c_file)) {
+    file.remove(test_c_file)
+  }
+  if (file.exists(test_exe)) {
+    file.remove(test_exe)
+  }
+
+  # Check success
+  if (is.null(run_output) || length(run_output) == 0) {
+    return(FALSE)
+  }
+
+  return(grepl("^[0-9]+\\.[0-9]+", run_output[1]))
+}
+
+expect_true(
+  test_dynamic_linking_with_rpath(),
+  info = "Should be able to dynamically link with RPATH and run"
+)
+
+# =============================================================================
+# Dynamic Linking with LD_LIBRARY_PATH
+# =============================================================================
+
+test_dynamic_linking_with_ldpath <- function() {
+  # Skip if we don't have the necessary directories
+  if (nchar(htslib_include_dir()) == 0 || nchar(htslib_lib_dir()) == 0) {
+    return(TRUE) # Skip silently
+  }
+
+  # Get R's compiler configuration
+  cc <- system2(
+    file.path(R.home("bin"), "R"),
+    c("CMD", "config", "CC"),
+    stdout = TRUE,
+    stderr = FALSE
+  )
+  cflags <- system2(
+    file.path(R.home("bin"), "R"),
+    c("CMD", "config", "CFLAGS"),
+    stdout = TRUE,
+    stderr = FALSE
+  )
+
+  tmp_dir <- tempdir()
+  test_c_file <- file.path(tmp_dir, "test_dynamic_ldpath.c")
+  test_exe <- file.path(tmp_dir, "test_dynamic_ldpath")
+
+  test_code <- '
+#include <stdio.h>
+#include <htslib/hts.h>
+
+int main(void) {
+    printf("%s", hts_version());
+    return 0;
+}
+'
+  writeLines(test_code, test_c_file)
+
+  # Dynamic linking without RPATH
+  compile_cmd <- sprintf(
+    "%s %s %s -o %s %s %s",
+    cc,
+    cflags,
+    htslib_cflags(),
+    test_exe,
+    test_c_file,
+    htslib_libs(static = FALSE)
+  )
+
+  compile_result <- system(
+    compile_cmd,
+    ignore.stdout = TRUE,
+    ignore.stderr = TRUE
+  )
+
+  if (compile_result != 0) {
+    if (file.exists(test_c_file)) {
+      file.remove(test_c_file)
+    }
+    return(FALSE)
+  }
+
+  # Set LD_LIBRARY_PATH and try to run
+  lib_dir <- htslib_lib_dir()
+  old_ldpath <- Sys.getenv("LD_LIBRARY_PATH")
+  Sys.setenv(LD_LIBRARY_PATH = paste0(lib_dir, ":", old_ldpath))
+
+  run_output <- tryCatch(
+    {
+      system2(test_exe, stdout = TRUE, stderr = FALSE)
+    },
+    error = function(e) NULL
+  )
+
+  # Restore LD_LIBRARY_PATH
+  if (nchar(old_ldpath) > 0) {
+    Sys.setenv(LD_LIBRARY_PATH = old_ldpath)
+  } else {
+    Sys.unsetenv("LD_LIBRARY_PATH")
+  }
+
+  # Clean up
+  if (file.exists(test_c_file)) {
+    file.remove(test_c_file)
+  }
+  if (file.exists(test_exe)) {
+    file.remove(test_exe)
+  }
+
+  if (is.null(run_output) || length(run_output) == 0) {
+    return(FALSE)
+  }
+
+  return(grepl("^[0-9]+\\.[0-9]+", run_output[1]))
+}
+
+expect_true(
+  test_dynamic_linking_with_ldpath(),
+  info = "Should be able to dynamically link and run with LD_LIBRARY_PATH"
+)
+
+# =============================================================================
+# Compilation Test: hts_version() execution (static linking)
 # =============================================================================
 # This test compiles AND runs a program to verify runtime linking works
 

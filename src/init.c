@@ -19,7 +19,7 @@ extern SEXP RC_htslib_capabilities(void);
 extern SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
                                 SEXP region_sexp, SEXP samples_sexp,
                                 SEXP include_info_sexp, SEXP include_format_sexp,
-                                SEXP threads_sexp);
+                                SEXP index_sexp, SEXP threads_sexp);
 extern SEXP vcf_arrow_get_schema(SEXP filename_sexp);
 extern SEXP vcf_arrow_read_next_batch(SEXP stream_xptr);
 extern SEXP vcf_arrow_collect_batches(SEXP stream_xptr, SEXP max_batches_sexp);
@@ -33,7 +33,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"RC_htslib_has_feature", (DL_FUNC)&RC_htslib_has_feature, 1},
     {"RC_htslib_capabilities", (DL_FUNC)&RC_htslib_capabilities, 0},
     /* VCF Arrow stream functions */
-    {"vcf_to_arrow_stream", (DL_FUNC)&vcf_to_arrow_stream, 7},
+    {"vcf_to_arrow_stream", (DL_FUNC)&vcf_to_arrow_stream, 8},
     {"vcf_arrow_get_schema", (DL_FUNC)&vcf_arrow_get_schema, 1},
     {"vcf_arrow_read_next_batch", (DL_FUNC)&vcf_arrow_read_next_batch, 1},
     {"vcf_arrow_collect_batches", (DL_FUNC)&vcf_arrow_collect_batches, 2},
