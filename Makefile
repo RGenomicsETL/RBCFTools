@@ -5,13 +5,20 @@
 PKGNAME := $(shell sed -n "s/Package: *\([^ ]*\)/\1/p" DESCRIPTION)
 PKGVERS := $(shell sed -n "s/Version: *\([^ ]*\)/\1/p" DESCRIPTION)
 
+# Platform-specific library path variable
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	LIBPATH_VAR = DYLD_LIBRARY_PATH
+else
+	LIBPATH_VAR = LD_LIBRARY_PATH
+endif
 
 all: check
 
 
 
 rd:
-	LD_LIBRARY_PATH=$(CURDIR)/inst/htslib/lib:$(CURDIR)/inst/bcftools/lib:$$LD_LIBRARY_PATH R -e 'roxygen2::roxygenize()'
+	$(LIBPATH_VAR)=$(CURDIR)/inst/htslib/lib:$(CURDIR)/inst/bcftools/lib:$$$(LIBPATH_VAR) R -e 'roxygen2::roxygenize()'
 build: install_deps
 	R CMD build .
 

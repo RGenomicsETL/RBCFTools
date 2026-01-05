@@ -394,18 +394,35 @@ int main(void) {
 '
   writeLines(test_code, test_c_file)
 
-  # Dynamic linking with RPATH embedded
+  # Dynamic linking with RPATH embedded (platform-specific syntax)
   lib_dir <- htslib_lib_dir()
-  compile_cmd <- sprintf(
-    "%s %s %s -Wl,-rpath,%s -o %s %s %s",
-    cc,
-    cflags,
-    htslib_cflags(),
-    lib_dir,
-    test_exe,
-    test_c_file,
-    htslib_libs(static = FALSE)
-  )
+  is_macos <- Sys.info()["sysname"] == "Darwin"
+
+  if (is_macos) {
+    # macOS uses -rpath with a comma separator
+    compile_cmd <- sprintf(
+      "%s %s %s -Wl,-rpath,%s -o %s %s %s",
+      cc,
+      cflags,
+      htslib_cflags(),
+      lib_dir,
+      test_exe,
+      test_c_file,
+      htslib_libs(static = FALSE)
+    )
+  } else {
+    # Linux uses -rpath= or just -rpath,
+    compile_cmd <- sprintf(
+      "%s %s %s -Wl,-rpath,%s -o %s %s %s",
+      cc,
+      cflags,
+      htslib_cflags(),
+      lib_dir,
+      test_exe,
+      test_c_file,
+      htslib_libs(static = FALSE)
+    )
+  }
 
   # Try to compile
   compile_result <- system(
@@ -516,7 +533,7 @@ int main(void) {
   # Set LD_LIBRARY_PATH (Linux) or DYLD_LIBRARY_PATH (macOS) and try to run
   lib_dir <- htslib_lib_dir()
   is_macos <- Sys.info()["sysname"] == "Darwin"
-  
+
   if (is_macos) {
     old_ldpath <- Sys.getenv("DYLD_LIBRARY_PATH")
     Sys.setenv(DYLD_LIBRARY_PATH = paste0(lib_dir, ":", old_ldpath))
