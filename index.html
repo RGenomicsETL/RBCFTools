@@ -77,11 +77,11 @@
 <p>RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"</span></span>
 <span><span class="fu"><a href="reference/bgzip_path.html">bgzip_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"</span></span>
 <span><span class="fu"><a href="reference/tabix_path.html">tabix_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"</span></span>
 <span><span class="co"># List all available tools</span></span>
 <span><span class="fu"><a href="reference/bcftools_tools.html">bcftools_tools</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     </span></span>
@@ -126,7 +126,7 @@
 <span></span>
 <span><span class="co"># Human-readable feature string</span></span>
 <span><span class="fu"><a href="reference/htslib_feature_string.html">htslib_feature_string</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="feature-constants">Feature Constants<a class="anchor" aria-label="anchor" href="#feature-constants"></a>
 </h3>
@@ -201,30 +201,30 @@
 <span><span class="co">#&gt; spec; correcting schema</span></span>
 <span></span>
 <span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF INFO.CB</span></span>
-<span><span class="co">#&gt; 1      1 10583 rs58108140   G   A   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 2      1 11508       &lt;NA&gt;   A   G   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 3      1 11565       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 4      1 13116       &lt;NA&gt;   T   G   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 5      1 13327       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 6      1 14699       &lt;NA&gt;   C   G   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 7      1 15274       &lt;NA&gt;   A   T   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 8      1 15820       &lt;NA&gt;   G   T   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 9      1 16257       &lt;NA&gt;   G   C   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 10     1 16378       &lt;NA&gt;   T   C   NA   PASS      NA    NULL    NULL</span></span>
-<span><span class="co">#&gt; 11     1 28376       &lt;NA&gt;   G   A   NA   PASS      NA    NULL    NULL</span></span>
+<span><span class="co">#&gt;    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF       INFO.CB</span></span>
+<span><span class="co">#&gt; 1      1 10583 rs58108140   G   A   NA   PASS    1557   0.162 UM,BI,BC,NCBI</span></span>
+<span><span class="co">#&gt; 2      1 11508       &lt;NA&gt;   A   G   NA   PASS      23    0.72         BI,BC</span></span>
+<span><span class="co">#&gt; 3      1 11565       &lt;NA&gt;   G   T   NA   PASS      45       0         BI,BC</span></span>
+<span><span class="co">#&gt; 4      1 13116       &lt;NA&gt;   T   G   NA   PASS    2400   0.016         UM,BI</span></span>
+<span><span class="co">#&gt; 5      1 13327       &lt;NA&gt;   G   C   NA   PASS    2798    0.01         BI,BC</span></span>
+<span><span class="co">#&gt; 6      1 14699       &lt;NA&gt;   C   G   NA   PASS     408    0.02         BI,BC</span></span>
+<span><span class="co">#&gt; 7      1 15274       &lt;NA&gt;   A   T   NA   PASS    1739    0.91         UM,BI</span></span>
+<span><span class="co">#&gt; 8      1 15820       &lt;NA&gt;   G   T   NA   PASS    1643   0.114      UM,BI,BC</span></span>
+<span><span class="co">#&gt; 9      1 16257       &lt;NA&gt;   G   C   NA   PASS    5301    0.12    BI,BC,NCBI</span></span>
+<span><span class="co">#&gt; 10     1 16378       &lt;NA&gt;   T   C   NA   PASS     820    0.51    BI,BC,NCBI</span></span>
+<span><span class="co">#&gt; 11     1 28376       &lt;NA&gt;   G   A   NA   PASS    2943   0.026         UM,BI</span></span>
 <span><span class="co">#&gt;    INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2 INFO.AC INFO.AN samples.HG00098.AD</span></span>
-<span><span class="co">#&gt; 1           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 2           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 3           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 4           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 5           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 6           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 7           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 8           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 9           NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 10          NA          NA          NA    NULL      NA               NULL</span></span>
-<span><span class="co">#&gt; 11          NA          NA          NA    NULL      NA               NULL</span></span>
+<span><span class="co">#&gt; 1        0.248          NA          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 2        0.001          NA          NA       6       6               NULL</span></span>
+<span><span class="co">#&gt; 3           NA       0.003          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 4        0.106       0.286          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 5        0.396       0.481          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 6        0.061       0.184          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 7        0.063       0.194          NA       6       6               NULL</span></span>
+<span><span class="co">#&gt; 8        0.147       0.209          NA       0       6               NULL</span></span>
+<span><span class="co">#&gt; 9        0.627       0.719          NA       1       6               NULL</span></span>
+<span><span class="co">#&gt; 10       0.107       0.174          NA       3       6               NULL</span></span>
+<span><span class="co">#&gt; 11       0.004       0.020          NA       6       6               NULL</span></span>
 <span><span class="co">#&gt;    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT</span></span>
 <span><span class="co">#&gt; 1                  NA               NULL               3.28                0|0</span></span>
 <span><span class="co">#&gt; 2                  NA               NULL               2.22                1|1</span></span>
@@ -332,7 +332,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e76d021998.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -351,19 +351,19 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmpxtk4sa/file2d04b6660b3b00.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpMTHiOi/file38a3e76d021998.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
-<span><span class="co">#&gt; 1                    36            2515         0           0         11</span></span>
-<span><span class="co">#&gt; 2                    36            2515         1           0         11</span></span>
-<span><span class="co">#&gt; 3                    36            2515         2           0         11</span></span>
-<span><span class="co">#&gt; 4                    36            2515         3           0         11</span></span>
-<span><span class="co">#&gt; 5                    36            2515         4           0         11</span></span>
-<span><span class="co">#&gt; 6                    36            2515         5           0         11</span></span>
+<span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
+<span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
+<span><span class="co">#&gt; 3                    36            3135         2           0         11</span></span>
+<span><span class="co">#&gt; 4                    36            3135         3           0         11</span></span>
+<span><span class="co">#&gt; 5                    36            3135         4           0         11</span></span>
+<span><span class="co">#&gt; 6                    36            3135         5           0         11</span></span>
 <span><span class="co">#&gt;       path_in_schema       type  stats_min  stats_max stats_null_count</span></span>
 <span><span class="co">#&gt; 1              CHROM BYTE_ARRAY          1          1                0</span></span>
 <span><span class="co">#&gt; 2                POS     DOUBLE    10583.0    28376.0                0</span></span>
@@ -393,9 +393,9 @@
 <span><span class="co">#&gt; 5                    67                      85               NULL</span></span>
 <span><span class="co">#&gt; 6                    25                      23               NULL</span></span>
 <span><span class="co">#&gt;   bloom_filter_offset bloom_filter_length min_is_exact max_is_exact</span></span>
-<span><span class="co">#&gt; 1                1874                  47         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 1                2261                  47         TRUE         TRUE</span></span>
 <span><span class="co">#&gt; 2                  NA                  NA         TRUE         TRUE</span></span>
-<span><span class="co">#&gt; 3                1921                  47         TRUE         TRUE</span></span>
+<span><span class="co">#&gt; 3                2308                  47         TRUE         TRUE</span></span>
 <span><span class="co">#&gt; 4                  NA                  NA         TRUE         TRUE</span></span>
 <span><span class="co">#&gt; 5                  NA                  NA         TRUE         TRUE</span></span>
 <span><span class="co">#&gt; 6                  NA                  NA           NA           NA</span></span>
@@ -432,7 +432,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpxtk4sa/file2d04b6725cf433.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpMTHiOi/file38a3e732948d06.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">

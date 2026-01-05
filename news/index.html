@@ -47,7 +47,7 @@
 <li>
 <code><a href="../reference/vcf_query.html">vcf_query()</a></code>: SQL queries on VCF files via DuckDB</li>
 </ul></li>
-<li><p><strong>Streaming mode for large files</strong>: <code>vcf_to_parquet(..., streaming = TRUE)</code> streams VCF → Arrow IPC → Parquet without loading into R memory. Requires DuckDB nanoarrow extension (auto-installed on first use).</p></li>
+<li><p><strong>Streaming mode for large files</strong>: <code>vcf_to_parquet(..., streaming = TRUE)</code> streams VCF -&gt; Arrow IPC -&gt; Parquet without loading into R memory. Requires DuckDB nanoarrow extension (auto-installed on first use).</p></li>
 <li>
 <p><strong>FORMAT field extraction</strong>:</p>
 <ul><li>Proper GT field decoding (genotype integers to strings like “0|0”, “0/1”)</li>
