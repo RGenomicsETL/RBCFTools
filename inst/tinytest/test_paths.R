@@ -581,13 +581,10 @@ int main(void) {
   return(grepl("^[0-9]+\\.[0-9]+", run_output[1]))
 }
 
-# Skip on macOS due to some linking crap
-if (Sys.info()["sysname"] != "Darwin") {
-  expect_true(
-    test_dynamic_linking_with_ldpath(),
-    info = "Should be able to dynamically link and run with LD_LIBRARY_PATH"
-  )
-}
+expect_true(
+  test_dynamic_linking_with_ldpath(),
+  info = "Should be able to dynamically link and run with LD_LIBRARY_PATH"
+)
 
 # =============================================================================
 # Compilation Test: hts_version() execution (static linking)
