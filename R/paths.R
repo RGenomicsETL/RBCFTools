@@ -344,7 +344,14 @@ htslib_libs <- function(static = FALSE) {
 
   if (static) {
     # Additional libraries needed for static linking
-    static_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl"
+    # Note: -ldl is only needed on Linux; macOS has dlopen in libc
+    static_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate"
+
+    # Add -ldl on Linux/non-macOS systems
+    if (.Platform$OS.type == "unix" && Sys.info()["sysname"] != "Darwin") {
+      static_deps <- paste(static_deps, "-ldl")
+    }
+
     paste(base_libs, static_deps)
   } else {
     base_libs

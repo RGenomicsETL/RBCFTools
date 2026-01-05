@@ -38,11 +38,13 @@ CONVERT OPTIONS:
   --no-info        Exclude INFO fields
   --no-format      Exclude FORMAT/sample data
   --row-group-size  Rows per row group (default: 100000)
+  --quiet          Suppress warnings
 
 QUERY OPTIONS:
   -i, --input      Input Parquet file(s) (required, can be multiple)
   -q, --query      SQL query string (required)
   -o, --output     Output file (CSV format, default: stdout)
+  --quiet          Suppress warnings
 
 SCHEMA OPTIONS:
   -i, --input      Input VCF file (required)
@@ -133,6 +135,9 @@ parse_args <- function(args) {
         } else if (arg == "--row-group-size") {
             opts$row_group_size <- as.integer(args[i + 1])
             i <- i + 2
+        } else if (arg == "--quiet") {
+            opts$quiet <- TRUE
+            i <- i + 1
         } else {
             cat("Unknown option:", arg, "\n")
             quit(status = 1)
@@ -142,6 +147,11 @@ parse_args <- function(args) {
 }
 
 opts <- parse_args(args)
+
+# Set quiet mode if requested
+if (!is.null(opts$quiet) && opts$quiet) {
+    options(warn = -1)
+}
 
 # Set defaults
 if (is.null(opts$compression)) {

@@ -300,14 +300,17 @@ int main(void) {
 
   # Build the compile command using static library directly
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
+  # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
+  ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    lib_path
+    lib_path,
+    ldl_flag
   )
 
   # Try to compile
@@ -585,14 +588,17 @@ int main(void) {
 
   # Build the compile command using static library directly
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
+  # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
+  ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    lib_path
+    lib_path,
+    ldl_flag
   )
 
   # Try to compile
@@ -705,14 +711,17 @@ int main(void) {
 
   # Use static library directly
   lib_path <- file.path(htslib_lib_dir(), "libhts.a")
+  # Platform-specific: -ldl is only needed on Linux/non-Darwin systems
+  ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   compile_cmd <- sprintf(
-    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate -ldl",
+    "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
     cc,
     cflags,
     htslib_cflags(),
     test_exe,
     test_c_file,
-    lib_path
+    lib_path,
+    ldl_flag
   )
 
   compile_result <- system(
