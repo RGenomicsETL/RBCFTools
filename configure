@@ -250,9 +250,8 @@ if [ "${COMPILER_TYPE}" = "gcc" ]; then
     # GCC-specific warning suppressions
     BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-alloc-size-larger-than"
 elif [ "${COMPILER_TYPE}" = "clang" ]; then
-    # Clang doesn't need -Wno-alloc-size-larger-than (doesn't have that warning)
-    # Could add clang-specific flags here if needed
-    :
+    # Clang-specific warning suppressions
+    BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-unused-but-set-variable"
 fi
 
 ./configure \
