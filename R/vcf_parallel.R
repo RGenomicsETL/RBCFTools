@@ -151,9 +151,24 @@ vcf_count_per_contig <- function(filename) {
 
     # Parse output: format is "chr1\t12345\t67890\t..."
     # We want the contig name (col 1) and record count (col 2)
+    # Use suppressWarnings to avoid NA coercion warnings from malformed lines
     lines <- strsplit(output, "\t")
-    contigs <- sapply(lines, `[`, 1)
-    counts <- as.integer(sapply(lines, `[`, 2))
+    contigs <- sapply(lines, function(x) {
+        if (length(x) >= 1) x[1] else NA_character_
+    })
+    counts <- suppressWarnings(as.integer(sapply(lines, function(x) {
+        if (length(x) >= 2) x[2] else NA_character_
+    })))
+
+    # Keep only valid entries
+    valid <- !is.na(contigs) & !is.na(counts)
+    if (!any(valid)) {
+        warning("Could not parse variant counts from bcftools index")
+        return(integer(0))
+    }
+
+    contigs <- contigs[valid]
+    counts <- counts[valid]
 
     names(counts) <- contigs
     counts
@@ -223,8 +238,6 @@ merge_parquet_files <- function(
 #' @param compression Compression codec
 #' @param row_group_size Row group size
 #' @param streaming Use streaming mode
-#' @param min_variants_per_contig Minimum variants to process a contig (default: 100)
-#'   Contigs with fewer variants are grouped together to avoid overhead
 #' @param index Optional explicit index path
 #' @param ... Additional arguments passed to vcf_open_arrow
 #'
@@ -238,8 +251,7 @@ merge_parquet_files <- function(
 #' 4. Writes each contig to a temporary Parquet file
 #' 5. Merges all temporary files into final output using DuckDB
 #'
-#' Performance scales nearly linearly with number of chromosomes (up to thread count).
-#' Best for whole-genome VCFs with many chromosomes.
+#' Contigs that return no variants are skipped automatically.
 #'
 #' @examples
 #' \dontrun{
@@ -261,7 +273,6 @@ vcf_to_parquet_parallel <- function(
     compression = "snappy",
     row_group_size = 100000L,
     streaming = FALSE,
-    min_variants_per_contig = 100L,
     index = NULL,
     ...
 ) {
@@ -269,9 +280,8 @@ vcf_to_parquet_parallel <- function(
         stop("Package 'parallel' required for parallel processing")
     }
 
-    # Check for index using htslib (robust to remote files)
+    # Check for index
     has_idx <- vcf_has_index(input_vcf, index)
-
     if (!has_idx) {
         warning("No index found. Falling back to single-threaded mode.")
         return(vcf_to_parquet(
@@ -284,52 +294,23 @@ vcf_to_parquet_parallel <- function(
         ))
     }
 
-    # Get list of contigs from header
+    # Get contigs from header
     contigs <- vcf_get_contigs(input_vcf)
-
     if (length(contigs) == 0) {
         stop("No contigs found in VCF header")
     }
 
-    # Get per-contig variant counts to optimize work distribution
-    contig_counts <- tryCatch(
-        vcf_count_per_contig(input_vcf),
-        error = function(e) {
-            # Fallback: assume equal distribution
-            rep(1000L, length(contigs))
-        }
-    )
-
-    # Filter out tiny contigs and group them
-    large_contigs <- contigs[contig_counts >= min_variants_per_contig]
-    small_contigs <- contigs[contig_counts < min_variants_per_contig]
-
-    # Prepare work units
-    work_units <- as.list(large_contigs)
-
-    # Group small contigs together
-    if (length(small_contigs) > 0) {
-        work_units <- c(work_units, list(small_contigs))
-    }
-
-    if (length(work_units) == 0) {
-        stop("No contigs to process")
-    }
-
-    # Limit threads to number of work units
-    threads <- min(threads, length(work_units))
+    # Limit threads to number of contigs
+    threads <- min(threads, length(contigs))
 
     message(sprintf(
-        "Processing %d contigs (%d large, %d small grouped) using %d threads",
+        "Processing %d contigs using %d threads",
         length(contigs),
-        length(large_contigs),
-        length(small_contigs),
         threads
     ))
 
-    # If only 1 thread needed, use single-threaded path directly
-    if (threads == 1) {
-        message("Using single-threaded mode (1 work unit)")
+    # If only 1 contig or 1 thread, use single-threaded mode
+    if (length(contigs) == 1 || threads == 1) {
         return(vcf_to_parquet(
             input_vcf,
             output_parquet,
@@ -342,7 +323,7 @@ vcf_to_parquet_parallel <- function(
         ))
     }
 
-    # Create temporary directory for per-contig parquet files
+    # Create temp directory for per-contig files
     temp_dir <- tempfile("vcf_parallel_")
     dir.create(temp_dir, recursive = TRUE)
     on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
@@ -353,129 +334,106 @@ vcf_to_parquet_parallel <- function(
         duckdb_compression <- "LZ4_RAW"
     }
 
-    # Process work units in parallel
-    process_unit <- function(i) {
-        unit <- work_units[[i]]
-        temp_file <- file.path(temp_dir, sprintf("chunk_%04d.parquet", i))
+    # Capture additional arguments
+    extra_args <- list(...)
+
+    # Process each contig
+    process_contig <- function(
+        i,
+        vcf_file,
+        out_dir,
+        contigs_list,
+        use_streaming,
+        compression_codec,
+        rg_size,
+        idx,
+        args_list
+    ) {
+        contig <- contigs_list[i]
+        temp_file <- file.path(out_dir, sprintf("contig_%04d.parquet", i))
 
         tryCatch(
             {
-                # Suppress messages in worker processes to avoid I/O conflicts
-                suppressMessages({
-                    if (length(unit) == 1) {
-                        # Single contig
-                        region <- unit
-                    } else {
-                        # Multiple small contigs
-                        region <- NULL
-                    }
+                # Build arguments list
+                call_args <- c(
+                    list(
+                        input_vcf = vcf_file,
+                        output_parquet = temp_file,
+                        duckdb_compression = compression_codec,
+                        row_group_size = rg_size,
+                        region = contig,
+                        index = idx
+                    ),
+                    args_list
+                )
 
-                    # Process this region
-                    if (streaming) {
-                        vcf_to_parquet_streaming(
-                            input_vcf,
-                            temp_file,
-                            duckdb_compression,
-                            row_group_size,
-                            region = if (length(unit) == 1) unit else NULL,
-                            index = index,
-                            ...
-                        )
-                    } else {
-                        vcf_to_parquet_inmemory(
-                            input_vcf,
-                            temp_file,
-                            duckdb_compression,
-                            row_group_size,
-                            region = if (length(unit) == 1) unit else NULL,
-                            index = index,
-                            ...
-                        )
-                    }
+                # Process this contig
+                if (use_streaming) {
+                    do.call(vcf_to_parquet_streaming, call_args)
+                } else {
+                    do.call(vcf_to_parquet_inmemory, call_args)
+                }
 
-                    # For multiple small contigs, process each and merge
-                    if (length(unit) > 1) {
-                        small_files <- lapply(seq_along(unit), function(j) {
-                            small_file <- file.path(
-                                temp_dir,
-                                sprintf("small_%04d_%04d.parquet", i, j)
-                            )
-                            if (streaming) {
-                                vcf_to_parquet_streaming(
-                                    input_vcf,
-                                    small_file,
-                                    duckdb_compression,
-                                    row_group_size,
-                                    region = unit[j],
-                                    index = index,
-                                    ...
-                                )
-                            } else {
-                                vcf_to_parquet_inmemory(
-                                    input_vcf,
-                                    small_file,
-                                    duckdb_compression,
-                                    row_group_size,
-                                    region = unit[j],
-                                    index = index,
-                                    ...
-                                )
-                            }
-                            small_file
-                        })
-                        # Merge small files into temp_file
-                        merge_parquet_files(
-                            unlist(small_files),
-                            temp_file,
-                            duckdb_compression,
-                            row_group_size
-                        )
-                    }
-                })
-
-                temp_file
+                # Return temp file path only if it exists and has content
+                if (file.exists(temp_file) && file.size(temp_file) > 0) {
+                    return(temp_file)
+                }
+                return(NULL)
             },
             error = function(e) {
-                warning(sprintf(
-                    "[Thread %d] Failed to process work unit: %s",
-                    i,
-                    e$message
-                ))
-                NULL
+                # Silently skip failed contigs
+                return(NULL)
             }
         )
     }
 
     # Run in parallel
     if (.Platform$OS.type == "windows") {
-        # Use parLapply for Windows
         cl <- parallel::makeCluster(threads)
         on.exit(parallel::stopCluster(cl), add = TRUE)
         parallel::clusterEvalQ(cl, library(RBCFTools))
         temp_files <- parallel::parLapply(
             cl,
-            seq_along(work_units),
-            process_unit
+            seq_along(contigs),
+            process_contig,
+            vcf_file = input_vcf,
+            out_dir = temp_dir,
+            contigs_list = contigs,
+            use_streaming = streaming,
+            compression_codec = duckdb_compression,
+            rg_size = row_group_size,
+            idx = index,
+            args_list = extra_args
         )
     } else {
-        # Use mclapply for Unix/Mac
         temp_files <- parallel::mclapply(
-            seq_along(work_units),
-            process_unit,
+            seq_along(contigs),
+            process_contig,
+            vcf_file = input_vcf,
+            out_dir = temp_dir,
+            contigs_list = contigs,
+            use_streaming = streaming,
+            compression_codec = duckdb_compression,
+            rg_size = row_group_size,
+            idx = index,
+            args_list = extra_args,
             mc.cores = threads
         )
     }
 
-    # Filter out failed chunks
+    # Filter out NULLs and non-existent files
     temp_files <- Filter(Negate(is.null), temp_files)
     temp_files <- unlist(temp_files)
-    temp_files <- temp_files[file.exists(temp_files)]
+    temp_files <- temp_files[
+        file.exists(temp_files) & file.size(temp_files) > 0
+    ]
 
     if (length(temp_files) == 0) {
-        stop("Failed to process any contigs")
+        stop("No variants found in any contig")
     }
 
-    # Merge all temporary parquet files
+    # Merge all temp files
+    message("Merging temporary Parquet files... to ", output_parquet)
     merge_parquet_files(
         temp_files,
         output_parquet,
