@@ -70,13 +70,21 @@ fi
 echo "----------Configuring HTSlib in $HTSLIB_DIR-----------------"
 cd $HTSLIB_DIR
 
+# Detect WebAssembly/r-wasm environment
+CONFIGURE_EXTRA_FLAGS=""
+if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
+    echo "Detected WebAssembly/r-wasm build environment"
+    CONFIGURE_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no"
+fi
+
 ./configure \
     CFLAGS="${CFLAGS} -Wno-unused-function" \
     --enable-plugins \
     --enable-shared \
     --enable-s3 \
     --enable-gcs \
-    --prefix="${THISDir}/inst/htslib"
+    --prefix="${THISDir}/inst/htslib" \
+    ${CONFIGURE_EXTRA_FLAGS}
 
 ## copy file instead of symbolic linking
 rm -f htscodecs.mk && cp "${HTSLIB_BUNDLED_MK}" htscodecs.mk
@@ -254,12 +262,20 @@ elif [ "${COMPILER_TYPE}" = "clang" ]; then
     BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-unused-but-set-variable"
 fi
 
+# Detect WebAssembly/r-wasm environment for bcftools
+BCFTOOLS_EXTRA_FLAGS=""
+if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
+    echo "Detected WebAssembly/r-wasm build environment for bcftools"
+    BCFTOOLS_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no"
+fi
+
 ./configure \
     ${BCFTOOLS_CONFIGURE_FLAGS} \
     CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
     CPPFLAGS="${CPPFLAGS}" \
     LDFLAGS="${LDFLAGS}" \
-    --enable-shared
+    --enable-shared \
+    ${BCFTOOLS_EXTRA_FLAGS}
 
 # Build the bcftools executable and plugins with dependency flags
 export CC="${CC}"
