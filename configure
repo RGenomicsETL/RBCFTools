@@ -234,9 +234,30 @@ if [ "$HAVE_GSL" = "yes" ]; then
     export GSL_LIBS="${GSL_LIBS}"
 fi
 
+# Detect compiler type for platform-specific warning flags
+COMPILER_TYPE="unknown"
+if ${CC} --version 2>&1 | grep -qi "clang"; then
+    COMPILER_TYPE="clang"
+    echo "Detected Clang compiler"
+elif ${CC} --version 2>&1 | grep -qi "gcc\|g++"; then
+    COMPILER_TYPE="gcc"
+    echo "Detected GCC compiler"
+fi
+
+# Set warning suppression flags based on compiler
+BCFTOOLS_WARN_FLAGS="-Wno-unused-variable"
+if [ "${COMPILER_TYPE}" = "gcc" ]; then
+    # GCC-specific warning suppressions
+    BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-alloc-size-larger-than"
+elif [ "${COMPILER_TYPE}" = "clang" ]; then
+    # Clang doesn't need -Wno-alloc-size-larger-than (doesn't have that warning)
+    # Could add clang-specific flags here if needed
+    :
+fi
+
 ./configure \
     ${BCFTOOLS_CONFIGURE_FLAGS} \
-    CFLAGS="${CFLAGS} -Wno-alloc-size-larger-than -Wno-unused-variable" \
+    CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
     CPPFLAGS="${CPPFLAGS}" \
     LDFLAGS="${LDFLAGS}" \
     --enable-shared
