@@ -332,7 +332,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpmUF715/file38c12e60409eec.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -351,12 +351,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -432,7 +432,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpmUF715/file38c12e7ec80dcf.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c055baba5e.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -478,10 +478,104 @@
 <span><span class="co">#&gt; 6 chr22 16050229   C A        , &lt;NON_REF&gt;</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="command-line-tool">Command-Line Tool<a class="anchor" aria-label="anchor" href="#command-line-tool"></a>
+</h3>
+<p>A CLI tool is provided for VCF to Parquet conversion and querying</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="va">BCF</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="va">$SCRIPT</span> convert <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co"># Show schema</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="va">$SCRIPT</span> schema <span class="at">-i</span> <span class="va">$BCF</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-15</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="co"># File info</span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a><span class="va">$SCRIPT</span> info <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.p3QxGjLMD0.parquet </span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a><span class="co">#&gt;   Compression: snappy </span></span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a><span class="co">#&gt;   Include INFO: TRUE </span></span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="co">#&gt;   Include FORMAT: TRUE </span></span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.p3QxGjLMD0.parquet</span></span>
+<span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a><span class="co">#&gt;   Time: 0.73 seconds</span></span>
+<span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
+<span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a><span class="co">#&gt; Warning messages:</span></span>
+<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a><span class="co">#&gt; 1: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
+<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a><span class="co">#&gt; 2: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
+<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a><span class="co">#&gt; 3: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
+<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="co">#&gt; 4: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
+<span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a><span class="co">#&gt; 5: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-45"><a href="#cb14-45" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
+<span id="cb14-46"><a href="#cb14-46" tabindex="-1"></a><span class="co">#&gt; 6: In nanoarrow::convert_array_stream(stream) :</span></span>
+<span id="cb14-47"><a href="#cb14-47" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
+<span id="cb14-48"><a href="#cb14-48" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb14-49"><a href="#cb14-49" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
+<span id="cb14-50"><a href="#cb14-50" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
+<span id="cb14-51"><a href="#cb14-51" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
+<span id="cb14-52"><a href="#cb14-52" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
+<span id="cb14-53"><a href="#cb14-53" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
+<span id="cb14-54"><a href="#cb14-54" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
+<span id="cb14-55"><a href="#cb14-55" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb14-56"><a href="#cb14-56" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb14-57"><a href="#cb14-57" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb14-58"><a href="#cb14-58" tabindex="-1"></a><span class="co">#&gt; Warning messages:</span></span>
+<span id="cb14-59"><a href="#cb14-59" tabindex="-1"></a><span class="co">#&gt; VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb14-60"><a href="#cb14-60" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-61"><a href="#cb14-61" tabindex="-1"></a><span class="co">#&gt; &lt;nanoarrow_schema struct&gt;</span></span>
+<span id="cb14-62"><a href="#cb14-62" tabindex="-1"></a><span class="co">#&gt;  $ format    : chr "+s"</span></span>
+<span id="cb14-63"><a href="#cb14-63" tabindex="-1"></a><span class="co">#&gt;  $ name      : chr ""</span></span>
+<span id="cb14-64"><a href="#cb14-64" tabindex="-1"></a><span class="co">#&gt;  $ metadata  : list()</span></span>
+<span id="cb14-65"><a href="#cb14-65" tabindex="-1"></a><span class="co">#&gt;  $ flags     : int 0</span></span>
+<span id="cb14-66"><a href="#cb14-66" tabindex="-1"></a><span class="co">#&gt;  $ children  :List of 9</span></span>
+<span id="cb14-67"><a href="#cb14-67" tabindex="-1"></a><span class="co">#&gt;   ..$ CHROM  :&lt;nanoarrow_schema string&gt;</span></span>
+<span id="cb14-68"><a href="#cb14-68" tabindex="-1"></a><span class="co">#&gt;   .. ..$ format    : chr "u"</span></span>
+<span id="cb14-69"><a href="#cb14-69" tabindex="-1"></a><span class="co">#&gt;   .. ..$ name      : chr "CHROM"</span></span>
+<span id="cb14-70"><a href="#cb14-70" tabindex="-1"></a><span class="co">#&gt;   .. ..$ metadata  : list()</span></span>
+<span id="cb14-71"><a href="#cb14-71" tabindex="-1"></a><span class="co">#&gt;   .. ..$ flags     : int 0</span></span>
+<span id="cb14-72"><a href="#cb14-72" tabindex="-1"></a><span class="co">#&gt;   .. ..$ children  : list()</span></span>
+<span id="cb14-73"><a href="#cb14-73" tabindex="-1"></a><span class="co">#&gt;   .. ..$ dictionary: NULL</span></span>
+<span id="cb14-74"><a href="#cb14-74" tabindex="-1"></a><span class="co">#&gt; 1: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-75"><a href="#cb14-75" tabindex="-1"></a><span class="co">#&gt;   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema</span></span>
+<span id="cb14-76"><a href="#cb14-76" tabindex="-1"></a><span class="co">#&gt; 2: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-77"><a href="#cb14-77" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type</span></span>
+<span id="cb14-78"><a href="#cb14-78" tabindex="-1"></a><span class="co">#&gt; 3: In vcf_arrow_schema(opts$input) :</span></span>
+<span id="cb14-79"><a href="#cb14-79" tabindex="-1"></a><span class="co">#&gt;   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema</span></span>
+<span id="cb14-80"><a href="#cb14-80" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.p3QxGjLMD0.parquet </span></span>
+<span id="cb14-81"><a href="#cb14-81" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-82"><a href="#cb14-82" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
+<span id="cb14-83"><a href="#cb14-83" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
+<span id="cb14-84"><a href="#cb14-84" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
+<span id="cb14-85"><a href="#cb14-85" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-86"><a href="#cb14-86" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb14-87"><a href="#cb14-87" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
+<span id="cb14-88"><a href="#cb14-88" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
+<span id="cb14-89"><a href="#cb14-89" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>
 </h3>
 <p>For region queries, an index file is required. By default, RBCFTools looks for <code>.tbi</code> (tabix) or <code>.csi</code> indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the <code>index</code> parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try <code>.tbi</code> first then fall back to <code>.csi</code>, while BCF files use <code>.csi</code> only.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Explicit index file path</span></span>
 <span><span class="va">bcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">csi_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf.csi"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
@@ -508,7 +602,7 @@
 <div class="section level2">
 <h2 id="limitations-and-issues">Limitations and issues<a class="anchor" aria-label="anchor" href="#limitations-and-issues"></a>
 </h2>
-<p>The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get <code>arrow_table</code> format that can be registered by <code>duckdb</code> but this is an additional dependency.</p>
+<p>The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get <code>arrow_table</code> format that can be registered by <code>duckdb</code> but this is an additional dependency. There is no particular attempt to parse further vep/snpeff/annovar info fields.</p>
 </div>
 <div class="section level2">
 <h2 id="future-directions">Future directions<a class="anchor" aria-label="anchor" href="#future-directions"></a>

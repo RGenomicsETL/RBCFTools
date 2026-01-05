@@ -2,6 +2,8 @@
 
 ## RBCFTools 1.23-0.0.0.9000 (development version)
 
+- vcf2parquet.R script in inst/
+
 - **VCF to Arrow streaming** via nanoarrow (no `arrow` package
   required):
 

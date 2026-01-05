@@ -311,7 +311,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpmUF715/file38c12e60409eec.parquet
+#> Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -330,12 +330,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
-#> 2 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
-#> 3 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
-#> 4 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
-#> 5 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
-#> 6 /tmp/RtmpmUF715/file38c12e60409eec.parquet            0                 11
+#> 1 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 2 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 3 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 4 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 5 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
+#> 6 /tmp/RtmpJLptP8/file3a51c05daf7f2d.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -418,7 +418,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpmUF715/file38c12e7ec80dcf.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpJLptP8/file3a51c055baba5e.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -467,6 +467,102 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 6 chr22 16050229   C A        , <NON_REF>
 ```
 
+### Command-Line Tool
+
+A CLI tool is provided for VCF to Parquet conversion and querying
+
+``` bash
+# Get paths using system.file
+SCRIPT=$(Rscript -e "cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))")
+BCF=$(Rscript -e "cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))")
+OUT_PQ=$(mktemp --suffix=.parquet)
+
+# Convert BCF to Parquet
+$SCRIPT convert -i $BCF -o $OUT_PQ
+
+# Query with DuckDB SQL
+$SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
+
+# Show schema
+$SCRIPT schema -i $BCF | head -15
+
+# File info
+$SCRIPT info -i $OUT_PQ | head -10
+
+rm -f $OUT_PQ
+#> Converting VCF to Parquet...
+#>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
+#>   Output: /tmp/tmp.p3QxGjLMD0.parquet 
+#>   Compression: snappy 
+#>   Batch size: 10000 
+#>   Streaming: FALSE 
+#>   Include INFO: TRUE 
+#>   Include FORMAT: TRUE 
+#> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
+#> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
+#> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
+#> Wrote 11 rows to /tmp/tmp.p3QxGjLMD0.parquet
+#> 
+#> ✓ Conversion complete!
+#>   Time: 0.73 seconds
+#>   Output size: 0.01 MB
+#> Warning messages:
+#> 1: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
+#> 2: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
+#> 3: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
+#> 4: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
+#> 5: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
+#> 6: In nanoarrow::convert_array_stream(stream) :
+#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
+#> Running query on Parquet file(s)...
+#>   CHROM   POS REF ALT
+#> 1     1 10583   G   A
+#> 2     1 11508   A   G
+#> 3     1 11565   G   T
+#> 4     1 13116   T   G
+#> 5     1 13327   G   C
+#> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
+#> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
+#> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
+#> Warning messages:
+#> VCF Arrow Schema for: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
+#> 
+#> <nanoarrow_schema struct>
+#>  $ format    : chr "+s"
+#>  $ name      : chr ""
+#>  $ metadata  : list()
+#>  $ flags     : int 0
+#>  $ children  :List of 9
+#>   ..$ CHROM  :<nanoarrow_schema string>
+#>   .. ..$ format    : chr "u"
+#>   .. ..$ name      : chr "CHROM"
+#>   .. ..$ metadata  : list()
+#>   .. ..$ flags     : int 0
+#>   .. ..$ children  : list()
+#>   .. ..$ dictionary: NULL
+#> 1: In vcf_arrow_schema(opts$input) :
+#>   FORMAT/AD should be declared as Number=R per VCF spec; correcting schema
+#> 2: In vcf_arrow_schema(opts$input) :
+#>   FORMAT/GQ should be Type=Integer per VCF spec, but header declares Type=Float; using header type
+#> 3: In vcf_arrow_schema(opts$input) :
+#>   FORMAT/GT should be declared as Number=1 per VCF spec; correcting schema
+#> Parquet File Information: /tmp/tmp.p3QxGjLMD0.parquet 
+#> 
+#> File size: 0.01 MB 
+#> Total rows: 11 
+#> Number of columns: 60 
+#> 
+#> Schema (top-level columns):
+#>     name       type
+#>    CHROM BYTE_ARRAY
+#>      POS     DOUBLE
+```
+
 ### Custom Index File Path
 
 For region queries, an index file is required. By default, RBCFTools
@@ -508,7 +604,8 @@ additional copies and converstions when converting to parquet including
 Arrow IPC file serialization. Same limitation applies to the SQL query
 interface. In theory we can use the arrow package to get `arrow_table`
 format that can be registered by `duckdb` but this is an additional
-dependency.
+dependency. There is no particular attempt to parse further
+vep/snpeff/annovar info fields.
 
 ## Future directions
 
