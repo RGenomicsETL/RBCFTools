@@ -48,6 +48,8 @@ and querying with tools like DuckDB, Spark, or Python pandas/polars.</p>
 <span>  compression <span class="op">=</span> <span class="st">"snappy"</span>,</span>
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  streaming <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  threads <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -79,6 +81,18 @@ via DuckDB. This avoids loading the entire VCF into R memory. Requires
 the DuckDB nanoarrow community extension. Default is FALSE.</p></dd>
 
 
+<dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
+<dd><p>Number of parallel threads for processing (default: 1).
+When threads &gt; 1 and file is indexed, uses parallel processing by splitting
+work across chromosomes/contigs. Each thread processes different regions
+simultaneously. Requires indexed file. See <code><a href="vcf_to_parquet_parallel.html">vcf_to_parquet_parallel</a></code>
+for details.</p></dd>
+
+
+<dt id="arg-index">index<a class="anchor" aria-label="anchor" href="#arg-index"></a></dt>
+<dd><p>Optional explicit index file path</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to vcf_open_arrow</p></dd>
 
@@ -89,14 +103,14 @@ the DuckDB nanoarrow community extension. Default is FALSE.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>By default (<code>streaming = FALSE</code>), the function loads the entire VCF into
-memory as a data.frame before writing to Parquet. This is fast for small
-to medium files.</p>
-<p>For very large VCF files, set <code>streaming = TRUE</code> to use a two-stage
-streaming approach:</p><ol><li><p>Stream VCF to a temporary Arrow IPC file (via nanoarrow)</p></li>
-<li><p>Convert IPC to Parquet via DuckDB (with nanoarrow extension)</p></li>
-</ol><p>This keeps R memory usage minimal regardless of file size.</p>
-    </div>
+    <p><strong>Processing Modes:</strong></p><ol><li><p><strong>Standard mode</strong> (<code>streaming = FALSE, threads = 1</code>): Loads entire VCF
+into memory as data.frame before writing. Fast for small-medium files.</p></li>
+<li><p><strong>Streaming mode</strong> (<code>streaming = TRUE, threads = 1</code>): Two-stage streaming
+via temporary Arrow IPC file. Minimal memory usage for large files.</p></li>
+<li><p><strong>Parallel mode</strong> (<code>threads &gt; 1</code>): Requires indexed file. Splits work by
+chromosomes, processing multiple regions simultaneously. Near-linear
+speedup with thread count. Best for whole-genome VCFs.</p></li>
+</ol></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -106,6 +120,12 @@ streaming approach:</p><ol><li><p>Stream VCF to a temporary Arrow IPC file (via 
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Streaming mode for large files (low memory)</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet</span><span class="op">(</span><span class="st">"huge.vcf.gz"</span>, <span class="st">"huge.parquet"</span>, streaming <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Parallel mode for whole-genome VCF (requires index)</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Parallel + streaming for massive files</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, threads <span class="op">=</span> <span class="fl">16</span>, streaming <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With zstd compression</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="st">"variants.parquet"</span>, compression <span class="op">=</span> <span class="st">"zstd"</span><span class="op">)</span></span></span>

@@ -713,6 +713,16 @@ We should improve the code, avoid copies, add more tests and maybe
   : Get Path to tabix Executable
 - [`vcf_arrow_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.md)
   : Get the Arrow schema for a VCF file
+- [`vcf_count_per_contig()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_per_contig.md)
+  : Get variant counts per contig using bcftools
+- [`vcf_count_variants()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_variants.md)
+  : Get number of variants using bcftools
+- [`vcf_get_contig_lengths()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contig_lengths.md)
+  : Get contig lengths from VCF/BCF file
+- [`vcf_get_contigs()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contigs.md)
+  : Get contig names from VCF/BCF file
+- [`vcf_has_index()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_has_index.md)
+  : Check if VCF/BCF file has an index
 - [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
   : Create an Arrow stream from a VCF/BCF file
 - [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md)
@@ -723,4 +733,6 @@ We should improve the code, avoid copies, add more tests and maybe
   : Write VCF/BCF to Arrow IPC format
 - [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)
   : Write VCF/BCF to Parquet format
+- [`vcf_to_parquet_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.md)
+  : Parallel VCF to Parquet conversion
 
