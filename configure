@@ -106,29 +106,93 @@ fi
 
 #--------------------- Check for SSL library (needed for S3)
 SSL_LIBS=""
+SSL_CFLAGS=""
 echo "Checking for SSL library (required for S3 support)..."
 
-# Try OpenSSL/libcrypto first (most common)
-if echo '#include <openssl/hmac.h>
+# On macOS, check Homebrew OpenSSL paths first
+if [ "$(uname)" = "Darwin" ]; then
+    # Check for Homebrew OpenSSL (Apple Silicon path first, then Intel)
+    for OPENSSL_PREFIX in /opt/homebrew/opt/openssl@3 /opt/homebrew/opt/openssl@1.1 /opt/homebrew/opt/openssl \
+                          /usr/local/opt/openssl@3 /usr/local/opt/openssl@1.1 /usr/local/opt/openssl; do
+        if [ -d "${OPENSSL_PREFIX}" ]; then
+            echo "Testing Homebrew OpenSSL at ${OPENSSL_PREFIX}..."
+            if echo '#include <openssl/hmac.h>
 int main(void) { return 0; }' | \
-   ${CC} ${CFLAGS} -x c - -lcrypto -o /dev/null 2>/dev/null; then
-    SSL_LIBS="-lcrypto"
-    echo "Found OpenSSL/libcrypto"
-# Try GnuTLS
-elif echo '#include <gnutls/gnutls.h>
-int main(void) { gnutls_global_init(); return 0; }' | \
-   ${CC} ${CFLAGS} -x c - -lgnutls -o /dev/null 2>/dev/null; then
-    SSL_LIBS="-lgnutls"
-    echo "Found GnuTLS"
-# Try NSS
-elif echo '#include <nss.h>
-int main(void) { NSS_Init(NULL); return 0; }' | \
-   ${CC} ${CFLAGS} -x c - -lnss3 -o /dev/null 2>/dev/null; then
-    SSL_LIBS="-lnss3"
-    echo "Found NSS"
+               ${CC} ${CFLAGS} -I${OPENSSL_PREFIX}/include -x c - -L${OPENSSL_PREFIX}/lib -lcrypto -o /dev/null 2>/dev/null; then
+                SSL_LIBS="-L${OPENSSL_PREFIX}/lib -lcrypto"
+                SSL_CFLAGS="-I${OPENSSL_PREFIX}/include"
+                CFLAGS="${CFLAGS} ${SSL_CFLAGS}"
+                echo "Found Homebrew OpenSSL at ${OPENSSL_PREFIX}"
+                break
+            fi
+        fi
+    done
+    
+    # Try system LibreSSL if Homebrew OpenSSL not found
+    if [ -z "${SSL_LIBS}" ]; then
+        if echo '#include <openssl/hmac.h>
+int main(void) { return 0; }' | \
+           ${CC} ${CFLAGS} -x c - -lcrypto -o /dev/null 2>/dev/null; then
+            SSL_LIBS="-lcrypto"
+            echo "Found system LibreSSL/OpenSSL"
+        fi
+    fi
+    
+    # Try wolfSSL with OpenSSL compatibility layer
+    if [ -z "${SSL_LIBS}" ]; then
+        for WOLFSSL_PREFIX in /opt/homebrew/opt/wolfssl /usr/local/opt/wolfssl /usr/local; do
+            if [ -d "${WOLFSSL_PREFIX}/include/wolfssl" ]; then
+                echo "Testing wolfSSL at ${WOLFSSL_PREFIX}..."
+                if echo '#include <wolfssl/options.h>
+#include <wolfssl/openssl/hmac.h>
+int main(void) { return 0; }' | \
+                   ${CC} ${CFLAGS} -I${WOLFSSL_PREFIX}/include -I${WOLFSSL_PREFIX}/include/wolfssl -x c - -L${WOLFSSL_PREFIX}/lib -lwolfssl -o /dev/null 2>/dev/null; then
+                    SSL_LIBS="-L${WOLFSSL_PREFIX}/lib -lwolfssl"
+                    SSL_CFLAGS="-I${WOLFSSL_PREFIX}/include -I${WOLFSSL_PREFIX}/include/wolfssl -DEXTERNAL_OPTS_OPENVPN"
+                    CFLAGS="${CFLAGS} ${SSL_CFLAGS}"
+                    echo "Found wolfSSL at ${WOLFSSL_PREFIX}"
+                    break
+                fi
+            fi
+        done
+    fi
 else
+    # Linux: Try OpenSSL/libcrypto first (most common)
+    if echo '#include <openssl/hmac.h>
+int main(void) { return 0; }' | \
+       ${CC} ${CFLAGS} -x c - -lcrypto -o /dev/null 2>/dev/null; then
+        SSL_LIBS="-lcrypto"
+        echo "Found OpenSSL/libcrypto"
+    # Try GnuTLS
+    elif echo '#include <gnutls/gnutls.h>
+int main(void) { gnutls_global_init(); return 0; }' | \
+       ${CC} ${CFLAGS} -x c - -lgnutls -o /dev/null 2>/dev/null; then
+        SSL_LIBS="-lgnutls"
+        echo "Found GnuTLS"
+    # Try NSS
+    elif echo '#include <nss.h>
+int main(void) { NSS_Init(NULL); return 0; }' | \
+       ${CC} ${CFLAGS} -x c - -lnss3 -o /dev/null 2>/dev/null; then
+        SSL_LIBS="-lnss3"
+        echo "Found NSS"
+    # Try wolfSSL with OpenSSL compatibility layer
+    elif echo '#include <wolfssl/options.h>
+#include <wolfssl/openssl/hmac.h>
+int main(void) { return 0; }' | \
+       ${CC} ${CFLAGS} -x c - -lwolfssl -o /dev/null 2>/dev/null; then
+        SSL_LIBS="-lwolfssl"
+        echo "Found wolfSSL"
+    fi
+fi
+
+if [ -z "${SSL_LIBS}" ]; then
     echo "WARNING: No SSL library found. S3/GCS support may not work at runtime."
-    echo "Install one of: libssl-dev, libgnutls-dev, or libnss3-dev"
+    if [ "$(uname)" = "Darwin" ]; then
+        echo "Install OpenSSL via Homebrew: brew install openssl@3"
+        echo "Or install wolfSSL: brew install wolfssl"
+    else
+        echo "Install one of: libssl-dev, libgnutls-dev, libnss3-dev, or libwolfssl-dev"
+    fi
 fi
 
 EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl ${SSL_LIBS}"
