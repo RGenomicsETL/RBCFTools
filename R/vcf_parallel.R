@@ -354,6 +354,10 @@ vcf_to_parquet_parallel <- function(
 
         tryCatch(
             {
+                # Filter args - only keep those supported by vcf_open_arrow
+                supported_args <- c("samples", "include_info", "include_format")
+                filtered_args <- args_list[names(args_list) %in% supported_args]
+
                 # Build arguments list
                 call_args <- c(
                     list(
@@ -364,7 +368,7 @@ vcf_to_parquet_parallel <- function(
                         region = contig,
                         index = idx
                     ),
-                    args_list
+                    filtered_args
                 )
 
                 # Process this contig
@@ -421,12 +425,19 @@ vcf_to_parquet_parallel <- function(
         )
     }
 
-    # Filter out NULLs and non-existent files
+    # Filter out NULLs and keep only successful file paths
     temp_files <- Filter(Negate(is.null), temp_files)
-    temp_files <- unlist(temp_files)
-    temp_files <- temp_files[
-        file.exists(temp_files) & file.size(temp_files) > 0
-    ]
+    temp_files <- unlist(temp_files, use.names = FALSE)
+    temp_files <- as.character(temp_files)
+
+    # Keep files that exist and have content
+    if (length(temp_files) > 0) {
+        temp_files <- temp_files[
+            nzchar(temp_files) &
+                file.exists(temp_files) &
+                file.size(temp_files) > 0
+        ]
+    }
 
     if (length(temp_files) == 0) {
         stop("No variants found in any contig")

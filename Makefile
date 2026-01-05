@@ -43,6 +43,12 @@ test: dev-install
 test-dev: install2
 	R -e 'library("$(PKGNAME)") ; tinytest::run_test_dir("inst/tinytest")'
 
+test-vcf: install2
+	bash test.sh inst/extdata/test_deep_variant.vcf.gz
+	
+test-vcf-bcf: install2
+	bash test.sh /mnt/NGS/ProNAS/ulcwgs/analyses/methyl_RND/variantcalls/Toure_Mahamane_Sounkou_S33/test_2.bcf
+
 rdm: dev-install
 	R -e "rmarkdown::render('README.Rmd')"
 
