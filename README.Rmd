@@ -240,10 +240,10 @@ $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
 
 # Show schema
-$SCRIPT schema -i $BCF
+$SCRIPT schema 0 --quiet -i $BCF
 
 # File info
-$SCRIPT info -i $OUT_PQ 
+$SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 ```
