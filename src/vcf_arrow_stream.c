@@ -2509,6 +2509,13 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
     }
     memset(priv, 0, sizeof(*priv));
     
+    // Initialize stream function pointers EARLY so get_last_error works on failure
+    stream->get_schema = &vcf_stream_get_schema;
+    stream->get_next = &vcf_stream_get_next;
+    stream->get_last_error = &vcf_stream_get_last_error;
+    stream->release = &vcf_stream_release;
+    stream->private_data = priv;
+    
     // Copy options
     if (opts) {
         priv->opts = *opts;
@@ -2559,14 +2566,14 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
         if (priv->fp->format.format == vcf) {
             // VCF files can have either TBI (.tbi) or CSI (.csi) index
             // Try TBI first (more common), then fall back to CSI
-            priv->tbx = tbx_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
+            priv->tbx = tbx_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             if (priv->tbx) {
                 priv->idx = priv->tbx->idx;
                 // Use tbx_itr_querys for VCF files with TBI (reads text lines)
                 priv->itr = tbx_itr_querys(priv->tbx, priv->opts.region);
             } else {
                 // TBI not found, try CSI index
-                priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
+                priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
                 if (priv->idx) {
                     // Use bcf_itr_querys for VCF files with CSI index
                     priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
@@ -2574,7 +2581,7 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
             }
         } else {
             // BCF files use CSI index only
-            priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE);
+            priv->idx = bcf_index_load3(filename, priv->opts.index, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             if (priv->idx) {
                 // Use bcf_itr_querys for BCF files (reads binary records)
                 priv->itr = bcf_itr_querys(priv->idx, priv->hdr, priv->opts.region);
@@ -2611,13 +2618,6 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
         vcf_arrow_free(priv);
         return ENOMEM;
     }
-    
-    // Initialize stream
-    stream->get_schema = &vcf_stream_get_schema;
-    stream->get_next = &vcf_stream_get_next;
-    stream->get_last_error = &vcf_stream_get_last_error;
-    stream->release = &vcf_stream_release;
-    stream->private_data = priv;
     
     return 0;
 }

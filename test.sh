@@ -6,7 +6,8 @@ threads=10
 
 echo "which Rscript: $(which Rscript)"
 # Convert BCF to Parquet (using zstd for better compression than snappy)
-[[ -f $OUT_PQ ]] || $SCRIPT convert \
+#[[ -f $OUT_PQ ]] || \
+$SCRIPT convert \
     --batch-size 1000000 --row-group-size 1000000 --streaming -t $threads -c zstd -i $BCF -o $OUT_PQ 
 
 # Query with DuckDB SQL

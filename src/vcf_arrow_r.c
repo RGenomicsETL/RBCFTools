@@ -81,9 +81,15 @@ SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
     // Initialize the VCF stream
     int ret = vcf_arrow_stream_init(stream, filename, &opts);
     if (ret != 0) {
+        const char* errmsg = "unknown error";
+        if (stream->get_last_error) {
+            const char* last_err = stream->get_last_error(stream);
+            if (last_err && last_err[0]) {
+                errmsg = last_err;
+            }
+        }
         UNPROTECT(1);
-        Rf_error("Failed to initialize VCF stream: %s", 
-                 stream->get_last_error ? stream->get_last_error(stream) : "unknown error");
+        Rf_error("Failed to initialize VCF stream: %s", errmsg);
     }
     
     UNPROTECT(1);

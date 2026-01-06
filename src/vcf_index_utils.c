@@ -44,20 +44,30 @@ SEXP RC_vcf_has_index(SEXP filename_sexp, SEXP index_sexp) {
         return Rf_ScalarLogical(0);
     }
     
+    
     // Try to load the index
     hts_idx_t* idx = NULL;
-    if (index_path) {
-        // Use explicit index path
-        idx = bcf_index_load2(filename, index_path);
+    tbx_t* tbx = NULL;
+    
+    // For VCF files, try TBI first (tabix), then CSI
+    if (fp->format.format == vcf) {
+        tbx = tbx_index_load3(filename, index_path, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
+        if (tbx) {
+            idx = tbx->idx;  // TBI found
+        } else {
+            // Try CSI as fallback
+            idx = bcf_index_load3(filename, index_path, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
+        }
     } else {
-        // Auto-detect index
-        idx = bcf_index_load(filename);
+        // BCF files use CSI only
+        idx = bcf_index_load3(filename, index_path, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
     }
     
     int has_idx = (idx != NULL);
     
     // Clean up
-    if (idx) hts_idx_destroy(idx);
+    if (tbx) tbx_destroy(tbx);
+    else if (idx) hts_idx_destroy(idx);
     bcf_hdr_destroy(hdr);
     hts_close(fp);
     

@@ -137,6 +137,7 @@ Convert entire BCF to data.frame
 options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
 df[, c("CHROM", "POS", "REF", "ALT", "QUAL")] |> head()
+stream$release()
 ```
 
 
