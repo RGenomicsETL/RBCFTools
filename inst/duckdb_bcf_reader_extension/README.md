@@ -35,6 +35,13 @@ make RBCFTOOLS_HTSLIB=1
 make HTSLIB_STATIC=/path/to/libhts.a
 ```
 
+**With libdeflate support** (if htslib was built with libdeflate):
+```bash
+make HTSLIB_STATIC=/path/to/libhts.a USE_DEFLATE=1
+```
+
+Note: Static `libhts.a` requires its dependencies: `-lz -lbz2 -llzma -lcurl -lpthread` (and `-ldeflate` if enabled). The Makefile handles this automatically.
+
 This produces `build/bcf_reader.duckdb_extension`.
 
 ## Usage
