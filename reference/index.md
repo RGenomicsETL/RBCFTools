@@ -4,6 +4,10 @@
 
 - [`annot_tsv_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/annot_tsv_path.md)
   : Get Path to annot-tsv Executable
+- [`bcf_reader_build()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcf_reader_build.md)
+  : Build the bcf_reader DuckDB extension
+- [`bcf_reader_copy_source()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcf_reader_copy_source.md)
+  : Copy bcf_reader extension source to a build directory
 - [`bcftools_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_bin_dir.md)
   : Get Path to bcftools Binary Directory
 - [`bcftools_lib_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_lib_dir.md)
@@ -67,10 +71,16 @@
   : Get Path to tabix Executable
 - [`vcf_arrow_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.md)
   : Get the Arrow schema for a VCF file
+- [`vcf_count_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_duckdb.md)
+  : Count variants in a VCF/BCF file
 - [`vcf_count_per_contig()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_per_contig.md)
   : Get variant counts per contig using bcftools
 - [`vcf_count_variants()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_variants.md)
   : Get number of variants using bcftools
+- [`vcf_duckdb`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb.md)
+  : DuckDB VCF/BCF Query Utilities
+- [`vcf_duckdb_connect()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.md)
+  : Setup DuckDB connection with bcf_reader extension loaded
 - [`vcf_get_contig_lengths()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contig_lengths.md)
   : Get contig lengths from VCF/BCF file
 - [`vcf_get_contigs()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contigs.md)
@@ -81,11 +91,21 @@
   : Create an Arrow stream from a VCF/BCF file
 - [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md)
   : Query VCF/BCF with DuckDB
+- [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md)
+  : Query a VCF/BCF file using DuckDB SQL
+- [`vcf_samples_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_samples_duckdb.md)
+  : List samples in a VCF/BCF file using DuckDB
+- [`vcf_schema_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_schema_duckdb.md)
+  : Get VCF/BCF schema using DuckDB
+- [`vcf_summary_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_summary_duckdb.md)
+  : Summary statistics for a VCF/BCF file using DuckDB
 - [`vcf_to_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.md)
   : Read VCF/BCF file into a data frame or list of batches
 - [`vcf_to_arrow_ipc()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow_ipc.md)
   : Write VCF/BCF to Arrow IPC format
 - [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)
   : Write VCF/BCF to Parquet format
+- [`vcf_to_parquet_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.md)
+  : Export VCF/BCF to Parquet using DuckDB
 - [`vcf_to_parquet_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.md)
   : Parallel VCF to Parquet conversion
