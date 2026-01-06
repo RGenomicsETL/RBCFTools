@@ -2,14 +2,18 @@
 # Self-contained build without CMake
 #
 # Usage:
-#   make          - Build the extension
-#   make clean    - Clean build artifacts
-#   make test     - Run basic tests
-#   make install  - Install to ~/.duckdb/extensions
+#   make                              - Build the extension (uses system htslib)
+#   make RBCFTOOLS_HTSLIB=1           - Build using RBCFTools package htslib
+#   make clean                        - Clean build artifacts
+#   make test                         - Run basic tests
+#   make install                      - Install to ~/.duckdb/extensions
+#
+# The extension is designed to be built as part of RBCFTools package configure,
+# using the package's bundled htslib for maximum portability.
 #
 # Requirements:
 #   - GCC or Clang
-#   - htslib (pkg-config)
+#   - htslib (from RBCFTools or system pkg-config)
 #   - DuckDB v1.2.0+
 
 # Extension configuration (can be overridden: make DUCKDB_VERSION=v1.5.0)
@@ -41,25 +45,73 @@ endif
 
 # Compiler settings
 CC := gcc
-CFLAGS := -O2 -Wall -fPIC
+CFLAGS := -O2 -Wall -Wextra -Wno-unused-parameter -fPIC
 INCLUDES := -I.
 
-# htslib via pkg-config
-HTSLIB_CFLAGS ?= $(shell pkg-config --cflags htslib 2>/dev/null)
-HTSLIB_LIBS ?= $(shell pkg-config --libs htslib 2>/dev/null)
+# ============================================================================
+# htslib configuration
+# Priority: RBCFTOOLS_HTSLIB > HTSLIB_STATIC > pkg-config > system defaults
+# ============================================================================
 
-# If HTSLIB_STATIC is set, use it for linking
-ifeq ($(HTSLIB_STATIC),)
-	ifeq ($(HTSLIB_LIBS),)
-		HTSLIB_CFLAGS := -I/usr/include/htslib
-		HTSLIB_LIBS := -lhts -lz -lbz2 -llzma -lcurl -lpthread
-	endif
-	CFLAGS += $(HTSLIB_CFLAGS)
-	LDFLAGS ?= $(HTSLIB_LIBS)
-else
-	CFLAGS += -I$(dir $(HTSLIB_STATIC))
-	LDFLAGS ?= $(HTSLIB_STATIC) -lz -lbz2 -llzma -lcurl -ldeflate
+# Option 1: Use RBCFTools package htslib (recommended for package builds)
+# Set RBCFTOOLS_HTSLIB=1 and optionally RBCFTOOLS_ROOT to package root
+ifdef RBCFTOOLS_HTSLIB
+    # Default to parent directories if not specified
+    RBCFTOOLS_ROOT ?= ../..
+    HTSLIB_DIR := $(RBCFTOOLS_ROOT)/inst/htslib
+    HTSLIB_INCLUDE := $(HTSLIB_DIR)/include
+    HTSLIB_LIB := $(HTSLIB_DIR)/lib
+    
+    # Check if the directories exist
+    ifneq ($(wildcard $(HTSLIB_INCLUDE)/htslib),)
+        CFLAGS += -I$(HTSLIB_INCLUDE)
+        # Prefer static linking for portability
+        ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
+            LDFLAGS := $(HTSLIB_LIB)/libhts.a -lz -lbz2 -llzma -lcurl -lpthread
+            ifdef USE_DEFLATE
+                LDFLAGS += -ldeflate
+            endif
+        else
+            LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+        endif
+    else
+        $(warning RBCFTools htslib not found at $(HTSLIB_INCLUDE), falling back to pkg-config)
+        RBCFTOOLS_HTSLIB :=
+    endif
 endif
+
+# Option 2: Use explicitly specified static htslib
+ifndef RBCFTOOLS_HTSLIB
+ifdef HTSLIB_STATIC
+    CFLAGS += -I$(dir $(HTSLIB_STATIC))../include
+    LDFLAGS := $(HTSLIB_STATIC) -lz -lbz2 -llzma -lcurl -lpthread
+    ifdef USE_DEFLATE
+        LDFLAGS += -ldeflate
+    endif
+endif
+endif
+
+# Option 3: Use pkg-config (system htslib)
+ifndef RBCFTOOLS_HTSLIB
+ifndef HTSLIB_STATIC
+    HTSLIB_CFLAGS := $(shell pkg-config --cflags htslib 2>/dev/null)
+    HTSLIB_LIBS := $(shell pkg-config --libs htslib 2>/dev/null)
+    
+    ifneq ($(HTSLIB_LIBS),)
+        CFLAGS += $(HTSLIB_CFLAGS)
+        LDFLAGS := $(HTSLIB_LIBS)
+    else
+        # Option 4: System defaults (fallback)
+        $(warning Using system defaults for htslib)
+        CFLAGS += -I/usr/include
+        LDFLAGS := -lhts -lz -lbz2 -llzma -lcurl -lpthread
+    endif
+endif
+endif
+
+# ============================================================================
+# Build rules
+# ============================================================================
 
 # Build directories
 BUILD_DIR := build
@@ -77,8 +129,8 @@ all: $(EXTENSION_FILE)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Compile source files
-$(BUILD_DIR)/%.o: %.c duckdb_extension.h | $(BUILD_DIR)
+# Compile source files - depends on vcf_types.h now
+$(BUILD_DIR)/%.o: %.c duckdb_extension.h vcf_types.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Link shared library
@@ -95,6 +147,10 @@ $(EXTENSION_FILE): $(SHARED_LIB)
 clean:
 	rm -rf $(BUILD_DIR)
 
+# ============================================================================
+# Test targets
+# ============================================================================
+
 # Test the extension
 test: $(EXTENSION_FILE)
 	@echo "Testing extension with DuckDB..."
@@ -104,6 +160,14 @@ test: $(EXTENSION_FILE)
 		SELECT COUNT(*) as total FROM bcf_read('../extdata/test_deep_variant.vcf.gz'); \
 	" || (echo 'FAILED: Extension or test query failed' && exit 1)
 	@echo "DuckDB extension test passed!"
+
+# Test: display schema with proper types
+test_schema: $(EXTENSION_FILE)
+	@echo "Testing extension: displaying schema..."
+	@duckdb -unsigned -c "\
+		LOAD './$(EXTENSION_FILE)'; \
+		DESCRIBE SELECT * FROM bcf_read('../extdata/test_deep_variant.vcf.gz'); \
+	"
 
 # Test: display first 10 rows
 test_head: $(EXTENSION_FILE)
@@ -116,11 +180,29 @@ test_head: $(EXTENSION_FILE)
 	" || (echo 'FAILED: Extension or test_head query failed' && exit 1)
 	@echo "DuckDB extension test_head passed!"
 
+# Test: count per chromosome
+test_count: $(EXTENSION_FILE)
+	@echo "Testing extension: count per chromosome..."
+	@duckdb -unsigned -c "\
+		LOAD './$(EXTENSION_FILE)'; \
+		SELECT CHROM, COUNT(*) as n \
+		FROM bcf_read('../extdata/test_deep_variant.vcf.gz') \
+		GROUP BY CHROM; \
+	"
+
+# ============================================================================
+# Install targets
+# ============================================================================
+
 # Install to user's DuckDB extensions directory
 install: $(EXTENSION_FILE)
 	@mkdir -p ~/.duckdb/extensions/$(DUCKDB_VERSION)/$(PLATFORM)
 	cp $(EXTENSION_FILE) ~/.duckdb/extensions/$(DUCKDB_VERSION)/$(PLATFORM)/
 	@echo "Installed to ~/.duckdb/extensions/$(DUCKDB_VERSION)/$(PLATFORM)/$(EXTENSION_NAME).duckdb_extension"
+
+# ============================================================================
+# Info targets
+# ============================================================================
 
 # Show configuration
 info:
@@ -130,5 +212,12 @@ info:
 	@echo "Compiler: $(CC)"
 	@echo "CFLAGS: $(CFLAGS)"
 	@echo "LDFLAGS: $(LDFLAGS)"
+ifdef RBCFTOOLS_HTSLIB
+	@echo "htslib: RBCFTools package ($(HTSLIB_DIR))"
+else ifdef HTSLIB_STATIC
+	@echo "htslib: Static ($(HTSLIB_STATIC))"
+else
+	@echo "htslib: System (pkg-config or defaults)"
+endif
 
-.PHONY: all clean test install info
+.PHONY: all clean test test_schema test_head test_count install info
