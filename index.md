@@ -314,7 +314,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet
+#> Wrote 11 rows to /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -333,12 +333,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
-#> 2 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
-#> 3 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
-#> 4 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
-#> 5 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
-#> 6 /tmp/RtmpBOMitz/file2f525e4d7c4b5b.parquet            0                 11
+#> 1 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 2 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 3 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 4 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 5 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 6 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -421,7 +421,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpBOMitz/file2f525ee37c530.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpFtjCUp/file2f74ac2a20dedf.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -499,7 +499,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.G4lV3zjrSU.parquet 
+#>   Output: /tmp/tmp.NOFFzk73sz.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -510,7 +510,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.G4lV3zjrSU.parquet
+#> Wrote 11 rows to /tmp/tmp.NOFFzk73sz.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.19 seconds
@@ -554,7 +554,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.G4lV3zjrSU.parquet 
+#> Parquet File Information: /tmp/tmp.NOFFzk73sz.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
