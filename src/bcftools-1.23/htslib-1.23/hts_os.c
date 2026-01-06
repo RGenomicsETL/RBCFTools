@@ -32,6 +32,9 @@ DEALINGS IN THE SOFTWARE.  */
 #include "os/rand.c"
 #else
 #include <stdlib.h>
+#ifdef HAVE_SRAND48_DETERMINISTIC
+extern void srand48_deterministic(long seed);
+#endif
 HTSLIB_EXPORT
 void hts_srand48(long seed)
 {
