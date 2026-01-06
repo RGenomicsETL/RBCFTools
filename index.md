@@ -314,7 +314,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet
+#> Wrote 11 rows to /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -333,12 +333,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
-#> 2 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
-#> 3 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
-#> 4 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
-#> 5 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
-#> 6 /tmp/RtmpFtjCUp/file2f74ac184f3261.parquet            0                 11
+#> 1 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
+#> 2 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
+#> 3 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
+#> 4 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
+#> 5 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
+#> 6 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -421,7 +421,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpFtjCUp/file2f74ac2a20dedf.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpHx26HK/file2ffbe43feb94b1.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -445,12 +445,64 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 #> 5     1 13327   G   C
 ```
 
+### DuckDB Extension
+
+A native DuckDB extension (`bcf_reader`) for direct SQL queries on
+VCF/BCF files without Arrow conversion overhead:
+
+``` r
+# Build extension (uses package's bundled htslib)
+build_dir <- file.path(tempdir(), "bcf_reader")
+ext_path <- bcf_reader_build(build_dir, verbose = FALSE)
+
+# Connect and query a VCF.gz file
+con <- vcf_duckdb_connect(ext_path)
+vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+
+# Describe schema
+DBI::dbGetQuery(con, sprintf("DESCRIBE SELECT * FROM bcf_read('%s')", vcf_file))
+#>                        column_name column_type null  key default extra
+#> 1                            CHROM     VARCHAR  YES <NA>    <NA>  <NA>
+#> 2                              POS      BIGINT  YES <NA>    <NA>  <NA>
+#> 3                               ID     VARCHAR  YES <NA>    <NA>  <NA>
+#> 4                              REF     VARCHAR  YES <NA>    <NA>  <NA>
+#> 5                              ALT   VARCHAR[]  YES <NA>    <NA>  <NA>
+#> 6                             QUAL      DOUBLE  YES <NA>    <NA>  <NA>
+#> 7                           FILTER   VARCHAR[]  YES <NA>    <NA>  <NA>
+#> 8                         INFO_END     INTEGER  YES <NA>    <NA>  <NA>
+#> 9      FORMAT_GT_test_deep_variant     VARCHAR  YES <NA>    <NA>  <NA>
+#> 10     FORMAT_GQ_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
+#> 11     FORMAT_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
+#> 12 FORMAT_MIN_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
+#> 13     FORMAT_AD_test_deep_variant   INTEGER[]  YES <NA>    <NA>  <NA>
+#> 14    FORMAT_VAF_test_deep_variant     FLOAT[]  YES <NA>    <NA>  <NA>
+#> 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES <NA>    <NA>  <NA>
+#> 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
+
+# Aggregate query
+DBI::dbGetQuery(con, sprintf("
+  SELECT CHROM, COUNT(*) as n_variants, 
+         MIN(POS) as min_pos, MAX(POS) as max_pos
+  FROM bcf_read('%s') 
+  GROUP BY CHROM 
+  ORDER BY n_variants DESC 
+  LIMIT 5", vcf_file))
+#>   CHROM n_variants min_pos   max_pos
+#> 1    19     574688  111129  59084689
+#> 2     1     573536  536895 249211717
+#> 3    17     437200    6102  81052229
+#> 4    11     391552  180184 134257519
+#> 5     2     352512   42993 242836470
+
+DBI::dbDisconnect(con)
+```
+
 ### Stream Remote VCF to Arrow
 
 Stream remote VCF region directly to Arrow from S3
 
 ``` r
-
+try({
 vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
@@ -461,13 +513,9 @@ stream <- vcf_open_arrow(
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
-#>   CHROM      POS REF                  ALT
-#> 1 chr22 16050036   A C        , <NON_REF>
-#> 2 chr22 16050151   T G        , <NON_REF>
-#> 3 chr22 16050213   C T        , <NON_REF>
-#> 4 chr22 16050219   C A        , <NON_REF>
-#> 5 chr22 16050224   A C        , <NON_REF>
-#> 6 chr22 16050229   C A        , <NON_REF>
+})
+#> Error in vcf_open_arrow(vcf_url, region = "chr22:16050000-16050500", batch_size = 1000L) : 
+#>   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz
 ```
 
 ### Command-Line Tool
@@ -499,7 +547,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.NOFFzk73sz.parquet 
+#>   Output: /tmp/tmp.LtTQfjFaiM.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -510,7 +558,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.NOFFzk73sz.parquet
+#> Wrote 11 rows to /tmp/tmp.LtTQfjFaiM.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.19 seconds
@@ -554,7 +602,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.NOFFzk73sz.parquet 
+#> Parquet File Information: /tmp/tmp.LtTQfjFaiM.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
