@@ -50,11 +50,31 @@ INCLUDES := -I.
 
 # ============================================================================
 # htslib configuration
-# Priority: RBCFTOOLS_HTSLIB > HTSLIB_STATIC > pkg-config > system defaults
+# Priority: HTSLIB_INCLUDE/LIB direct > RBCFTOOLS_HTSLIB > HTSLIB_STATIC > pkg-config > system defaults
 # ============================================================================
+
+# Option 0: Direct HTSLIB_INCLUDE and HTSLIB_LIB paths (highest priority)
+# Used when building from R with explicit paths
+ifdef HTSLIB_INCLUDE
+ifdef HTSLIB_LIB
+    CFLAGS += -I$(HTSLIB_INCLUDE)
+    # Prefer static linking for portability
+    ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
+        LDFLAGS := $(HTSLIB_LIB)/libhts.a -lz -lbz2 -llzma -lcurl -lpthread
+        ifdef USE_DEFLATE
+            LDFLAGS += -ldeflate
+        endif
+    else
+        LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+    endif
+    # Mark as configured to skip other options
+    HTSLIB_CONFIGURED := 1
+endif
+endif
 
 # Option 1: Use RBCFTools package htslib (recommended for package builds)
 # Set RBCFTOOLS_HTSLIB=1 and optionally RBCFTOOLS_ROOT to package root
+ifndef HTSLIB_CONFIGURED
 ifdef RBCFTOOLS_HTSLIB
     # Default to parent directories if not specified
     RBCFTOOLS_ROOT ?= ../..
@@ -74,13 +94,16 @@ ifdef RBCFTOOLS_HTSLIB
         else
             LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
         endif
+        HTSLIB_CONFIGURED := 1
     else
         $(warning RBCFTools htslib not found at $(HTSLIB_INCLUDE), falling back to pkg-config)
         RBCFTOOLS_HTSLIB :=
     endif
 endif
+endif
 
 # Option 2: Use explicitly specified static htslib
+ifndef HTSLIB_CONFIGURED
 ifndef RBCFTOOLS_HTSLIB
 ifdef HTSLIB_STATIC
     CFLAGS += -I$(dir $(HTSLIB_STATIC))../include
@@ -88,10 +111,13 @@ ifdef HTSLIB_STATIC
     ifdef USE_DEFLATE
         LDFLAGS += -ldeflate
     endif
+    HTSLIB_CONFIGURED := 1
+endif
 endif
 endif
 
 # Option 3: Use pkg-config (system htslib)
+ifndef HTSLIB_CONFIGURED
 ifndef RBCFTOOLS_HTSLIB
 ifndef HTSLIB_STATIC
     HTSLIB_CFLAGS := $(shell pkg-config --cflags htslib 2>/dev/null)
@@ -106,6 +132,7 @@ ifndef HTSLIB_STATIC
         CFLAGS += -I/usr/include
         LDFLAGS := -lhts -lz -lbz2 -llzma -lcurl -lpthread
     endif
+endif
 endif
 endif
 

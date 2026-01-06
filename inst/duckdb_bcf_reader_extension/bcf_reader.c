@@ -777,10 +777,15 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                 
                 duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
                 
-                for (int a = 1; a < init->rec->n_allele; a++) {
-                    duckdb_list_vector_set_size(vec, entry.offset + a);
-                    duckdb_vector_assign_string_element(child_vec, entry.offset + a - 1,
-                                                        init->rec->d.allele[a]);
+                // Reserve and set space for all ALT alleles
+                if (entry.length > 0) {
+                    duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                    duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                    
+                    for (int a = 1; a < init->rec->n_allele; a++) {
+                        duckdb_vector_assign_string_element(child_vec, entry.offset + a - 1,
+                                                            init->rec->d.allele[a]);
+                    }
                 }
                 
                 duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
@@ -801,7 +806,6 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                 // FILTER is a LIST(VARCHAR)
                 duckdb_list_entry entry;
                 entry.offset = duckdb_list_vector_get_size(vec);
-                entry.length = init->rec->d.n_flt;
                 
                 duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
                 
@@ -811,8 +815,10 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                     duckdb_list_vector_set_size(vec, entry.offset + 1);
                     duckdb_vector_assign_string_element(child_vec, entry.offset, "PASS");
                 } else {
+                    entry.length = init->rec->d.n_flt;
+                    // Reserve space for all filters at once
+                    duckdb_list_vector_set_size(vec, entry.offset + entry.length);
                     for (int f = 0; f < init->rec->d.n_flt; f++) {
-                        duckdb_list_vector_set_size(vec, entry.offset + f + 1);
                         const char* flt_name = bcf_hdr_int2id(init->hdr, BCF_DT_ID, 
                                                               init->rec->d.flt[f]);
                         duckdb_vector_assign_string_element(child_vec, entry.offset + f,
@@ -852,14 +858,27 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                             entry.length = 0;
                             
                             duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
-                            int32_t* child_data = (int32_t*)duckdb_vector_get_data(child_vec);
                             
+                            // First count valid values
                             for (int v = 0; v < ret_info; v++) {
                                 if (values[v] != bcf_int32_missing && values[v] != bcf_int32_vector_end) {
-                                    duckdb_list_vector_set_size(vec, entry.offset + entry.length + 1);
-                                    child_data = (int32_t*)duckdb_vector_get_data(child_vec);
-                                    child_data[entry.offset + entry.length] = values[v];
                                     entry.length++;
+                                }
+                            }
+                            
+                            // Reserve and set size
+                            if (entry.length > 0) {
+                                duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                                duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                                
+                                // Now fill in the values
+                                int32_t* child_data = (int32_t*)duckdb_vector_get_data(child_vec);
+                                int write_idx = 0;
+                                for (int v = 0; v < ret_info; v++) {
+                                    if (values[v] != bcf_int32_missing && values[v] != bcf_int32_vector_end) {
+                                        child_data[entry.offset + write_idx] = values[v];
+                                        write_idx++;
+                                    }
                                 }
                             }
                             
@@ -903,14 +922,27 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                             entry.length = 0;
                             
                             duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
-                            float* child_data = (float*)duckdb_vector_get_data(child_vec);
                             
+                            // First count valid values
                             for (int v = 0; v < ret_info; v++) {
                                 if (!bcf_float_is_missing(values[v]) && !bcf_float_is_vector_end(values[v])) {
-                                    duckdb_list_vector_set_size(vec, entry.offset + entry.length + 1);
-                                    child_data = (float*)duckdb_vector_get_data(child_vec);
-                                    child_data[entry.offset + entry.length] = values[v];
                                     entry.length++;
+                                }
+                            }
+                            
+                            // Reserve and set size
+                            if (entry.length > 0) {
+                                duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                                duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                                
+                                // Now fill in the values
+                                float* child_data = (float*)duckdb_vector_get_data(child_vec);
+                                int write_idx = 0;
+                                for (int v = 0; v < ret_info; v++) {
+                                    if (!bcf_float_is_missing(values[v]) && !bcf_float_is_vector_end(values[v])) {
+                                        child_data[entry.offset + write_idx] = values[v];
+                                        write_idx++;
+                                    }
                                 }
                             }
                             
@@ -955,20 +987,35 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                             
                             duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
                             
-                            // Parse comma-separated values
-                            char* tok;
-                            char* saveptr = NULL;
                             char* value_copy = strdup_duckdb(value);
                             
+                            // First count the number of tokens
+                            char* tok;
+                            char* saveptr = NULL;
                             for (tok = strtok_r(value_copy, ",", &saveptr); 
                                  tok != NULL; 
                                  tok = strtok_r(NULL, ",", &saveptr)) {
-                                duckdb_list_vector_set_size(vec, entry.offset + entry.length + 1);
-                                duckdb_vector_assign_string_element(child_vec, entry.offset + entry.length, tok);
                                 entry.length++;
                             }
-                            
                             duckdb_free(value_copy);
+                            
+                            // Reserve and set size
+                            if (entry.length > 0) {
+                                duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                                duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                                
+                                // Parse again and fill in values
+                                value_copy = strdup_duckdb(value);
+                                saveptr = NULL;
+                                int write_idx = 0;
+                                for (tok = strtok_r(value_copy, ",", &saveptr); 
+                                     tok != NULL; 
+                                     tok = strtok_r(NULL, ",", &saveptr)) {
+                                    duckdb_vector_assign_string_element(child_vec, entry.offset + write_idx, tok);
+                                    write_idx++;
+                                }
+                                duckdb_free(value_copy);
+                            }
                             
                             duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
                             list_data[row_count] = entry;
@@ -1016,13 +1063,28 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                                 
                                 duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
                                 
+                                // First count valid values
                                 for (int v = 0; v < vals_per_sample; v++) {
                                     if (sample_vals[v] != bcf_int32_missing && 
                                         sample_vals[v] != bcf_int32_vector_end) {
-                                        duckdb_list_vector_set_size(vec, entry.offset + entry.length + 1);
-                                        int32_t* child_data = (int32_t*)duckdb_vector_get_data(child_vec);
-                                        child_data[entry.offset + entry.length] = sample_vals[v];
                                         entry.length++;
+                                    }
+                                }
+                                
+                                // Reserve and set size
+                                if (entry.length > 0) {
+                                    duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                                    duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                                    
+                                    // Now fill in the values
+                                    int32_t* child_data = (int32_t*)duckdb_vector_get_data(child_vec);
+                                    int write_idx = 0;
+                                    for (int v = 0; v < vals_per_sample; v++) {
+                                        if (sample_vals[v] != bcf_int32_missing && 
+                                            sample_vals[v] != bcf_int32_vector_end) {
+                                            child_data[entry.offset + write_idx] = sample_vals[v];
+                                            write_idx++;
+                                        }
                                     }
                                 }
                                 
@@ -1067,13 +1129,28 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                                 
                                 duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
                                 
+                                // First count valid values
                                 for (int v = 0; v < vals_per_sample; v++) {
                                     if (!bcf_float_is_missing(sample_vals[v]) && 
                                         !bcf_float_is_vector_end(sample_vals[v])) {
-                                        duckdb_list_vector_set_size(vec, entry.offset + entry.length + 1);
-                                        float* child_data = (float*)duckdb_vector_get_data(child_vec);
-                                        child_data[entry.offset + entry.length] = sample_vals[v];
                                         entry.length++;
+                                    }
+                                }
+                                
+                                // Reserve and set size
+                                if (entry.length > 0) {
+                                    duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                                    duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+                                    
+                                    // Now fill in the values
+                                    float* child_data = (float*)duckdb_vector_get_data(child_vec);
+                                    int write_idx = 0;
+                                    for (int v = 0; v < vals_per_sample; v++) {
+                                        if (!bcf_float_is_missing(sample_vals[v]) && 
+                                            !bcf_float_is_vector_end(sample_vals[v])) {
+                                            child_data[entry.offset + write_idx] = sample_vals[v];
+                                            write_idx++;
+                                        }
                                     }
                                 }
                                 
