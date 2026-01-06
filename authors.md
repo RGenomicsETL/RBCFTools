@@ -19,13 +19,13 @@ Source:
 [`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
 
 Toure S (2026). *RBCFTools: 'htslib' And 'bcftools' Libraries And
-Command Line Tools Wrapper*. R package version 1.22-0.0.0.9000,
+Command Line Tools Wrapper*. R package version 1.23-0.0.0.9000,
 <https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
       title = {RBCFTools: `htslib` And `bcftools` Libraries And Command Line Tools Wrapper},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 1.22-0.0.0.9000},
+      note = {R package version 1.23-0.0.0.9000},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }
