@@ -235,8 +235,17 @@ DBI::dbExecute(con, sprintf("
   COPY (SELECT * FROM bcf_read('%s')) 
   TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)", vcf_file, parquet_out))
 
-# Verify
+# Verify parquet file size
 file.info(parquet_out)$size
+
+# Same query on Parquet file
+DBI::dbGetQuery(con, sprintf("
+  SELECT CHROM, COUNT(*) as n_variants, 
+         MIN(POS) as min_pos, MAX(POS) as max_pos
+  FROM '%s' 
+  GROUP BY CHROM 
+  ORDER BY n_variants DESC 
+  LIMIT 5", parquet_out))
 
 DBI::dbDisconnect(con)
 ```
