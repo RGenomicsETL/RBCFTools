@@ -334,7 +334,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -353,12 +353,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpHx26HK/file2ffbe478cfc4a8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpEQgtk6/file2fff1828bffc10.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -434,7 +434,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpHx26HK/file2ffbe43feb94b1.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpEQgtk6/file2fff184019db28.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -503,6 +503,17 @@
 <span><span class="co">#&gt; 4    11     391552  180184 134257519</span></span>
 <span><span class="co">#&gt; 5     2     352512   42993 242836470</span></span>
 <span></span>
+<span><span class="co"># Export directly to Parquet</span></span>
+<span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"</span></span>
+<span><span class="st">  COPY (SELECT * FROM bcf_read('%s')) </span></span>
+<span><span class="st">  TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)"</span>, <span class="va">vcf_file</span>, <span class="va">parquet_out</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 368319</span></span>
+<span></span>
+<span><span class="co"># Verify</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/file.info.html" class="external-link">file.info</a></span><span class="op">(</span><span class="va">parquet_out</span><span class="op">)</span><span class="op">$</span><span class="va">size</span></span>
+<span><span class="co">#&gt; [1] 3998815</span></span>
+<span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -552,7 +563,7 @@
 <span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.LtTQfjFaiM.parquet </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.kcF2JWCCKk.parquet </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
@@ -563,10 +574,10 @@
 <span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.LtTQfjFaiM.parquet</span></span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.kcF2JWCCKk.parquet</span></span>
 <span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.19 seconds</span></span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.18 seconds</span></span>
 <span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
 <span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
 <span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
@@ -607,7 +618,7 @@
 <span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.LtTQfjFaiM.parquet </span></span>
+<span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.kcF2JWCCKk.parquet </span></span>
 <span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
 <span id="cb15-82"><a href="#cb15-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
