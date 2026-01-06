@@ -229,6 +229,15 @@ DBI::dbGetQuery(con, sprintf("
   ORDER BY n_variants DESC 
   LIMIT 5", vcf_file))
 
+# Export directly to Parquet
+parquet_out <- tempfile(fileext = ".parquet")
+DBI::dbExecute(con, sprintf("
+  COPY (SELECT * FROM bcf_read('%s')) 
+  TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)", vcf_file, parquet_out))
+
+# Verify
+file.info(parquet_out)$size
+
 DBI::dbDisconnect(con)
 ```
 
