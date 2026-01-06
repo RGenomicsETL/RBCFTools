@@ -105,6 +105,17 @@ test: $(EXTENSION_FILE)
 	" || (echo 'FAILED: Extension or test query failed' && exit 1)
 	@echo "DuckDB extension test passed!"
 
+# Test: display first 10 rows
+test_head: $(EXTENSION_FILE)
+	@echo "Testing extension: displaying first row where FORMAT_AD_test_deep_variant is not NULL or empty..."
+	@duckdb -unsigned -c "\
+		LOAD './$(EXTENSION_FILE)'; \
+		SELECT * FROM bcf_read('../extdata/test_deep_variant.vcf.gz') \
+		WHERE FORMAT_AD_test_deep_variant IS NOT NULL AND FORMAT_AD_test_deep_variant != '' \
+		LIMIT 1; \
+	" || (echo 'FAILED: Extension or test_head query failed' && exit 1)
+	@echo "DuckDB extension test_head passed!"
+
 # Install to user's DuckDB extensions directory
 install: $(EXTENSION_FILE)
 	@mkdir -p ~/.duckdb/extensions/$(DUCKDB_VERSION)/$(PLATFORM)

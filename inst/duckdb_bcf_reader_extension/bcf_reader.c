@@ -145,35 +145,63 @@ static void bcf_read_bind(duckdb_bind_info info) {
     duckdb_logical_type varchar_type = duckdb_create_logical_type(DUCKDB_TYPE_VARCHAR);
     duckdb_logical_type bigint_type = duckdb_create_logical_type(DUCKDB_TYPE_BIGINT);
     duckdb_logical_type float_type = duckdb_create_logical_type(DUCKDB_TYPE_FLOAT);
-    
-    // Core VCF columns (0-7)
+
+    // Core VCF columns
     duckdb_bind_add_result_column(info, "CHROM", varchar_type);   // 0
-    duckdb_bind_add_result_column(info, "POS", bigint_type);       // 1
-    duckdb_bind_add_result_column(info, "ID", varchar_type);       // 2
-    duckdb_bind_add_result_column(info, "REF", varchar_type);      // 3
-    duckdb_bind_add_result_column(info, "ALT", varchar_type);      // 4
-    duckdb_bind_add_result_column(info, "QUAL", float_type);       // 5
-    duckdb_bind_add_result_column(info, "FILTER", varchar_type);   // 6
-    duckdb_bind_add_result_column(info, "INFO", varchar_type);     // 7
-    
-    // Add sample columns for GT (genotype) if samples exist (8+)
-    if (n_samples > 0) {
-        for (int i = 0; i < n_samples; i++) {
-            const char *sample_name = hdr->samples[i];
+    duckdb_bind_add_result_column(info, "POS", bigint_type);     // 1
+    duckdb_bind_add_result_column(info, "ID", varchar_type);     // 2
+    duckdb_bind_add_result_column(info, "REF", varchar_type);    // 3
+    duckdb_bind_add_result_column(info, "ALT", varchar_type);    // 4
+    duckdb_bind_add_result_column(info, "QUAL", float_type);     // 5
+    duckdb_bind_add_result_column(info, "FILTER", varchar_type); // 6
+
+    // Add INFO fields as columns
+    // int info_col_start = 7; // Removed unused variable
+    int n_info_fields = 0;
+    for (int i = 0; i < hdr->n[BCF_DT_ID]; i++) {
+        if (hdr->id[BCF_DT_ID][i].val && hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_INFO]) {
+            const char *field_name = hdr->id[BCF_DT_ID][i].key;
             char col_name[256];
-            snprintf(col_name, sizeof(col_name), "GT_%s", sample_name);
+            snprintf(col_name, sizeof(col_name), "INFO_%s", field_name);
+            duckdb_bind_add_result_column(info, col_name, varchar_type);
+            n_info_fields++;
+        }
+    }
+
+    // Add FORMAT fields as columns for each sample
+    int n_fmt_fields = 0;
+    for (int i = 0; i < hdr->n[BCF_DT_ID]; i++) {
+        if (hdr->id[BCF_DT_ID][i].val && hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+            n_fmt_fields++;
+        }
+    }
+    if (n_fmt_fields == 0) n_fmt_fields = 1; // At least GT
+
+    for (int s = 0; s < n_samples; s++) {
+        for (int i = 0; i < hdr->n[BCF_DT_ID]; i++) {
+            if (hdr->id[BCF_DT_ID][i].val && hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+                const char *field_name = hdr->id[BCF_DT_ID][i].key;
+                char col_name[256];
+                snprintf(col_name, sizeof(col_name), "FORMAT_%s_%s", field_name, hdr->samples[s]);
+                duckdb_bind_add_result_column(info, col_name, varchar_type);
+            }
+        }
+        // Fallback if no FORMAT fields: add GT
+        if (n_fmt_fields == 1) {
+            char col_name[256];
+            snprintf(col_name, sizeof(col_name), "FORMAT_GT_%s", hdr->samples[s]);
             duckdb_bind_add_result_column(info, col_name, varchar_type);
         }
     }
-    
+
     // Cleanup types
     duckdb_destroy_logical_type(&varchar_type);
     duckdb_destroy_logical_type(&bigint_type);
     duckdb_destroy_logical_type(&float_type);
-    
+
     bcf_hdr_destroy(hdr);
     hts_close(fp);
-    
+
     // Set bind data
     duckdb_bind_set_bind_data(info, bind_data, destroy_bind_data);
 }
@@ -243,55 +271,54 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
     idx_t row_count = 0;
     
     // Get n_samples from init_data header
-    int n_samples = bcf_hdr_nsamples(init_data->hdr);
+    // int n_samples = bcf_hdr_nsamples(init_data->hdr); // Removed unused variable
     
     // Read records
     int ret;
+    // Count FORMAT fields for fallback logic
+    int n_fmt_fields = 0;
+    for (int i = 0; i < init_data->hdr->n[BCF_DT_ID]; i++) {
+        if (init_data->hdr->id[BCF_DT_ID][i].val && init_data->hdr->id[BCF_DT_ID][i].val->hrec[BCF_HL_FMT]) {
+            n_fmt_fields++;
+        }
+    }
+    if (n_fmt_fields == 0) n_fmt_fields = 1;
     while (row_count < vector_size) {
-        // Read next record
         if (init_data->itr) {
             ret = bcf_itr_next(init_data->fp, init_data->itr, init_data->rec);
         } else {
             ret = bcf_read(init_data->fp, init_data->hdr, init_data->rec);
         }
-        
         if (ret < 0) {
             init_data->done = 1;
             break;
         }
-        
-        // Verify record is valid before accessing
         if (!init_data->rec) {
             init_data->done = 1;
             break;
         }
-        
-        // Unpack the record
         bcf_unpack(init_data->rec, BCF_UN_ALL);
-        
-        // Only process columns that were requested (projection pushdown)
+
+        // int col_offset = 0; // Removed unused variable
+        // Core VCF columns
+        // Assign all columns, including INFO and FORMAT fields
         for (idx_t i = 0; i < init_data->column_count; i++) {
             idx_t col_id = init_data->column_ids[i];
             duckdb_vector vec = duckdb_data_chunk_get_vector(output, i);
-            
+            // Core VCF columns
             if (col_id == 0) {
-                // CHROM
                 const char *chrom = bcf_hdr_id2name(init_data->hdr, init_data->rec->rid);
                 duckdb_vector_assign_string_element(vec, row_count, chrom ? chrom : ".");
             } else if (col_id == 1) {
-                // POS (1-based)
                 int64_t *pos_data = (int64_t *)duckdb_vector_get_data(vec);
                 pos_data[row_count] = init_data->rec->pos + 1;
             } else if (col_id == 2) {
-                // ID
                 const char *id = init_data->rec->d.id;
                 duckdb_vector_assign_string_element(vec, row_count, id ? id : ".");
             } else if (col_id == 3) {
-                // REF
                 const char *ref = init_data->rec->d.allele[0];
                 duckdb_vector_assign_string_element(vec, row_count, ref ? ref : ".");
             } else if (col_id == 4) {
-                // ALT (comma-separated)
                 if (init_data->rec->n_allele > 1) {
                     size_t alt_len = 0;
                     for (int j = 1; j < init_data->rec->n_allele; j++) {
@@ -309,11 +336,9 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                     duckdb_vector_assign_string_element(vec, row_count, ".");
                 }
             } else if (col_id == 5) {
-                // QUAL
                 float *qual_data = (float *)duckdb_vector_get_data(vec);
                 qual_data[row_count] = init_data->rec->qual;
             } else if (col_id == 6) {
-                // FILTER
                 if (init_data->rec->d.n_flt > 0) {
                     char filter_str[1024] = "";
                     for (int j = 0; j < init_data->rec->d.n_flt; j++) {
@@ -324,47 +349,81 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                 } else {
                     duckdb_vector_assign_string_element(vec, row_count, "PASS");
                 }
-            } else if (col_id == 7) {
-                // INFO (placeholder)
-                duckdb_vector_assign_string_element(vec, row_count, ".");
-            } else if (col_id >= 8 && (int)(col_id - 8) < n_samples) {
-                // Genotype columns (GT_<sample>)
-                int sample_idx = (int)(col_id - 8);
-                int32_t *gt_arr = NULL;
-                int n_gt = 0;
-                int n_gt_arr = 0;
-                
-                n_gt = bcf_get_genotypes(init_data->hdr, init_data->rec, &gt_arr, &n_gt_arr);
-                
-                if (n_gt > 0) {
-                    int ploidy = n_gt / n_samples;
-                    char gt_str[64] = "";
-                    
-                    for (int p = 0; p < ploidy; p++) {
-                        int32_t allele = gt_arr[sample_idx * ploidy + p];
-                        if (bcf_gt_is_missing(allele)) {
-                            strcat(gt_str, p > 0 ? "/." : ".");
-                        } else {
-                            char allele_str[16];
-                            snprintf(allele_str, sizeof(allele_str), "%s%d", 
-                                     p > 0 ? (bcf_gt_is_phased(allele) ? "|" : "/") : "",
-                                     bcf_gt_allele(allele));
-                            strcat(gt_str, allele_str);
-                        }
+            } else {
+                // INFO and FORMAT fields
+                // INFO fields: columns start after FILTER (col_id >= 7 and < info_end)
+                // FORMAT fields: columns after INFO
+                // Try to match column name to INFO or FORMAT field
+                // Get column name from header
+                const char *colname = duckdb_column_name(info, i);
+                // INFO fields
+                if (strncmp(colname, "INFO_", 5) == 0) {
+                    const char *info_field = colname + 5;
+                    char *info_val = NULL;
+                    int info_len = 0;
+                    int ret = bcf_get_info_string(init_data->hdr, init_data->rec, info_field, &info_val, &info_len);
+                    if (ret > 0 && info_val) {
+                        duckdb_vector_assign_string_element(vec, row_count, info_val);
+                        free(info_val);
+                    } else {
+                        duckdb_vector_assign_string_element(vec, row_count, "");
                     }
-                    duckdb_vector_assign_string_element(vec, row_count, gt_str);
+                } else if (strncmp(colname, "FORMAT_", 7) == 0) {
+                    const char *fmt_field = colname + 7;
+                    const char *underscore = strchr(fmt_field, '_');
+                    if (underscore) {
+                        size_t field_len = underscore - fmt_field;
+                        char field_name[64];
+                        strncpy(field_name, fmt_field, field_len);
+                        field_name[field_len] = '\0';
+                        const char *sample_name = underscore + 1;
+                        int sample_idx = -1;
+                        for (int s = 0; s < bcf_hdr_nsamples(init_data->hdr); s++) {
+                            if (strcmp(init_data->hdr->samples[s], sample_name) == 0) {
+                                sample_idx = s;
+                                break;
+                            }
+                        }
+                        if (sample_idx >= 0) {
+                            char *fmt_val = NULL;
+                            int fmt_len = 0;
+                            int ret = bcf_get_format_string(init_data->hdr, init_data->rec, field_name, &fmt_val, &fmt_len);
+                            if (ret > 0 && fmt_val) {
+                                // FORMAT string is tab-separated for all samples; extract sample_idx
+                                char *tok = fmt_val;
+                                for (int idx = 0; idx < sample_idx; idx++) {
+                                    tok = strchr(tok, '\t');
+                                    if (!tok) break;
+                                    tok++;
+                                }
+                                if (tok) {
+                                    char *end = strchr(tok, '\t');
+                                    size_t len = end ? (size_t)(end - tok) : strlen(tok);
+                                    char out[256];
+                                    strncpy(out, tok, len);
+                                    out[len] = '\0';
+                                    duckdb_vector_assign_string_element(vec, row_count, out);
+                                } else {
+                                    duckdb_vector_assign_string_element(vec, row_count, "");
+                                }
+                                free(fmt_val);
+                            } else {
+                                duckdb_vector_assign_string_element(vec, row_count, "");
+                            }
+                        } else {
+                            duckdb_vector_assign_string_element(vec, row_count, "");
+                        }
+                    } else {
+                        duckdb_vector_assign_string_element(vec, row_count, "");
+                    }
                 } else {
-                    duckdb_vector_assign_string_element(vec, row_count, "./.");
+                    duckdb_vector_assign_string_element(vec, row_count, "");
                 }
-                
-                if (gt_arr) free(gt_arr);
             }
         }
-        
         row_count++;
         init_data->current_row++;
     }
-    
     duckdb_data_chunk_set_size(output, row_count);
 }
 

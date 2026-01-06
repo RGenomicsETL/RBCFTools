@@ -126,7 +126,7 @@ stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 batch <- stream$get_next()
 
 nanoarrow::convert_array(batch)
-
+stream$release()
 ```
 
 ### Convert to Data Frame
@@ -137,7 +137,7 @@ Convert entire BCF to data.frame
 options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
 df[, c("CHROM", "POS", "REF", "ALT", "QUAL")] |> head()
-stream$release()
+
 ```
 
 
