@@ -204,12 +204,40 @@ vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
+### DuckDB Extension
+
+A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead:
+
+```{r duckdb-ext, eval=TRUE}
+# Build extension (uses package's bundled htslib)
+build_dir <- file.path(tempdir(), "bcf_reader")
+ext_path <- bcf_reader_build(build_dir, verbose = FALSE)
+
+# Connect and query a VCF.gz file
+con <- vcf_duckdb_connect(ext_path)
+vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+
+# Describe schema
+DBI::dbGetQuery(con, sprintf("DESCRIBE SELECT * FROM bcf_read('%s')", vcf_file))
+
+# Aggregate query
+DBI::dbGetQuery(con, sprintf("
+  SELECT CHROM, COUNT(*) as n_variants, 
+         MIN(POS) as min_pos, MAX(POS) as max_pos
+  FROM bcf_read('%s') 
+  GROUP BY CHROM 
+  ORDER BY n_variants DESC 
+  LIMIT 5", vcf_file))
+
+DBI::dbDisconnect(con)
+```
+
 ### Stream Remote VCF to Arrow
 
 Stream remote VCF region directly to Arrow from S3
 
 ```{r url-arrow, eval=TRUE}
-
+try({
 vcf_url <- paste0(s3_base, s3_path, vcf_file)
 stream <- vcf_open_arrow(
     vcf_url,
@@ -220,6 +248,7 @@ stream <- vcf_open_arrow(
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
+})
 ```
 
 ### Command-Line Tool
