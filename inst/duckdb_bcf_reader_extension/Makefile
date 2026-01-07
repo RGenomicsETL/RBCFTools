@@ -58,14 +58,18 @@ INCLUDES := -I.
 ifdef HTSLIB_INCLUDE
 ifdef HTSLIB_LIB
     CFLAGS += -I$(HTSLIB_INCLUDE)
-    # Prefer static linking for portability
-    ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
+    # Prefer dynamic linking for plugin support (S3, GCS, HTTP)
+    # Static linking breaks htslib plugins needed for remote file access
+    ifneq ($(wildcard $(HTSLIB_LIB)/libhts.so),)
+        LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+    else ifneq ($(wildcard $(HTSLIB_LIB)/libhts.dylib),)
+        LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+    else ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
+        # Fall back to static only if no shared lib available
         LDFLAGS := $(HTSLIB_LIB)/libhts.a -lz -lbz2 -llzma -lcurl -lpthread
         ifdef USE_DEFLATE
             LDFLAGS += -ldeflate
         endif
-    else
-        LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
     endif
     # Mark as configured to skip other options
     HTSLIB_CONFIGURED := 1
@@ -85,14 +89,16 @@ ifdef RBCFTOOLS_HTSLIB
     # Check if the directories exist
     ifneq ($(wildcard $(HTSLIB_INCLUDE)/htslib),)
         CFLAGS += -I$(HTSLIB_INCLUDE)
-        # Prefer static linking for portability
-        ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
+        # Prefer dynamic linking for plugin support (S3, GCS, HTTP)
+        ifneq ($(wildcard $(HTSLIB_LIB)/libhts.so),)
+            LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+        else ifneq ($(wildcard $(HTSLIB_LIB)/libhts.dylib),)
+            LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
+        else ifneq ($(wildcard $(HTSLIB_LIB)/libhts.a),)
             LDFLAGS := $(HTSLIB_LIB)/libhts.a -lz -lbz2 -llzma -lcurl -lpthread
             ifdef USE_DEFLATE
                 LDFLAGS += -ldeflate
             endif
-        else
-            LDFLAGS := -L$(HTSLIB_LIB) -Wl,-rpath,$(HTSLIB_LIB) -lhts
         endif
         HTSLIB_CONFIGURED := 1
     else

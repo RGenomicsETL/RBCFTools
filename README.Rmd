@@ -106,11 +106,11 @@ length(result)
 ```
 
 
-## (Experimental) VCF to Arrow
+## (Experimental) VCF to Arrow Streams and Duckdb `bcf_reader` extension
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow (IPC) conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r) and Parquet format convertion. 
+RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r) and Parquet format convertion when serializing to Arrow IPC. We also support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) duckdb extension to read directly into duckb
 
-The Arrow conversion performs VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warnings when correcting non-conformant fields
+The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warning or duckdb logs when correcting non-conformant fields
 
 
 ### Read VCF as Arrow Stream
@@ -157,7 +157,7 @@ ipc_data <- as.data.frame(nanoarrow::read_nanoarrow(ipc_file))
 ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ```
 
-### Write to Parquet
+### Write VCF Streams to Parquet
 
 Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet file and perform queries on the parquet file. This involve vcf stream conversion to data.frame
 
@@ -194,9 +194,10 @@ vcf_to_parquet(
 
 ```
 
-### Query VCF with duckdb
+### Query VCF with duckdb after converting the Stream
 
 SQL queries on BCF using duckdb package. For now this is somehow limited due to convertion from arrow streams to data frame
+
 ```{r duckdb, eval=TRUE}
 vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 
@@ -206,7 +207,7 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 
 ###  Query VCF with  DuckDB Extension
 
-A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead:
+A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead. The extension uses the Duckb C API and should be compatible with duckb v1.2.0+
 
 ```{r duckdb-ext, eval=TRUE}
 # Build extension (uses package's bundled htslib)
@@ -250,21 +251,33 @@ DBI::dbGetQuery(con, sprintf("
 DBI::dbDisconnect(con)
 ```
 
-### Stream Remote VCF to Arrow
+### Stream Remote VCF using Arrow or DuckDB Extension
 
-Stream remote VCF region directly to Arrow from S3
+Stream remote VCF region directly from S3 using either `nanoarrow` based `vcf_stream` or `duckb` extension
 
 ```{r url-arrow, eval=TRUE}
 s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
+
+# Arrow stream
 stream <- vcf_open_arrow(
     s3_vcf_uri,
     region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
-
-# Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
+
+
+# Query remote VCF with bcf_reader extension
+
+vcf_query_duckdb(
+    s3_vcf_uri,
+    ext_path,
+    region = "chr22:16050000-16050500",
+    query = "SELECT CHROM, POS, REF, ALT FROM vcf LIMIT 5"
+)
+
+
 ```
 
 ### Command-Line Tool

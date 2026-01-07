@@ -244,6 +244,10 @@ vcf_duckdb_connect <- function(
     )
   }
 
+  # Setup HTS_PATH for remote file access (S3, GCS, HTTP)
+  # This must be set before htslib opens any files
+  setup_hts_env()
+
   # Enable unsigned extensions
   config$allow_unsigned_extensions <- "true"
 
@@ -293,12 +297,12 @@ vcf_duckdb_connect <- function(
 #'
 #' # Count variants
 #' vcf_query_duckdb("variants.vcf.gz", ext_path,
-#'     query = "SELECT COUNT(*) FROM bcf_read('{file}')"
+#'   query = "SELECT COUNT(*) FROM bcf_read('{file}')"
 #' )
 #'
 #' # Filter by chromosome
 #' vcf_query_duckdb("variants.vcf.gz", ext_path,
-#'     query = "SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"
+#'   query = "SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"
 #' )
 #'
 #' # Region query (requires index)
@@ -317,11 +321,16 @@ vcf_query_duckdb <- function(
   region = NULL,
   con = NULL
 ) {
-  # Validate file
-  if (!file.exists(file)) {
-    stop("File not found: ", file, call. = FALSE)
+  # Check if file is a remote URL
+  is_remote <- grepl("^(s3|gs|http|https|ftp)://", file, ignore.case = TRUE)
+
+  if (!is_remote) {
+    # Validate local file
+    if (!file.exists(file)) {
+      stop("File not found: ", file, call. = FALSE)
+    }
+    file <- normalizePath(file, mustWork = TRUE)
   }
-  file <- normalizePath(file, mustWork = TRUE)
 
   # Need either extension_path or con
   if (is.null(con) && is.null(extension_path)) {
@@ -342,9 +351,15 @@ vcf_query_duckdb <- function(
     # Replace {file} placeholder with actual bcf_read() call
     sql <- gsub("\\{file\\}", file, query, fixed = FALSE)
     sql <- gsub("bcf_read\\s*\\(\\s*'[^']*'\\s*\\)", bcf_read_call, sql)
-    # If query doesn't contain bcf_read, assume it's a simple query and wrap it
+    # If query doesn't contain bcf_read, handle it appropriately
     if (!grepl("bcf_read", sql, ignore.case = TRUE)) {
-      sql <- sprintf("SELECT %s FROM %s", query, bcf_read_call)
+      # If query contains "FROM vcf", replace "vcf" with the bcf_read call
+      if (grepl("\\bFROM\\s+vcf\\b", sql, ignore.case = TRUE)) {
+        sql <- gsub("\\bFROM\\s+vcf\\b", paste0("FROM ", bcf_read_call), sql, ignore.case = TRUE)
+      } else {
+        # Assume it's just column names/expressions and wrap it
+        sql <- sprintf("SELECT %s FROM %s", query, bcf_read_call)
+      }
     }
   }
 
@@ -407,10 +422,15 @@ vcf_count_duckdb <- function(
 #' vcf_schema_duckdb("variants.vcf.gz", ext_path)
 #' }
 vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
-  if (!file.exists(file)) {
-    stop("File not found: ", file, call. = FALSE)
+  # Check if file is a remote URL
+  is_remote <- grepl("^(s3|gs|http|https|ftp)://", file, ignore.case = TRUE)
+
+  if (!is_remote) {
+    if (!file.exists(file)) {
+      stop("File not found: ", file, call. = FALSE)
+    }
+    file <- normalizePath(file, mustWork = TRUE)
   }
-  file <- normalizePath(file, mustWork = TRUE)
 
   if (is.null(con) && is.null(extension_path)) {
     stop("Either extension_path or con must be provided", call. = FALSE)
@@ -460,12 +480,12 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #'
 #' # Export specific columns
 #' vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,
-#'     columns = c("CHROM", "POS", "REF", "ALT", "INFO_AF")
+#'   columns = c("CHROM", "POS", "REF", "ALT", "INFO_AF")
 #' )
 #'
 #' # Export a region
 #' vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
-#'     region = "chr22"
+#'   region = "chr22"
 #' )
 #'
 #' # Parallel mode for whole-genome VCF (requires index)
@@ -482,14 +502,20 @@ vcf_to_parquet_duckdb <- function(
   threads = 1L,
   con = NULL
 ) {
-  if (!file.exists(input_file)) {
-    stop("Input file not found: ", input_file, call. = FALSE)
+  # Check if file is a remote URL
+  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
+
+  if (!is_remote) {
+    if (!file.exists(input_file)) {
+      stop("Input file not found: ", input_file, call. = FALSE)
+    }
+    input_file <- normalizePath(input_file, mustWork = TRUE)
   }
+
   if (is.null(con) && is.null(extension_path)) {
     stop("Either extension_path or con must be provided", call. = FALSE)
   }
 
-  input_file <- normalizePath(input_file, mustWork = TRUE)
   output_file <- normalizePath(output_file, mustWork = FALSE)
 
   # Use parallel processing if threads > 1
@@ -603,7 +629,11 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
     on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
   }
 
-  file <- normalizePath(file, mustWork = TRUE)
+  # Check if file is a remote URL
+  is_remote <- grepl("^(s3|gs|http|https|ftp)://", file, ignore.case = TRUE)
+  if (!is_remote) {
+    file <- normalizePath(file, mustWork = TRUE)
+  }
 
   # Get counts per chromosome
   per_chrom <- vcf_query_duckdb(
@@ -659,9 +689,9 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #'
 #' # With specific columns
 #' vcf_to_parquet_duckdb_parallel(
-#'     "wgs.vcf.gz", "wgs.parquet", ext_path,
-#'     threads = 16,
-#'     columns = c("CHROM", "POS", "REF", "ALT")
+#'   "wgs.vcf.gz", "wgs.parquet", ext_path,
+#'   threads = 16,
+#'   columns = c("CHROM", "POS", "REF", "ALT")
 #' )
 #' }
 #'
@@ -695,7 +725,11 @@ vcf_to_parquet_duckdb_parallel <- function(
     )
   }
 
-  input_file <- normalizePath(input_file, mustWork = TRUE)
+  # Check if file is a remote URL
+  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
+  if (!is_remote) {
+    input_file <- normalizePath(input_file, mustWork = TRUE)
+  }
   output_file <- normalizePath(output_file, mustWork = FALSE)
 
   # Check for index

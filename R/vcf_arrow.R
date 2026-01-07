@@ -65,6 +65,10 @@ vcf_open_arrow <- function(
   index = NULL,
   threads = 0L
 ) {
+  # Setup HTS_PATH for remote file access (S3, GCS, HTTP)
+  # This must be set before htslib opens any files
+  setup_hts_env()
+
   # Normalize local paths, but allow:
   # - Remote URLs (s3://, gs://, http://, https://, ftp://)
   # - htslib ##idx## syntax for custom index paths
