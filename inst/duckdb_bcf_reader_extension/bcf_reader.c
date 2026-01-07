@@ -579,22 +579,12 @@ static void bcf_read_global_init(duckdb_init_info info) {
     global->current_contig = 0;
     global->has_region = (bind->region && strlen(bind->region) > 0);
     
-    // Set up parallel scan if we have an index and multiple contigs
-    if (bind->has_index && bind->n_contigs > 1 && !global->has_region) {
-        global->n_contigs = bind->n_contigs;
-        global->contig_names = bind->contig_names;  // Reference only
-        
-        // Allow parallel scanning with one thread per contig
-        // But cap at a reasonable number
-        idx_t max_threads = bind->n_contigs;
-        if (max_threads > 16) max_threads = 16;  // Cap threads
-        duckdb_init_set_max_threads(info, max_threads);
-    } else {
-        // Single-threaded scan
-        global->n_contigs = 0;
-        global->contig_names = NULL;
-        duckdb_init_set_max_threads(info, 1);
-    }
+    // For now, always use single-threaded scan
+    // Parallel scanning by contig would require coordinating which thread reads which contig
+    // That's better handled at the R level via vcf_to_parquet_duckdb_parallel
+    global->n_contigs = 0;
+    global->contig_names = NULL;
+    duckdb_init_set_max_threads(info, 1);
     
     duckdb_init_set_init_data(info, global, destroy_global_init_data);
 }
