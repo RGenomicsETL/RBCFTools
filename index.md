@@ -46,11 +46,11 @@ functions to locate the executables
 
 ``` r
 bcftools_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"
 # List all available tools
 bcftools_tools()
 #>  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     
@@ -96,7 +96,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
 ### Feature Constants
@@ -147,15 +147,19 @@ length(result)
 #> [1] 4622
 ```
 
-## (Experimental) VCF to Arrow
+## (Experimental) VCF to Arrow Streams and Duckdb `bcf_reader` extension
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow (IPC) conversion
+RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion
 via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables
 integration with tools like [duckdb](https://github.com/duckdb/duckdb-r)
-and Parquet format convertion.
+and Parquet format convertion when serializing to Arrow IPC. We also
+support the
+[`bcf_reader`](https://rgenomicsetl.github.io/RBCFTools/inst/duckdb_bcf_reader_extension/)
+duckdb extension to read directly into duckb
 
-The Arrow conversion performs VCF spec conformance checks on headers
-(similar to htslib’s `bcf_hdr_check_sanity()`) and emits R warnings when
+The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec
+conformance checks on headers (similar to htslib’s
+`bcf_hdr_check_sanity()`) and emits R warning or duckdb logs when
 correcting non-conformant fields
 
 ### Read VCF as Arrow Stream
@@ -310,7 +314,7 @@ ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 6     1 14699   C   G
 ```
 
-### Write to Parquet
+### Write VCF Streams to Parquet
 
 Using [duckdb](https://github.com/duckdb/duckdb-r) to convert BCF to
 parquet file and perform queries on the parquet file. This involve vcf
@@ -320,7 +324,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpmaN3li/file19493362fc4935.parquet
+#> Wrote 11 rows to /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -339,12 +343,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
-#> 2 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
-#> 3 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
-#> 4 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
-#> 5 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
-#> 6 /tmp/RtmpmaN3li/file19493362fc4935.parquet            0                 11
+#> 1 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 2 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 3 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 4 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 5 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 6 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -427,11 +431,11 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpmaN3li/file19493339f064ca.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpSsP0QX/file30df3b7a8f0912.parquet (streaming mode)
 # describe using duckdb
 ```
 
-### Query VCF with duckdb
+### Query VCF with duckdb after converting the Stream
 
 SQL queries on BCF using duckdb package. For now this is somehow limited
 due to convertion from arrow streams to data frame
@@ -454,7 +458,8 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ### Query VCF with DuckDB Extension
 
 A native DuckDB extension (`bcf_reader`) for direct SQL queries on
-VCF/BCF files without Arrow conversion overhead:
+VCF/BCF files without Arrow conversion overhead. The extension uses the
+Duckb C API and should be compatible with duckb v1.2.0+
 
 ``` r
 # Build extension (uses package's bundled htslib)
@@ -529,19 +534,20 @@ DBI::dbGetQuery(con, sprintf("
 DBI::dbDisconnect(con)
 ```
 
-### Stream Remote VCF to Arrow
+### Stream Remote VCF using Arrow or DuckDB Extension
 
-Stream remote VCF region directly to Arrow from S3
+Stream remote VCF region directly from S3 using either `nanoarrow` based
+`vcf_stream` or `duckb` extension
 
 ``` r
 s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
+
+# Arrow stream
 stream <- vcf_open_arrow(
     s3_vcf_uri,
     region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
-
-# Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #>   CHROM      POS REF                  ALT
@@ -551,6 +557,22 @@ df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 #> 4 chr22 16050219   C A        , <NON_REF>
 #> 5 chr22 16050224   A C        , <NON_REF>
 #> 6 chr22 16050229   C A        , <NON_REF>
+
+
+# Query remote VCF with bcf_reader extension
+
+vcf_query_duckdb(
+    s3_vcf_uri,
+    ext_path,
+    region = "chr22:16050000-16050500",
+    query = "SELECT CHROM, POS, REF, ALT FROM vcf LIMIT 5"
+)
+#>   CHROM      POS REF          ALT
+#> 1 chr22 16050036   A C, <NON_REF>
+#> 2 chr22 16050151   T G, <NON_REF>
+#> 3 chr22 16050213   C T, <NON_REF>
+#> 4 chr22 16050219   C A, <NON_REF>
+#> 5 chr22 16050224   A C, <NON_REF>
 ```
 
 ### Command-Line Tool
@@ -581,21 +603,22 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
-#>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.OMVr1MnhU5.parquet 
+#>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
+#>   Output: /tmp/tmp.LwnhrjWya3.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
 #>   Streaming: FALSE 
 #>   Include INFO: TRUE 
 #>   Include FORMAT: TRUE 
+#> [W::bcf_get_version] Couldn't get VCF version, considering as 4.2
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.OMVr1MnhU5.parquet
+#> Wrote 11 rows to /tmp/tmp.LwnhrjWya3.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.78 seconds
+#>   Time: 0.19 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -636,7 +659,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.OMVr1MnhU5.parquet 
+#> Parquet File Information: /tmp/tmp.LwnhrjWya3.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
