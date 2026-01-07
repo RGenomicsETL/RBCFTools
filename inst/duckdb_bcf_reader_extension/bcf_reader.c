@@ -515,26 +515,20 @@ static void bcf_read_bind(duckdb_bind_info info) {
     
     // Only set up parallel scan if no user-specified region
     if (!region || strlen(region) == 0) {
-        // Suppress htslib warnings when index doesn't exist
-        int old_log_level = hts_get_log_level();
-        hts_set_log_level(HTS_LOG_OFF);
-        
-        // Try to load index
+        // Try to load index using *_load3 for remote file support
+        // HTS_IDX_SILENT_FAIL suppresses warnings when index doesn't exist
         hts_idx_t* idx = NULL;
         tbx_t* tbx = NULL;
         enum htsExactFormat fmt = hts_get_format(fp)->format;
         
         if (fmt == bcf) {
-            idx = bcf_index_load(file_path);
+            idx = bcf_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
         } else {
-            tbx = tbx_index_load(file_path);
+            tbx = tbx_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             if (!tbx) {
-                idx = bcf_index_load(file_path);
+                idx = bcf_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             }
         }
-        
-        // Restore log level
-        hts_set_log_level(old_log_level);
         
         if (idx || tbx) {
             bind->has_index = 1;
@@ -643,15 +637,16 @@ static void bcf_read_local_init(duckdb_init_info info) {
     local->rec = bcf_init();
     
     // Load index for parallel scanning or region queries
+    // Use *_load3 with HTS_IDX_SAVE_REMOTE for remote file support
     if (is_parallel || (bind->region && strlen(bind->region) > 0)) {
         enum htsExactFormat fmt = hts_get_format(local->fp)->format;
         
         if (fmt == bcf) {
-            local->idx = bcf_index_load(bind->file_path);
+            local->idx = bcf_index_load3(bind->file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
         } else {
-            local->tbx = tbx_index_load(bind->file_path);
+            local->tbx = tbx_index_load3(bind->file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             if (!local->tbx) {
-                local->idx = bcf_index_load(bind->file_path);
+                local->idx = bcf_index_load3(bind->file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
             }
         }
     }
