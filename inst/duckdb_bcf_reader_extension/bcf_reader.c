@@ -144,6 +144,15 @@ typedef struct {
     // Parallel scan state
     int is_parallel;
     int assigned_contig;       // Which contig this thread is scanning (-1 = all)
+    const char* contig_name;   // Name of assigned contig (reference, don't free)
+    int needs_next_contig;     // Flag to request next contig assignment
+} bcf_init_data_t;
+    idx_t column_count;
+    idx_t* column_ids;
+    
+    // Parallel scan state
+    int is_parallel;
+    int assigned_contig;       // Which contig this thread is scanning (-1 = all)
     const char* contig_name;   // Name of assigned contig
 } bcf_init_data_t;
 
@@ -579,12 +588,24 @@ static void bcf_read_global_init(duckdb_init_info info) {
     global->current_contig = 0;
     global->has_region = (bind->region && strlen(bind->region) > 0);
     
-    // For now, always use single-threaded scan
-    // Parallel scanning by contig would require coordinating which thread reads which contig
-    // That's better handled at the R level via vcf_to_parquet_duckdb_parallel
-    global->n_contigs = 0;
-    global->contig_names = NULL;
-    duckdb_init_set_max_threads(info, 1);
+    // Enable parallel scan if:
+    // 1. Index exists
+    // 2. Multiple contigs available
+    // 3. No user-specified region (region queries are already filtered)
+    if (bind->has_index && bind->n_contigs > 1 && !global->has_region) {
+        global->n_contigs = bind->n_contigs;
+        global->contig_names = bind->contig_names;  // Reference only
+        
+        // Cap threads at number of contigs or reasonable max
+        idx_t max_threads = bind->n_contigs;
+        if (max_threads > 16) max_threads = 16;
+        duckdb_init_set_max_threads(info, max_threads);
+    } else {
+        // Single-threaded scan
+        global->n_contigs = 0;
+        global->contig_names = NULL;
+        duckdb_init_set_max_threads(info, 1);
+    }
     
     duckdb_init_set_init_data(info, global, destroy_global_init_data);
 }
@@ -595,9 +616,16 @@ static void bcf_read_global_init(duckdb_init_info info) {
 
 static void bcf_read_local_init(duckdb_init_info info) {
     bcf_bind_data_t* bind = (bcf_bind_data_t*)duckdb_init_get_bind_data(info);
+    bcf_global_init_data_t* global = (bcf_global_init_data_t*)duckdb_init_get_init_data(info);
     
     bcf_init_data_t* local = (bcf_init_data_t*)duckdb_malloc(sizeof(bcf_init_data_t));
     memset(local, 0, sizeof(bcf_init_data_t));
+    
+    // Initialize parallel scan state
+    local->is_parallel = (global->n_contigs > 0);
+    local->assigned_contig = -1;
+    local->contig_name = NULL;
+    local->needs_next_contig = local->is_parallel;  // Start by requesting first contig
     
     // Open file (each thread gets its own file handle)
     local->fp = hts_open(bind->file_path, "r");
@@ -619,25 +647,26 @@ static void bcf_read_local_init(duckdb_init_info info) {
     // Allocate record
     local->rec = bcf_init();
     
-    // Set up region query if specified by user
-    if (bind->region && strlen(bind->region) > 0) {
+    // Load index for parallel scanning or region queries
+    if (local->is_parallel || (bind->region && strlen(bind->region) > 0)) {
         enum htsExactFormat fmt = hts_get_format(local->fp)->format;
         
         if (fmt == bcf) {
             local->idx = bcf_index_load(bind->file_path);
-            if (local->idx) {
-                local->itr = bcf_itr_querys(local->idx, local->hdr, bind->region);
-            }
         } else {
             local->tbx = tbx_index_load(bind->file_path);
-            if (local->tbx) {
-                local->itr = tbx_itr_querys(local->tbx, bind->region);
-            } else {
+            if (!local->tbx) {
                 local->idx = bcf_index_load(bind->file_path);
-                if (local->idx) {
-                    local->itr = bcf_itr_querys(local->idx, local->hdr, bind->region);
-                }
             }
+        }
+    }
+    
+    // Set up region query if user specified a region (non-parallel case)
+    if (!local->is_parallel && bind->region && strlen(bind->region) > 0) {
+        if (local->idx) {
+            local->itr = bcf_itr_querys(local->idx, local->hdr, bind->region);
+        } else if (local->tbx) {
+            local->itr = tbx_itr_querys(local->tbx, bind->region);
         }
         
         if (!local->itr) {
