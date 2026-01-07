@@ -653,16 +653,28 @@ static void bcf_read_local_init(duckdb_init_info info) {
     
     // Set up region query if user specified a region (non-parallel case)
     if (!is_parallel && bind->region && strlen(bind->region) > 0) {
+        // First check if we have an index
+        if (!local->idx && !local->tbx) {
+            char err[512];
+            snprintf(err, sizeof(err), 
+                     "Region query requires an index file (.tbi or .csi). Region: %s", bind->region);
+            duckdb_init_set_error(info, err);
+            destroy_init_data(local);
+            return;
+        }
+        
+        // Try to create iterator for the region
         if (local->idx) {
             local->itr = bcf_itr_querys(local->idx, local->hdr, bind->region);
         } else if (local->tbx) {
             local->itr = tbx_itr_querys(local->tbx, bind->region);
         }
         
+        // If iterator is NULL, the region/contig was not found
         if (!local->itr) {
             char err[512];
             snprintf(err, sizeof(err), 
-                     "Region query requires index file. Region: %s", bind->region);
+                     "Region not found in file (contig may not exist in header): %s", bind->region);
             duckdb_init_set_error(info, err);
             destroy_init_data(local);
             return;
