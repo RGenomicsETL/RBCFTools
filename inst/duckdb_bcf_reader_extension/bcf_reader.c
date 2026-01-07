@@ -147,14 +147,6 @@ typedef struct {
     const char* contig_name;   // Name of assigned contig (reference, don't free)
     int needs_next_contig;     // Flag to request next contig assignment
 } bcf_init_data_t;
-    idx_t column_count;
-    idx_t* column_ids;
-    
-    // Parallel scan state
-    int is_parallel;
-    int assigned_contig;       // Which contig this thread is scanning (-1 = all)
-    const char* contig_name;   // Name of assigned contig
-} bcf_init_data_t;
 
 // =============================================================================
 // Warning Callback for DuckDB
@@ -616,16 +608,19 @@ static void bcf_read_global_init(duckdb_init_info info) {
 
 static void bcf_read_local_init(duckdb_init_info info) {
     bcf_bind_data_t* bind = (bcf_bind_data_t*)duckdb_init_get_bind_data(info);
-    bcf_global_init_data_t* global = (bcf_global_init_data_t*)duckdb_init_get_init_data(info);
     
     bcf_init_data_t* local = (bcf_init_data_t*)duckdb_malloc(sizeof(bcf_init_data_t));
     memset(local, 0, sizeof(bcf_init_data_t));
     
+    // Check if we're in parallel mode based on bind data
+    int is_parallel = (bind->has_index && bind->n_contigs > 1 && 
+                       (!bind->region || strlen(bind->region) == 0));
+    
     // Initialize parallel scan state
-    local->is_parallel = (global->n_contigs > 0);
+    local->is_parallel = is_parallel;
     local->assigned_contig = -1;
     local->contig_name = NULL;
-    local->needs_next_contig = local->is_parallel;  // Start by requesting first contig
+    local->needs_next_contig = is_parallel;  // Start by requesting first contig
     
     // Open file (each thread gets its own file handle)
     local->fp = hts_open(bind->file_path, "r");
@@ -648,7 +643,7 @@ static void bcf_read_local_init(duckdb_init_info info) {
     local->rec = bcf_init();
     
     // Load index for parallel scanning or region queries
-    if (local->is_parallel || (bind->region && strlen(bind->region) > 0)) {
+    if (is_parallel || (bind->region && strlen(bind->region) > 0)) {
         enum htsExactFormat fmt = hts_get_format(local->fp)->format;
         
         if (fmt == bcf) {
@@ -662,7 +657,7 @@ static void bcf_read_local_init(duckdb_init_info info) {
     }
     
     // Set up region query if user specified a region (non-parallel case)
-    if (!local->is_parallel && bind->region && strlen(bind->region) > 0) {
+    if (!is_parallel && bind->region && strlen(bind->region) > 0) {
         if (local->idx) {
             local->itr = bcf_itr_querys(local->idx, local->hdr, bind->region);
         } else if (local->tbx) {
@@ -709,11 +704,55 @@ static inline void set_validity_bit(uint64_t* validity, idx_t row, int is_valid)
 }
 
 // =============================================================================
+// Helper: Claim next contig for parallel scanning
+// Returns 1 if a new contig was claimed, 0 if no more contigs
+// =============================================================================
+
+static int claim_next_contig(bcf_init_data_t* init, bcf_global_init_data_t* global) {
+    if (!init->is_parallel || !global || global->n_contigs == 0) {
+        return 0;
+    }
+    
+    // Atomically claim next contig (DuckDB ensures thread-safe access to global state)
+    int next = global->current_contig;
+    if (next >= global->n_contigs) {
+        return 0;  // No more contigs
+    }
+    global->current_contig++;
+    
+    // Destroy old iterator if exists
+    if (init->itr) {
+        hts_itr_destroy(init->itr);
+        init->itr = NULL;
+    }
+    
+    // Set up iterator for this contig
+    const char* contig = global->contig_names[next];
+    init->assigned_contig = next;
+    init->contig_name = contig;
+    
+    if (init->idx) {
+        init->itr = bcf_itr_querys(init->idx, init->hdr, contig);
+    } else if (init->tbx) {
+        init->itr = tbx_itr_querys(init->tbx, contig);
+    }
+    
+    if (!init->itr) {
+        // This contig might not have any records - try next
+        return claim_next_contig(init, global);
+    }
+    
+    init->needs_next_contig = 0;
+    return 1;
+}
+
+// =============================================================================
 // Main Scan Function
 // =============================================================================
 
 static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk output) {
     bcf_bind_data_t* bind = (bcf_bind_data_t*)duckdb_function_get_bind_data(info);
+    bcf_global_init_data_t* global = (bcf_global_init_data_t*)duckdb_function_get_init_data(info);
     
     // Try to get local init data first (for parallel scans)
     bcf_init_data_t* init = (bcf_init_data_t*)duckdb_function_get_local_init_data(info);
@@ -725,6 +764,16 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
     if (!init || init->done) {
         duckdb_data_chunk_set_size(output, 0);
         return;
+    }
+    
+    // For parallel scans, claim first/next contig if needed
+    if (init->needs_next_contig) {
+        if (!claim_next_contig(init, global)) {
+            // No more contigs to process
+            init->done = 1;
+            duckdb_data_chunk_set_size(output, 0);
+            return;
+        }
     }
     
     idx_t vector_size = duckdb_vector_size();
@@ -751,6 +800,13 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         }
         
         if (ret < 0) {
+            // End of current contig/file
+            if (init->is_parallel) {
+                // Try to claim next contig
+                if (claim_next_contig(init, global)) {
+                    continue;  // Continue reading from new contig
+                }
+            }
             init->done = 1;
             break;
         }
