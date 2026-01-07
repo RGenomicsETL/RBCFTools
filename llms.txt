@@ -41,11 +41,11 @@ functions to locate the executables
 
 ``` r
 bcftools_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"
 # List all available tools
 bcftools_tools()
 #>  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     
@@ -91,7 +91,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
 ### Feature Constants
@@ -314,7 +314,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet
+#> Wrote 11 rows to /tmp/RtmprWKiVc/file11c0621437e420.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -333,12 +333,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
-#> 2 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
-#> 3 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
-#> 4 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
-#> 5 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
-#> 6 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11
+#> 1 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 2 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 3 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 4 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 5 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 6 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -421,7 +421,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpl0IDtw/file30023375fd3a5e.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmprWKiVc/file11c0624bf1a92a.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -541,7 +541,7 @@ df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
 })
 #> Error in vcf_open_arrow(vcf_url, region = "chr22:16050000-16050500", batch_size = 1000L) : 
-#>   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz
+#>   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz
 ```
 
 ### Command-Line Tool
@@ -572,22 +572,21 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
-#>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.HKVkWOrDxL.parquet 
+#>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
+#>   Output: /tmp/tmp.QTR2orDLS7.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
 #>   Streaming: FALSE 
 #>   Include INFO: TRUE 
 #>   Include FORMAT: TRUE 
-#> [W::bcf_get_version] Couldn't get VCF version, considering as 4.2
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.HKVkWOrDxL.parquet
+#> Wrote 11 rows to /tmp/tmp.QTR2orDLS7.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.19 seconds
+#>   Time: 0.72 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -628,7 +627,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.HKVkWOrDxL.parquet 
+#> Parquet File Information: /tmp/tmp.QTR2orDLS7.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 

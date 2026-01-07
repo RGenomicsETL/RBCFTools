@@ -78,11 +78,11 @@
 <p>RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"</span></span>
 <span><span class="fu"><a href="reference/bgzip_path.html">bgzip_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"</span></span>
 <span><span class="fu"><a href="reference/tabix_path.html">tabix_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"</span></span>
+<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"</span></span>
 <span><span class="co"># List all available tools</span></span>
 <span><span class="fu"><a href="reference/bcftools_tools.html">bcftools_tools</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     </span></span>
@@ -127,7 +127,7 @@
 <span></span>
 <span><span class="co"># Human-readable feature string</span></span>
 <span><span class="fu"><a href="reference/htslib_feature_string.html">htslib_feature_string</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="feature-constants">Feature Constants<a class="anchor" aria-label="anchor" href="#feature-constants"></a>
 </h3>
@@ -334,7 +334,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmprWKiVc/file11c0621437e420.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -353,12 +353,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmpl0IDtw/file3002337fdf3f90.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -434,7 +434,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpl0IDtw/file30023375fd3a5e.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmprWKiVc/file11c0624bf1a92a.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -549,7 +549,7 @@
 <span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Error in vcf_open_arrow(vcf_url, region = "chr22:16050000-16050500", batch_size = 1000L) : </span></span>
-<span><span class="co">#&gt;   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz</span></span></code></pre></div>
+<span><span class="co">#&gt;   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="command-line-tool">Command-Line Tool<a class="anchor" aria-label="anchor" href="#command-line-tool"></a>
@@ -577,111 +577,110 @@
 <span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a></span>
 <span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
-<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.HKVkWOrDxL.parquet </span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.QTR2orDLS7.parquet </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
 <span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
 <span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a><span class="co">#&gt;   Include INFO: TRUE </span></span>
 <span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a><span class="co">#&gt;   Include FORMAT: TRUE </span></span>
-<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_get_version] Couldn't get VCF version, considering as 4.2</span></span>
-<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
-<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
-<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.HKVkWOrDxL.parquet</span></span>
-<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.19 seconds</span></span>
-<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
-<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
-<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
-<span id="cb15-43"><a href="#cb15-43" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
-<span id="cb15-44"><a href="#cb15-44" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
-<span id="cb15-45"><a href="#cb15-45" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
-<span id="cb15-46"><a href="#cb15-46" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
-<span id="cb15-47"><a href="#cb15-47" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb15-48"><a href="#cb15-48" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
-<span id="cb15-49"><a href="#cb15-49" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
-<span id="cb15-50"><a href="#cb15-50" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
-<span id="cb15-51"><a href="#cb15-51" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
-<span id="cb15-52"><a href="#cb15-52" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
-<span id="cb15-53"><a href="#cb15-53" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
-<span id="cb15-54"><a href="#cb15-54" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
-<span id="cb15-55"><a href="#cb15-55" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
-<span id="cb15-56"><a href="#cb15-56" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
-<span id="cb15-57"><a href="#cb15-57" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
-<span id="cb15-58"><a href="#cb15-58" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
-<span id="cb15-59"><a href="#cb15-59" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb15-60"><a href="#cb15-60" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb15-61"><a href="#cb15-61" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb15-62"><a href="#cb15-62" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb15-63"><a href="#cb15-63" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb15-64"><a href="#cb15-64" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb15-65"><a href="#cb15-65" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb15-66"><a href="#cb15-66" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
-<span id="cb15-67"><a href="#cb15-67" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
-<span id="cb15-68"><a href="#cb15-68" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
-<span id="cb15-69"><a href="#cb15-69" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-70"><a href="#cb15-70" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-71"><a href="#cb15-71" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-72"><a href="#cb15-72" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-73"><a href="#cb15-73" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-74"><a href="#cb15-74" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-75"><a href="#cb15-75" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.HKVkWOrDxL.parquet </span></span>
-<span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
-<span id="cb15-82"><a href="#cb15-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
-<span id="cb15-83"><a href="#cb15-83" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
-<span id="cb15-84"><a href="#cb15-84" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb15-85"><a href="#cb15-85" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb15-86"><a href="#cb15-86" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
-<span id="cb15-87"><a href="#cb15-87" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
-<span id="cb15-88"><a href="#cb15-88" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
-<span id="cb15-89"><a href="#cb15-89" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
-<span id="cb15-90"><a href="#cb15-90" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
-<span id="cb15-91"><a href="#cb15-91" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
-<span id="cb15-92"><a href="#cb15-92" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
-<span id="cb15-93"><a href="#cb15-93" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
-<span id="cb15-94"><a href="#cb15-94" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
-<span id="cb15-95"><a href="#cb15-95" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb15-96"><a href="#cb15-96" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
-<span id="cb15-97"><a href="#cb15-97" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
-<span id="cb15-98"><a href="#cb15-98" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
-<span id="cb15-99"><a href="#cb15-99" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
-<span id="cb15-100"><a href="#cb15-100" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
-<span id="cb15-101"><a href="#cb15-101" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
-<span id="cb15-102"><a href="#cb15-102" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
-<span id="cb15-103"><a href="#cb15-103" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
-<span id="cb15-104"><a href="#cb15-104" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
-<span id="cb15-105"><a href="#cb15-105" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
-<span id="cb15-106"><a href="#cb15-106" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb15-107"><a href="#cb15-107" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
-<span id="cb15-108"><a href="#cb15-108" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb15-109"><a href="#cb15-109" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb15-110"><a href="#cb15-110" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb15-111"><a href="#cb15-111" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb15-112"><a href="#cb15-112" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
-<span id="cb15-113"><a href="#cb15-113" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb15-114"><a href="#cb15-114" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb15-115"><a href="#cb15-115" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb15-116"><a href="#cb15-116" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb15-117"><a href="#cb15-117" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb15-118"><a href="#cb15-118" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb15-119"><a href="#cb15-119" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb15-120"><a href="#cb15-120" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
-<span id="cb15-121"><a href="#cb15-121" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb15-122"><a href="#cb15-122" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb15-123"><a href="#cb15-123" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb15-124"><a href="#cb15-124" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb15-125"><a href="#cb15-125" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb15-126"><a href="#cb15-126" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb15-127"><a href="#cb15-127" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
+<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.QTR2orDLS7.parquet</span></span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt;   Time: 0.72 seconds</span></span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
+<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
+<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
+<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
+<span id="cb15-43"><a href="#cb15-43" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
+<span id="cb15-44"><a href="#cb15-44" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
+<span id="cb15-45"><a href="#cb15-45" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
+<span id="cb15-46"><a href="#cb15-46" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb15-47"><a href="#cb15-47" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
+<span id="cb15-48"><a href="#cb15-48" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
+<span id="cb15-49"><a href="#cb15-49" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
+<span id="cb15-50"><a href="#cb15-50" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
+<span id="cb15-51"><a href="#cb15-51" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
+<span id="cb15-52"><a href="#cb15-52" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
+<span id="cb15-53"><a href="#cb15-53" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
+<span id="cb15-54"><a href="#cb15-54" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
+<span id="cb15-55"><a href="#cb15-55" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
+<span id="cb15-56"><a href="#cb15-56" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
+<span id="cb15-57"><a href="#cb15-57" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
+<span id="cb15-58"><a href="#cb15-58" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb15-59"><a href="#cb15-59" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb15-60"><a href="#cb15-60" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb15-61"><a href="#cb15-61" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb15-62"><a href="#cb15-62" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb15-63"><a href="#cb15-63" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb15-64"><a href="#cb15-64" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb15-65"><a href="#cb15-65" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
+<span id="cb15-66"><a href="#cb15-66" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
+<span id="cb15-67"><a href="#cb15-67" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
+<span id="cb15-68"><a href="#cb15-68" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-69"><a href="#cb15-69" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-70"><a href="#cb15-70" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-71"><a href="#cb15-71" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-72"><a href="#cb15-72" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-73"><a href="#cb15-73" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-74"><a href="#cb15-74" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-75"><a href="#cb15-75" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
+<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.QTR2orDLS7.parquet </span></span>
+<span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
+<span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
+<span id="cb15-82"><a href="#cb15-82" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
+<span id="cb15-83"><a href="#cb15-83" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-84"><a href="#cb15-84" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb15-85"><a href="#cb15-85" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
+<span id="cb15-86"><a href="#cb15-86" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
+<span id="cb15-87"><a href="#cb15-87" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
+<span id="cb15-88"><a href="#cb15-88" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
+<span id="cb15-89"><a href="#cb15-89" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
+<span id="cb15-90"><a href="#cb15-90" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
+<span id="cb15-91"><a href="#cb15-91" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
+<span id="cb15-92"><a href="#cb15-92" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
+<span id="cb15-93"><a href="#cb15-93" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
+<span id="cb15-94"><a href="#cb15-94" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb15-95"><a href="#cb15-95" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
+<span id="cb15-96"><a href="#cb15-96" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
+<span id="cb15-97"><a href="#cb15-97" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
+<span id="cb15-98"><a href="#cb15-98" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
+<span id="cb15-99"><a href="#cb15-99" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
+<span id="cb15-100"><a href="#cb15-100" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
+<span id="cb15-101"><a href="#cb15-101" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
+<span id="cb15-102"><a href="#cb15-102" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
+<span id="cb15-103"><a href="#cb15-103" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
+<span id="cb15-104"><a href="#cb15-104" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
+<span id="cb15-105"><a href="#cb15-105" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb15-106"><a href="#cb15-106" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
+<span id="cb15-107"><a href="#cb15-107" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb15-108"><a href="#cb15-108" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb15-109"><a href="#cb15-109" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb15-110"><a href="#cb15-110" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb15-111"><a href="#cb15-111" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
+<span id="cb15-112"><a href="#cb15-112" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb15-113"><a href="#cb15-113" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb15-114"><a href="#cb15-114" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb15-115"><a href="#cb15-115" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb15-116"><a href="#cb15-116" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb15-117"><a href="#cb15-117" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb15-118"><a href="#cb15-118" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb15-119"><a href="#cb15-119" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
+<span id="cb15-120"><a href="#cb15-120" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb15-121"><a href="#cb15-121" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb15-122"><a href="#cb15-122" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb15-123"><a href="#cb15-123" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb15-124"><a href="#cb15-124" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb15-125"><a href="#cb15-125" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb15-126"><a href="#cb15-126" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>
