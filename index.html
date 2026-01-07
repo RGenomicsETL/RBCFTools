@@ -160,13 +160,13 @@
 <span><span class="co"># Build S3 URL for 1000 Genomes cohort VCF</span></span>
 <span><span class="va">s3_base</span> <span class="op">&lt;-</span> <span class="st">"s3://1000genomes-dragen-v3.7.6/data/cohorts/"</span></span>
 <span><span class="va">s3_path</span> <span class="op">&lt;-</span> <span class="st">"gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"</span></span>
-<span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="st">"3202_samples_cohort_gg_chr22.vcf.gz"</span></span>
-<span><span class="va">vcf_url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">vcf_file</span><span class="op">)</span></span>
+<span><span class="va">s3_vcf_file</span> <span class="op">&lt;-</span> <span class="st">"3202_samples_cohort_gg_chr22.vcf.gz"</span></span>
+<span><span class="va">s3_vcf_uri</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">s3_vcf_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Query a small region (chr22:20000000-20100000) and count variants</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"view"</span>, <span class="st">"-H"</span>, <span class="st">"-r"</span>, <span class="st">"chr22:20000000-20100000"</span>, <span class="va">vcf_url</span><span class="op">)</span>,</span>
+<span>  args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"view"</span>, <span class="st">"-H"</span>, <span class="st">"-r"</span>, <span class="st">"chr22:20000000-20100000"</span>, <span class="va">s3_vcf_uri</span><span class="op">)</span>,</span>
 <span>  stdout <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  stderr <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
@@ -334,7 +334,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmprWKiVc/file11c0621437e420.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -353,12 +353,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -434,7 +434,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmprWKiVc/file11c0624bf1a92a.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp9TaM5Z/file11ce0337f83ed4.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -536,10 +536,9 @@
 </h3>
 <p>Stream remote VCF region directly to Arrow from S3</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="op">{</span></span>
-<span><span class="va">vcf_url</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">vcf_file</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">s3_vcf_uri</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">s3_vcf_file</span><span class="op">)</span></span>
 <span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span></span>
-<span>    <span class="va">vcf_url</span>,</span>
+<span>    <span class="va">s3_vcf_uri</span>,</span>
 <span>    region <span class="op">=</span> <span class="st">"chr22:16050000-16050500"</span>,</span>
 <span>    batch_size <span class="op">=</span> <span class="fl">1000L</span></span>
 <span><span class="op">)</span></span>
@@ -547,9 +546,13 @@
 <span><span class="co"># Convert to data.frame</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array_stream.html" class="external-link">convert_array_stream</a></span><span class="op">(</span><span class="va">stream</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in vcf_open_arrow(vcf_url, region = "chr22:16050000-16050500", batch_size = 1000L) : </span></span>
-<span><span class="co">#&gt;   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz</span></span></code></pre></div>
+<span><span class="co">#&gt;   CHROM      POS REF                  ALT</span></span>
+<span><span class="co">#&gt; 1 chr22 16050036   A C        , &lt;NON_REF&gt;</span></span>
+<span><span class="co">#&gt; 2 chr22 16050151   T G        , &lt;NON_REF&gt;</span></span>
+<span><span class="co">#&gt; 3 chr22 16050213   C T        , &lt;NON_REF&gt;</span></span>
+<span><span class="co">#&gt; 4 chr22 16050219   C A        , &lt;NON_REF&gt;</span></span>
+<span><span class="co">#&gt; 5 chr22 16050224   A C        , &lt;NON_REF&gt;</span></span>
+<span><span class="co">#&gt; 6 chr22 16050229   C A        , &lt;NON_REF&gt;</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="command-line-tool">Command-Line Tool<a class="anchor" aria-label="anchor" href="#command-line-tool"></a>
@@ -578,7 +581,7 @@
 <span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.QTR2orDLS7.parquet </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.RAwodkp4ff.parquet </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
@@ -588,7 +591,7 @@
 <span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.QTR2orDLS7.parquet</span></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.RAwodkp4ff.parquet</span></span>
 <span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
 <span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt;   Time: 0.72 seconds</span></span>
@@ -632,7 +635,7 @@
 <span id="cb15-75"><a href="#cb15-75" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.QTR2orDLS7.parquet </span></span>
+<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.RAwodkp4ff.parquet </span></span>
 <span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
 <span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
