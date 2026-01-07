@@ -9,7 +9,12 @@ external installation is required. When compiled with libcurl, remote
 file access from S3, GCS, and HTTP URLs is supported. The package also
 includes experimental support for streaming VCF/BCF to Apache Arrow
 (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with
-export to Parquet format using [duckdb](https://duckdb.org/)
+export to Parquet format using [duckdb](https://duckdb.org/) via either
+the [duckdb nanoarrow
+extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
+or a
+[`bcf_reader`](https://rgenomicsetl.github.io/RBCFTools/inst/duckdb_bcf_reader_extension/)
+extension bundled in this package.
 
 ## Installation
 
@@ -308,13 +313,14 @@ ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 ### Write to Parquet
 
 Using [duckdb](https://github.com/duckdb/duckdb-r) to convert BCF to
-parquet file and perform queries on the parquet file
+parquet file and perform queries on the parquet file. This involve vcf
+stream conversion to data.frame
 
 ``` r
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet
+#> Wrote 11 rows to /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -333,12 +339,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
-#> 2 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
-#> 3 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
-#> 4 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
-#> 5 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
-#> 6 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11
+#> 1 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
+#> 2 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
+#> 3 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
+#> 4 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
+#> 5 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
+#> 6 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -421,7 +427,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpj7Bbxi/file17a367ba416f.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpZhEOD2/file190d6b3a4e5073.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -445,7 +451,7 @@ vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 #> 5     1 13327   G   C
 ```
 
-### DuckDB Extension
+### Query VCF with DuckDB Extension
 
 A native DuckDB extension (`bcf_reader`) for direct SQL queries on
 VCF/BCF files without Arrow conversion overhead:
@@ -488,11 +494,11 @@ DBI::dbGetQuery(con, sprintf("
   ORDER BY n_variants DESC 
   LIMIT 5", vcf_file))
 #>   CHROM n_variants min_pos   max_pos
-#> 1    19     574688  111129  59084689
-#> 2     1     573536  536895 249211717
-#> 3    17     437200    6102  81052229
-#> 4    11     391552  180184 134257519
-#> 5     2     352512   42993 242836470
+#> 1    19      35918  111129  59084689
+#> 2     1      35846  536895 249211717
+#> 3    17      27325    6102  81052229
+#> 4    11      24472  180184 134257519
+#> 5     2      22032   42993 242836470
 
 # Export directly to Parquet
 parquet_out <- tempfile(fileext = ".parquet")
@@ -576,7 +582,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.IhW88VWuBm.parquet 
+#>   Output: /tmp/tmp.j1uBuEpsLm.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -586,7 +592,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.IhW88VWuBm.parquet
+#> Wrote 11 rows to /tmp/tmp.j1uBuEpsLm.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.77 seconds
@@ -630,7 +636,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.IhW88VWuBm.parquet 
+#> Parquet File Information: /tmp/tmp.j1uBuEpsLm.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 

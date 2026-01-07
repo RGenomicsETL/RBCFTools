@@ -51,7 +51,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>, with export to Parquet format using <a href="https://duckdb.org/" class="external-link">duckdb</a></p>
+<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>, with export to Parquet format using <a href="https://duckdb.org/" class="external-link">duckdb</a> via either the <a href="https://duckdb.org/community_extensions/extensions/nanoarrow.html" class="external-link">duckdb nanoarrow extension</a> or a <a href="inst/duckdb_bcf_reader_extension/"><code>bcf_reader</code></a> extension bundled in this package.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -329,12 +329,12 @@
 <div class="section level3">
 <h3 id="write-to-parquet">Write to Parquet<a class="anchor" aria-label="anchor" href="#write-to-parquet"></a>
 </h3>
-<p>Using <a href="https://github.com/duckdb/duckdb-r" class="external-link">duckdb</a> to convert BCF to parquet file and perform queries on the parquet file</p>
+<p>Using <a href="https://github.com/duckdb/duckdb-r" class="external-link">duckdb</a> to convert BCF to parquet file and perform queries on the parquet file. This involve vcf stream conversion to data.frame</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -353,12 +353,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmpj7Bbxi/file17a3672f0976e1.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpZhEOD2/file190d6b2269e62d.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -434,7 +434,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpj7Bbxi/file17a367ba416f.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpZhEOD2/file190d6b3a4e5073.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -456,7 +456,7 @@
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="duckdb-extension">DuckDB Extension<a class="anchor" aria-label="anchor" href="#duckdb-extension"></a>
+<h3 id="query-vcf-with-duckdb-extension">Query VCF with DuckDB Extension<a class="anchor" aria-label="anchor" href="#query-vcf-with-duckdb-extension"></a>
 </h3>
 <p>A native DuckDB extension (<code>bcf_reader</code>) for direct SQL queries on VCF/BCF files without Arrow conversion overhead:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
@@ -497,11 +497,11 @@
 <span><span class="st">  ORDER BY n_variants DESC </span></span>
 <span><span class="st">  LIMIT 5"</span>, <span class="va">vcf_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM n_variants min_pos   max_pos</span></span>
-<span><span class="co">#&gt; 1    19     574688  111129  59084689</span></span>
-<span><span class="co">#&gt; 2     1     573536  536895 249211717</span></span>
-<span><span class="co">#&gt; 3    17     437200    6102  81052229</span></span>
-<span><span class="co">#&gt; 4    11     391552  180184 134257519</span></span>
-<span><span class="co">#&gt; 5     2     352512   42993 242836470</span></span>
+<span><span class="co">#&gt; 1    19      35918  111129  59084689</span></span>
+<span><span class="co">#&gt; 2     1      35846  536895 249211717</span></span>
+<span><span class="co">#&gt; 3    17      27325    6102  81052229</span></span>
+<span><span class="co">#&gt; 4    11      24472  180184 134257519</span></span>
+<span><span class="co">#&gt; 5     2      22032   42993 242836470</span></span>
 <span></span>
 <span><span class="co"># Export directly to Parquet</span></span>
 <span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
@@ -581,7 +581,7 @@
 <span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.IhW88VWuBm.parquet </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.j1uBuEpsLm.parquet </span></span>
 <span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
@@ -591,7 +591,7 @@
 <span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.IhW88VWuBm.parquet</span></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.j1uBuEpsLm.parquet</span></span>
 <span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
 <span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt;   Time: 0.77 seconds</span></span>
@@ -635,7 +635,7 @@
 <span id="cb15-75"><a href="#cb15-75" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.IhW88VWuBm.parquet </span></span>
+<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.j1uBuEpsLm.parquet </span></span>
 <span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
 <span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
