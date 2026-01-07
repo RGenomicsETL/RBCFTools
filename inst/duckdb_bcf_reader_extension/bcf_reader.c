@@ -290,15 +290,13 @@ static void bcf_read_bind(duckdb_bind_info info) {
         return;
     }
     
-    // Get optional region parameter
+    // Get optional region named parameter
     char* region = NULL;
-    if (duckdb_bind_get_parameter_count(info) > 1) {
-        duckdb_value region_val = duckdb_bind_get_parameter(info, 1);
-        if (!duckdb_is_null_value(region_val)) {
-            region = duckdb_get_varchar(region_val);
-        }
-        duckdb_destroy_value(&region_val);
+    duckdb_value region_val = duckdb_bind_get_named_parameter(info, "region");
+    if (region_val && !duckdb_is_null_value(region_val)) {
+        region = duckdb_get_varchar(region_val);
     }
+    if (region_val) duckdb_destroy_value(&region_val);
     
     // Open the file to read header
     htsFile* fp = hts_open(file_path, "r");

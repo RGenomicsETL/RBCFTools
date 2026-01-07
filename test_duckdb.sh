@@ -142,10 +142,12 @@ parquet_count <- dbGetQuery(con, "SELECT COUNT(*) as n FROM variants")$n[1]
 parquet_count_time <- as.numeric(difftime(Sys.time(), parquet_count_start, units = "secs"))
 cat(sprintf("   Result: %d variants (%.4f sec)\n", parquet_count, parquet_count_time))
 
-# Count variants in VCF
+# Count variants in VCF - use a fresh query
 cat("\n1b. Count all variants in VCF:\n")
 vcf_count_start <- Sys.time()
-vcf_count <- dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM bcf_read('%s')", vcf_file))$n[1]
+vcf_count_query <- sprintf("SELECT COUNT(*) as n FROM bcf_read('%s')", vcf_file)
+cat(sprintf("   Query: %s\n", vcf_count_query))
+vcf_count <- dbGetQuery(con, vcf_count_query)$n[1]
 vcf_count_time <- as.numeric(difftime(Sys.time(), vcf_count_start, units = "secs"))
 cat(sprintf("   Result: %d variants (%.4f sec)\n", vcf_count, vcf_count_time))
 
@@ -170,10 +172,9 @@ cat(sprintf("   Time: %.4f sec\n", parquet_perchrom_time))
 
 cat("\n2b. VCF per-chromosome counts:\n")
 vcf_perchrom_start <- Sys.time()
-vcf_perchrom <- dbGetQuery(con, sprintf(
-    "SELECT CHROM, COUNT(*) as n FROM bcf_read('%s') GROUP BY CHROM ORDER BY n DESC LIMIT 5",
-    vcf_file
-))
+vcf_perchrom_query <- sprintf("SELECT CHROM, COUNT(*) as n FROM bcf_read('%s') GROUP BY CHROM ORDER BY n DESC LIMIT 5", vcf_file)
+cat(sprintf("   Query: %s\n", substr(vcf_perchrom_query, 1, 100)), "...\n")
+vcf_perchrom <- dbGetQuery(con, vcf_perchrom_query)
 vcf_perchrom_time <- as.numeric(difftime(Sys.time(), vcf_perchrom_start, units = "secs"))
 print(vcf_perchrom)
 cat(sprintf("   Time: %.4f sec\n", vcf_perchrom_time))
@@ -250,15 +251,10 @@ cat(sprintf("   Result: %d intervals matched, %d total variants (%.4f sec)\n",
            nrow(result_parquet), sum(result_parquet$row_count), parquet_time))
 
 # === Method 2: Query VCF directly via bcf_read() ===
-cat("\n=== Method 2: Direct VCF Query via bcf_read() ===\n")
+cat("\n3b. VCF interval queries (bcf_read with regions):\n")
 vcf_start <- Sys.time()
 
-# Debug: Show a sample interval
-cat(sprintf("Sample interval: chr=%s, start=%d, end=%d\n", 
-           intervals$chrom[1], intervals$start_pos[1], intervals$end_pos[1]))
-
 # Query each interval separately via bcf_read with region parameter
-# Note: bcf_read region syntax is "chr:start-end"
 vcf_counts <- lapply(seq_len(nrow(intervals)), function(i) {
     chr <- intervals$chrom[i]
     start_pos <- intervals$start_pos[i]
@@ -267,8 +263,6 @@ vcf_counts <- lapply(seq_len(nrow(intervals)), function(i) {
     # Create region string for bcf_read
     region_str <- sprintf("%s:%d-%d", chr, start_pos, end_pos)
     
-    # Query this specific region and filter by exact positions
-    # bcf_read region filter may include variants that overlap the boundaries
     tryCatch({
         region_query <- sprintf(
             "SELECT COUNT(*) as n FROM bcf_read('%s', region := '%s') WHERE %s >= %d AND %s <= %d", 
@@ -281,7 +275,6 @@ vcf_counts <- lapply(seq_len(nrow(intervals)), function(i) {
             row_count = as.integer(count_result$n[1])
         )
     }, error = function(e) {
-        # If region query fails, try without region (shouldn't happen but fallback)
         warning(sprintf("Query failed for interval %d (%s): %s", i, region_str, e$message))
         data.frame(
             query_id = intervals$query_id[i],
@@ -291,24 +284,12 @@ vcf_counts <- lapply(seq_len(nrow(intervals)), function(i) {
 })
 
 result_vcf <- do.call(rbind, vcf_counts)
-
-# Debug: Compare first few results
-cat("\nFirst 5 comparisons:\n")
-cat("query_id | parquet_count | vcf_count | chr:start-end\n")
-for (i in 1:min(5, nrow(intervals))) {
-    pq_count <- result_parquet$row_count[result_parquet$query_id == i]
-    vcf_count <- result_vcf$row_count[result_vcf$query_id == i]
-    cat(sprintf("%8d | %13d | %9d | %s:%d-%d\n", 
-               i, pq_count, vcf_count,
-               intervals$chrom[i], intervals$start_pos[i], intervals$end_pos[i]))
-}
-
 vcf_end <- Sys.time()
 vcf_time <- as.numeric(difftime(vcf_end, vcf_start, units = "secs"))
 
-cat(sprintf("\nVCF direct query time: %.4f seconds\n", vcf_time))
-cat(sprintf("Total matches: %d\n", sum(result_vcf$row_count)))
-cat(sprintf("Queries/second: %.2f\n", nrow(intervals) / vcf_time))
+cat(sprintf("   Result: %d intervals matched, %d total variants (%.4f sec)\n", 
+           nrow(result_vcf), sum(result_vcf$row_count), vcf_time))
+cat(sprintf("   Speedup: %.2fx faster\n\n", vcf_time / parquet_time))
 
 # === Summary ===
 cat("\n\n=== PERFORMANCE COMPARISON SUMMARY ===\n")

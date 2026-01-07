@@ -714,17 +714,28 @@ vcf_to_parquet_duckdb_parallel <- function(
   }
 
   # Get contigs from header
-  contigs <- vcf_get_contigs(input_file)
-  if (length(contigs) == 0) {
+  all_contigs <- vcf_get_contigs(input_file)
+  if (length(all_contigs) == 0) {
     stop("No contigs found in VCF header")
   }
+
+  # Filter to only contigs with variants (use vcf_count_per_contig)
+  contig_counts <- vcf_count_per_contig(input_file)
+  contigs_with_data <- names(contig_counts)[contig_counts > 0]
+
+  if (length(contigs_with_data) == 0) {
+    stop("No contigs have variants")
+  }
+
+  contigs <- contigs_with_data
 
   # Limit threads to number of contigs
   threads <- min(threads, length(contigs))
 
   message(sprintf(
-    "Processing %d contigs using %d threads (DuckDB mode)",
+    "Processing %d contigs (out of %d in header) using %d threads (DuckDB mode)",
     length(contigs),
+    length(all_contigs),
     threads
   ))
 
