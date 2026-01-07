@@ -7,25 +7,25 @@ library(tinytest)
 # =============================================================================
 
 skip_if_no_duckdb <- function() {
-    if (!requireNamespace("duckdb", quietly = TRUE)) {
-        exit_file("duckdb package not available")
-    }
-    if (!requireNamespace("DBI", quietly = TRUE)) {
-        exit_file("DBI package not available")
-    }
+  if (!requireNamespace("duckdb", quietly = TRUE)) {
+    exit_file("duckdb package not available")
+  }
+  if (!requireNamespace("DBI", quietly = TRUE)) {
+    exit_file("DBI package not available")
+  }
 }
 
 skip_if_no_duckdb()
 
 # Get test VCF file
 test_vcf <- system.file(
-    "extdata",
-    "1000G_3samples.vcf.gz",
-    package = "RBCFTools"
+  "extdata",
+  "1000G_3samples.vcf.gz",
+  package = "RBCFTools"
 )
 
 if (!file.exists(test_vcf) || !nzchar(test_vcf)) {
-    exit_file("1000G_3samples.vcf.gz not found")
+  exit_file("1000G_3samples.vcf.gz not found")
 }
 
 # =============================================================================
@@ -34,12 +34,12 @@ if (!file.exists(test_vcf) || !nzchar(test_vcf)) {
 
 src_dir <- RBCFTools:::bcf_reader_source_dir()
 expect_true(
-    dir.exists(src_dir),
-    info = "bcf_reader_source_dir should return existing directory"
+  dir.exists(src_dir),
+  info = "bcf_reader_source_dir should return existing directory"
 )
 expect_true(
-    file.exists(file.path(src_dir, "bcf_reader.c")),
-    info = "Source directory should contain bcf_reader.c"
+  file.exists(file.path(src_dir, "bcf_reader.c")),
+  info = "Source directory should contain bcf_reader.c"
 )
 
 # =============================================================================
@@ -48,34 +48,34 @@ expect_true(
 
 temp_build_dir <- file.path(tempdir(), "bcf_reader_test_copy")
 if (dir.exists(temp_build_dir)) {
-    unlink(temp_build_dir, recursive = TRUE)
+  unlink(temp_build_dir, recursive = TRUE)
 }
 
 expect_silent(
-    bcf_reader_copy_source(temp_build_dir)
+  bcf_reader_copy_source(temp_build_dir)
 )
 expect_true(
-    dir.exists(temp_build_dir),
-    info = "Destination directory should be created"
+  dir.exists(temp_build_dir),
+  info = "Destination directory should be created"
 )
 expect_true(
-    file.exists(file.path(temp_build_dir, "bcf_reader.c")),
-    info = "bcf_reader.c should be copied"
+  file.exists(file.path(temp_build_dir, "bcf_reader.c")),
+  info = "bcf_reader.c should be copied"
 )
 expect_true(
-    file.exists(file.path(temp_build_dir, "vcf_types.h")),
-    info = "vcf_types.h should be copied"
+  file.exists(file.path(temp_build_dir, "vcf_types.h")),
+  info = "vcf_types.h should be copied"
 )
 expect_true(
-    file.exists(file.path(temp_build_dir, "Makefile")),
-    info = "Makefile should be copied"
+  file.exists(file.path(temp_build_dir, "Makefile")),
+  info = "Makefile should be copied"
 )
 
 # Test error when dest_dir is NULL
 expect_error(
-    bcf_reader_copy_source(NULL),
-    pattern = "dest_dir must be specified",
-    info = "Should error when dest_dir is NULL"
+  bcf_reader_copy_source(NULL),
+  pattern = "dest_dir must be specified",
+  info = "Should error when dest_dir is NULL"
 )
 
 # Clean up
@@ -87,38 +87,38 @@ unlink(temp_build_dir, recursive = TRUE)
 
 build_dir <- file.path(tempdir(), "bcf_reader_build_test")
 if (dir.exists(build_dir)) {
-    unlink(build_dir, recursive = TRUE)
+  unlink(build_dir, recursive = TRUE)
 }
 
 # Build extension
 expect_message(
-    ext_path <- bcf_reader_build(build_dir, verbose = TRUE),
-    pattern = "Building bcf_reader extension",
-    info = "Build should show progress message"
+  ext_path <- bcf_reader_build(build_dir, verbose = TRUE),
+  pattern = "Building bcf_reader extension",
+  info = "Build should show progress message"
 )
 
 expect_true(
-    file.exists(ext_path),
-    info = "Extension file should exist after build"
+  file.exists(ext_path),
+  info = "Extension file should exist after build"
 )
 
 expect_true(
-    grepl("bcf_reader.duckdb_extension$", ext_path),
-    info = "Extension should have correct name"
+  grepl("bcf_reader.duckdb_extension$", ext_path),
+  info = "Extension should have correct name"
 )
 
 # Test force rebuild
 expect_message(
-    ext_path2 <- bcf_reader_build(build_dir, force = FALSE, verbose = TRUE),
-    pattern = "already exists",
-    info = "Should skip rebuild when extension exists and force=FALSE"
+  ext_path2 <- bcf_reader_build(build_dir, force = FALSE, verbose = TRUE),
+  pattern = "already exists",
+  info = "Should skip rebuild when extension exists and force=FALSE"
 )
 
 # Test error when build_dir is NULL
 expect_error(
-    bcf_reader_build(NULL),
-    pattern = "build_dir must be specified",
-    info = "Should error when build_dir is NULL"
+  bcf_reader_build(NULL),
+  pattern = "build_dir must be specified",
+  info = "Should error when build_dir is NULL"
 )
 
 # =============================================================================
@@ -128,22 +128,22 @@ expect_error(
 # Test connection
 con <- vcf_duckdb_connect(ext_path)
 expect_true(
-    inherits(con, "duckdb_connection"),
-    info = "Should return a DuckDB connection"
+  inherits(con, "duckdb_connection"),
+  info = "Should return a DuckDB connection"
 )
 
 # Test error when extension_path is NULL
 expect_error(
-    vcf_duckdb_connect(NULL),
-    pattern = "extension_path must be specified",
-    info = "Should error when extension_path is NULL"
+  vcf_duckdb_connect(NULL),
+  pattern = "extension_path must be specified",
+  info = "Should error when extension_path is NULL"
 )
 
 # Test error when extension doesn't exist
 expect_error(
-    vcf_duckdb_connect("/nonexistent/path/extension.duckdb_extension"),
-    pattern = "Extension not found",
-    info = "Should error when extension doesn't exist"
+  vcf_duckdb_connect("/nonexistent/path/extension.duckdb_extension"),
+  pattern = "Extension not found",
+  info = "Should error when extension doesn't exist"
 )
 
 # =============================================================================
@@ -153,70 +153,70 @@ expect_error(
 # Basic query - all variants
 result <- vcf_query_duckdb(test_vcf, extension_path = ext_path)
 expect_true(
-    is.data.frame(result),
-    info = "vcf_query_duckdb should return data frame"
+  is.data.frame(result),
+  info = "vcf_query_duckdb should return data frame"
 )
 expect_true(
-    nrow(result) > 0,
-    info = "Should have at least one variant"
+  nrow(result) > 0,
+  info = "Should have at least one variant"
 )
 expect_true(
-    all(c("CHROM", "POS", "REF", "ALT") %in% names(result)),
-    info = "Result should have basic VCF columns"
+  all(c("CHROM", "POS", "REF", "ALT") %in% names(result)),
+  info = "Result should have basic VCF columns"
 )
 
 # Count query
 count_result <- vcf_query_duckdb(
-    test_vcf,
-    extension_path = ext_path,
-    query = "SELECT COUNT(*) as n FROM bcf_read('{file}')"
+  test_vcf,
+  extension_path = ext_path,
+  query = "SELECT COUNT(*) as n FROM bcf_read('{file}')"
 )
 expect_true(
-    is.data.frame(count_result),
-    info = "Count query should return data frame"
+  is.data.frame(count_result),
+  info = "Count query should return data frame"
 )
 expect_true(
-    "n" %in% names(count_result),
-    info = "Count query should have n column"
+  "n" %in% names(count_result),
+  info = "Count query should have n column"
 )
 expect_true(
-    count_result$n[1] > 0,
-    info = "Should have positive count"
+  count_result$n[1] > 0,
+  info = "Should have positive count"
 )
 
 # Filter query
 filter_result <- vcf_query_duckdb(
-    test_vcf,
-    extension_path = ext_path,
-    query = "SELECT CHROM, POS FROM bcf_read('{file}') LIMIT 5"
+  test_vcf,
+  extension_path = ext_path,
+  query = "SELECT CHROM, POS FROM bcf_read('{file}') LIMIT 5"
 )
 expect_true(
-    nrow(filter_result) <= 5,
-    info = "LIMIT 5 should return at most 5 rows"
+  nrow(filter_result) <= 5,
+  info = "LIMIT 5 should return at most 5 rows"
 )
 expect_true(
-    all(c("CHROM", "POS") %in% names(filter_result)),
-    info = "Should have requested columns"
+  all(c("CHROM", "POS") %in% names(filter_result)),
+  info = "Should have requested columns"
 )
 
 # Test with existing connection
 result_con <- vcf_query_duckdb(test_vcf, con = con)
 expect_true(
-    is.data.frame(result_con),
-    info = "Should work with existing connection"
+  is.data.frame(result_con),
+  info = "Should work with existing connection"
 )
 
 # Test error cases
 expect_error(
-    vcf_query_duckdb("/nonexistent/file.vcf", extension_path = ext_path),
-    pattern = "File not found",
-    info = "Should error on non-existent file"
+  vcf_query_duckdb("/nonexistent/file.vcf", extension_path = ext_path),
+  pattern = "File not found",
+  info = "Should error on non-existent file"
 )
 
 expect_error(
-    vcf_query_duckdb(test_vcf, extension_path = NULL, con = NULL),
-    pattern = "Either extension_path or con must be provided",
-    info = "Should error when both extension_path and con are NULL"
+  vcf_query_duckdb(test_vcf, extension_path = NULL, con = NULL),
+  pattern = "Either extension_path or con must be provided",
+  info = "Should error when both extension_path and con are NULL"
 )
 
 # =============================================================================
@@ -225,20 +225,20 @@ expect_error(
 
 count <- vcf_count_duckdb(test_vcf, extension_path = ext_path)
 expect_true(
-    is.integer(count),
-    info = "vcf_count_duckdb should return integer"
+  is.integer(count),
+  info = "vcf_count_duckdb should return integer"
 )
 expect_true(
-    count > 0,
-    info = "Should have positive variant count"
+  count > 0,
+  info = "Should have positive variant count"
 )
 
 # Test with connection
 count_con <- vcf_count_duckdb(test_vcf, con = con)
 expect_equal(
-    count,
-    count_con,
-    info = "Count should be same with extension_path or con"
+  count,
+  count_con,
+  info = "Count should be same with extension_path or con"
 )
 
 # =============================================================================
@@ -247,35 +247,35 @@ expect_equal(
 
 schema <- vcf_schema_duckdb(test_vcf, extension_path = ext_path)
 expect_true(
-    is.data.frame(schema),
-    info = "vcf_schema_duckdb should return data frame"
+  is.data.frame(schema),
+  info = "vcf_schema_duckdb should return data frame"
 )
 expect_true(
-    all(c("column_name", "column_type") %in% names(schema)),
-    info = "Schema should have column_name and column_type"
+  all(c("column_name", "column_type") %in% names(schema)),
+  info = "Schema should have column_name and column_type"
 )
 expect_true(
-    nrow(schema) > 0,
-    info = "Should have at least one column"
+  nrow(schema) > 0,
+  info = "Should have at least one column"
 )
 expect_true(
-    "CHROM" %in% schema$column_name,
-    info = "Schema should include CHROM column"
+  "CHROM" %in% schema$column_name,
+  info = "Schema should include CHROM column"
 )
 
 # Test with connection
 schema_con <- vcf_schema_duckdb(test_vcf, con = con)
 expect_equal(
-    schema$column_name,
-    schema_con$column_name,
-    info = "Schema should be same with extension_path or con"
+  schema$column_name,
+  schema_con$column_name,
+  info = "Schema should be same with extension_path or con"
 )
 
 # Test error cases
 expect_error(
-    vcf_schema_duckdb("/nonexistent/file.vcf", extension_path = ext_path),
-    pattern = "File not found",
-    info = "Should error on non-existent file"
+  vcf_schema_duckdb("/nonexistent/file.vcf", extension_path = ext_path),
+  pattern = "File not found",
+  info = "Should error on non-existent file"
 )
 
 # =============================================================================
@@ -284,21 +284,21 @@ expect_error(
 
 samples <- vcf_samples_duckdb(test_vcf, extension_path = ext_path)
 expect_true(
-    is.character(samples),
-    info = "vcf_samples_duckdb should return character vector"
+  is.character(samples),
+  info = "vcf_samples_duckdb should return character vector"
 )
 # Note: test_deep_variant.vcf.gz has sample data
 expect_true(
-    length(samples) >= 0,
-    info = "Should return sample names (or empty if no samples)"
+  length(samples) >= 0,
+  info = "Should return sample names (or empty if no samples)"
 )
 
 # Test with connection
 samples_con <- vcf_samples_duckdb(test_vcf, con = con)
 expect_equal(
-    samples,
-    samples_con,
-    info = "Samples should be same with extension_path or con"
+  samples,
+  samples_con,
+  info = "Samples should be same with extension_path or con"
 )
 
 # =============================================================================
@@ -307,35 +307,35 @@ expect_equal(
 
 summary <- vcf_summary_duckdb(test_vcf, extension_path = ext_path)
 expect_true(
-    is.list(summary),
-    info = "vcf_summary_duckdb should return a list"
+  is.list(summary),
+  info = "vcf_summary_duckdb should return a list"
 )
 expect_true(
-    all(
-        c("total_variants", "n_samples", "samples", "variants_per_chrom") %in%
-            names(summary)
-    ),
-    info = "Summary should have expected fields"
+  all(
+    c("total_variants", "n_samples", "samples", "variants_per_chrom") %in%
+      names(summary)
+  ),
+  info = "Summary should have expected fields"
 )
 expect_true(
-    is.integer(summary$total_variants) || is.numeric(summary$total_variants),
-    info = "total_variants should be numeric"
+  is.integer(summary$total_variants) || is.numeric(summary$total_variants),
+  info = "total_variants should be numeric"
 )
 expect_true(
-    summary$total_variants > 0,
-    info = "Should have positive variant count"
+  summary$total_variants > 0,
+  info = "Should have positive variant count"
 )
 expect_true(
-    is.data.frame(summary$variants_per_chrom),
-    info = "variants_per_chrom should be data frame"
+  is.data.frame(summary$variants_per_chrom),
+  info = "variants_per_chrom should be data frame"
 )
 
 # Test with connection
 summary_con <- vcf_summary_duckdb(test_vcf, con = con)
 expect_equal(
-    summary$total_variants,
-    summary_con$total_variants,
-    info = "Summary should be same with extension_path or con"
+  summary$total_variants,
+  summary_con$total_variants,
+  info = "Summary should be same with extension_path or con"
 )
 
 # =============================================================================
@@ -345,72 +345,72 @@ expect_equal(
 parquet_out <- tempfile(fileext = ".parquet")
 
 expect_silent(
-    vcf_to_parquet_duckdb(
-        test_vcf,
-        parquet_out,
-        extension_path = ext_path,
-        compression = "zstd"
-    ),
-    info = "vcf_to_parquet_duckdb should run without errors"
+  vcf_to_parquet_duckdb(
+    test_vcf,
+    parquet_out,
+    extension_path = ext_path,
+    compression = "zstd"
+  ),
+  info = "vcf_to_parquet_duckdb should run without errors"
 )
 
 expect_true(
-    file.exists(parquet_out),
-    info = "Parquet file should be created"
+  file.exists(parquet_out),
+  info = "Parquet file should be created"
 )
 
 expect_true(
-    file.size(parquet_out) > 0,
-    info = "Parquet file should not be empty"
+  file.size(parquet_out) > 0,
+  info = "Parquet file should not be empty"
 )
 
 # Test with column selection
 parquet_slim <- tempfile(fileext = ".parquet")
 vcf_to_parquet_duckdb(
-    test_vcf,
-    parquet_slim,
-    extension_path = ext_path,
-    columns = c("CHROM", "POS", "REF", "ALT")
+  test_vcf,
+  parquet_slim,
+  extension_path = ext_path,
+  columns = c("CHROM", "POS", "REF", "ALT")
 )
 expect_true(
-    file.exists(parquet_slim),
-    info = "Parquet file with selected columns should be created"
+  file.exists(parquet_slim),
+  info = "Parquet file with selected columns should be created"
 )
 
 # Verify parquet content can be read back
 if (requireNamespace("duckdb", quietly = TRUE)) {
-    verify_con <- DBI::dbConnect(duckdb::duckdb())
-    parquet_data <- DBI::dbGetQuery(
-        verify_con,
-        sprintf("SELECT * FROM '%s' LIMIT 1", parquet_out)
-    )
-    expect_true(
-        nrow(parquet_data) > 0,
-        info = "Should be able to read parquet file"
-    )
-    DBI::dbDisconnect(verify_con, shutdown = TRUE)
+  verify_con <- DBI::dbConnect(duckdb::duckdb())
+  parquet_data <- DBI::dbGetQuery(
+    verify_con,
+    sprintf("SELECT * FROM '%s' LIMIT 1", parquet_out)
+  )
+  expect_true(
+    nrow(parquet_data) > 0,
+    info = "Should be able to read parquet file"
+  )
+  DBI::dbDisconnect(verify_con, shutdown = TRUE)
 }
 
 # Test error cases
 expect_error(
-    vcf_to_parquet_duckdb(
-        "/nonexistent/file.vcf",
-        parquet_out,
-        extension_path = ext_path
-    ),
-    pattern = "Input file not found",
-    info = "Should error on non-existent input file"
+  vcf_to_parquet_duckdb(
+    "/nonexistent/file.vcf",
+    parquet_out,
+    extension_path = ext_path
+  ),
+  pattern = "Input file not found",
+  info = "Should error on non-existent input file"
 )
 
 expect_error(
-    vcf_to_parquet_duckdb(
-        test_vcf,
-        parquet_out,
-        extension_path = NULL,
-        con = NULL
-    ),
-    pattern = "Either extension_path or con must be provided",
-    info = "Should error when both extension_path and con are NULL"
+  vcf_to_parquet_duckdb(
+    test_vcf,
+    parquet_out,
+    extension_path = NULL,
+    con = NULL
+  ),
+  pattern = "Either extension_path or con must be provided",
+  info = "Should error when both extension_path and con are NULL"
 )
 
 # Clean up parquet files
