@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![R-universe version](https://RGenomicsETL.r-universe.dev/RBCFTools/badges/version)](https://RGenomicsETL.r-universe.dev/RBCFTools)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/)
+RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the  [duckdb nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
 
 ## Installation
 
@@ -159,7 +159,7 @@ ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 
 ### Write to Parquet
 
-Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet file and perform queries on the parquet file
+Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet file and perform queries on the parquet file. This involve vcf stream conversion to data.frame
 
 ```{r parquet, eval=TRUE}
 
@@ -204,7 +204,7 @@ vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
-### DuckDB Extension
+###  Query VCF with  DuckDB Extension
 
 A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead:
 

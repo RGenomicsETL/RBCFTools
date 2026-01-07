@@ -443,6 +443,10 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #' @param columns Optional character vector of columns to include. NULL for all.
 #' @param region Optional genomic region to export (requires index)
 #' @param compression Parquet compression: "snappy", "zstd", "gzip", or "none"
+#' @param row_group_size Number of rows per row group (default: 100000)
+#' @param threads Number of parallel threads for processing (default: 1).
+#'   When threads > 1 and file is indexed, uses parallel processing by splitting
+#'   work across chromosomes/contigs. See \code{\link{vcf_to_parquet_duckdb_parallel}}.
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
 #' @return Invisible path to output file
@@ -463,6 +467,9 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #' vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
 #'     region = "chr22"
 #' )
+#'
+#' # Parallel mode for whole-genome VCF (requires index)
+#' vcf_to_parquet_duckdb("wgs.vcf.gz", "wgs.parquet", ext_path, threads = 8)
 #' }
 vcf_to_parquet_duckdb <- function(
   input_file,
@@ -471,6 +478,8 @@ vcf_to_parquet_duckdb <- function(
   columns = NULL,
   region = NULL,
   compression = "zstd",
+  row_group_size = 100000L,
+  threads = 1L,
   con = NULL
 ) {
   if (!file.exists(input_file)) {
@@ -482,6 +491,20 @@ vcf_to_parquet_duckdb <- function(
 
   input_file <- normalizePath(input_file, mustWork = TRUE)
   output_file <- normalizePath(output_file, mustWork = FALSE)
+
+  # Use parallel processing if threads > 1
+  if (threads > 1) {
+    return(vcf_to_parquet_duckdb_parallel(
+      input_file = input_file,
+      output_file = output_file,
+      extension_path = extension_path,
+      threads = threads,
+      compression = compression,
+      row_group_size = row_group_size,
+      columns = columns,
+      con = con
+    ))
+  }
 
   # Build select clause
   select_clause <- if (is.null(columns)) {
@@ -501,13 +524,17 @@ vcf_to_parquet_duckdb <- function(
     bcf_read_call <- sprintf("bcf_read('%s')", input_file)
   }
 
-  # Build COPY statement
+  # Map compression name to DuckDB format
+  duckdb_compression <- toupper(compression)
+
+  # Build COPY statement with row_group_size
   sql <- sprintf(
-    "COPY (SELECT %s FROM %s) TO '%s' (FORMAT PARQUET, COMPRESSION '%s')",
+    "COPY (SELECT %s FROM %s) TO '%s' (FORMAT PARQUET, COMPRESSION '%s', ROW_GROUP_SIZE %d)",
     select_clause,
     bcf_read_call,
     output_file,
-    compression
+    duckdb_compression,
+    as.integer(row_group_size)
   )
 
   own_con <- is.null(con)
@@ -594,4 +621,233 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
     samples = samples,
     variants_per_chrom = per_chrom
   )
+}
+
+#' Parallel VCF to Parquet conversion using DuckDB
+#'
+#' Processes VCF/BCF file in parallel by splitting work across chromosomes/contigs
+#' using the DuckDB bcf_reader extension. Requires an indexed file. Each thread
+#' processes a different chromosome, then results are merged into a single Parquet file.
+#'
+#' @param input_file Path to input VCF/BCF file (must be indexed)
+#' @param output_file Path for output Parquet file
+#' @param extension_path Path to the bcf_reader.duckdb_extension file.
+#' @param threads Number of parallel threads (default: auto-detect)
+#' @param compression Parquet compression codec
+#' @param row_group_size Row group size
+#' @param columns Optional character vector of columns to include
+#' @param con Optional existing DuckDB connection (with extension loaded).
+#'
+#' @return Invisibly returns the output path
+#'
+#' @details
+#' This function:
+#' 1. Checks for index (required for parallel processing)
+#' 2. Extracts contig names from header
+#' 3. Processes each contig in parallel using multiple R processes
+#' 4. Writes each contig to a temporary Parquet file
+#' 5. Merges all temporary files into final output using DuckDB
+#'
+#' Contigs that return no variants are skipped automatically.
+#'
+#' @examples
+#' \dontrun{
+#' ext_path <- bcf_reader_build(tempdir())
+#'
+#' # Use 8 threads
+#' vcf_to_parquet_duckdb_parallel("wgs.vcf.gz", "wgs.parquet", ext_path, threads = 8)
+#'
+#' # With specific columns
+#' vcf_to_parquet_duckdb_parallel(
+#'     "wgs.vcf.gz", "wgs.parquet", ext_path,
+#'     threads = 16,
+#'     columns = c("CHROM", "POS", "REF", "ALT")
+#' )
+#' }
+#'
+#' @export
+vcf_to_parquet_duckdb_parallel <- function(
+  input_file,
+  output_file,
+  extension_path = NULL,
+  threads = parallel::detectCores(),
+  compression = "zstd",
+  row_group_size = 100000L,
+  columns = NULL,
+  con = NULL
+) {
+  if (!requireNamespace("parallel", quietly = TRUE)) {
+    stop("Package 'parallel' required for parallel processing")
+  }
+
+  # Check that we have extension_path for workers (con won't work across processes)
+  if (is.null(extension_path)) {
+    if (!is.null(con)) {
+      stop(
+        "Parallel processing requires extension_path parameter. ",
+        "Shared connections cannot be used across processes.",
+        call. = FALSE
+      )
+    }
+    stop(
+      "extension_path must be provided for parallel processing",
+      call. = FALSE
+    )
+  }
+
+  input_file <- normalizePath(input_file, mustWork = TRUE)
+  output_file <- normalizePath(output_file, mustWork = FALSE)
+
+  # Check for index
+  has_idx <- vcf_has_index(input_file)
+  if (!has_idx) {
+    warning("No index found. Falling back to single-threaded mode.")
+    return(vcf_to_parquet_duckdb(
+      input_file = input_file,
+      output_file = output_file,
+      extension_path = extension_path,
+      columns = columns,
+      compression = compression,
+      row_group_size = row_group_size,
+      threads = 1
+    ))
+  }
+
+  # Get contigs from header
+  contigs <- vcf_get_contigs(input_file)
+  if (length(contigs) == 0) {
+    stop("No contigs found in VCF header")
+  }
+
+  # Limit threads to number of contigs
+  threads <- min(threads, length(contigs))
+
+  message(sprintf(
+    "Processing %d contigs using %d threads (DuckDB mode)",
+    length(contigs),
+    threads
+  ))
+
+  # If only 1 contig or 1 thread, use single-threaded mode
+  if (length(contigs) == 1 || threads == 1) {
+    return(vcf_to_parquet_duckdb(
+      input_file = input_file,
+      output_file = output_file,
+      extension_path = extension_path,
+      columns = columns,
+      compression = compression,
+      row_group_size = row_group_size,
+      threads = 1
+    ))
+  }
+
+  # Create temp directory for per-contig files
+  temp_dir <- tempfile("vcf_duckdb_parallel_")
+  dir.create(temp_dir, recursive = TRUE)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+
+  # Map compression name
+  duckdb_compression <- toupper(compression)
+
+  # Process each contig
+  process_contig <- function(
+    i,
+    vcf_file,
+    out_dir,
+    contigs_list,
+    ext_path,
+    compression_codec,
+    rg_size,
+    cols
+  ) {
+    contig <- contigs_list[i]
+    temp_file <- file.path(out_dir, sprintf("contig_%04d.parquet", i))
+
+    tryCatch(
+      {
+        # Process this contig using vcf_to_parquet_duckdb
+        vcf_to_parquet_duckdb(
+          input_file = vcf_file,
+          output_file = temp_file,
+          extension_path = ext_path,
+          columns = cols,
+          region = contig,
+          compression = compression_codec,
+          row_group_size = rg_size,
+          threads = 1
+        )
+
+        # Return temp file path only if it exists and has content
+        if (file.exists(temp_file) && file.size(temp_file) > 0) {
+          return(temp_file)
+        }
+        return(NULL)
+      },
+      error = function(e) {
+        # Silently skip failed contigs
+        return(NULL)
+      }
+    )
+  }
+
+  # Run in parallel
+  if (.Platform$OS.type == "windows") {
+    cl <- parallel::makeCluster(threads)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterEvalQ(cl, library(RBCFTools))
+    temp_files <- parallel::parLapply(
+      cl,
+      seq_along(contigs),
+      process_contig,
+      vcf_file = input_file,
+      out_dir = temp_dir,
+      contigs_list = contigs,
+      ext_path = extension_path,
+      compression_codec = compression,
+      rg_size = row_group_size,
+      cols = columns
+    )
+  } else {
+    temp_files <- parallel::mclapply(
+      seq_along(contigs),
+      process_contig,
+      vcf_file = input_file,
+      out_dir = temp_dir,
+      contigs_list = contigs,
+      ext_path = extension_path,
+      compression_codec = compression,
+      rg_size = row_group_size,
+      cols = columns,
+      mc.cores = threads
+    )
+  }
+
+  # Filter out NULLs and keep only successful file paths
+  temp_files <- Filter(Negate(is.null), temp_files)
+  temp_files <- unlist(temp_files, use.names = FALSE)
+  temp_files <- as.character(temp_files)
+
+  # Keep files that exist and have content
+  if (length(temp_files) > 0) {
+    temp_files <- temp_files[
+      nzchar(temp_files) &
+        file.exists(temp_files) &
+        file.size(temp_files) > 0
+    ]
+  }
+
+  if (length(temp_files) == 0) {
+    stop("No variants found in any contig")
+  }
+
+  # Merge all temp files using DuckDB
+  message("Merging temporary Parquet files... to ", output_file)
+  merge_parquet_files(
+    temp_files,
+    output_file,
+    duckdb_compression,
+    row_group_size
+  )
+
+  invisible(output_file)
 }
