@@ -1,3 +1,4 @@
+^test_duckdb\.sh$
 ^test\.sh$
 ^.*tbi$
 ^.*csi$

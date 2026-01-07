@@ -1,5 +1,7 @@
 # RBCFTools 1.23-0.0.0.9000 (development version)
 
+- Parallel (contig based) duckdb extenstion based parquet convertor
+
 - reflect htslib/bcftools version in package version
 
 - **DuckDB bcf_reader extension**: Native DuckDB table function for querying VCF/BCF files directly.
