@@ -470,8 +470,8 @@ expect_true(
 
 unlink(parquet_threaded)
 
-# Test with threads > 1 on unindexed file (should fall back to single-threaded)
-# Note: test_vcf might not have an index, so this tests the fallback behavior
+# Test with threads > 1 on indexed file (should use parallel processing)
+# 1000G_3samples.vcf.gz has an index file (.tbi)
 parquet_multi <- tempfile(fileext = ".parquet")
 
 expect_message(
@@ -481,7 +481,7 @@ expect_message(
     extension_path = ext_path,
     threads = 2L
   ),
-  pattern = "No index found|Processing.*contigs",
+  pattern = "Processing.*contigs",
   info = "Should show message when processing with threads parameter"
 )
 

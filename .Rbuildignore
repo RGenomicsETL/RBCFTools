@@ -1,7 +1,7 @@
 ^test_duckdb\.sh$
 ^test\.sh$
-^.*tbi$
-^.*csi$
+^[^/]*\.tbi$
+^[^/]*\.csi$
 ^README.Rmd$
 ^README.html$
 ^r-svn/.*$
