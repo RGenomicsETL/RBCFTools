@@ -139,13 +139,13 @@ setup_hts_env()
 # Build S3 URL for 1000 Genomes cohort VCF
 s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
 s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
-vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
-vcf_url <- paste0(s3_base, s3_path, vcf_file)
+s3_vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
+s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 
 # Query a small region (chr22:20000000-20100000) and count variants
 result <- system2(
   bcftools_path(),
-  args = c("view", "-H", "-r", "chr22:20000000-20100000", vcf_url),
+  args = c("view", "-H", "-r", "chr22:20000000-20100000", s3_vcf_uri),
   stdout = TRUE,
   stderr = FALSE
 )
@@ -325,7 +325,7 @@ parquet file and perform queries on the parquet file
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmprWKiVc/file11c0621437e420.parquet
+#> Wrote 11 rows to /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -344,12 +344,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
-#> 2 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
-#> 3 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
-#> 4 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
-#> 5 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
-#> 6 /tmp/RtmprWKiVc/file11c0621437e420.parquet            0                 11
+#> 1 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
+#> 2 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
+#> 3 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
+#> 4 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
+#> 5 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
+#> 6 /tmp/Rtmp9TaM5Z/file11ce03734305e1.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -432,7 +432,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmprWKiVc/file11c0624bf1a92a.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmp9TaM5Z/file11ce0337f83ed4.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -540,10 +540,9 @@ DBI::dbDisconnect(con)
 Stream remote VCF region directly to Arrow from S3
 
 ``` r
-try({
-vcf_url <- paste0(s3_base, s3_path, vcf_file)
+s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 stream <- vcf_open_arrow(
-    vcf_url,
+    s3_vcf_uri,
     region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
@@ -551,9 +550,13 @@ stream <- vcf_open_arrow(
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
-})
-#> Error in vcf_open_arrow(vcf_url, region = "chr22:16050000-16050500", batch_size = 1000L) : 
-#>   Failed to initialize VCF stream: Failed to open file: s3://1000genomes-dragen-v3.7.6/data/cohorts/gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort//usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz
+#>   CHROM      POS REF                  ALT
+#> 1 chr22 16050036   A C        , <NON_REF>
+#> 2 chr22 16050151   T G        , <NON_REF>
+#> 3 chr22 16050213   C T        , <NON_REF>
+#> 4 chr22 16050219   C A        , <NON_REF>
+#> 5 chr22 16050224   A C        , <NON_REF>
+#> 6 chr22 16050229   C A        , <NON_REF>
 ```
 
 ### Command-Line Tool
@@ -585,7 +588,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.QTR2orDLS7.parquet 
+#>   Output: /tmp/tmp.RAwodkp4ff.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -595,7 +598,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.QTR2orDLS7.parquet
+#> Wrote 11 rows to /tmp/tmp.RAwodkp4ff.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.72 seconds
@@ -639,7 +642,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.QTR2orDLS7.parquet 
+#> Parquet File Information: /tmp/tmp.RAwodkp4ff.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 

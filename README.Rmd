@@ -92,13 +92,13 @@ setup_hts_env()
 # Build S3 URL for 1000 Genomes cohort VCF
 s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
 s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
-vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
-vcf_url <- paste0(s3_base, s3_path, vcf_file)
+s3_vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
+s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 
 # Query a small region (chr22:20000000-20100000) and count variants
 result <- system2(
   bcftools_path(),
-  args = c("view", "-H", "-r", "chr22:20000000-20100000", vcf_url),
+  args = c("view", "-H", "-r", "chr22:20000000-20100000", s3_vcf_uri),
   stdout = TRUE,
   stderr = FALSE
 )
@@ -255,10 +255,9 @@ DBI::dbDisconnect(con)
 Stream remote VCF region directly to Arrow from S3
 
 ```{r url-arrow, eval=TRUE}
-try({
-vcf_url <- paste0(s3_base, s3_path, vcf_file)
+s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 stream <- vcf_open_arrow(
-    vcf_url,
+    s3_vcf_uri,
     region = "chr22:16050000-16050500",
     batch_size = 1000L
 )
@@ -266,7 +265,6 @@ stream <- vcf_open_arrow(
 # Convert to data.frame
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
-})
 ```
 
 ### Command-Line Tool
