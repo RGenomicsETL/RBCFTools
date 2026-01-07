@@ -46,6 +46,8 @@
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  compression <span class="op">=</span> <span class="st">"zstd"</span>,</span>
+<span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
+<span>  threads <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -78,6 +80,16 @@
 <dd><p>Parquet compression: "snappy", "zstd", "gzip", or "none"</p></dd>
 
 
+<dt id="arg-row-group-size">row_group_size<a class="anchor" aria-label="anchor" href="#arg-row-group-size"></a></dt>
+<dd><p>Number of rows per row group (default: 100000)</p></dd>
+
+
+<dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
+<dd><p>Number of parallel threads for processing (default: 1).
+When threads &gt; 1 and file is indexed, uses parallel processing by splitting
+work across chromosomes/contigs. See <code><a href="vcf_to_parquet_duckdb_parallel.html">vcf_to_parquet_duckdb_parallel</a></code>.</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
@@ -104,6 +116,9 @@
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="st">"chr22.parquet"</span>, <span class="va">ext_path</span>,</span></span>
 <span class="r-in"><span>    region <span class="op">=</span> <span class="st">"chr22"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Parallel mode for whole-genome VCF (requires index)</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, <span class="va">ext_path</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

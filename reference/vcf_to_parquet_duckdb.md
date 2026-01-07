@@ -12,6 +12,8 @@ vcf_to_parquet_duckdb(
   columns = NULL,
   region = NULL,
   compression = "zstd",
+  row_group_size = 100000L,
+  threads = 1L,
   con = NULL
 )
 ```
@@ -42,6 +44,17 @@ vcf_to_parquet_duckdb(
 
   Parquet compression: "snappy", "zstd", "gzip", or "none"
 
+- row_group_size:
+
+  Number of rows per row group (default: 100000)
+
+- threads:
+
+  Number of parallel threads for processing (default: 1). When threads
+  \> 1 and file is indexed, uses parallel processing by splitting work
+  across chromosomes/contigs. See
+  [`vcf_to_parquet_duckdb_parallel`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.md).
+
 - con:
 
   Optional existing DuckDB connection (with extension loaded).
@@ -68,5 +81,8 @@ vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,
 vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
     region = "chr22"
 )
+
+# Parallel mode for whole-genome VCF (requires index)
+vcf_to_parquet_duckdb("wgs.vcf.gz", "wgs.parquet", ext_path, threads = 8)
 } # }
 ```

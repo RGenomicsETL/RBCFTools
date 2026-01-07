@@ -849,6 +849,8 @@ We should improve the code, avoid copies, add more tests and maybe
   : Write VCF/BCF to Parquet format
 - [`vcf_to_parquet_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.md)
   : Export VCF/BCF to Parquet using DuckDB
+- [`vcf_to_parquet_duckdb_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.md)
+  : Parallel VCF to Parquet conversion using DuckDB
 - [`vcf_to_parquet_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.md)
   : Parallel VCF to Parquet conversion
 
