@@ -149,15 +149,16 @@ vcf_count_per_contig <- function(filename) {
     return(integer(0))
   }
 
-  # Parse output: format is "chr1\t12345\t67890\t..."
-  # We want the contig name (col 1) and record count (col 2)
+  # Parse output: format is "CHROM\tLENGTH\tN_RECORDS"
+  # We want the contig name (col 1) and record count (col 3)
+  # Note: LENGTH can be "." if not in header
   # Use suppressWarnings to avoid NA coercion warnings from malformed lines
   lines <- strsplit(output, "\t")
   contigs <- sapply(lines, function(x) {
     if (length(x) >= 1) x[1] else NA_character_
   })
   counts <- suppressWarnings(as.integer(sapply(lines, function(x) {
-    if (length(x) >= 2) x[2] else NA_character_
+    if (length(x) >= 3) x[3] else NA_character_
   })))
 
   # Keep only valid entries
