@@ -587,7 +587,7 @@ expect_true(
 )
 
 expect_equal(
-  result_path,
+  normalizePath(result_path, mustWork = FALSE),
   normalizePath(parquet_full, mustWork = FALSE),
   info = "Should return output path invisibly"
 )
