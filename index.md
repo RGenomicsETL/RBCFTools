@@ -46,11 +46,11 @@ functions to locate the executables
 
 ``` r
 bcftools_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"
+#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"
 # List all available tools
 bcftools_tools()
 #>  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     
@@ -96,7 +96,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
 ### Feature Constants
@@ -324,7 +324,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet
+#> Wrote 11 rows to /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -343,12 +343,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
-#> 2 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
-#> 3 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
-#> 4 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
-#> 5 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
-#> 6 /tmp/RtmpSsP0QX/file30df3b5ec99b32.parquet            0                 11
+#> 1 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
+#> 2 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
+#> 3 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
+#> 4 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
+#> 5 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
+#> 6 /tmp/RtmpCO4yH0/file1a7ac07dc7f575.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -431,7 +431,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpSsP0QX/file30df3b7a8f0912.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpCO4yH0/file1a7ac01ec6a31e.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -603,22 +603,21 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
-#>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.LwnhrjWya3.parquet 
+#>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
+#>   Output: /tmp/tmp.B4COs0cRrJ.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
 #>   Streaming: FALSE 
 #>   Include INFO: TRUE 
 #>   Include FORMAT: TRUE 
-#> [W::bcf_get_version] Couldn't get VCF version, considering as 4.2
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.LwnhrjWya3.parquet
+#> Wrote 11 rows to /tmp/tmp.B4COs0cRrJ.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.19 seconds
+#>   Time: 0.75 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -659,7 +658,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.LwnhrjWya3.parquet 
+#> Parquet File Information: /tmp/tmp.B4COs0cRrJ.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
