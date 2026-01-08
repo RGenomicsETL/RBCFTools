@@ -32,8 +32,7 @@ RBCFTools is an R package that bundles [bcftools](https://samtools.github.io/bcf
 ### 4. Bundled Native Tools (`inst/bcftools/`, `inst/htslib/`)
 Built during package installation by [configure](../configure) script. Libraries live in `inst/{bcftools,htslib}/lib/` with RPATH set for runtime linking.
 
-### 5. Rust Component (`vcf2parquet/`)
-Separate Rust crate (not actively used by R code) for VCF→Parquet conversion. Has its own [Cargo.toml](../vcf2parquet/Cargo.toml) and CI.
+
 
 ## Build System
 
