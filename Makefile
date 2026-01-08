@@ -62,4 +62,17 @@ rdm: dev-install
 rdm2:
 	R -e "rmarkdown::render('README.Rmd')"
 
-.PHONY: all rd build check install_deps install clean dev-install dev-test dev-preprocess-test dev-parse-test dev-all-tests
+# Docker build targets
+docker-build-release:
+	docker build -f Dockerfile -t rbcftools:$(PKGVERS)-release .
+
+docker-build-dev:
+	docker build --build-arg BUILD_MODE=develop -f Dockerfile -t rbcftools:$(PKGVERS)-dev .
+
+docker-build-all: docker-build-release docker-build-dev
+	@echo "Built both release and dev containers"
+
+docker-clean:
+	docker rmi rbcftools:$(PKGVERS)-release rbcftools:$(PKGVERS)-dev 2>/dev/null || true
+
+.PHONY: all rd build check install_deps install clean dev-install dev-test dev-preprocess-test dev-parse-test dev-all-tests docker-build-release docker-build-dev docker-build-all docker-clean
