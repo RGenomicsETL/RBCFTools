@@ -29,15 +29,13 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install remotes for dependency installation (needed for develop mode)
-RUN Rscript -e "install.packages('remotes')"
-
-# Copy local source for develop mode (ignored in release mode via .dockerignore or conditional)
+# Copy local source (only used in develop mode)
 COPY . /package
 
 # Install RBCFTools based on BUILD_MODE
 RUN if [ "$BUILD_MODE" = "develop" ]; then \
         echo "Installing RBCFTools from local source..." && \
+        Rscript -e "install.packages('remotes')" && \
         Rscript -e "remotes::install_deps('/package', dependencies = TRUE)" && \
         R CMD INSTALL /package; \
     else \

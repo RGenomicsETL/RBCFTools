@@ -76,18 +76,26 @@ cd $HTSLIB_DIR
 
 # Detect WebAssembly/r-wasm environment
 CONFIGURE_EXTRA_FLAGS=""
+HTSLIB_PLUGINS="--enable-plugins"
+HTSLIB_S3="--enable-s3"
+HTSLIB_GCS="--enable-gcs"
+
 if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
     echo "Detected WebAssembly/r-wasm build environment"
+    echo "Disabling plugins, S3, and GCS support (not available in wasm)"
     CONFIGURE_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no"
+    HTSLIB_PLUGINS="--disable-plugins"
+    HTSLIB_S3="--disable-s3"
+    HTSLIB_GCS="--disable-gcs"
 fi
 
 ./configure \
     ${CONFIGURE_ARGS} \
     CFLAGS="${CFLAGS} -Wno-unused-function" \
-    --enable-plugins \
+    ${HTSLIB_PLUGINS} \
     --enable-shared \
-    --enable-s3 \
-    --enable-gcs \
+    ${HTSLIB_S3} \
+    ${HTSLIB_GCS} \
     --prefix="${THISDir}/inst/htslib" \
     ${CONFIGURE_EXTRA_FLAGS}
 

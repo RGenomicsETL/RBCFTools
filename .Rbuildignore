@@ -1,3 +1,4 @@
+^.env$
 ^Dockerfile\.webr-test$
 ^test_duckdb\.sh$
 ^test\.sh$
