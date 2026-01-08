@@ -40,6 +40,46 @@
 <p><strong>Platform</strong>: Unix-like only (Linux, macOS). Windows is NOT supported.</p>
 </div>
 <div class="section level2">
+<h2 id="versioning">Versioning<a class="anchor" aria-label="anchor" href="#versioning"></a></h2>
+<p>Package version follows <code>{htslib_version}-{semver}</code> format: - <strong>1.23</strong> = bundled htslib/bcftools version (track upstream releases) - <strong>0.0.0.9000</strong> = package semver (development); increment per standard R conventions</p>
+<p>Example: <code>1.23-0.0.0.9000</code> means htslib 1.23, package dev version.</p>
+<p>When bumping versions: - Update <code>DESCRIPTION</code> Version field - Add entry to <code>NEWS.md</code> (GNU ChangeLog style, see below)</p>
+</div>
+<div class="section level2">
+<h2 id="code-style--philosophy">Code Style &amp; Philosophy<a class="anchor" aria-label="anchor" href="#code-style--philosophy"></a></h2>
+<p><strong>Keep things simple and robust.</strong> Prefer straightforward solutions over clever ones.</p>
+<div class="section level3">
+<h3 id="r-code">R Code<a class="anchor" aria-label="anchor" href="#r-code"></a></h3>
+<ul><li>
+<strong>Never use <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat()</a></code></strong> for output—use <code><a href="https://rdrr.io/r/base/message.html" class="external-link">message()</a></code> for user feedback, <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code> for issues</li>
+<li>Use <code><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop()</a></code> with <code>call. = FALSE</code> for clean error messages</li>
+<li>Prefer base R over tidyverse dependencies (package is low-dependency)</li>
+<li>Use <code><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf()</a></code> for string formatting, not <code><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0()</a></code> chains</li>
+</ul></div>
+<div class="section level3">
+<h3 id="readmermd">README.Rmd<a class="anchor" aria-label="anchor" href="#readmermd"></a></h3>
+<ul><li>
+<strong>Sober, professional prose</strong>—this is Rmd that renders to GitHub markdown</li>
+<li>Use proper paragraphs, not bullet-heavy lists</li>
+<li>Code chunks should be minimal and illustrative</li>
+<li>Avoid emoji, excessive formatting, or marketing language</li>
+<li>Output is suppressed warnings where appropriate (<code>options(warn = -1)</code>)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="newsmd-gnu-changelog-style">NEWS.md (GNU ChangeLog Style)<a class="anchor" aria-label="anchor" href="#newsmd-gnu-changelog-style"></a></h3>
+<ul><li>One <code># RBCFTools {version}</code> header per release</li>
+<li>Terse, factual bullet points—no marketing prose</li>
+<li>Group related changes; mention function names</li>
+<li>Development versions use <code>(development version)</code> suffix</li>
+</ul><p>Example:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu"># RBCFTools 1.23-0.0.1.9000 (development version)</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="ss">- </span>Add <span class="in">`vcf_count_duckdb()`</span> for fast variant counting via SQL.</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="ss">- </span>Fix region query parsing for BCF files with CSI index.</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="ss">- </span>Parallel Parquet export now respects <span class="in">`threads`</span> parameter.</span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="architecture--key-components">Architecture &amp; Key Components<a class="anchor" aria-label="anchor" href="#architecture--key-components"></a></h2>
 <div class="section level3">
 <h3 id="id_1-native-c-layer-src">1. Native C Layer (<code>src/</code>)<a class="anchor" aria-label="anchor" href="#id_1-native-c-layer-src"></a></h3>
@@ -91,32 +131,32 @@
 </ol></div>
 <div class="section level3">
 <h3 id="key-make-targets-makefile">Key Make Targets (<a href="../Makefile">Makefile</a>)<a class="anchor" aria-label="anchor" href="#key-make-targets-makefile"></a></h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">make</span> build        <span class="co"># Build package tarball</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">make</span> check        <span class="co"># R CMD check --as-cran</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">make</span> install      <span class="co"># Full configure + install</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">make</span> install2     <span class="co"># Skip configure (fast iterative dev)</span></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">make</span> test-dev     <span class="co"># Run tinytest suite after install2</span></span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># Docker</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">make</span> docker-build-release  <span class="co"># Install from R-universe</span></span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">make</span> docker-build-dev      <span class="co"># Install from local source (COPY .)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">make</span> build        <span class="co"># Build package tarball</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">make</span> check        <span class="co"># R CMD check --as-cran</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">make</span> install      <span class="co"># Full configure + install</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">make</span> install2     <span class="co"># Skip configure (fast iterative dev)</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">make</span> test-dev     <span class="co"># Run tinytest suite after install2</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co"># Docker</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">make</span> docker-build-release  <span class="co"># Install from R-universe</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="fu">make</span> docker-build-dev      <span class="co"># Install from local source (COPY .)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="quick-iteration-workflow">Quick Iteration Workflow<a class="anchor" aria-label="anchor" href="#quick-iteration-workflow"></a></h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># After C changes (requires full configure)</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># After R changes only (faster, skips configure)</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">make</span> install2</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">make</span> test-dev</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># After C changes (requires full configure)</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">make</span> install</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># After R changes only (faster, skips configure)</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="fu">make</span> install2</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">make</span> test-dev</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="testing-strategy-insttinytest">Testing Strategy (<code>inst/tinytest/</code>)<a class="anchor" aria-label="anchor" href="#testing-strategy-insttinytest"></a></h2>
 <p>Uses <a href="https://github.com/markvanderloo/tinytest" class="external-link">tinytest</a> (lightweight, no heavy dependencies). Key files: - <strong><a href="../inst/tinytest/test_vcf_arrow.R">test_vcf_arrow.R</a></strong>: Arrow stream conversion, nanoarrow integration - <strong><a href="../inst/tinytest/test_vcf_duckdb.R">test_vcf_duckdb.R</a></strong>: DuckDB extension build, SQL queries, Parquet export - <strong><a href="../inst/tinytest/test_parallel.R">test_parallel.R</a></strong>: Parallel processing with per-chromosome chunks - <strong><a href="../inst/tinytest/test_bcftools_comparison.R">test_bcftools_comparison.R</a></strong>: Validate Arrow output against bcftools CLI</p>
 <p><strong>Run tests</strong>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'tinytest::test_package("RBCFTools")'</span>       <span class="co"># All tests</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'library(RBCFTools); tinytest::run_test_dir("inst/tinytest")'</span>  <span class="co"># After install2</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'tinytest::test_package("RBCFTools")'</span>       <span class="co"># All tests</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">'library(RBCFTools); tinytest::run_test_dir("inst/tinytest")'</span>  <span class="co"># After install2</span></span></code></pre></div>
 <p><strong>Test files</strong> in <code>inst/extdata/</code>: - <code>1000G_3samples.vcf.gz</code> (small multi-sample file) - <code>test_format_simple.vcf</code> (uncompressed, for basic parsing tests)</p>
 </div>
 <div class="section level2">
@@ -147,6 +187,13 @@
 <h3 id="parallel-processing-pattern">Parallel Processing Pattern<a class="anchor" aria-label="anchor" href="#parallel-processing-pattern"></a></h3>
 <p>See <a href="../R/vcf_parallel.R">vcf_parallel.R</a>. Typical flow: 1. Check index with <code><a href="reference/vcf_has_index.html">vcf_has_index()</a></code> 2. Get contigs via <code><a href="reference/vcf_get_contigs.html">vcf_get_contigs()</a></code> 3. Use <code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code> or <code><a href="https://rdrr.io/r/parallel/clusterApply.html" class="external-link">parallel::parLapply()</a></code> to process per-chromosome 4. Combine results (e.g., <code>do.call(rbind, ...)</code> for data frames)</p>
 </div>
+<div class="section level3">
+<h3 id="vepsnpeffannovar-annotations">VEP/SnpEff/ANNOVAR Annotations<a class="anchor" aria-label="anchor" href="#vepsnpeffannovar-annotations"></a></h3>
+<p>Currently, structured annotation fields (INFO/CSQ from VEP, INFO/ANN from SnpEff, etc.) are <strong>not specially parsed</strong>—they remain as pipe-delimited or comma-separated strings in the INFO column.</p>
+<p><strong>Rationale</strong>: These annotations have tool-specific schemas that change between versions. Parsing them requires: 1. Reading the header <code>##INFO=&lt;ID=CSQ,...,Description="...Format: Allele|Consequence|..."&gt;</code> 2. Splitting by <code>|</code> and mapping to column names 3. Handling multiple transcript annotations per variant</p>
+<p><strong>Future options</strong> (if needed): - Use bcftools <code>+split-vep</code> plugin via <code>system2(bcftools_path(), ...)</code> for VEP - Add optional <code>parse_vep = TRUE</code> parameter to Arrow/DuckDB functions - Post-process with DuckDB SQL: <code>SELECT unnest(string_split(INFO_CSQ, '|')) ...</code></p>
+<p>For now, recommend users run <code>bcftools +split-vep</code> upstream or query raw strings with SQL.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="common-tasks">Common Tasks<a class="anchor" aria-label="anchor" href="#common-tasks"></a></h2>
@@ -161,32 +208,32 @@
 </ol></div>
 <div class="section level3">
 <h3 id="building-duckdb-extension">Building DuckDB Extension<a class="anchor" aria-label="anchor" href="#building-duckdb-extension"></a></h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># From R session</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">library</span>(RBCFTools)</span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>build_dir <span class="ot">&lt;-</span> <span class="fu">tempdir</span>()</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">bcf_reader_copy_source</span>(build_dir)  <span class="co"># Copy sources (installed pkg is read-only)</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>ext_path <span class="ot">&lt;-</span> <span class="fu">bcf_reader_build</span>(build_dir)</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># Or use Makefile directly</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>cd inst<span class="sc">/</span>duckdb_bcf_reader_extension</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>make RBCFTOOLS_HTSLIB<span class="ot">=</span><span class="dv">1</span>  <span class="co"># Use package htslib</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># From R session</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">library</span>(RBCFTools)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>build_dir <span class="ot">&lt;-</span> <span class="fu">tempdir</span>()</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">bcf_reader_copy_source</span>(build_dir)  <span class="co"># Copy sources (installed pkg is read-only)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>ext_path <span class="ot">&lt;-</span> <span class="fu">bcf_reader_build</span>(build_dir)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Or use Makefile directly</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>cd inst<span class="sc">/</span>duckdb_bcf_reader_extension</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>make RBCFTOOLS_HTSLIB<span class="ot">=</span><span class="dv">1</span>  <span class="co"># Use package htslib</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="debugging-remote-file-access">Debugging Remote File Access<a class="anchor" aria-label="anchor" href="#debugging-remote-file-access"></a></h3>
 <p>Set <code>HTS_DEBUG=1</code> environment variable to see htslib’s remote file plugin activity:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>HTS_DEBUG <span class="op">=</span> <span class="st">"1"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/setup_hts_env.html">setup_hts_env</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="st">"s3://bucket/file.vcf.gz"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="docker-testing">Docker Testing<a class="anchor" aria-label="anchor" href="#docker-testing"></a></h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Build and run tests in container</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-f</span> Dockerfile .</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Interactive dev container</span></span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">--build-arg</span> BUILD_MODE=develop <span class="at">-f</span> Dockerfile <span class="at">-t</span> rbcftools:dev .</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-it</span> rbcftools:dev R</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Build and run tests in container</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-f</span> Dockerfile .</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># Interactive dev container</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">--build-arg</span> BUILD_MODE=develop <span class="at">-f</span> Dockerfile <span class="at">-t</span> rbcftools:dev .</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-it</span> rbcftools:dev R</span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -208,12 +255,26 @@
 </ul></div>
 <div class="section level2">
 <h2 id="anti-patterns">Anti-Patterns<a class="anchor" aria-label="anchor" href="#anti-patterns"></a></h2>
-<p>❌ <strong>Don’t</strong> use sequential <code><a href="https://rdrr.io/r/base/CallExternal.html" class="external-link">.Call()</a></code> for batch operations—prefer vectorized C code<br>
+<p>❌ <strong>Don’t</strong> use <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat()</a></code> in R code—use <code><a href="https://rdrr.io/r/base/message.html" class="external-link">message()</a></code> or <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code><br>
+❌ <strong>Don’t</strong> use sequential <code><a href="https://rdrr.io/r/base/CallExternal.html" class="external-link">.Call()</a></code> for batch operations—prefer vectorized C code<br>
 ❌ <strong>Don’t</strong> assume Windows support—scripts must check <code>OS_type: unix</code><br>
 ❌ <strong>Don’t</strong> link against system htslib/bcftools—package bundles specific versions<br>
 ❌ <strong>Don’t</strong> forget to add test coverage for new features in <code>inst/tinytest/</code><br>
-❌ <strong>Don’t</strong> modify generated files (README.md, man/*.Rd)—edit sources (README.Rmd, roxygen2 comments)</p>
+❌ <strong>Don’t</strong> modify generated files (README.md, man/*.Rd)—edit sources (README.Rmd, roxygen2 comments)<br>
+❌ <strong>Don’t</strong> over-engineer—prefer simple, robust solutions<br>
+❌ <strong>Don’t</strong> add heavy dependencies—nanoarrow is the exception, arrow package is avoided</p>
 </div>
+<div class="section level2">
+<h2 id="known-limitations">Known Limitations<a class="anchor" aria-label="anchor" href="#known-limitations"></a></h2>
+<ul><li>
+<strong>Memory copies</strong>: Arrow streaming involves C-level copies; Parquet export adds IPC serialization overhead</li>
+<li>
+<strong>No VEP/SnpEff parsing</strong>: Structured annotations stay as raw strings (see VEP section above)</li>
+<li>
+<strong>No Windows support</strong>: htslib build system is Unix-only</li>
+<li>
+<strong>DuckDB extension unsigned</strong>: Requires <code>allow_unsigned_extensions</code> config</li>
+</ul></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

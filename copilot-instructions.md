@@ -15,6 +15,61 @@ support**: When built with libcurl, reads from S3, GCS, HTTP directly
 
 **Platform**: Unix-like only (Linux, macOS). Windows is NOT supported.
 
+## Versioning
+
+Package version follows `{htslib_version}-{semver}` format: - **1.23** =
+bundled htslib/bcftools version (track upstream releases) -
+**0.0.0.9000** = package semver (development); increment per standard R
+conventions
+
+Example: `1.23-0.0.0.9000` means htslib 1.23, package dev version.
+
+When bumping versions: - Update `DESCRIPTION` Version field - Add entry
+to `NEWS.md` (GNU ChangeLog style, see below)
+
+## Code Style & Philosophy
+
+**Keep things simple and robust.** Prefer straightforward solutions over
+clever ones.
+
+### R Code
+
+- **Never use [`cat()`](https://rdrr.io/r/base/cat.html)** for
+  output—use [`message()`](https://rdrr.io/r/base/message.html) for user
+  feedback, [`warning()`](https://rdrr.io/r/base/warning.html) for
+  issues
+- Use [`stop()`](https://rdrr.io/r/base/stop.html) with `call. = FALSE`
+  for clean error messages
+- Prefer base R over tidyverse dependencies (package is low-dependency)
+- Use [`sprintf()`](https://rdrr.io/r/base/sprintf.html) for string
+  formatting, not [`paste0()`](https://rdrr.io/r/base/paste.html) chains
+
+### README.Rmd
+
+- **Sober, professional prose**—this is Rmd that renders to GitHub
+  markdown
+- Use proper paragraphs, not bullet-heavy lists
+- Code chunks should be minimal and illustrative
+- Avoid emoji, excessive formatting, or marketing language
+- Output is suppressed warnings where appropriate (`options(warn = -1)`)
+
+### NEWS.md (GNU ChangeLog Style)
+
+- One `# RBCFTools {version}` header per release
+- Terse, factual bullet points—no marketing prose
+- Group related changes; mention function names
+- Development versions use `(development version)` suffix
+
+Example:
+
+``` markdown
+# RBCFTools 1.23-0.0.1.9000 (development version)
+
+- Add `vcf_count_duckdb()` for fast variant counting via SQL.
+- Fix region query parsing for BCF files with CSI index.
+- Parallel Parquet export now respects `threads` parameter.
+```
+
 ## Architecture & Key Components
 
 ### 1. Native C Layer (`src/`)
@@ -186,6 +241,26 @@ Typical flow: 1. Check index with
 to process per-chromosome 4. Combine results (e.g.,
 `do.call(rbind, ...)` for data frames)
 
+### VEP/SnpEff/ANNOVAR Annotations
+
+Currently, structured annotation fields (INFO/CSQ from VEP, INFO/ANN
+from SnpEff, etc.) are **not specially parsed**—they remain as
+pipe-delimited or comma-separated strings in the INFO column.
+
+**Rationale**: These annotations have tool-specific schemas that change
+between versions. Parsing them requires: 1. Reading the header
+`##INFO=<ID=CSQ,...,Description="...Format: Allele|Consequence|...">` 2.
+Splitting by `|` and mapping to column names 3. Handling multiple
+transcript annotations per variant
+
+**Future options** (if needed): - Use bcftools `+split-vep` plugin via
+`system2(bcftools_path(), ...)` for VEP - Add optional
+`parse_vep = TRUE` parameter to Arrow/DuckDB functions - Post-process
+with DuckDB SQL: `SELECT unnest(string_split(INFO_CSQ, '|')) ...`
+
+For now, recommend users run `bcftools +split-vep` upstream or query raw
+strings with SQL.
+
 ## Common Tasks
 
 ### Adding a New C Function
@@ -250,6 +325,9 @@ docker run -it rbcftools:dev R
 
 ## Anti-Patterns
 
+❌ **Don’t** use [`cat()`](https://rdrr.io/r/base/cat.html) in R
+code—use [`message()`](https://rdrr.io/r/base/message.html) or
+[`warning()`](https://rdrr.io/r/base/warning.html)  
 ❌ **Don’t** use sequential
 [`.Call()`](https://rdrr.io/r/base/CallExternal.html) for batch
 operations—prefer vectorized C code  
@@ -259,4 +337,17 @@ specific versions
 ❌ **Don’t** forget to add test coverage for new features in
 `inst/tinytest/`  
 ❌ **Don’t** modify generated files (README.md, man/\*.Rd)—edit sources
-(README.Rmd, roxygen2 comments)
+(README.Rmd, roxygen2 comments)  
+❌ **Don’t** over-engineer—prefer simple, robust solutions  
+❌ **Don’t** add heavy dependencies—nanoarrow is the exception, arrow
+package is avoided
+
+## Known Limitations
+
+- **Memory copies**: Arrow streaming involves C-level copies; Parquet
+  export adds IPC serialization overhead
+- **No VEP/SnpEff parsing**: Structured annotations stay as raw strings
+  (see VEP section above)
+- **No Windows support**: htslib build system is Unix-only
+- **DuckDB extension unsigned**: Requires `allow_unsigned_extensions`
+  config
