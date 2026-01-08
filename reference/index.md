@@ -93,6 +93,8 @@
   : Query VCF/BCF with DuckDB
 - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md)
   : Query a VCF/BCF file using DuckDB SQL
+- [`vcf_read_vep()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_read_vep.md)
+  : Read VCF with parsed VEP annotations
 - [`vcf_samples_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_samples_duckdb.md)
   : List samples in a VCF/BCF file using DuckDB
 - [`vcf_schema_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_schema_duckdb.md)
@@ -111,3 +113,15 @@
   : Parallel VCF to Parquet conversion using DuckDB
 - [`vcf_to_parquet_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.md)
   : Parallel VCF to Parquet conversion
+- [`vep_detect_tag()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_detect_tag.md)
+  : Detect VEP annotation tag in VCF file
+- [`vep_get_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_get_schema.md)
+  : Get VEP annotation schema from VCF header
+- [`vep_has_annotation()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_has_annotation.md)
+  : Check if VCF has VEP-style annotations
+- [`vep_infer_type()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_infer_type.md)
+  : Infer type from VEP field name
+- [`vep_list_fields()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_list_fields.md)
+  : List VEP annotation fields in a VCF file
+- [`vep_parse_record()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_parse_record.md)
+  : Parse VEP annotation string

@@ -1,4 +1,4 @@
-# RBCFTools: \`htslib\` And \`bcftools\` Libraries And Command Line Tools Wrapper
+# RBCFTools: 'htslib' and 'bcftools' Libraries and Command Line Tools Wrapper
 
 Bundles the 'htslib' and 'bcftools' libraries and command lines tools
 for reading and manipulating VCF/BCF files. Includes experimental

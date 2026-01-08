@@ -93,12 +93,12 @@ If provided, extension_path is ignored.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Count variants</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_query_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>,</span></span>
-<span class="r-in"><span>    query <span class="op">=</span> <span class="st">"SELECT COUNT(*) FROM bcf_read('{file}')"</span></span></span>
+<span class="r-in"><span>  query <span class="op">=</span> <span class="st">"SELECT COUNT(*) FROM bcf_read('{file}')"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Filter by chromosome</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_query_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>,</span></span>
-<span class="r-in"><span>    query <span class="op">=</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"</span></span></span>
+<span class="r-in"><span>  query <span class="op">=</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Region query (requires index)</span></span></span>

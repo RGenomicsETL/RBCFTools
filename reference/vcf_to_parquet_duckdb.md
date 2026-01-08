@@ -74,12 +74,12 @@ vcf_to_parquet_duckdb("variants.vcf.gz", "variants.parquet", ext_path)
 
 # Export specific columns
 vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,
-    columns = c("CHROM", "POS", "REF", "ALT", "INFO_AF")
+  columns = c("CHROM", "POS", "REF", "ALT", "INFO_AF")
 )
 
 # Export a region
 vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
-    region = "chr22"
+  region = "chr22"
 )
 
 # Parallel mode for whole-genome VCF (requires index)

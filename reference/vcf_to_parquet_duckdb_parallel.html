@@ -117,9 +117,9 @@ processes a different chromosome, then results are merged into a single Parquet 
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With specific columns</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb_parallel</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, <span class="va">ext_path</span>,</span></span>
-<span class="r-in"><span>    threads <span class="op">=</span> <span class="fl">16</span>,</span></span>
-<span class="r-in"><span>    columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  threads <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
