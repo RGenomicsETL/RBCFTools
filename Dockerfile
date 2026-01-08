@@ -42,6 +42,10 @@ RUN if [ "$BUILD_MODE" = "develop" ]; then \
         echo "Installing RBCFTools from R-universe..." && \
         Rscript -e "install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))"; \
     fi
-
+# INSTALL TInytest for testing
+RUN Rscript -e "install.packages(c('tinytest','vctrs', 'rlang','duckdb'))"
 # Run the tinytest tests to verify installation
 RUN Rscript -e "tinytest::test_package('RBCFTools')"
+
+# clean up apt cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
