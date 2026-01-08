@@ -355,7 +355,12 @@ vcf_query_duckdb <- function(
     if (!grepl("bcf_read", sql, ignore.case = TRUE)) {
       # If query contains "FROM vcf", replace "vcf" with the bcf_read call
       if (grepl("\\bFROM\\s+vcf\\b", sql, ignore.case = TRUE)) {
-        sql <- gsub("\\bFROM\\s+vcf\\b", paste0("FROM ", bcf_read_call), sql, ignore.case = TRUE)
+        sql <- gsub(
+          "\\bFROM\\s+vcf\\b",
+          paste0("FROM ", bcf_read_call),
+          sql,
+          ignore.case = TRUE
+        )
       } else {
         # Assume it's just column names/expressions and wrap it
         sql <- sprintf("SELECT %s FROM %s", query, bcf_read_call)
@@ -503,7 +508,11 @@ vcf_to_parquet_duckdb <- function(
   con = NULL
 ) {
   # Check if file is a remote URL
-  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
+  is_remote <- grepl(
+    "^(s3|gs|http|https|ftp)://",
+    input_file,
+    ignore.case = TRUE
+  )
 
   if (!is_remote) {
     if (!file.exists(input_file)) {
@@ -726,7 +735,11 @@ vcf_to_parquet_duckdb_parallel <- function(
   }
 
   # Check if file is a remote URL
-  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
+  is_remote <- grepl(
+    "^(s3|gs|http|https|ftp)://",
+    input_file,
+    ignore.case = TRUE
+  )
   if (!is_remote) {
     input_file <- normalizePath(input_file, mustWork = TRUE)
   }
