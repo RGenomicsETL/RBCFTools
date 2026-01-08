@@ -42,12 +42,12 @@ vcf_query_duckdb("variants.vcf.gz", ext_path)
 
 # Count variants
 vcf_query_duckdb("variants.vcf.gz", ext_path,
-    query = "SELECT COUNT(*) FROM bcf_read('{file}')"
+  query = "SELECT COUNT(*) FROM bcf_read('{file}')"
 )
 
 # Filter by chromosome
 vcf_query_duckdb("variants.vcf.gz", ext_path,
-    query = "SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"
+  query = "SELECT CHROM, POS, REF, ALT FROM bcf_read('{file}') WHERE CHROM = '22'"
 )
 
 # Region query (requires index)

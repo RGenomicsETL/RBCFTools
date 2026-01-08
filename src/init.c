@@ -29,6 +29,13 @@ extern SEXP RC_vcf_has_index(SEXP filename_sexp, SEXP index_sexp);
 extern SEXP RC_vcf_get_contigs(SEXP filename_sexp);
 extern SEXP RC_vcf_get_contig_lengths(SEXP filename_sexp);
 
+/* Declare external functions from vep_parser_r.c */
+extern SEXP RC_vep_detect_tag(SEXP filename_sexp);
+extern SEXP RC_vep_has_annotation(SEXP filename_sexp);
+extern SEXP RC_vep_get_schema(SEXP filename_sexp, SEXP tag_sexp);
+extern SEXP RC_vep_infer_type(SEXP field_name_sexp);
+extern SEXP RC_vep_parse_record(SEXP csq_sexp, SEXP schema_sexp, SEXP filename_sexp);
+
 /* Registration table for .Call routines */
 static const R_CallMethodDef CallEntries[] = {
     {"RC_htslib_version", (DL_FUNC)&RC_htslib_version, 0},
@@ -46,6 +53,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"RC_vcf_has_index", (DL_FUNC)&RC_vcf_has_index, 2},
     {"RC_vcf_get_contigs", (DL_FUNC)&RC_vcf_get_contigs, 1},
     {"RC_vcf_get_contig_lengths", (DL_FUNC)&RC_vcf_get_contig_lengths, 1},
+    /* VEP annotation parser */
+    {"RC_vep_detect_tag", (DL_FUNC)&RC_vep_detect_tag, 1},
+    {"RC_vep_has_annotation", (DL_FUNC)&RC_vep_has_annotation, 1},
+    {"RC_vep_get_schema", (DL_FUNC)&RC_vep_get_schema, 2},
+    {"RC_vep_infer_type", (DL_FUNC)&RC_vep_infer_type, 1},
+    {"RC_vep_parse_record", (DL_FUNC)&RC_vep_parse_record, 3},
     {NULL, NULL, 0}};
 
 /* Package initialization */

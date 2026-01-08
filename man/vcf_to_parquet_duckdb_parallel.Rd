@@ -61,9 +61,9 @@ vcf_to_parquet_duckdb_parallel("wgs.vcf.gz", "wgs.parquet", ext_path, threads = 
 
 # With specific columns
 vcf_to_parquet_duckdb_parallel(
-    "wgs.vcf.gz", "wgs.parquet", ext_path,
-    threads = 16,
-    columns = c("CHROM", "POS", "REF", "ALT")
+  "wgs.vcf.gz", "wgs.parquet", ext_path,
+  threads = 16,
+  columns = c("CHROM", "POS", "REF", "ALT")
 )
 }
 
