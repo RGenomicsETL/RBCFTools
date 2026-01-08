@@ -52,7 +52,6 @@ DUCKDB_EXTENSION_EXTERN
 // =============================================================================
 
 #define BCF_READER_DEFAULT_BATCH_SIZE 2048
-#define BCF_READER_MAX_STRING_LEN 65536
 
 // Column indices for core VCF fields
 enum {
