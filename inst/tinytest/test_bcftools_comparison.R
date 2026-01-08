@@ -37,12 +37,16 @@ ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
 # Helper function to run bcftools query
 run_bcftools_query <- function(vcf_file, format_string, region = NULL) {
     bcftools <- bcftools_path()
-    args <- c("query", "-f", format_string, vcf_file)
-    if (!is.null(region)) {
-        args <- c(args[1:2], "-r", region, args[3:length(args)])
-    }
-
-    result <- system2(bcftools, args, stdout = TRUE, stderr = FALSE)
+    # Use system() instead of system2() to handle format string escaping properly
+    region_arg <- if (!is.null(region)) paste("-r", shQuote(region)) else ""
+    cmd <- sprintf(
+        "%s query -f %s %s %s 2>/dev/null",
+        shQuote(bcftools),
+        shQuote(format_string),
+        region_arg,
+        shQuote(vcf_file)
+    )
+    result <- system(cmd, intern = TRUE)
     if (length(result) == 0) {
         return(character(0))
     }
@@ -84,7 +88,9 @@ repeat {
 stream$release()
 
 # Combine all batches
+
 arrow_df <- do.call(rbind, arrow_batches)
+
 
 expect_equal(
     arrow_df$CHROM,
