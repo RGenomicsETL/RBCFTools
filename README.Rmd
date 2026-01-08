@@ -332,7 +332,7 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 
 ## Limitations and issues
 
-The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the SQL query interface. In theory we can use the arrow package to get `arrow_table` format that can be registered by `duckdb` but this is an additional dependency. There is no particular attempt to parse further vep/snpeff/annovar info fields.
+The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the Arrow based SQL query interface. There is no particular attempt to parse further vep/snpeff/annovar info fields.
 
 ## Future directions
 
