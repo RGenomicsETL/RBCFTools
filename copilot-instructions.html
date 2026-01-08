@@ -189,10 +189,11 @@
 </div>
 <div class="section level3">
 <h3 id="vepsnpeffannovar-annotations">VEP/SnpEff/ANNOVAR Annotations<a class="anchor" aria-label="anchor" href="#vepsnpeffannovar-annotations"></a></h3>
-<p>Currently, structured annotation fields (INFO/CSQ from VEP, INFO/ANN from SnpEff, etc.) are <strong>not specially parsed</strong>—they remain as pipe-delimited or comma-separated strings in the INFO column.</p>
-<p><strong>Rationale</strong>: These annotations have tool-specific schemas that change between versions. Parsing them requires: 1. Reading the header <code>##INFO=&lt;ID=CSQ,...,Description="...Format: Allele|Consequence|..."&gt;</code> 2. Splitting by <code>|</code> and mapping to column names 3. Handling multiple transcript annotations per variant</p>
-<p><strong>Future options</strong> (if needed): - Use bcftools <code>+split-vep</code> plugin via <code>system2(bcftools_path(), ...)</code> for VEP - Add optional <code>parse_vep = TRUE</code> parameter to Arrow/DuckDB functions - Post-process with DuckDB SQL: <code>SELECT unnest(string_split(INFO_CSQ, '|')) ...</code></p>
-<p>For now, recommend users run <code>bcftools +split-vep</code> upstream or query raw strings with SQL.</p>
+<p><strong>Current status</strong>: Structured annotation fields (INFO/CSQ from VEP, INFO/ANN from SnpEff, INFO/BCSQ from bcftools/csq) are <strong>not specially parsed</strong>—they remain as pipe-delimited strings.</p>
+<p><strong>Known Issues</strong>: 1. String post-processing in SQL is inefficient and loses type information 2. No schema extraction from VCF header Description field</p>
+<p><strong>Test Files</strong> (in <code>inst/extdata/</code>): - <code>test_vep.vcf</code> - Full VEP annotations with 80+ fields - <code>test_vep_types.vcf</code> - VEP with typed fields (SpliceAI, gnomAD, etc.) - <code>test_vep_snpeff.vcf</code> - bcftools/csq BCSQ format</p>
+<p><strong>Implementation Plan</strong>: See <a href="../docs/VEP_ANNOTATION_PARSING_PLAN.html">docs/VEP_ANNOTATION_PARSING_PLAN.md</a> for detailed plan including: - Core parser library (<code>vep_parser.c/h</code>) inspired by bcftools <code>+split-vep</code> - Type inference from field names (e.g., <code>*_AF</code> → Float) - DuckDB extension with <code>vep_mode</code> parameter for exploded columns - Arrow stream with <code>parse_vep</code> option</p>
+<p><strong>Workarounds</strong> (current): - Use bcftools <code>+split-vep</code> plugin via <code>system2(bcftools_path(), ...)</code> upstream - Post-process with DuckDB SQL: <code>SELECT unnest(string_split(INFO_CSQ, '|')) ...</code></p>
 </div>
 </div>
 <div class="section level2">

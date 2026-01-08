@@ -243,23 +243,29 @@ to process per-chromosome 4. Combine results (e.g.,
 
 ### VEP/SnpEff/ANNOVAR Annotations
 
-Currently, structured annotation fields (INFO/CSQ from VEP, INFO/ANN
-from SnpEff, etc.) are **not specially parsed**—they remain as
-pipe-delimited or comma-separated strings in the INFO column.
+**Current status**: Structured annotation fields (INFO/CSQ from VEP,
+INFO/ANN from SnpEff, INFO/BCSQ from bcftools/csq) are **not specially
+parsed**—they remain as pipe-delimited strings.
 
-**Rationale**: These annotations have tool-specific schemas that change
-between versions. Parsing them requires: 1. Reading the header
-`##INFO=<ID=CSQ,...,Description="...Format: Allele|Consequence|...">` 2.
-Splitting by `|` and mapping to column names 3. Handling multiple
-transcript annotations per variant
+**Known Issues**: 1. String post-processing in SQL is inefficient and
+loses type information 2. No schema extraction from VCF header
+Description field
 
-**Future options** (if needed): - Use bcftools `+split-vep` plugin via
-`system2(bcftools_path(), ...)` for VEP - Add optional
-`parse_vep = TRUE` parameter to Arrow/DuckDB functions - Post-process
-with DuckDB SQL: `SELECT unnest(string_split(INFO_CSQ, '|')) ...`
+**Test Files** (in `inst/extdata/`): - `test_vep.vcf` - Full VEP
+annotations with 80+ fields - `test_vep_types.vcf` - VEP with typed
+fields (SpliceAI, gnomAD, etc.) - `test_vep_snpeff.vcf` - bcftools/csq
+BCSQ format
 
-For now, recommend users run `bcftools +split-vep` upstream or query raw
-strings with SQL.
+**Implementation Plan**: See
+[docs/VEP_ANNOTATION_PARSING_PLAN.md](https://rgenomicsetl.github.io/docs/VEP_ANNOTATION_PARSING_PLAN.md)
+for detailed plan including: - Core parser library (`vep_parser.c/h`)
+inspired by bcftools `+split-vep` - Type inference from field names
+(e.g., `*_AF` → Float) - DuckDB extension with `vep_mode` parameter for
+exploded columns - Arrow stream with `parse_vep` option
+
+**Workarounds** (current): - Use bcftools `+split-vep` plugin via
+`system2(bcftools_path(), ...)` upstream - Post-process with DuckDB SQL:
+`SELECT unnest(string_split(INFO_CSQ, '|')) ...`
 
 ## Common Tasks
 
