@@ -30,6 +30,10 @@
   : Attach a DuckLake catalog
 - [`ducklake_create_s3_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.md)
   : Create or replace an S3 secret for DuckLake
+- [`ducklake_download_mc()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_mc.md)
+  : Download a static MinIO client (mc) binary
+- [`ducklake_download_minio()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_minio.md)
+  : Download a static MinIO server binary
 - [`ducklake_load()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.md)
   : Load the DuckLake extension
 - [`ducklake_write_variants()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_write_variants.md)
