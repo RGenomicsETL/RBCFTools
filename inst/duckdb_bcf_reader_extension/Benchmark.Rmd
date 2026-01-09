@@ -151,52 +151,56 @@ res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
 ```
 
-### Parquet conversion: single-thread vs parallel (DuckDB extension)
+### Parquet conversion: 4 threads vs 10 threads (DuckDB extension)
 
-Parallel conversion uses `vcf_to_parquet_duckdb()` (via the bcf_reader extension) for direct VCF-to-Parquet export. Skips if prerequisites are missing.
+Compares `vcf_to_parquet_duckdb()` (via the bcf_reader extension) with different thread counts. Skips if prerequisites are missing.
 
 ```{r parquet-setup}
 parquet_can_run <- has_bcf && has_ext && requireNamespace("RBCFTools", quietly = TRUE)
-threads_parallel <- if (parquet_can_run) max(2L, parallel::detectCores()) else 0L
 
-parquet_single <- tempfile(fileext = ".parquet")
-parquet_parallel <- tempfile(fileext = ".parquet")
+parquet_4threads <- tempfile(fileext = ".parquet")
+parquet_10threads <- tempfile(fileext = ".parquet")
 ```
 
-```{r parquet-bench, eval=parquet_can_run}
-# Single-thread conversion via DuckDB bcf_reader extension
-res_parquet_single <- time_expr({
-  RBCFTools::vcf_to_parquet_duckdb(
-    input_file = bcf_path,
-    output_file = parquet_single,
-    extension_path = duckdb_ext,
-    compression = "zstd",
-    row_group_size = 100000L,
-    threads = 1L
-  )
-}, enabled = parquet_can_run)
 
-# Parallel conversion via DuckDB bcf_reader extension (requires index)
-res_parquet_parallel <- if (RBCFTools::vcf_has_index(bcf_path) && threads_parallel > 1) {
+```{r parquet-bench-10, eval=parquet_can_run}
+
+# 10-thread conversion via DuckDB bcf_reader extension (requires index)
+res_parquet_10threads <- if (RBCFTools::vcf_has_index(bcf_path)) {
   time_expr({
     RBCFTools::vcf_to_parquet_duckdb(
       input_file = bcf_path,
-      output_file = parquet_parallel,
+      output_file = parquet_10threads,
       extension_path = duckdb_ext,
       compression = "zstd",
       row_group_size = 100000L,
-      threads = threads_parallel
+      threads = 10L
     )
   }, enabled = parquet_can_run)
 } else {
   NULL
 }
-
-res_parquet_single
-res_parquet_parallel
-
-unlink(c(parquet_single, parquet_parallel))
 ```
+
+```{r parquet-bench, eval=parquet_can_run}
+# 4-thread conversion via DuckDB bcf_reader extension
+res_parquet_4threads <- time_expr({
+  RBCFTools::vcf_to_parquet_duckdb(
+    input_file = bcf_path,
+    output_file = parquet_4threads,
+    extension_path = duckdb_ext,
+    compression = "zstd",
+    row_group_size = 100000L,
+    threads = 4L
+  )
+}, enabled = parquet_can_run)
+
+res_parquet_4threads
+res_parquet_10threads
+
+unlink(c(parquet_4threads, parquet_10threads))
+```
+
 
 ## Notes
 

@@ -251,6 +251,8 @@ DBI::dbGetQuery(con, sprintf("
 DBI::dbDisconnect(con)
 ```
 
+
+
 ### Stream Remote VCF using Arrow or DuckDB Extension
 
 Stream remote VCF region directly from S3 using either `nanoarrow` based `vcf_stream` or `duckb` extension
@@ -280,6 +282,62 @@ vcf_query_duckdb(
 
 ```
 
+
+### DuckLake ETL to MinIO
+
+With MinIO running (e.g., `mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS` and a bucket `mybucket` ready), you can stream variants into DuckLake and query them back:
+
+```{r ducklake-etl, eval=FALSE}
+con <- duckdb::dbConnect(duckdb::duckdb(config = list(
+  allow_unsigned_extensions = "true",
+  enable_external_access = "true"
+)))
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "LOAD ducklake")
+
+ducklake_create_s3_secret(
+  con,
+  name = "minio_secret",
+  key_id = "MINIOUSER",
+  secret = "MINIOPASS",
+  endpoint = "127.0.0.1:9000",
+  region = "us-east-1",
+  use_ssl = FALSE
+)
+
+ducklake_attach(
+  con,
+  metadata_path = "ducklake_demo.ducklake",
+  data_path = "s3://mybucket/rbcftools",
+  alias = "lake",
+  extra_options = list(SECRET = "minio_secret")
+)
+
+vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+ducklake_write_variants(
+  con,
+  table = "lake.variants",
+  vcf_path = vcf_file,
+  threads = 2
+)
+
+DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+```
+
+MinIO client install quickstart (host tools):
+
+```bash
+# Linux amd64/arm64
+curl -sO https://dl.min.io/client/mc/release/linux-$(uname -m)/mc
+chmod +x mc
+
+# macOS amd64/arm64
+curl -sO https://dl.min.io/client/mc/release/darwin-$(uname -m)/mc
+chmod +x mc
+
+./mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS
+./mc ls myminio/mybucket
+```
 ### Command-Line Tool
 
 A CLI tool is provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs
@@ -330,10 +388,6 @@ batch2 <- stream2$get_next()
 nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 ```
 
-
-## Future directions
-
-We should improve the code, avoid copies, add more tests and maybe [ducklake](https://github.com/duckdb/ducklake) support
 
 
 ## References

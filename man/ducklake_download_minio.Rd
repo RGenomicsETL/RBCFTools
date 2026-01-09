@@ -4,16 +4,12 @@
 \alias{ducklake_download_minio}
 \title{Download a static MinIO server binary}
 \usage{
-ducklake_download_minio(
-  dest_dir = tempdir(),
-  url = "https://dl.min.io/server/minio/release/linux-amd64/minio",
-  filename = "minio"
-)
+ducklake_download_minio(dest_dir = tempdir(), url = NULL, filename = "minio")
 }
 \arguments{
 \item{dest_dir}{Destination directory (created if missing).}
 
-\item{url}{Optional download URL. Defaults to MinIO Linux amd64 build.}
+\item{url}{Optional download URL. Defaults to MinIO Linux build for host arch.}
 
 \item{filename}{Output filename. Defaults to "minio".}
 }

@@ -4,16 +4,12 @@
 \alias{ducklake_download_mc}
 \title{Download a static MinIO client (mc) binary}
 \usage{
-ducklake_download_mc(
-  dest_dir = tempdir(),
-  url = "https://dl.min.io/client/mc/release/linux-amd64/mc",
-  filename = "mc"
-)
+ducklake_download_mc(dest_dir = tempdir(), url = NULL, filename = "mc")
 }
 \arguments{
 \item{dest_dir}{Destination directory (created if missing).}
 
-\item{url}{Optional download URL. Defaults to mc Linux amd64 build.}
+\item{url}{Optional download URL. Defaults to mc Linux build for host arch.}
 
 \item{filename}{Output filename. Defaults to "mc".}
 }

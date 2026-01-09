@@ -333,7 +333,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpaOn6N0/file21770d4a739b93.parquet
+#> Wrote 11 rows to /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -352,12 +352,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
-#> 2 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
-#> 3 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
-#> 4 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
-#> 5 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
-#> 6 /tmp/RtmpaOn6N0/file21770d4a739b93.parquet            0                 11
+#> 1 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 2 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 3 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 4 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 5 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 6 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -440,7 +440,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpaOn6N0/file21770d49eadfe9.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmp3kgfO0/file2202f177c823ce.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -585,6 +585,64 @@ vcf_query_duckdb(
 #> 5 chr22 16050224   A C, <NON_REF>
 ```
 
+### DuckLake ETL to MinIO
+
+With MinIO running (e.g., `mc alias set myminio/ http://127.0.0.1:9000
+MINIOUSER MINIOPASS` and a bucket `mybucket` ready), you can stream
+variants into DuckLake and query them back:
+
+``` r
+con <- duckdb::dbConnect(duckdb::duckdb(config = list(
+  allow_unsigned_extensions = "true",
+  enable_external_access = "true"
+)))
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "LOAD ducklake")
+
+ducklake_create_s3_secret(
+  con,
+  name = "minio_secret",
+  key_id = "MINIOUSER",
+  secret = "MINIOPASS",
+  endpoint = "127.0.0.1:9000",
+  region = "us-east-1",
+  use_ssl = FALSE
+)
+
+ducklake_attach(
+  con,
+  metadata_path = "ducklake_demo.ducklake",
+  data_path = "s3://mybucket/rbcftools",
+  alias = "lake",
+  extra_options = list(SECRET = "minio_secret")
+)
+
+vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+ducklake_write_variants(
+  con,
+  table = "lake.variants",
+  vcf_path = vcf_file,
+  threads = 2
+)
+
+DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+```
+
+MinIO client install quickstart (host tools):
+
+``` bash
+# Linux amd64/arm64
+curl -sO https://dl.min.io/client/mc/release/linux-$(uname -m)/mc
+chmod +x mc
+
+# macOS amd64/arm64
+curl -sO https://dl.min.io/client/mc/release/darwin-$(uname -m)/mc
+chmod +x mc
+
+./mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS
+./mc ls myminio/mybucket
+```
+
 ### Command-Line Tool
 
 A CLI tool is provided for VCF to Parquet conversion and querying,
@@ -614,7 +672,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.nAOBRJZK7e.parquet 
+#>   Output: /tmp/tmp.fZXga4fmdd.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -624,10 +682,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.nAOBRJZK7e.parquet
+#> Wrote 11 rows to /tmp/tmp.fZXga4fmdd.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.51 seconds
+#>   Time: 0.77 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -668,7 +726,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.nAOBRJZK7e.parquet 
+#> Parquet File Information: /tmp/tmp.fZXga4fmdd.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
@@ -752,11 +810,6 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 #> 2     1 11508   A
 #> 3     1 11565   G
 ```
-
-## Future directions
-
-We should improve the code, avoid copies, add more tests and maybe
-[ducklake](https://github.com/duckdb/ducklake) support
 
 ## References
 
