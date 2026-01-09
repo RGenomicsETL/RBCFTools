@@ -1079,14 +1079,22 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     int n_vep = priv->n_vep_columns;
     
     // Per-VEP-field data arrays - store parsed values for each record
+    // For VEP_TRANSCRIPT_FIRST: scalar storage (one value per record)
+    // For VEP_TRANSCRIPT_ALL: list storage (all transcripts per record)
     char*** vep_str_data = NULL;        // String values per field [n_vep][batch_size]
-    int32_t** vep_int_data = NULL;      // Integer values per field [n_vep][batch_size]
-    float** vep_float_data = NULL;      // Float values per field [n_vep][batch_size]
+    int32_t** vep_int_data = NULL;      // Integer values per field [n_vep][batch_size] or list storage
+    float** vep_float_data = NULL;      // Float values per field [n_vep][batch_size] or list storage
     uint8_t** vep_validity = NULL;      // Validity bitmaps per field [n_vep][(batch_size+7)/8]
     int32_t** vep_str_offsets = NULL;   // String offsets per field [n_vep][batch_size+1]
     size_t* vep_str_sizes = NULL;       // Current string data size per field
     char** vep_str_buffers = NULL;      // Concatenated string data per field
     size_t* vep_str_capacity = NULL;    // Allocated capacity per field
+    
+    // For VEP_TRANSCRIPT_ALL mode: list offsets and element capacity
+    int32_t** vep_list_offsets = NULL;  // List offsets per field [n_vep][batch_size+1]
+    size_t* vep_list_sizes = NULL;      // Current number of list elements per field
+    size_t* vep_list_capacity = NULL;   // Allocated capacity for list elements per field
+    int vep_transcript_all = (priv->opts.vep_transcript_mode == VEP_TRANSCRIPT_ALL);
     
     if (n_vep > 0 && priv->vep_schema) {
         vep_str_data = (char***)vcf_arrow_malloc(n_vep * sizeof(char**));
@@ -1098,6 +1106,16 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         vep_str_buffers = (char**)vcf_arrow_malloc(n_vep * sizeof(char*));
         vep_str_capacity = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
         
+        // List mode storage
+        if (vep_transcript_all) {
+            vep_list_offsets = (int32_t**)vcf_arrow_malloc(n_vep * sizeof(int32_t*));
+            vep_list_sizes = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
+            vep_list_capacity = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
+            if (vep_list_offsets) memset(vep_list_offsets, 0, n_vep * sizeof(int32_t*));
+            if (vep_list_sizes) memset(vep_list_sizes, 0, n_vep * sizeof(size_t));
+            if (vep_list_capacity) memset(vep_list_capacity, 0, n_vep * sizeof(size_t));
+        }
+        
         if (vep_str_data) memset(vep_str_data, 0, n_vep * sizeof(char**));
         if (vep_int_data) memset(vep_int_data, 0, n_vep * sizeof(int32_t*));
         if (vep_float_data) memset(vep_float_data, 0, n_vep * sizeof(float*));
@@ -1107,7 +1125,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         if (vep_str_buffers) memset(vep_str_buffers, 0, n_vep * sizeof(char*));
         if (vep_str_capacity) memset(vep_str_capacity, 0, n_vep * sizeof(size_t));
         
-        // Allocate per-field arrays based on type
+        // Allocate per-field arrays based on type and mode
         for (int v = 0; v < n_vep; v++) {
             int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
             const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
@@ -1117,19 +1135,36 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             vep_validity[v] = (uint8_t*)vcf_arrow_malloc((batch_size + 7) / 8);
             if (vep_validity[v]) memset(vep_validity[v], 0, (batch_size + 7) / 8);
             
-            if (field_type == VEP_TYPE_STRING) {
-                // String: use offsets and concatenated buffer
-                vep_str_offsets[v] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
-                if (vep_str_offsets[v]) memset(vep_str_offsets[v], 0, (batch_size + 1) * sizeof(int32_t));
-                vep_str_buffers[v] = NULL;
-                vep_str_capacity[v] = 0;
-                vep_str_sizes[v] = 0;
-            } else if (field_type == VEP_TYPE_INTEGER) {
-                vep_int_data[v] = (int32_t*)vcf_arrow_malloc(batch_size * sizeof(int32_t));
-                if (vep_int_data[v]) memset(vep_int_data[v], 0, batch_size * sizeof(int32_t));
-            } else if (field_type == VEP_TYPE_FLOAT) {
-                vep_float_data[v] = (float*)vcf_arrow_malloc(batch_size * sizeof(float));
-                if (vep_float_data[v]) memset(vep_float_data[v], 0, batch_size * sizeof(float));
+            if (vep_transcript_all) {
+                // List mode: allocate list offsets, data grows dynamically
+                vep_list_offsets[v] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
+                if (vep_list_offsets[v]) memset(vep_list_offsets[v], 0, (batch_size + 1) * sizeof(int32_t));
+                
+                // For strings, we also need child string offsets (separate from list offsets)
+                if (field_type == VEP_TYPE_STRING) {
+                    // vep_str_buffers and vep_str_sizes will be used for flattened string data
+                    // vep_str_offsets will be per-element string offsets
+                    vep_str_buffers[v] = NULL;
+                    vep_str_capacity[v] = 0;
+                    vep_str_sizes[v] = 0;
+                }
+                // vep_int_data/vep_float_data will be dynamically grown
+            } else {
+                // Scalar mode: one value per record
+                if (field_type == VEP_TYPE_STRING) {
+                    // String: use offsets and concatenated buffer
+                    vep_str_offsets[v] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
+                    if (vep_str_offsets[v]) memset(vep_str_offsets[v], 0, (batch_size + 1) * sizeof(int32_t));
+                    vep_str_buffers[v] = NULL;
+                    vep_str_capacity[v] = 0;
+                    vep_str_sizes[v] = 0;
+                } else if (field_type == VEP_TYPE_INTEGER) {
+                    vep_int_data[v] = (int32_t*)vcf_arrow_malloc(batch_size * sizeof(int32_t));
+                    if (vep_int_data[v]) memset(vep_int_data[v], 0, batch_size * sizeof(int32_t));
+                } else if (field_type == VEP_TYPE_FLOAT) {
+                    vep_float_data[v] = (float*)vcf_arrow_malloc(batch_size * sizeof(float));
+                    if (vep_float_data[v]) memset(vep_float_data[v], 0, batch_size * sizeof(float));
+                }
             }
         }
     }
@@ -1680,29 +1715,34 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             vep_record_t* vep_rec = vep_record_parse_bcf(priv->vep_schema, priv->hdr, priv->rec);
             
             if (vep_rec && vep_rec->n_transcripts > 0) {
-                // For VEP_TRANSCRIPT_FIRST mode, use first transcript
-                // For VEP_TRANSCRIPT_ALL mode, we'd need list storage (not yet implemented)
-                int tr_idx = 0;  // First transcript
-                
-                for (int v = 0; v < n_vep; v++) {
-                    int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
-                    const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
-                    if (!field) continue;
+                if (vep_transcript_all) {
+                    // VEP_TRANSCRIPT_ALL mode: store all transcripts as list elements
+                    int n_tr = vep_rec->n_transcripts;
                     
-                    const vep_value_t* val = vep_record_get_value(vep_rec, tr_idx, field_idx);
-                    
-                    if (val && !val->is_missing) {
-                        // Set validity bit
+                    for (int v = 0; v < n_vep; v++) {
+                        int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+                        const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+                        if (!field) continue;
+                        
+                        // Mark as valid (has at least one transcript)
                         if (vep_validity[v]) {
                             vep_validity[v][n_read / 8] |= (1 << (n_read % 8));
                         }
                         
-                        if (field->type == VEP_TYPE_STRING) {
-                            // Store string value
-                            if (val->str_value && vep_str_offsets[v]) {
-                                size_t len = strlen(val->str_value);
+                        // Store list offset for this record
+                        if (vep_list_offsets[v]) {
+                            vep_list_offsets[v][n_read] = (int32_t)vep_list_sizes[v];
+                        }
+                        
+                        // Process each transcript
+                        for (int tr = 0; tr < n_tr; tr++) {
+                            const vep_value_t* val = vep_record_get_value(vep_rec, tr, field_idx);
+                            
+                            if (field->type == VEP_TYPE_STRING) {
+                                // Grow string buffer if needed
+                                const char* str_val = (val && !val->is_missing && val->str_value) ? val->str_value : "";
+                                size_t len = strlen(str_val);
                                 
-                                // Grow buffer if needed
                                 size_t needed = vep_str_sizes[v] + len;
                                 if (needed > vep_str_capacity[v]) {
                                     size_t new_cap = vep_str_capacity[v] == 0 ? 4096 : vep_str_capacity[v] * 2;
@@ -1715,27 +1755,106 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                                 }
                                 
                                 // Copy string data
-                                if (vep_str_sizes[v] + len <= vep_str_capacity[v]) {
-                                    memcpy(vep_str_buffers[v] + vep_str_sizes[v], val->str_value, len);
-                                    vep_str_sizes[v] += len;
+                                if (vep_str_sizes[v] + len <= vep_str_capacity[v] && len > 0) {
+                                    memcpy(vep_str_buffers[v] + vep_str_sizes[v], str_val, len);
                                 }
-                                vep_str_offsets[v][n_read + 1] = (int32_t)vep_str_sizes[v];
-                            } else if (vep_str_offsets[v]) {
-                                vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
-                            }
-                        } else if (field->type == VEP_TYPE_INTEGER) {
-                            if (vep_int_data[v]) {
-                                vep_int_data[v][n_read] = val->int_value;
-                            }
-                        } else if (field->type == VEP_TYPE_FLOAT) {
-                            if (vep_float_data[v]) {
-                                vep_float_data[v][n_read] = val->float_value;
+                                vep_str_sizes[v] += len;
+                                vep_list_sizes[v]++;  // Count string element
+                                
+                            } else if (field->type == VEP_TYPE_INTEGER) {
+                                // Grow int buffer if needed
+                                if (vep_list_sizes[v] >= vep_list_capacity[v]) {
+                                    size_t new_cap = vep_list_capacity[v] == 0 ? 1024 : vep_list_capacity[v] * 2;
+                                    int32_t* new_buf = (int32_t*)vcf_arrow_realloc(vep_int_data[v], new_cap * sizeof(int32_t));
+                                    if (new_buf) {
+                                        vep_int_data[v] = new_buf;
+                                        vep_list_capacity[v] = new_cap;
+                                    }
+                                }
+                                if (vep_int_data[v] && vep_list_sizes[v] < vep_list_capacity[v]) {
+                                    vep_int_data[v][vep_list_sizes[v]] = (val && !val->is_missing) ? val->int_value : 0;
+                                    vep_list_sizes[v]++;
+                                }
+                                
+                            } else if (field->type == VEP_TYPE_FLOAT) {
+                                // Grow float buffer if needed
+                                if (vep_list_sizes[v] >= vep_list_capacity[v]) {
+                                    size_t new_cap = vep_list_capacity[v] == 0 ? 1024 : vep_list_capacity[v] * 2;
+                                    float* new_buf = (float*)vcf_arrow_realloc(vep_float_data[v], new_cap * sizeof(float));
+                                    if (new_buf) {
+                                        vep_float_data[v] = new_buf;
+                                        vep_list_capacity[v] = new_cap;
+                                    }
+                                }
+                                if (vep_float_data[v] && vep_list_sizes[v] < vep_list_capacity[v]) {
+                                    vep_float_data[v][vep_list_sizes[v]] = (val && !val->is_missing) ? val->float_value : 0.0f;
+                                    vep_list_sizes[v]++;
+                                }
                             }
                         }
-                    } else {
-                        // Missing value - update offsets for strings
-                        if (field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
-                            vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                        
+                        // Update final offset for this record
+                        if (vep_list_offsets[v]) {
+                            vep_list_offsets[v][n_read + 1] = (int32_t)vep_list_sizes[v];
+                        }
+                    }
+                } else {
+                    // VEP_TRANSCRIPT_FIRST mode: use first transcript only (scalar)
+                    int tr_idx = 0;
+                    
+                    for (int v = 0; v < n_vep; v++) {
+                        int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+                        const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+                        if (!field) continue;
+                        
+                        const vep_value_t* val = vep_record_get_value(vep_rec, tr_idx, field_idx);
+                        
+                        if (val && !val->is_missing) {
+                            // Set validity bit
+                            if (vep_validity[v]) {
+                                vep_validity[v][n_read / 8] |= (1 << (n_read % 8));
+                            }
+                            
+                            if (field->type == VEP_TYPE_STRING) {
+                                // Store string value
+                                if (val->str_value && vep_str_offsets[v]) {
+                                    size_t len = strlen(val->str_value);
+                                    
+                                    // Grow buffer if needed
+                                    size_t needed = vep_str_sizes[v] + len;
+                                    if (needed > vep_str_capacity[v]) {
+                                        size_t new_cap = vep_str_capacity[v] == 0 ? 4096 : vep_str_capacity[v] * 2;
+                                        while (new_cap < needed) new_cap *= 2;
+                                        char* new_buf = (char*)vcf_arrow_realloc(vep_str_buffers[v], new_cap);
+                                        if (new_buf) {
+                                            vep_str_buffers[v] = new_buf;
+                                            vep_str_capacity[v] = new_cap;
+                                        }
+                                    }
+                                    
+                                    // Copy string data
+                                    if (vep_str_sizes[v] + len <= vep_str_capacity[v]) {
+                                        memcpy(vep_str_buffers[v] + vep_str_sizes[v], val->str_value, len);
+                                        vep_str_sizes[v] += len;
+                                    }
+                                    vep_str_offsets[v][n_read + 1] = (int32_t)vep_str_sizes[v];
+                                } else if (vep_str_offsets[v]) {
+                                    vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                                }
+                            } else if (field->type == VEP_TYPE_INTEGER) {
+                                if (vep_int_data[v]) {
+                                    vep_int_data[v][n_read] = val->int_value;
+                                }
+                            } else if (field->type == VEP_TYPE_FLOAT) {
+                                if (vep_float_data[v]) {
+                                    vep_float_data[v][n_read] = val->float_value;
+                                }
+                            }
+                        } else {
+                            // Missing value - update offsets for strings
+                            if (field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
+                                vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                            }
                         }
                     }
                 }
@@ -1744,8 +1863,16 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                 for (int v = 0; v < n_vep; v++) {
                     int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
                     const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
-                    if (field && field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
-                        vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                    
+                    if (vep_transcript_all) {
+                        // Set empty list offset
+                        if (vep_list_offsets && vep_list_offsets[v]) {
+                            vep_list_offsets[v][n_read + 1] = vep_list_offsets[v][n_read];
+                        }
+                    } else {
+                        if (field && field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
+                            vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                        }
                     }
                 }
             }

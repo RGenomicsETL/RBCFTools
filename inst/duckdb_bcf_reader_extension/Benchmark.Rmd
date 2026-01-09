@@ -1,12 +1,8 @@
 ---
 title: "BCF Reader Benchmarks"
-output:
-  html_document:
-    toc: true
-    toc_depth: 2
-    toc_float: true
+output: github_document
 params:
-  bcf_path: "test_very_large.bcf"
+  bcf_path: "../../test_very_large.bcf"
   region: "22:20000000-21000000"
   duckdb_ext: "build/bcf_reader.duckdb_extension"
 ---
@@ -36,12 +32,18 @@ bcf_path <- params$bcf_path
 region <- params$region
 duckdb_ext <- params$duckdb_ext
 
-if (!file.exists(bcf_path)) {
-  stop("BCF not found: ", bcf_path, ". Drop the file locally before running benchmarks.")
-}
-if (!file.exists(duckdb_ext)) {
-  stop("DuckDB extension not found: ", duckdb_ext, ". Build with `make` first.")
-}
+has_bcf <- file.exists(bcf_path)
+has_ext <- file.exists(duckdb_ext)
+can_run <- has_bcf && has_ext
+
+if (!has_bcf) message("BCF not found: ", bcf_path, ". Benchmarks will be skipped.")
+if (!has_ext) message("DuckDB extension not found: ", duckdb_ext, ". Build with `make` first; benchmarks will be skipped.")
+
+data.frame(
+  resource = c("bcf_path", "duckdb_ext"),
+  path = c(bcf_path, duckdb_ext),
+  exists = c(has_bcf, has_ext)
+)
 ```
 
 ## Benchmarks
@@ -60,7 +62,7 @@ run_cmd <- function(cmd) {
 
 ### bcftools view (full file)
 
-```{r bcftools-full}
+```{r bcftools-full, eval=can_run}
 cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
 time_bcftools_full <- run_cmd(cmd_bcftools_full)
 time_bcftools_full
@@ -68,7 +70,7 @@ time_bcftools_full
 
 ### bcftools view (region)
 
-```{r bcftools-region}
+```{r bcftools-region, eval=can_run}
 cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 time_bcftools_region <- run_cmd(cmd_bcftools_region)
 time_bcftools_region
@@ -76,7 +78,7 @@ time_bcftools_region
 
 ### DuckDB bcf_read (full file)
 
-```{r duckdb-full}
+```{r duckdb-full, eval=can_run}
 cmd_duckdb_full <- sprintf(
   "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
   shQuote(duckdb_ext),
@@ -88,7 +90,7 @@ time_duckdb_full
 
 ### DuckDB bcf_read (region)
 
-```{r duckdb-region}
+```{r duckdb-region, eval=can_run}
 cmd_duckdb_region <- sprintf(
   "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
   shQuote(duckdb_ext),
@@ -104,3 +106,4 @@ time_duckdb_region
 - These timings are single passes; rerun and average for more stable numbers.
 - Ensure the file and its index are co-located with fast storage (local SSD preferred).
 - Adjust `region` to match indexed contigs present in `test_very_large.bcf`.
+- If required resources are missing, chunks are skipped and a status table is shown above.
