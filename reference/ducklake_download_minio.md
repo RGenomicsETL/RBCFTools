@@ -5,11 +5,7 @@ Download a static MinIO server binary
 ## Usage
 
 ``` r
-ducklake_download_minio(
-  dest_dir = tempdir(),
-  url = "https://dl.min.io/server/minio/release/linux-amd64/minio",
-  filename = "minio"
-)
+ducklake_download_minio(dest_dir = tempdir(), url = NULL, filename = "minio")
 ```
 
 ## Arguments
@@ -20,7 +16,7 @@ ducklake_download_minio(
 
 - url:
 
-  Optional download URL. Defaults to MinIO Linux amd64 build.
+  Optional download URL. Defaults to MinIO Linux build for host arch.
 
 - filename:
 
