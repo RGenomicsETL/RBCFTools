@@ -1094,6 +1094,8 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     int32_t** vep_list_offsets = NULL;  // List offsets per field [n_vep][batch_size+1]
     size_t* vep_list_sizes = NULL;      // Current number of list elements per field
     size_t* vep_list_capacity = NULL;   // Allocated capacity for list elements per field
+    int32_t** vep_str_element_offsets = NULL;  // Per-element string offsets for transcript_all mode
+    size_t* vep_str_element_capacity = NULL;   // Capacity for element offset arrays
     int vep_transcript_all = (priv->opts.vep_transcript_mode == VEP_TRANSCRIPT_ALL);
     
     if (n_vep > 0 && priv->vep_schema) {
@@ -1111,9 +1113,13 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             vep_list_offsets = (int32_t**)vcf_arrow_malloc(n_vep * sizeof(int32_t*));
             vep_list_sizes = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
             vep_list_capacity = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
+            vep_str_element_offsets = (int32_t**)vcf_arrow_malloc(n_vep * sizeof(int32_t*));
+            vep_str_element_capacity = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
             if (vep_list_offsets) memset(vep_list_offsets, 0, n_vep * sizeof(int32_t*));
             if (vep_list_sizes) memset(vep_list_sizes, 0, n_vep * sizeof(size_t));
             if (vep_list_capacity) memset(vep_list_capacity, 0, n_vep * sizeof(size_t));
+            if (vep_str_element_offsets) memset(vep_str_element_offsets, 0, n_vep * sizeof(int32_t*));
+            if (vep_str_element_capacity) memset(vep_str_element_capacity, 0, n_vep * sizeof(size_t));
         }
         
         if (vep_str_data) memset(vep_str_data, 0, n_vep * sizeof(char**));
@@ -1754,11 +1760,37 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
                                     }
                                 }
                                 
+                                // Track per-element string offset (for building child string array)
+                                if (vep_str_element_offsets) {
+                                    // Grow element offset array if needed
+                                    size_t elem_count = vep_list_sizes[v];
+                                    if (elem_count + 1 >= vep_str_element_capacity[v]) {
+                                        size_t new_cap = vep_str_element_capacity[v] == 0 ? 1024 : vep_str_element_capacity[v] * 2;
+                                        int32_t* new_offsets = (int32_t*)vcf_arrow_realloc(vep_str_element_offsets[v], (new_cap + 1) * sizeof(int32_t));
+                                        if (new_offsets) {
+                                            vep_str_element_offsets[v] = new_offsets;
+                                            vep_str_element_capacity[v] = new_cap;
+                                        }
+                                    }
+                                    // Store current position as start of this string
+                                    if (vep_str_element_offsets[v] && elem_count < vep_str_element_capacity[v]) {
+                                        vep_str_element_offsets[v][elem_count] = (int32_t)vep_str_sizes[v];
+                                    }
+                                }
+                                
                                 // Copy string data
                                 if (vep_str_sizes[v] + len <= vep_str_capacity[v] && len > 0) {
                                     memcpy(vep_str_buffers[v] + vep_str_sizes[v], str_val, len);
                                 }
                                 vep_str_sizes[v] += len;
+                                
+                                // Store end offset (next element's start = this element's end)
+                                size_t new_elem_count = vep_list_sizes[v] + 1;
+                                if (vep_str_element_offsets && vep_str_element_offsets[v] && 
+                                    new_elem_count <= vep_str_element_capacity[v]) {
+                                    vep_str_element_offsets[v][new_elem_count] = (int32_t)vep_str_sizes[v];
+                                }
+                                
                                 vep_list_sizes[v]++;  // Count string element
                                 
                             } else if (field->type == VEP_TYPE_INTEGER) {
@@ -2315,36 +2347,90 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         arr->null_count = null_count;
         
         if (transcript_all) {
-            // List type - create empty lists (child array type must match field_type)
+            // List type - use collected VEP data from vep_list_offsets, vep_str_buffers, etc.
             arr->n_buffers = 2;
             arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
             arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
             if (vep_validity) vep_validity[v] = NULL;  // Transfer ownership
             
-            int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-            memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-            arr->buffers[1] = offsets;
+            // Use the collected list offsets (or create empty ones if no data)
+            if (vep_list_offsets && vep_list_offsets[v]) {
+                arr->buffers[1] = vep_list_offsets[v];
+                vep_list_offsets[v] = NULL;  // Transfer ownership
+            } else {
+                int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                arr->buffers[1] = offsets;
+            }
             
             arr->n_children = 1;
             arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
             arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
             memset(arr->children[0], 0, sizeof(struct ArrowArray));
             arr->children[0]->release = &release_array_simple;
-            arr->children[0]->length = 0;
             arr->children[0]->n_children = 0;
             
-            // Child buffer count depends on field type
+            // Get total number of list elements from vep_list_sizes
+            int64_t total_elements = vep_list_sizes ? vep_list_sizes[v] : 0;
+            arr->children[0]->length = total_elements;
+            
+            // Child buffer depends on field type - use collected data
             if (field_type == VEP_TYPE_STRING) {
-                // String: validity, offsets, data (3 buffers)
+                // String list: use the per-element offsets we tracked during collection
                 arr->children[0]->n_buffers = 3;
                 arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                arr->children[0]->buffers[0] = NULL;
-                int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
-                child_offsets[0] = 0;
-                arr->children[0]->buffers[1] = child_offsets;
-                arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+                arr->children[0]->buffers[0] = NULL;  // All strings are valid
+                
+                size_t total_str_len = vep_str_sizes ? vep_str_sizes[v] : 0;
+                
+                // Use the per-element string offsets we tracked during collection
+                if (vep_str_element_offsets && vep_str_element_offsets[v] && total_elements > 0) {
+                    // We already have proper per-element offsets - use them
+                    arr->children[0]->buffers[1] = vep_str_element_offsets[v];
+                    vep_str_element_offsets[v] = NULL;  // Transfer ownership
+                } else {
+                    // Fallback: create empty offsets
+                    int32_t* child_offsets = (int32_t*)vcf_arrow_malloc((total_elements + 1) * sizeof(int32_t));
+                    if (child_offsets) {
+                        for (int64_t e = 0; e <= total_elements; e++) {
+                            child_offsets[e] = 0;
+                        }
+                    }
+                    arr->children[0]->buffers[1] = child_offsets;
+                }
+                
+                if (vep_str_buffers && vep_str_buffers[v] && total_str_len > 0) {
+                    arr->children[0]->buffers[2] = vep_str_buffers[v];
+                    vep_str_buffers[v] = NULL;
+                } else {
+                    arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+                }
+            } else if (field_type == VEP_TYPE_INTEGER) {
+                // Integer list - use collected vep_int_data
+                arr->children[0]->n_buffers = 2;
+                arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->children[0]->buffers[0] = NULL;  // All valid
+                
+                if (vep_int_data && vep_int_data[v] && total_elements > 0) {
+                    arr->children[0]->buffers[1] = vep_int_data[v];
+                    vep_int_data[v] = NULL;
+                } else {
+                    arr->children[0]->buffers[1] = vcf_arrow_malloc(sizeof(int32_t));
+                }
+            } else if (field_type == VEP_TYPE_FLOAT) {
+                // Float list - use collected vep_float_data
+                arr->children[0]->n_buffers = 2;
+                arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->children[0]->buffers[0] = NULL;  // All valid
+                
+                if (vep_float_data && vep_float_data[v] && total_elements > 0) {
+                    arr->children[0]->buffers[1] = vep_float_data[v];
+                    vep_float_data[v] = NULL;
+                } else {
+                    arr->children[0]->buffers[1] = vcf_arrow_malloc(sizeof(float));
+                }
             } else {
-                // Integer, Float, Flag: validity, data (2 buffers)
+                // FLAG/BOOLEAN list
                 arr->children[0]->n_buffers = 2;
                 arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
                 arr->children[0]->buffers[0] = NULL;

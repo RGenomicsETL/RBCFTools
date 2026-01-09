@@ -56,18 +56,22 @@ run_cmd <- function(cmd) {
   t <- system.time({
     system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)
   })
-  unname(t["elapsed"])
+  c(elapsed = unname(t["elapsed"]),
+    user = unname(t["user.self"]),
+    system = unname(t["sys.self"]))
 }
 
 n_runs <- 2  # adjust to change cold/warm repetition
 
 time_runs <- function(cmd, runs = n_runs) {
   if (!can_run) return(NULL)
-  times <- vapply(seq_len(runs), function(i) run_cmd(cmd), numeric(1))
+  times <- t(vapply(seq_len(runs), function(i) run_cmd(cmd), numeric(3)))
   data.frame(
-    run = seq_along(times),
-    elapsed = times,
-    cache_state = ifelse(seq_along(times) == 1, "cold-ish", "warm-ish")
+    run = seq_len(runs),
+    elapsed = times[, "elapsed"],
+    user = times[, "user"],
+    system = times[, "system"],
+    cache_state = ifelse(seq_len(runs) == 1, "cold-ish", "warm-ish")
   )
 }
 ```
@@ -78,9 +82,9 @@ time_runs <- function(cmd, runs = n_runs) {
 cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
 res_bcftools_full <- time_runs(cmd_bcftools_full)
 res_bcftools_full
-#>   run elapsed cache_state
-#> 1   1  66.157    cold-ish
-#> 2   2  70.357    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1  67.079 0.002  0.005    cold-ish
+#> 2   2  69.107 0.003  0.007    warm-ish
 ```
 
 ### bcftools view (region)
@@ -89,9 +93,9 @@ res_bcftools_full
 cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 res_bcftools_region <- time_runs(cmd_bcftools_region)
 res_bcftools_region
-#>   run elapsed cache_state
-#> 1   1   0.075    cold-ish
-#> 2   2   0.084    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.087 0.001  0.004    cold-ish
+#> 2   2   0.081 0.000  0.003    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
@@ -104,9 +108,9 @@ cmd_duckdb_full <- sprintf(
 )
 res_duckdb_full <- time_runs(cmd_duckdb_full)
 res_duckdb_full
-#>   run elapsed cache_state
-#> 1   1   3.425    cold-ish
-#> 2   2   3.615    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   3.316 0.001  0.003    cold-ish
+#> 2   2   3.813 0.000  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -120,9 +124,9 @@ cmd_duckdb_region <- sprintf(
 )
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
-#>   run elapsed cache_state
-#> 1   1   0.099    cold-ish
-#> 2   2   0.097    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.101 0.001  0.003    cold-ish
+#> 2   2   0.098 0.001  0.003    warm-ish
 ```
 
 ## Notes

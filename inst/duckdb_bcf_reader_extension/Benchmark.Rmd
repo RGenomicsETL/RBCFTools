@@ -55,18 +55,22 @@ run_cmd <- function(cmd) {
   t <- system.time({
     system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)
   })
-  unname(t["elapsed"])
+  c(elapsed = unname(t["elapsed"]),
+    user = unname(t["user.self"]),
+    system = unname(t["sys.self"]))
 }
 
 n_runs <- 2  # adjust to change cold/warm repetition
 
 time_runs <- function(cmd, runs = n_runs) {
   if (!can_run) return(NULL)
-  times <- vapply(seq_len(runs), function(i) run_cmd(cmd), numeric(1))
+  times <- t(vapply(seq_len(runs), function(i) run_cmd(cmd), numeric(3)))
   data.frame(
-    run = seq_along(times),
-    elapsed = times,
-    cache_state = ifelse(seq_along(times) == 1, "cold-ish", "warm-ish")
+    run = seq_len(runs),
+    elapsed = times[, "elapsed"],
+    user = times[, "user"],
+    system = times[, "system"],
+    cache_state = ifelse(seq_len(runs) == 1, "cold-ish", "warm-ish")
   )
 }
 ```
@@ -91,7 +95,7 @@ res_bcftools_region
 
 ```{r duckdb-full, eval=can_run}
 cmd_duckdb_full <- sprintf(
-  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
+  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path)
 )
@@ -103,7 +107,7 @@ res_duckdb_full
 
 ```{r duckdb-region, eval=can_run}
 cmd_duckdb_region <- sprintf(
-  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
+  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path),
   shQuote(region)
