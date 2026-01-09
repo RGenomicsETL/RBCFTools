@@ -151,12 +151,12 @@ res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
 ```
 
-### Parquet conversion: single-thread vs parallel
+### Parquet conversion: single-thread vs parallel (DuckDB extension)
 
-Parallel conversion uses `vcf_to_parquet()` (and its indexed parallel path) before ingest. Skips if prerequisites are missing.
+Parallel conversion uses `vcf_to_parquet_duckdb()` (via the bcf_reader extension) for direct VCF-to-Parquet export. Skips if prerequisites are missing.
 
 ```{r parquet-setup}
-parquet_can_run <- has_bcf && requireNamespace("RBCFTools", quietly = TRUE)
+parquet_can_run <- has_bcf && has_ext && requireNamespace("RBCFTools", quietly = TRUE)
 threads_parallel <- if (parquet_can_run) max(2L, parallel::detectCores()) else 0L
 
 parquet_single <- tempfile(fileext = ".parquet")
@@ -164,23 +164,25 @@ parquet_parallel <- tempfile(fileext = ".parquet")
 ```
 
 ```{r parquet-bench, eval=parquet_can_run}
-# Single-thread conversion
+# Single-thread conversion via DuckDB bcf_reader extension
 res_parquet_single <- time_expr({
-  RBCFTools::vcf_to_parquet(
-    input_vcf = bcf_path,
-    output_parquet = parquet_single,
+  RBCFTools::vcf_to_parquet_duckdb(
+    input_file = bcf_path,
+    output_file = parquet_single,
+    extension_path = duckdb_ext,
     compression = "zstd",
     row_group_size = 100000L,
     threads = 1L
   )
 }, enabled = parquet_can_run)
 
-# Parallel conversion (requires index)
+# Parallel conversion via DuckDB bcf_reader extension (requires index)
 res_parquet_parallel <- if (RBCFTools::vcf_has_index(bcf_path) && threads_parallel > 1) {
   time_expr({
-    RBCFTools::vcf_to_parquet(
-      input_vcf = bcf_path,
-      output_parquet = parquet_parallel,
+    RBCFTools::vcf_to_parquet_duckdb(
+      input_file = bcf_path,
+      output_file = parquet_parallel,
+      extension_path = duckdb_ext,
       compression = "zstd",
       row_group_size = 100000L,
       threads = threads_parallel

@@ -31,6 +31,20 @@ ducklake_load <- function(con, install = TRUE) {
   invisible(con)
 }
 
+#' @keywords internal
+ducklake_machine_arch <- function() {
+  m <- tolower(Sys.info()[["machine"]])
+  if (grepl("aarch64|arm64", m)) {
+    "arm64"
+  } else if (grepl("ppc64", m)) {
+    "ppc64le"
+  } else if (grepl("s390x", m)) {
+    "s390x"
+  } else {
+    "amd64"
+  }
+}
+
 #' Create or replace an S3 secret for DuckLake
 #'
 #' @param con A DuckDB connection.
@@ -77,11 +91,14 @@ ducklake_create_s3_secret <- function(
     SESSION_TOKEN = session_token
   )
 
+  # Drop NULL or empty values before formatting
+  opts <- opts[!vapply(opts, function(x) {
+    is.null(x) || (is.character(x) && length(x) == 1 && !nzchar(x))
+  }, logical(1), USE.NAMES = FALSE)]
+  opts <- opts[vapply(opts, function(x) length(x) > 0, logical(1), USE.NAMES = FALSE)]
+
   option_sql <- vapply(names(opts), function(nm) {
     val <- opts[[nm]]
-    if (is.null(val) || !nzchar(val)) {
-      return(NULL)
-    }
     if (nm %in% c("USE_SSL")) {
       sprintf("%s %s", nm, val)
     } else {
@@ -103,14 +120,14 @@ ducklake_create_s3_secret <- function(
 #' Download a static MinIO server binary
 #'
 #' @param dest_dir Destination directory (created if missing).
-#' @param url Optional download URL. Defaults to MinIO Linux amd64 build.
+#' @param url Optional download URL. Defaults to MinIO Linux build for host arch.
 #' @param filename Output filename. Defaults to "minio".
 #'
 #' @return Path to downloaded binary.
 #' @export
 ducklake_download_minio <- function(
   dest_dir = tempdir(),
-  url = "https://dl.min.io/server/minio/release/linux-amd64/minio",
+  url = NULL,
   filename = "minio"
 ) {
   if (missing(dest_dir) || is.null(dest_dir)) {
@@ -118,6 +135,14 @@ ducklake_download_minio <- function(
   }
   if (!dir.exists(dest_dir)) {
     dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  }
+  if (is.null(url) || !nzchar(url)) {
+    os <- tolower(Sys.info()[["sysname"]])
+    if (os != "linux") {
+      stop("MinIO server binary download is only supported on Linux hosts", call. = FALSE)
+    }
+    arch <- ducklake_machine_arch()
+    url <- sprintf("https://dl.min.io/server/minio/release/linux-%s/minio", arch)
   }
   dest <- file.path(dest_dir, filename)
   utils::download.file(url, dest, mode = "wb", quiet = TRUE)
@@ -128,14 +153,14 @@ ducklake_download_minio <- function(
 #' Download a static MinIO client (mc) binary
 #'
 #' @param dest_dir Destination directory (created if missing).
-#' @param url Optional download URL. Defaults to mc Linux amd64 build.
+#' @param url Optional download URL. Defaults to mc Linux build for host arch.
 #' @param filename Output filename. Defaults to "mc".
 #'
 #' @return Path to downloaded binary.
 #' @export
 ducklake_download_mc <- function(
   dest_dir = tempdir(),
-  url = "https://dl.min.io/client/mc/release/linux-amd64/mc",
+  url = NULL,
   filename = "mc"
 ) {
   if (missing(dest_dir) || is.null(dest_dir)) {
@@ -143,6 +168,17 @@ ducklake_download_mc <- function(
   }
   if (!dir.exists(dest_dir)) {
     dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  }
+  if (is.null(url) || !nzchar(url)) {
+    os <- tolower(Sys.info()[["sysname"]])
+    arch <- ducklake_machine_arch()
+    if (os == "linux") {
+      url <- sprintf("https://dl.min.io/client/mc/release/linux-%s/mc", arch)
+    } else if (os == "darwin") {
+      url <- sprintf("https://dl.min.io/client/mc/release/darwin-%s/mc", arch)
+    } else {
+      stop("Unsupported platform for mc download; expected Linux or macOS", call. = FALSE)
+    }
   }
   dest <- file.path(dest_dir, filename)
   utils::download.file(url, dest, mode = "wb", quiet = TRUE)
