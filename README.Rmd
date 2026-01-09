@@ -330,9 +330,6 @@ batch2 <- stream2$get_next()
 nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 ```
 
-## Limitations and issues
-
-Arrow stream still copies at the C level and again on Parquet conversion (Arrow IPC serialization); optimizing zero-copy paths remains open. The duckdb extension can be improve with ranged request for indexed files even when region is not specicied.
 
 ## Future directions
 

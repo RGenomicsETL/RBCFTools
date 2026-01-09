@@ -75,6 +75,23 @@ time_runs <- function(cmd, runs = n_runs) {
     cache_state = ifelse(seq_len(runs) == 1, "cold-ish", "warm-ish")
   )
 }
+
+time_expr <- function(expr, runs = 1L, enabled = can_run) {
+  if (!enabled) return(NULL)
+  times <- t(vapply(seq_len(runs), function(i) {
+    t <- system.time(force(expr))
+    c(elapsed = unname(t["elapsed"]),
+      user = unname(t["user.self"]),
+      system = unname(t["sys.self"]))
+  }, numeric(3)))
+  data.frame(
+    run = seq_len(nrow(times)),
+    elapsed = times[, "elapsed"],
+    user = times[, "user"],
+    system = times[, "system"],
+    cache_state = ifelse(seq_len(nrow(times)) == 1, "cold-ish", "warm-ish")
+  )
+}
 ```
 
 ### bcftools view — text VCF emit (full file)
@@ -132,6 +149,51 @@ cmd_duckdb_region <- sprintf(
 )
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
+```
+
+### Parquet conversion: single-thread vs parallel
+
+Parallel conversion uses `vcf_to_parquet()` (and its indexed parallel path) before ingest. Skips if prerequisites are missing.
+
+```{r parquet-setup}
+parquet_can_run <- has_bcf && requireNamespace("RBCFTools", quietly = TRUE)
+threads_parallel <- if (parquet_can_run) max(2L, parallel::detectCores()) else 0L
+
+parquet_single <- tempfile(fileext = ".parquet")
+parquet_parallel <- tempfile(fileext = ".parquet")
+```
+
+```{r parquet-bench, eval=parquet_can_run}
+# Single-thread conversion
+res_parquet_single <- time_expr({
+  RBCFTools::vcf_to_parquet(
+    input_vcf = bcf_path,
+    output_parquet = parquet_single,
+    compression = "zstd",
+    row_group_size = 100000L,
+    threads = 1L
+  )
+}, enabled = parquet_can_run)
+
+# Parallel conversion (requires index)
+res_parquet_parallel <- if (RBCFTools::vcf_has_index(bcf_path) && threads_parallel > 1) {
+  time_expr({
+    RBCFTools::vcf_to_parquet(
+      input_vcf = bcf_path,
+      output_parquet = parquet_parallel,
+      compression = "zstd",
+      row_group_size = 100000L,
+      threads = threads_parallel
+    )
+  }, enabled = parquet_can_run)
+} else {
+  NULL
+}
+
+res_parquet_single
+res_parquet_parallel
+
+unlink(c(parquet_single, parquet_parallel))
 ```
 
 ## Notes
