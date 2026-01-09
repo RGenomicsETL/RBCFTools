@@ -25,13 +25,20 @@
  * @param samples_sexp Sample filter string (or R_NilValue)
  * @param include_info_sexp Include INFO fields
  * @param include_format_sexp Include FORMAT fields
+ * @param index_sexp Index file path (or R_NilValue)
  * @param threads_sexp Number of threads
+ * @param parse_vep_sexp Enable VEP parsing
+ * @param vep_tag_sexp VEP tag (CSQ, BCSQ, ANN) or R_NilValue for auto-detect
+ * @param vep_columns_sexp Comma-separated VEP columns or R_NilValue for all
+ * @param vep_transcript_mode_sexp 0=all, 1=first
  * @return nanoarrow_array_stream external pointer
  */
 SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
                          SEXP region_sexp, SEXP samples_sexp,
                          SEXP include_info_sexp, SEXP include_format_sexp,
-                         SEXP index_sexp, SEXP threads_sexp) {
+                         SEXP index_sexp, SEXP threads_sexp,
+                         SEXP parse_vep_sexp, SEXP vep_tag_sexp,
+                         SEXP vep_columns_sexp, SEXP vep_transcript_mode_sexp) {
     // Validate inputs
     if (TYPEOF(filename_sexp) != STRSXP || Rf_length(filename_sexp) != 1) {
         Rf_error("filename must be a single character string");
@@ -72,6 +79,23 @@ SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
     
     if (!Rf_isNull(threads_sexp)) {
         opts.threads = Rf_asInteger(threads_sexp);
+    }
+    
+    // VEP parsing options
+    if (!Rf_isNull(parse_vep_sexp)) {
+        opts.parse_vep = Rf_asLogical(parse_vep_sexp);
+    }
+    
+    if (!Rf_isNull(vep_tag_sexp) && TYPEOF(vep_tag_sexp) == STRSXP) {
+        opts.vep_tag = CHAR(STRING_ELT(vep_tag_sexp, 0));
+    }
+    
+    if (!Rf_isNull(vep_columns_sexp) && TYPEOF(vep_columns_sexp) == STRSXP) {
+        opts.vep_columns = CHAR(STRING_ELT(vep_columns_sexp, 0));
+    }
+    
+    if (!Rf_isNull(vep_transcript_mode_sexp)) {
+        opts.vep_transcript_mode = Rf_asInteger(vep_transcript_mode_sexp);
     }
     
     // Create the stream external pointer using nanoarrow's helper

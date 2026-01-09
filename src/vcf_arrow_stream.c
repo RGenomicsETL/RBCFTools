@@ -3,6 +3,7 @@
 // Licensed under MIT License
 
 #include "vcf_arrow_stream.h"
+#include "vep_parser.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -55,6 +56,75 @@ static char* vcf_arrow_strdup(const char* s) {
     char* copy = (char*)vcf_arrow_malloc(len);
     if (copy) memcpy(copy, s, len);
     return copy;
+}
+
+// =============================================================================
+// VEP Type to Arrow Format Mapping
+// =============================================================================
+
+/**
+ * Convert VEP field type to Arrow format string
+ */
+static const char* vep_type_to_arrow_format(vep_field_type_t type) {
+    switch (type) {
+        case VEP_TYPE_INTEGER:
+            return ARROW_FORMAT_INT32;
+        case VEP_TYPE_FLOAT:
+            return ARROW_FORMAT_FLOAT32;
+        case VEP_TYPE_FLAG:
+            return "b";  // boolean
+        case VEP_TYPE_STRING:
+        default:
+            return ARROW_FORMAT_UTF8;
+    }
+}
+
+/**
+ * Parse comma-separated column names into selected field indices
+ * Returns array of field indices (terminated by -1), caller must free
+ */
+static int* parse_vep_column_selection(const vep_schema_t* schema, const char* columns) {
+    if (!schema || !columns || !*columns) {
+        // Return NULL to indicate "all columns"
+        return NULL;
+    }
+    
+    // Count commas to determine max number of columns
+    int n_commas = 0;
+    for (const char* p = columns; *p; p++) {
+        if (*p == ',') n_commas++;
+    }
+    
+    // Allocate array (n_commas+2 for up to n_commas+1 fields plus sentinel)
+    int* indices = (int*)vcf_arrow_malloc((n_commas + 2) * sizeof(int));
+    if (!indices) return NULL;
+    
+    int n_selected = 0;
+    char* copy = vcf_arrow_strdup(columns);
+    if (!copy) {
+        vcf_arrow_free(indices);
+        return NULL;
+    }
+    
+    char* saveptr = NULL;
+    char* token = strtok_r(copy, ",", &saveptr);
+    while (token) {
+        // Trim whitespace
+        while (*token == ' ') token++;
+        char* end = token + strlen(token) - 1;
+        while (end > token && *end == ' ') *end-- = '\0';
+        
+        int idx = vep_schema_get_field_index(schema, token);
+        if (idx >= 0) {
+            indices[n_selected++] = idx;
+        }
+        token = strtok_r(NULL, ",", &saveptr);
+    }
+    
+    vcf_arrow_free(copy);
+    indices[n_selected] = -1;  // Sentinel
+    
+    return indices;
 }
 
 // =============================================================================
@@ -359,10 +429,17 @@ static int vcf_arrow_correct_info_number(const char* field_name, int original_vl
 // Core Schema Creation
 // =============================================================================
 
-int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
-                                  struct ArrowSchema* schema,
-                                  const vcf_arrow_options_t* opts) {
+/**
+ * Internal function for schema creation that accepts pre-parsed VEP schema
+ */
+static int vcf_arrow_schema_from_header_internal(const bcf_hdr_t* hdr,
+                                                  struct ArrowSchema* schema,
+                                                  const vcf_arrow_options_t* opts,
+                                                  const vep_schema_t* vep_schema,
+                                                  const int* vep_field_indices,
+                                                  int n_vep_columns) {
     // Core VCF fields: CHROM, POS, ID, REF, ALT, QUAL, FILTER = 7
+    // Plus VEP columns if parsing enabled
     // Plus INFO fields if requested
     // Plus one struct for samples if requested
     
@@ -384,7 +461,17 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
     int n_samples = bcf_hdr_nsamples(hdr);
     int include_samples = (opts == NULL || opts->include_format) && n_samples > 0;
     
-    int64_t n_children = n_core;
+    // Calculate VEP column count
+    int n_vep = 0;
+    if (opts && opts->parse_vep && vep_schema) {
+        if (vep_field_indices) {
+            n_vep = n_vep_columns;
+        } else {
+            n_vep = vep_schema->n_fields;
+        }
+    }
+    
+    int64_t n_children = n_core + n_vep;  // Core fields + VEP columns
     if (n_info > 0) n_children++;  // INFO struct
     if (include_samples) n_children++;  // samples struct
     
@@ -419,6 +506,32 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
     // FILTER - list<string> (index 6)
     RETURN_IF_ERROR(init_schema_list(schema->children[idx++],
                                      "FILTER", ARROW_FORMAT_UTF8, "item"));
+    
+    // VEP columns (if parsing enabled and schema available)
+    if (n_vep > 0 && vep_schema) {
+        int transcript_all = (opts && opts->vep_transcript_mode == VEP_TRANSCRIPT_ALL);
+        
+        for (int v = 0; v < n_vep; v++) {
+            int field_idx = vep_field_indices ? vep_field_indices[v] : v;
+            const vep_field_t* field = vep_schema_get_field(vep_schema, field_idx);
+            if (!field) continue;
+            
+            // Column name: VEP_<fieldname>
+            char col_name[256];
+            snprintf(col_name, sizeof(col_name), "VEP_%s", field->name);
+            
+            const char* arrow_format = vep_type_to_arrow_format(field->type);
+            
+            // If transcript_all mode, wrap in list; otherwise scalar
+            if (transcript_all) {
+                RETURN_IF_ERROR(init_schema_list(schema->children[idx++],
+                                                 col_name, arrow_format, "item"));
+            } else {
+                RETURN_IF_ERROR(init_schema_field(schema->children[idx++],
+                                                  arrow_format, col_name, ARROW_FLAG_NULLABLE));
+            }
+        }
+    }
     
     // INFO struct (if requested and present)
     if (n_info > 0) {
@@ -562,6 +675,47 @@ int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
     return 0;
 }
 
+/**
+ * Public API function for schema creation
+ * Parses VEP schema on-demand if parse_vep is enabled
+ */
+int vcf_arrow_schema_from_header(const bcf_hdr_t* hdr,
+                                  struct ArrowSchema* schema,
+                                  const vcf_arrow_options_t* opts) {
+    vep_schema_t* vep_schema = NULL;
+    int* vep_field_indices = NULL;
+    int n_vep_columns = 0;
+    
+    // Parse VEP schema if enabled
+    if (opts && opts->parse_vep) {
+        vep_schema = vep_schema_parse(hdr, opts->vep_tag);
+        if (vep_schema) {
+            // Parse column selection if provided
+            if (opts->vep_columns && *opts->vep_columns) {
+                vep_field_indices = parse_vep_column_selection(vep_schema, opts->vep_columns);
+                if (vep_field_indices) {
+                    // Count selected columns
+                    for (int i = 0; vep_field_indices[i] >= 0; i++) {
+                        n_vep_columns++;
+                    }
+                }
+            } else {
+                n_vep_columns = vep_schema->n_fields;
+            }
+        }
+    }
+    
+    int ret = vcf_arrow_schema_from_header_internal(hdr, schema, opts, 
+                                                     vep_schema, vep_field_indices, 
+                                                     n_vep_columns);
+    
+    // Clean up
+    if (vep_field_indices) vcf_arrow_free(vep_field_indices);
+    if (vep_schema) vep_schema_destroy(vep_schema);
+    
+    return ret;
+}
+
 // =============================================================================
 // Stream Implementation
 // =============================================================================
@@ -576,7 +730,9 @@ static int vcf_stream_get_schema(struct ArrowArrayStream* stream, struct ArrowSc
             return ENOMEM;
         }
         
-        int ret = vcf_arrow_schema_from_header(priv->hdr, priv->cached_schema, &priv->opts);
+        int ret = vcf_arrow_schema_from_header_internal(priv->hdr, priv->cached_schema, &priv->opts,
+                                                         priv->vep_schema, priv->vep_field_indices,
+                                                         priv->n_vep_columns);
         if (ret != 0) {
             vcf_arrow_free(priv->cached_schema);
             priv->cached_schema = NULL;
@@ -586,7 +742,9 @@ static int vcf_stream_get_schema(struct ArrowArrayStream* stream, struct ArrowSc
     }
     
     // Deep copy schema by regenerating it with the same options
-    return vcf_arrow_schema_from_header(priv->hdr, out, &priv->opts);
+    return vcf_arrow_schema_from_header_internal(priv->hdr, out, &priv->opts,
+                                                  priv->vep_schema, priv->vep_field_indices,
+                                                  priv->n_vep_columns);
 }
 
 static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArray* out) {
@@ -1534,7 +1692,10 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     // n_samples was already computed earlier
     int include_samples = priv->opts.include_format && n_samples > 0;
     
-    int64_t n_children = n_core;
+    // Calculate VEP column count (must match schema)
+    int n_vep = priv->n_vep_columns;
+    
+    int64_t n_children = n_core + n_vep;  // Core fields + VEP columns
     if (n_info_fields > 0) n_children++;  // INFO struct
     if (include_samples) n_children++;  // samples struct
     
@@ -1849,12 +2010,107 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     vcf_arrow_free(filter_counts);
     
     // =========================================================================
-    // Child 7: INFO struct (if include_info and INFO fields exist)
+    // Children 7 to 7+n_vep-1: VEP columns (if VEP parsing enabled)
+    // Each VEP column is a scalar or list depending on vep_transcript_mode
+    // For now, we create placeholder NULL columns - actual VEP parsing 
+    // will be implemented when records are processed
+    // =========================================================================
+    // Note: VEP data population is not yet implemented - we just create empty columns
+    // to match the schema. Full implementation would parse CSQ/ANN/BCSQ per record.
+    for (int v = 0; v < n_vep; v++) {
+        int col_idx = 7 + v;
+        struct ArrowArray* arr = out->children[col_idx];
+        arr->length = n_read;
+        arr->null_count = n_read;  // All NULL for now
+        arr->offset = 0;
+        arr->n_children = 0;
+        arr->children = NULL;
+        
+        // Create validity bitmap (all NULL)
+        uint8_t* validity = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
+        memset(validity, 0, (n_read + 7) / 8);  // All bits 0 = all NULL
+        
+        // Determine if list type based on transcript mode
+        int transcript_all = (priv->opts.vep_transcript_mode == VEP_TRANSCRIPT_ALL);
+        
+        // Get field type to determine buffer count
+        int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+        const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+        vep_field_type_t field_type = field ? field->type : VEP_TYPE_STRING;
+        
+        if (transcript_all) {
+            // List type - create empty lists
+            arr->n_buffers = 2;
+            arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+            arr->buffers[0] = validity;
+            
+            // Empty list offsets (all zeros)
+            int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+            memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+            arr->buffers[1] = offsets;
+            
+            // Create empty child array
+            arr->n_children = 1;
+            arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
+            arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
+            memset(arr->children[0], 0, sizeof(struct ArrowArray));
+            arr->children[0]->release = &release_array_simple;
+            arr->children[0]->length = 0;
+            arr->children[0]->n_buffers = 3;  // For string child
+            arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+            arr->children[0]->buffers[0] = NULL;
+            int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
+            child_offsets[0] = 0;
+            arr->children[0]->buffers[1] = child_offsets;
+            arr->children[0]->buffers[2] = vcf_arrow_malloc(1);  // Empty string data
+        } else {
+            // Scalar type - buffer count depends on field type
+            if (field_type == VEP_TYPE_STRING) {
+                // STRING: 3 buffers (validity, offsets, data)
+                arr->n_buffers = 3;
+                arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                arr->buffers[0] = validity;
+                
+                // Empty string offsets (all zeros)
+                int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                arr->buffers[1] = offsets;
+                arr->buffers[2] = vcf_arrow_malloc(1);  // Empty string data
+            } else if (field_type == VEP_TYPE_INTEGER) {
+                // INTEGER: 2 buffers (validity, data)
+                arr->n_buffers = 2;
+                arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->buffers[0] = validity;
+                int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
+                memset(data, 0, n_read * sizeof(int32_t));
+                arr->buffers[1] = data;
+            } else if (field_type == VEP_TYPE_FLOAT) {
+                // FLOAT: 2 buffers (validity, data)
+                arr->n_buffers = 2;
+                arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->buffers[0] = validity;
+                float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
+                memset(data, 0, n_read * sizeof(float));
+                arr->buffers[1] = data;
+            } else {
+                // FLAG/BOOLEAN: 2 buffers (validity, data bitmap)
+                arr->n_buffers = 2;
+                arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->buffers[0] = validity;
+                uint8_t* data = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
+                memset(data, 0, (n_read + 7) / 8);
+                arr->buffers[1] = data;
+            }
+        }
+    }
+    
+    // =========================================================================
+    // Child 7+n_vep: INFO struct (if include_info and INFO fields exist)
     // Populated with actual INFO field data extracted during record reading
     // Note: We use n_info_fields from data collection phase for consistency
     // =========================================================================
     if (n_info_fields > 0) {
-        struct ArrowArray* info_arr = out->children[7];
+        struct ArrowArray* info_arr = out->children[7 + n_vep];
         info_arr->length = n_read;
         info_arr->null_count = 0;
         info_arr->offset = 0;
@@ -2067,6 +2323,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     // =========================================================================
     if (include_samples) {
         int samples_child_idx = n_info_fields > 0 ? 8 : 7;
+        samples_child_idx += n_vep;  // Offset by VEP columns
         struct ArrowArray* samples_arr = out->children[samples_child_idx];
         samples_arr->length = n_read;
         samples_arr->null_count = 0;
@@ -2480,6 +2737,14 @@ static void vcf_stream_release(struct ArrowArrayStream* stream) {
             vcf_arrow_free(priv->cached_schema);
         }
         
+        // Free VEP resources
+        if (priv->vep_schema) {
+            vep_schema_destroy(priv->vep_schema);
+        }
+        if (priv->vep_field_indices) {
+            vcf_arrow_free(priv->vep_field_indices);
+        }
+        
         vcf_arrow_free(priv);
     }
     stream->release = NULL;
@@ -2497,6 +2762,11 @@ void vcf_arrow_options_init(vcf_arrow_options_t* opts) {
     opts->region = NULL;
     opts->samples = NULL;
     opts->threads = 0;
+    // VEP options - disabled by default for backward compatibility
+    opts->parse_vep = 0;
+    opts->vep_tag = NULL;
+    opts->vep_columns = NULL;
+    opts->vep_transcript_mode = VEP_TRANSCRIPT_FIRST;
 }
 
 int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
@@ -2617,6 +2887,25 @@ int vcf_arrow_stream_init(struct ArrowArrayStream* stream,
         hts_close(priv->fp);
         vcf_arrow_free(priv);
         return ENOMEM;
+    }
+    
+    // Parse VEP schema if enabled
+    if (priv->opts.parse_vep) {
+        priv->vep_schema = vep_schema_parse(priv->hdr, priv->opts.vep_tag);
+        if (priv->vep_schema) {
+            // Parse column selection if provided
+            if (priv->opts.vep_columns && *priv->opts.vep_columns) {
+                priv->vep_field_indices = parse_vep_column_selection(priv->vep_schema, priv->opts.vep_columns);
+                if (priv->vep_field_indices) {
+                    // Count selected columns
+                    for (int i = 0; priv->vep_field_indices[i] >= 0; i++) {
+                        priv->n_vep_columns++;
+                    }
+                }
+            } else {
+                priv->n_vep_columns = priv->vep_schema->n_fields;
+            }
+        }
     }
     
     return 0;

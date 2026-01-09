@@ -5,11 +5,13 @@
 #ifndef VCF_ARROW_STREAM_H
 #define VCF_ARROW_STREAM_H
 
-#include <htslib/vcf.h>
-#include <htslib/hts.h>
-#include <htslib/synced_bcf_reader.h>
-#include <htslib/tbx.h>
-#include <htslib/kstring.h>
+#include "htslib/vcf.h"
+#include "htslib/hts.h"
+#include "htslib/synced_bcf_reader.h"
+#include "htslib/tbx.h"
+#include "htslib/kstring.h"
+// Forward declaration for VEP schema (defined in vep_parser.h)
+typedef struct vep_schema_t vep_schema_t;
 
 // Arrow C Data Interface structures
 // (These are also defined in nanoarrow/r.h but we define them here for standalone use)
@@ -80,6 +82,11 @@ extern "C" {
 // - FILTER: list<utf8> (list of strings)
 // - INFO: struct (dynamic based on header)
 // - FORMAT/samples: struct of lists (dynamic based on header)
+// - VEP fields: typed columns from CSQ/BCSQ/ANN (if parse_vep enabled)
+
+// VEP transcript selection modes
+#define VEP_TRANSCRIPT_ALL       0  // Return all transcripts (list columns)
+#define VEP_TRANSCRIPT_FIRST     1  // Return first transcript only (scalar columns)
 
 // Options for configuring the VCF stream
 typedef struct {
@@ -92,6 +99,12 @@ typedef struct {
                                   // VCF: tries .tbi first, then .csi
                                   // BCF: uses .csi only
     int threads;                  // Number of threads for decompression
+    
+    // VEP annotation parsing options
+    int parse_vep;                // Enable VEP/BCSQ/ANN parsing (default: 0)
+    const char* vep_tag;          // Annotation tag (NULL = auto-detect CSQ/BCSQ/ANN)
+    const char* vep_columns;      // Comma-separated columns to extract (NULL = all)
+    int vep_transcript_mode;      // VEP_TRANSCRIPT_ALL or VEP_TRANSCRIPT_FIRST
 } vcf_arrow_options_t;
 
 // Private data for the VCF stream
@@ -143,6 +156,11 @@ typedef struct {
     char** filter_data;
     int32_t* filter_offsets;
     int32_t* filter_list_offsets;
+    
+    // VEP annotation parsing state
+    vep_schema_t* vep_schema;     // Parsed VEP schema (NULL if parse_vep=0)
+    int* vep_field_indices;       // Indices of selected VEP fields (-1 = not selected)
+    int n_vep_columns;            // Number of VEP columns in output
     
 } vcf_arrow_private_t;
 

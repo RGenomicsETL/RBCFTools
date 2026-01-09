@@ -27,6 +27,13 @@
 #'   Alternatively, use htslib ##idx## syntax in filename (e.g., "file.vcf.gz##idx##custom.tbi").
 #'   Note: Index is only required for region queries; whole-file streaming needs no index.
 #' @param threads Number of decompression threads (default: 0 = auto)
+#' @param parse_vep Enable VEP/BCSQ/ANN annotation parsing (default: FALSE).
+#'   When TRUE, annotation fields are parsed and added as typed columns.
+#' @param vep_tag Annotation tag to parse ("CSQ", "BCSQ", "ANN") or NULL for auto-detect.
+#' @param vep_columns Character vector of VEP fields to extract, or NULL for all fields.
+#' @param vep_transcript Which transcript to extract: "first" (default) or "all".
+#'   "first" returns scalar columns (one value per variant).
+#'   "all" returns list columns (all transcripts per variant).
 #'
 #' @return A nanoarrow_array_stream object
 #'
@@ -63,7 +70,11 @@ vcf_open_arrow <- function(
   include_info = TRUE,
   include_format = TRUE,
   index = NULL,
-  threads = 0L
+  threads = 0L,
+  parse_vep = FALSE,
+  vep_tag = NULL,
+  vep_columns = NULL,
+  vep_transcript = c("first", "all")
 ) {
   # Setup HTS_PATH for remote file access (S3, GCS, HTTP)
   # This must be set before htslib opens any files
@@ -79,6 +90,15 @@ vcf_open_arrow <- function(
     filename <- normalizePath(filename, mustWork = TRUE)
   }
 
+  # Process VEP options
+  vep_transcript <- match.arg(vep_transcript)
+  vep_transcript_mode <- if (vep_transcript == "first") 1L else 0L
+  vep_columns_str <- if (!is.null(vep_columns)) {
+    paste(vep_columns, collapse = ",")
+  } else {
+    NULL
+  }
+
   .Call(
     vcf_to_arrow_stream,
     filename,
@@ -88,7 +108,11 @@ vcf_open_arrow <- function(
     as.logical(include_info),
     as.logical(include_format),
     index,
-    as.integer(threads)
+    as.integer(threads),
+    as.logical(parse_vep),
+    vep_tag,
+    vep_columns_str,
+    vep_transcript_mode
   )
 }
 

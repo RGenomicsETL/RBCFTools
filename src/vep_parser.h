@@ -12,7 +12,7 @@
 #ifndef VEP_PARSER_H
 #define VEP_PARSER_H
 
-#include <htslib/vcf.h>
+#include "htslib/vcf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +60,7 @@ typedef struct {
 /**
  * Parsed annotation schema from VCF header
  */
-typedef struct {
+typedef struct vep_schema_t {
     char* tag_name;          /**< Tag name (CSQ, BCSQ, ANN) */
     int n_fields;            /**< Number of fields */
     vep_field_t* fields;     /**< Array of field metadata */
