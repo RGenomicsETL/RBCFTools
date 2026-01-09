@@ -110,79 +110,149 @@ htslib_feature_string()
 ```
 
 ``` r
-# This runs only when prerequisites are available; otherwise it no-ops with a message.
-if (tolower(Sys.info()[["sysname"]]) != "linux") {
-  message("Skipping DuckLake ETL: requires Linux + MinIO + ducklake extension")
-} else if (!requireNamespace("duckdb", quietly = TRUE) ||
-           !requireNamespace("DBI", quietly = TRUE)) {
-  message("Skipping DuckLake ETL: duckdb/DBI not installed")
-} else if (!nzchar(Sys.which("mc")) || !nzchar(Sys.which("minio"))) {
-  message("Skipping DuckLake ETL: minio/mc binaries not on PATH")
-} else {
-  con <- duckdb::dbConnect(duckdb::duckdb(config = list(
-    allow_unsigned_extensions = "true",
-    enable_external_access = "true"
-  )))
-  on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+stopifnot(tolower(Sys.info()[["sysname"]]) == "linux")
 
-  # Try to install/load ducklake (network required)
-  ok <- FALSE
-  res_install <- try(DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"), silent = TRUE)
-  res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
-  ok <- !inherits(res_load, "try-error")
-  if (!ok) {
-    message("Skipping DuckLake ETL: ducklake extension not available")
-  } else {
-    tryCatch({
-      ducklake_create_s3_secret(
-        con,
-        name = "minio_secret",
-        key_id = "MINIOUSER",
-        secret = "MINIOPASS",
-        endpoint = "127.0.0.1:9000",
-        region = "us-east-1",
-        use_ssl = FALSE
-      )
+bin_dir <- file.path(tempdir(), "ducklake_bins")
+dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
-      ducklake_attach(
-        con,
-        metadata_path = "ducklake_demo.ducklake",
-        data_path = "s3://mybucket/rbcftools",
-        alias = "lake"
-      )
+minio_bin <- Sys.which("minio")
+if (!nzchar(minio_bin)) minio_bin <- ducklake_download_minio(dest_dir = bin_dir)
+mc_bin <- Sys.which("mc")
+if (!nzchar(mc_bin)) mc_bin <- ducklake_download_mc(dest_dir = bin_dir)
+stopifnot(nzchar(minio_bin), nzchar(mc_bin))
 
-      vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
-      ducklake_write_variants(
-        con,
-        table = "lake.variants",
-        vcf_path = vcf_file,
-        threads = 2
-      )
+# Start MinIO (ephemeral) and configure mc
+data_dir <- file.path(tempdir(), "ducklake_minio")
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+port <- sample(19000:19999, 1)
+endpoint <- sprintf("127.0.0.1:%d", port)
+log_file <- tempfile("ducklake_minio_", fileext = ".log")
+minio_env <- c("MINIO_ROOT_USER=minioadmin", "MINIO_ROOT_PASSWORD=minioadmin")
 
-      DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
-    }, error = function(e) {
-      message("Skipping DuckLake ETL: ", conditionMessage(e))
-    })
+minio_pid <- system2(
+  minio_bin,
+  c("server", data_dir, "--address", endpoint),
+  stdout = log_file,
+  stderr = log_file,
+  wait = FALSE,
+  env = minio_env
+)
+on.exit({ if (minio_pid > 0) system2("kill", as.character(minio_pid)) }, add = TRUE)
+
+Sys.sleep(5)
+alias_ok <- FALSE
+for (i in 1:30) {
+  status <- system2(mc_bin, c("alias", "set", "ducklake_local", paste0("http://", endpoint),
+                              "minioadmin", "minioadmin"), stdout = TRUE, stderr = TRUE)
+  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+    alias_ok <- TRUE
+    break
   }
+  Sys.sleep(1)
 }
+if (!alias_ok) {
+  stop("Failed to configure mc alias after multiple retries; see ", log_file, call. = FALSE)
+}
+
+bucket <- sprintf("ducklake-demo-%d", as.integer(Sys.time()))
+bucket_ok <- FALSE
+for (i in 1:30) {
+  status <- system2(mc_bin, c("mb", paste0("ducklake_local/", bucket)),
+                    stdout = TRUE, stderr = TRUE)
+  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+    bucket_ok <- TRUE
+    break
+  }
+  Sys.sleep(1)
+}
+if (!bucket_ok) {
+  stop("Failed to create bucket after multiple retries; see ", log_file, call. = FALSE)
+}
+bucket_name <- bucket
+mc_path <- mc_bin
+minio_endpoint <- endpoint
+minio_process <- minio_pid
+```
+
+``` r
+con <- duckdb::dbConnect(duckdb::duckdb(config = list(
+  allow_unsigned_extensions = "true",
+  enable_external_access = "true"
+)))
+stopifnot(DBI::dbIsValid(con))
+
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+#> [1] 0
+DBI::dbExecute(con, "LOAD ducklake")
+#> [1] 0
+
+ducklake_create_s3_secret(
+  con,
+  name = "ducklake_minio",
+  key_id = "minioadmin",
+  secret = "minioadmin",
+  endpoint = minio_endpoint,
+  region = "us-east-1",
+  use_ssl = FALSE
+)
+
+metadata_path <- file.path(tempdir(), sprintf("ducklake_meta_%s.ducklake", bucket_name))
+data_path_local <- file.path(tempdir(), sprintf("ducklake_data_%s", bucket_name))
+dir.create(data_path_local, recursive = TRUE, showWarnings = FALSE)
+ducklake_attach(
+  con,
+  metadata_path = metadata_path,
+  data_path = data_path_local,
+  alias = "lake",
+  extra_options = list(OVERRIDE_DATA_PATH = TRUE)
+)
+
+# Work inside the attached lake database
+DBI::dbExecute(con, "USE lake")
+#> [1] 0
+```
+
+``` r
+# Ensure we are operating inside the DuckLake catalog
+DBI::dbExecute(con, "USE lake")
+#> [1] 0
+
+# Load variants via Parquet ingestion (ducklake_write_variants)
+vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+ducklake_write_variants(
+  con,
+  table = "variants",
+  vcf_path = vcf_file,
+  threads = 1,
+  method = "parquet"
+)
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
-#> Processing 86 contigs using 2 threads
-#> Merging temporary Parquet files... to /tmp/RtmpxZka72/ducklake_parquet_22250abaa3fc6.parquet
-#> Merged 25 parquet files -> ducklake_parquet_22250abaa3fc6.parquet (368319 rows)
-#> Skipping DuckLake ETL: Catalog Error: Table with name variants does not exist!
-#> Did you mean "memory.lake.variants"?
-#> 
-#> LINE 1: SELECT COUNT(*) AS n FROM lake.variants
-#>                                   ^
-#> ℹ Context: rapi_prepare
-#> ℹ Error type: CATALOG
+#> Wrote 368319 rows to /tmp/RtmpNRxlNH/ducklake_parquet_22d8cc3818bc24.parquet
 ```
+
+``` r
+DBI::dbExecute(con, "USE lake")
+#> [1] 0
+DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+#>        n
+#> 1 368319
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+if (exists("minio_process") && minio_process > 0) {
+  system2("kill", as.character(minio_process))
+}
+```
+
+``` r
+
 
 ### Feature Constants
 
 Use `HTS_FEATURE_*` constants to check for specific features
+ 
+```
 
 ``` r
 # Check individual features
@@ -216,6 +286,10 @@ s3_base <- "s3://1000genomes-dragen-v3.7.6/data/cohorts/"
 s3_path <- "gvcf-genotyper-dragen-3.7.6/hg19/3202-samples-cohort/"
 s3_vcf_file <- "3202_samples_cohort_gg_chr22.vcf.gz"
 s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
+```
+
+``` r
+
 
 # Query a small region (chr22:20000000-20100000) and count variants
 result <- system2(
@@ -225,7 +299,6 @@ result <- system2(
   stderr = FALSE
 )
 length(result)
-#> [1] 4622
 ```
 
 ## (Experimental) VCF to Arrow Streams and Duckdb `bcf_reader` extension
@@ -404,7 +477,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpxZka72/file22250a71dcc875.parquet
+#> Wrote 11 rows to /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -423,12 +496,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
-#> 2 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
-#> 3 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
-#> 4 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
-#> 5 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
-#> 6 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 1 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
+#> 2 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
+#> 3 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
+#> 4 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
+#> 5 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
+#> 6 /tmp/RtmpNRxlNH/file22d8cc119658bd.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -511,7 +584,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpxZka72/file22250a68206012.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpNRxlNH/file22d8cc223d4190.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -631,13 +704,6 @@ stream <- vcf_open_arrow(
 )
 df <- as.data.frame(nanoarrow::convert_array_stream(stream))
 df[, c("CHROM", "POS", "REF", "ALT")] |> head()
-#>   CHROM      POS REF                  ALT
-#> 1 chr22 16050036   A C        , <NON_REF>
-#> 2 chr22 16050151   T G        , <NON_REF>
-#> 3 chr22 16050213   C T        , <NON_REF>
-#> 4 chr22 16050219   C A        , <NON_REF>
-#> 5 chr22 16050224   A C        , <NON_REF>
-#> 6 chr22 16050229   C A        , <NON_REF>
 
 
 # Query remote VCF with bcf_reader extension
@@ -648,12 +714,6 @@ vcf_query_duckdb(
     region = "chr22:16050000-16050500",
     query = "SELECT CHROM, POS, REF, ALT FROM vcf LIMIT 5"
 )
-#>   CHROM      POS REF          ALT
-#> 1 chr22 16050036   A C, <NON_REF>
-#> 2 chr22 16050151   T G, <NON_REF>
-#> 3 chr22 16050213   C T, <NON_REF>
-#> 4 chr22 16050219   C A, <NON_REF>
-#> 5 chr22 16050224   A C, <NON_REF>
 ```
 
 ### DuckLake ETL to MinIO
@@ -706,7 +766,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.j70p5DYPsz.parquet 
+#>   Output: /tmp/tmp.2bxix6tbQr.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -716,10 +776,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.j70p5DYPsz.parquet
+#> Wrote 11 rows to /tmp/tmp.2bxix6tbQr.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.51 seconds
+#>   Time: 0.49 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -760,7 +820,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.j70p5DYPsz.parquet 
+#> Parquet File Information: /tmp/tmp.2bxix6tbQr.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
