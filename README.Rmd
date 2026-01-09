@@ -332,7 +332,7 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 
 ## Limitations and issues
 
-Arrow stream still copies at the C level and again on Parquet conversion (Arrow IPC serialization); optimizing zero-copy paths remains open. Remaining structured annotation formats (e.g., SnpEff extras) are not parsed beyond VCF header types. The duckdb extension can be improve by pushing down further for indexed files.
+Arrow stream still copies at the C level and again on Parquet conversion (Arrow IPC serialization); optimizing zero-copy paths remains open. The duckdb extension can be improve with ranged request for indexed files even when region is not specicied.
 
 ## Future directions
 

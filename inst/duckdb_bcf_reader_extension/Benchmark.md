@@ -5,8 +5,11 @@ BCF Reader Benchmarks
 
 Quick, reproducible timing comparisons between:
 
-  - `bcftools view` streamed to `/dev/null`
-  - DuckDB `bcf_read()` via the packaged extension
+  - `bcftools view` streamed to `/dev/null` in two modes:
+      - **Text emit** (`-Ov`): forces VCF string formatting (slow path)
+      - **Binary emit** (`-Ou`): skips VCF formatting (fairer vs DuckDB)
+  - DuckDB `bcf_read()` via the packaged extension (projection-pushed
+    `COUNT(*)`)
 
 The large input (`test_very_large.bcf`) is expected to live locally
 (never committed); generated from GLIMPSE-imputed 1000 Genomes data.
@@ -76,26 +79,48 @@ time_runs <- function(cmd, runs = n_runs) {
 }
 ```
 
-### bcftools view (full file)
+### bcftools view — text VCF emit (full file)
 
 ``` r
-cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
-res_bcftools_full <- time_runs(cmd_bcftools_full)
-res_bcftools_full
+cmd_bcftools_full_text <- sprintf("bcftools view -Ov %s > /dev/null", shQuote(bcf_path))
+res_bcftools_full_text <- time_runs(cmd_bcftools_full_text)
+res_bcftools_full_text
 #>   run elapsed  user system cache_state
-#> 1   1  66.031 0.002  0.005    cold-ish
-#> 2   2  65.740 0.004  0.005    warm-ish
+#> 1   1  65.564 0.003  0.004    cold-ish
+#> 2   2  65.410 0.002  0.007    warm-ish
 ```
 
-### bcftools view (region)
+### bcftools view — binary BCF emit (full file, fairer)
 
 ``` r
-cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
-res_bcftools_region <- time_runs(cmd_bcftools_region)
-res_bcftools_region
+cmd_bcftools_full_bin <- sprintf("bcftools view -Ou %s > /dev/null", shQuote(bcf_path))
+res_bcftools_full_bin <- time_runs(cmd_bcftools_full_bin)
+res_bcftools_full_bin
 #>   run elapsed  user system cache_state
-#> 1   1   0.077 0.001  0.003    cold-ish
-#> 2   2   0.076 0.000  0.004    warm-ish
+#> 1   1  34.715 0.001  0.006    cold-ish
+#> 2   2  34.884 0.000  0.006    warm-ish
+```
+
+### bcftools view — text VCF emit (region)
+
+``` r
+cmd_bcftools_region_text <- sprintf("bcftools view -Ov -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
+res_bcftools_region_text <- time_runs(cmd_bcftools_region_text)
+res_bcftools_region_text
+#>   run elapsed user system cache_state
+#> 1   1   0.086    0  0.004    cold-ish
+#> 2   2   0.080    0  0.004    warm-ish
+```
+
+### bcftools view — binary BCF emit (region, fairer)
+
+``` r
+cmd_bcftools_region_bin <- sprintf("bcftools view -Ou -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
+res_bcftools_region_bin <- time_runs(cmd_bcftools_region_bin)
+res_bcftools_region_bin
+#>   run elapsed user system cache_state
+#> 1   1   0.068    0  0.004    cold-ish
+#> 2   2   0.067    0  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
@@ -108,9 +133,9 @@ cmd_duckdb_full <- sprintf(
 )
 res_duckdb_full <- time_runs(cmd_duckdb_full)
 res_duckdb_full
-#>   run elapsed  user system cache_state
-#> 1   1   4.400 0.000  0.005    cold-ish
-#> 2   2   3.888 0.001  0.003    warm-ish
+#>   run elapsed user system cache_state
+#> 1   1   3.557    0  0.004    cold-ish
+#> 2   2   4.961    0  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -125,14 +150,17 @@ cmd_duckdb_region <- sprintf(
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
 #>   run elapsed user system cache_state
-#> 1   1   0.098    0  0.004    cold-ish
-#> 2   2   0.095    0  0.003    warm-ish
+#> 1   1   0.099    0  0.004    cold-ish
+#> 2   2   0.094    0  0.003    warm-ish
 ```
 
 ## Notes
 
   - These timings are single passes; rerun and average for more stable
     numbers.
+  - DuckDB `COUNT(*)` benefits from projection pushdown (no INFO/FORMAT
+    decoding). The bcftools binary runs (`-Ou`) avoid text formatting
+    and are the fairest comparison; `-Ov` reflects worst-case text emit.
   - Ensure the file and its index are co-located with fast storage
     (local SSD preferred).
   - Adjust `region` to match indexed contigs present in
