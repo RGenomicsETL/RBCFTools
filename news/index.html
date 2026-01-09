@@ -35,7 +35,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.0.9000" id="rbcftools-123-0009000-development-version">RBCFTools 1.23-0.0.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0009000-development-version"></a></h2>
 <ul><li>DuckDB <code>bcf_reader</code> extension now auto-parses VEP-style annotations (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed <code>VEP_*</code> columns with all transcripts preserved as lists (using a vendored parser); builds remain self-contained with packaged htslib.</li>
-<li>Nanoarrow streaming still supports post-hoc VEP parsing; future work will align transcript-all modes across Arrow and DuckDB.</li>
+<li>Arrow VCF stream (nanoarrow) now aligns VEP parsing semantics with DuckDB (schema and typing improvements; transcript handling under active development).</li>
 <li>Parallel (contig-based) DuckDB extension Parquet converter.</li>
 <li>Package version reflects bundled htslib/bcftools versions.</li>
 <li>
