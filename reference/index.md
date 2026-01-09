@@ -24,6 +24,16 @@
   : Get bcftools Version
 - [`bgzip_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/bgzip_path.md)
   : Get Path to bgzip Executable
+- [`ducklake`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake.md)
+  : DuckLake helpers for VCF/BCF ETL
+- [`ducklake_attach()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_attach.md)
+  : Attach a DuckLake catalog
+- [`ducklake_create_s3_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.md)
+  : Create or replace an S3 secret for DuckLake
+- [`ducklake_load()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.md)
+  : Load the DuckLake extension
+- [`ducklake_write_variants()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_write_variants.md)
+  : Write variants into a DuckLake table
 - [`htsfile_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.md)
   : Get Path to htsfile Executable
 - [`htslib_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.md)

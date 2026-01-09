@@ -18,6 +18,11 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_tools.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_version.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bgzip_path.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_attach.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_write_variants.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_capabilities.html</loc></url>
