@@ -92,19 +92,36 @@ ducklake_create_s3_secret <- function(
   )
 
   # Drop NULL or empty values before formatting
-  opts <- opts[!vapply(opts, function(x) {
-    is.null(x) || (is.character(x) && length(x) == 1 && !nzchar(x))
-  }, logical(1), USE.NAMES = FALSE)]
-  opts <- opts[vapply(opts, function(x) length(x) > 0, logical(1), USE.NAMES = FALSE)]
+  opts <- opts[
+    !vapply(
+      opts,
+      function(x) {
+        is.null(x) || (is.character(x) && length(x) == 1 && !nzchar(x))
+      },
+      logical(1),
+      USE.NAMES = FALSE
+    )
+  ]
+  opts <- opts[vapply(
+    opts,
+    function(x) length(x) > 0,
+    logical(1),
+    USE.NAMES = FALSE
+  )]
 
-  option_sql <- vapply(names(opts), function(nm) {
-    val <- opts[[nm]]
-    if (nm %in% c("USE_SSL")) {
-      sprintf("%s %s", nm, val)
-    } else {
-      sprintf("%s %s", nm, DBI::dbQuoteString(con, val))
-    }
-  }, character(1L), USE.NAMES = FALSE)
+  option_sql <- vapply(
+    names(opts),
+    function(nm) {
+      val <- opts[[nm]]
+      if (nm %in% c("USE_SSL")) {
+        sprintf("%s %s", nm, val)
+      } else {
+        sprintf("%s %s", nm, DBI::dbQuoteString(con, val))
+      }
+    },
+    character(1L),
+    USE.NAMES = FALSE
+  )
   option_sql <- option_sql[nzchar(option_sql)]
 
   sql <- sprintf(
@@ -139,10 +156,16 @@ ducklake_download_minio <- function(
   if (is.null(url) || !nzchar(url)) {
     os <- tolower(Sys.info()[["sysname"]])
     if (os != "linux") {
-      stop("MinIO server binary download is only supported on Linux hosts", call. = FALSE)
+      stop(
+        "MinIO server binary download is only supported on Linux hosts",
+        call. = FALSE
+      )
     }
     arch <- ducklake_machine_arch()
-    url <- sprintf("https://dl.min.io/server/minio/release/linux-%s/minio", arch)
+    url <- sprintf(
+      "https://dl.min.io/server/minio/release/linux-%s/minio",
+      arch
+    )
   }
   dest <- file.path(dest_dir, filename)
   utils::download.file(url, dest, mode = "wb", quiet = TRUE)
@@ -177,7 +200,10 @@ ducklake_download_mc <- function(
     } else if (os == "darwin") {
       url <- sprintf("https://dl.min.io/client/mc/release/darwin-%s/mc", arch)
     } else {
-      stop("Unsupported platform for mc download; expected Linux or macOS", call. = FALSE)
+      stop(
+        "Unsupported platform for mc download; expected Linux or macOS",
+        call. = FALSE
+      )
     }
   }
   dest <- file.path(dest_dir, filename)
@@ -232,21 +258,26 @@ ducklake_attach <- function(
     }
   }
 
-  option_sql <- vapply(names(opts), function(nm) {
-    val <- opts[[nm]]
-    if (is.null(val) || (is.character(val) && !nzchar(val))) {
-      return(NULL)
-    }
-    if (is.logical(val)) {
-      sprintf("%s %s", nm, if (val) "true" else "false")
-    } else if (is.numeric(val)) {
-      sprintf("%s %s", nm, as.character(val))
-    } else if (tolower(val) %in% c("true", "false")) {
-      sprintf("%s %s", nm, val)
-    } else {
-      sprintf("%s %s", nm, DBI::dbQuoteString(con, val))
-    }
-  }, character(1L), USE.NAMES = FALSE)
+  option_sql <- vapply(
+    names(opts),
+    function(nm) {
+      val <- opts[[nm]]
+      if (is.null(val) || (is.character(val) && !nzchar(val))) {
+        return(NULL)
+      }
+      if (is.logical(val)) {
+        sprintf("%s %s", nm, if (val) "true" else "false")
+      } else if (is.numeric(val)) {
+        sprintf("%s %s", nm, as.character(val))
+      } else if (tolower(val) %in% c("true", "false")) {
+        sprintf("%s %s", nm, val)
+      } else {
+        sprintf("%s %s", nm, DBI::dbQuoteString(con, val))
+      }
+    },
+    character(1L),
+    USE.NAMES = FALSE
+  )
   option_sql <- option_sql[nzchar(option_sql)]
 
   attach_sql <- sprintf(
@@ -321,14 +352,20 @@ ducklake_write_variants <- function(
       function(x) DBI::dbQuoteIdentifier(con, x),
       character(1L)
     )
-    partition_clause <- sprintf(" PARTITION BY (%s)", paste(ids, collapse = ", "))
+    partition_clause <- sprintf(
+      " PARTITION BY (%s)",
+      paste(ids, collapse = ", ")
+    )
   }
 
   table_exists <- FALSE
   table_parts <- strsplit(table, "\\.", fixed = TRUE)[[1]]
   if (length(table_parts) == 2) {
     table_exists <- tryCatch(
-      DBI::dbExistsTable(con, DBI::Id(schema = table_parts[1], table = table_parts[2])),
+      DBI::dbExistsTable(
+        con,
+        DBI::Id(schema = table_parts[1], table = table_parts[2])
+      ),
       error = function(e) FALSE
     )
   } else {
@@ -339,7 +376,10 @@ ducklake_write_variants <- function(
   }
 
   quoted_table <- if (length(table_parts) == 2) {
-    DBI::dbQuoteIdentifier(con, DBI::Id(schema = table_parts[1], table = table_parts[2]))
+    DBI::dbQuoteIdentifier(
+      con,
+      DBI::Id(schema = table_parts[1], table = table_parts[2])
+    )
   } else {
     DBI::dbQuoteIdentifier(con, table_parts[1])
   }
@@ -385,18 +425,24 @@ ducklake_write_variants <- function(
     }
   } else {
     # direct mode via bcf_read
-    load_stmt <- if (!is.null(bcf_reader_extension) && nzchar(bcf_reader_extension)) {
+    load_stmt <- if (
+      !is.null(bcf_reader_extension) && nzchar(bcf_reader_extension)
+    ) {
       sprintf("LOAD %s", DBI::dbQuoteString(con, bcf_reader_extension))
     } else {
       "LOAD bcf_reader"
     }
     load_res <- try(DBI::dbExecute(con, load_stmt), silent = TRUE)
     if (inherits(load_res, "try-error")) {
-      stop("Failed to load bcf_reader extension; provide bcf_reader_extension path if needed", call. = FALSE)
+      stop(
+        "Failed to load bcf_reader extension; provide bcf_reader_extension path if needed",
+        call. = FALSE
+      )
     }
 
     bcf_call <- if (!is.null(region) && nzchar(region)) {
-      sprintf("bcf_read(%s, region := %s)",
+      sprintf(
+        "bcf_read(%s, region := %s)",
         DBI::dbQuoteString(con, vcf_path),
         DBI::dbQuoteString(con, region)
       )

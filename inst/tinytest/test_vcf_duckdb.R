@@ -228,7 +228,9 @@ expect_true(
   info = "VEP_AF column should be present"
 )
 
-vep_consequence_type <- vep_schema$column_type[vep_schema$column_name == "VEP_Consequence"][1]
+vep_consequence_type <- vep_schema$column_type[
+  vep_schema$column_name == "VEP_Consequence"
+][1]
 vep_af_type <- vep_schema$column_type[vep_schema$column_name == "VEP_AF"][1]
 
 expect_true(

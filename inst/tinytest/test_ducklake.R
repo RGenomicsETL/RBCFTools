@@ -18,8 +18,16 @@ dir.create(tmp_dir_dl, recursive = TRUE, showWarnings = FALSE)
 dummy <- file.path(tmp_dir_dl, "dummy.bin")
 writeBin(as.raw(1:10), dummy)
 dummy_url <- paste0("file://", dummy)
-minio_dummy <- ducklake_download_minio(dest_dir = tmp_dir_dl, url = dummy_url, filename = "minio_test")
-mc_dummy <- ducklake_download_mc(dest_dir = tmp_dir_dl, url = dummy_url, filename = "mc_test")
+minio_dummy <- ducklake_download_minio(
+  dest_dir = tmp_dir_dl,
+  url = dummy_url,
+  filename = "minio_test"
+)
+mc_dummy <- ducklake_download_mc(
+  dest_dir = tmp_dir_dl,
+  url = dummy_url,
+  filename = "mc_test"
+)
 expect_true(file.exists(minio_dummy))
 expect_true(file.exists(mc_dummy))
 expect_true(unname(file.access(minio_dummy, mode = 1)) == 0)
@@ -30,11 +38,17 @@ bin_dir <- tempfile("ducklake_bins_")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 minio_bin <- Sys.which("minio")
 if (!nzchar(minio_bin)) {
-  minio_bin <- tryCatch(ducklake_download_minio(dest_dir = bin_dir), error = function(e) "")
+  minio_bin <- tryCatch(
+    ducklake_download_minio(dest_dir = bin_dir),
+    error = function(e) ""
+  )
 }
 mc_bin <- Sys.which("mc")
 if (!nzchar(mc_bin)) {
-  mc_bin <- tryCatch(ducklake_download_mc(dest_dir = bin_dir), error = function(e) "")
+  mc_bin <- tryCatch(
+    ducklake_download_mc(dest_dir = bin_dir),
+    error = function(e) ""
+  )
 }
 
 if (!nzchar(minio_bin) || !nzchar(mc_bin)) {
@@ -54,22 +68,34 @@ minio_pid <- system2(
   stderr = log_file,
   wait = FALSE
 )
-on.exit({
-  if (!is.null(minio_pid) && minio_pid > 0) {
-    try(system2("kill", as.character(minio_pid)))
-  }
-}, add = TRUE)
+on.exit(
+  {
+    if (!is.null(minio_pid) && minio_pid > 0) {
+      try(system2("kill", as.character(minio_pid)))
+    }
+  },
+  add = TRUE
+)
 
 # give server time to start
 Sys.sleep(3)
 
 alias_status <- system2(
   mc_bin,
-  args = c("alias", "set", "ducklake_local", paste0("http://", endpoint), "minioadmin", "minioadmin"),
+  args = c(
+    "alias",
+    "set",
+    "ducklake_local",
+    paste0("http://", endpoint),
+    "minioadmin",
+    "minioadmin"
+  ),
   stdout = TRUE,
   stderr = TRUE
 )
-if (!is.null(attr(alias_status, "status")) && attr(alias_status, "status") != 0) {
+if (
+  !is.null(attr(alias_status, "status")) && attr(alias_status, "status") != 0
+) {
   exit_file("failed to configure mc alias")
 }
 
@@ -79,14 +105,18 @@ bucket_status <- system2(
   stdout = TRUE,
   stderr = TRUE
 )
-if (!is.null(attr(bucket_status, "status")) && attr(bucket_status, "status") != 0) {
+if (
+  !is.null(attr(bucket_status, "status")) && attr(bucket_status, "status") != 0
+) {
   exit_file("failed to create minio bucket")
 }
 
-con <- duckdb::dbConnect(duckdb::duckdb(config = list(
-  allow_unsigned_extensions = "true",
-  enable_external_access = "true"
-)))
+con <- duckdb::dbConnect(duckdb::duckdb(
+  config = list(
+    allow_unsigned_extensions = "true",
+    enable_external_access = "true"
+  )
+))
 on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 try(DBI::dbExecute(con, "INSTALL httpfs"), silent = TRUE)
 try(DBI::dbExecute(con, "LOAD httpfs"), silent = TRUE)
@@ -98,11 +128,20 @@ local_ducklake <- file.path(
   "build/release/extension/ducklake/ducklake.duckdb_extension"
 )
 if (file.exists(local_ducklake)) {
-  res <- try(DBI::dbExecute(con, sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))), silent = TRUE)
+  res <- try(
+    DBI::dbExecute(
+      con,
+      sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
+    ),
+    silent = TRUE
+  )
   loaded_ducklake <- !inherits(res, "try-error")
 }
 if (!loaded_ducklake) {
-  res <- try(DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"), silent = TRUE)
+  res <- try(
+    DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"),
+    silent = TRUE
+  )
   res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
   loaded_ducklake <- !inherits(res_load, "try-error")
 }
@@ -130,7 +169,11 @@ ducklake_attach(
   extra_options = list(SECRET = "ducklake_minio")
 )
 
-vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+vcf_file <- system.file(
+  "extdata",
+  "1000G_3samples.vcf.gz",
+  package = "RBCFTools"
+)
 if (!file.exists(vcf_file)) {
   exit_file("fixture VCF not found")
 }
@@ -142,5 +185,8 @@ ducklake_write_variants(
   threads = 2
 )
 
-variant_count <- DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")$n[1]
+variant_count <- DBI::dbGetQuery(
+  con,
+  "SELECT COUNT(*) AS n FROM lake.variants"
+)$n[1]
 expect_true(is.numeric(variant_count) && variant_count > 0)

@@ -27,8 +27,8 @@ NULL
 #'
 #' @export
 vep_detect_tag <- function(filename) {
-    filename <- normalizePath(filename, mustWork = TRUE)
-    .Call(RC_vep_detect_tag, filename, PACKAGE = "RBCFTools")
+  filename <- normalizePath(filename, mustWork = TRUE)
+  .Call(RC_vep_detect_tag, filename, PACKAGE = "RBCFTools")
 }
 
 #' Check if VCF has VEP-style annotations
@@ -45,8 +45,8 @@ vep_detect_tag <- function(filename) {
 #'
 #' @export
 vep_has_annotation <- function(filename) {
-    filename <- normalizePath(filename, mustWork = TRUE)
-    .Call(RC_vep_has_annotation, filename, PACKAGE = "RBCFTools")
+  filename <- normalizePath(filename, mustWork = TRUE)
+  .Call(RC_vep_has_annotation, filename, PACKAGE = "RBCFTools")
 }
 
 #' Get VEP annotation schema from VCF header
@@ -81,8 +81,8 @@ vep_has_annotation <- function(filename) {
 #'
 #' @export
 vep_get_schema <- function(filename, tag = NULL) {
-    filename <- normalizePath(filename, mustWork = TRUE)
-    .Call(RC_vep_get_schema, filename, tag, PACKAGE = "RBCFTools")
+  filename <- normalizePath(filename, mustWork = TRUE)
+  .Call(RC_vep_get_schema, filename, tag, PACKAGE = "RBCFTools")
 }
 
 #' Infer type from VEP field name
@@ -108,7 +108,7 @@ vep_get_schema <- function(filename, tag = NULL) {
 #'
 #' @export
 vep_infer_type <- function(field_name) {
-    .Call(RC_vep_infer_type, as.character(field_name), PACKAGE = "RBCFTools")
+  .Call(RC_vep_infer_type, as.character(field_name), PACKAGE = "RBCFTools")
 }
 
 # =============================================================================
@@ -140,14 +140,14 @@ vep_infer_type <- function(field_name) {
 #'
 #' @export
 vep_parse_record <- function(csq_value, filename, schema = NULL) {
-    filename <- normalizePath(filename, mustWork = TRUE)
-    .Call(
-        RC_vep_parse_record,
-        as.character(csq_value)[1],
-        schema,
-        filename,
-        PACKAGE = "RBCFTools"
-    )
+  filename <- normalizePath(filename, mustWork = TRUE)
+  .Call(
+    RC_vep_parse_record,
+    as.character(csq_value)[1],
+    schema,
+    filename,
+    PACKAGE = "RBCFTools"
+  )
 }
 
 # =============================================================================
@@ -183,110 +183,110 @@ vep_parse_record <- function(csq_value, filename, schema = NULL) {
 #'
 #' @export
 vcf_read_vep <- function(
-    filename,
-    vep_tag = NULL,
-    vep_columns = NULL,
-    ...
+  filename,
+  vep_tag = NULL,
+  vep_columns = NULL,
+  ...
 ) {
-    filename <- normalizePath(filename, mustWork = TRUE)
+  filename <- normalizePath(filename, mustWork = TRUE)
 
-    # Check for VEP annotation
-    if (!vep_has_annotation(filename)) {
-        stop("No VEP/BCSQ/ANN annotation found in VCF header")
+  # Check for VEP annotation
+  if (!vep_has_annotation(filename)) {
+    stop("No VEP/BCSQ/ANN annotation found in VCF header")
+  }
+
+  # Get schema
+  schema <- vep_get_schema(filename, vep_tag)
+  tag <- attr(schema, "tag")
+
+  # Get base VCF data
+  df <- vcf_to_arrow(filename, as = "data.frame", ...)
+
+  # Parse VEP annotations for each row
+  if (nrow(df) == 0) {
+    return(df)
+  }
+
+  # Get the INFO field containing annotations
+  info_col_name <- paste0("INFO.", tag)
+
+  # Check if INFO is nested or flat
+  if (info_col_name %in% names(df)) {
+    csq_values <- df[[info_col_name]]
+  } else if ("INFO" %in% names(df) && is.list(df$INFO)) {
+    # Try nested INFO structure
+    csq_values <- sapply(df$INFO, function(x) {
+      if (is.list(x) && tag %in% names(x)) {
+        x[[tag]]
+      } else {
+        NA_character_
+      }
+    })
+  } else {
+    message(
+      "VEP annotation column not found in data. Returning base VCF data."
+    )
+    return(df)
+  }
+
+  # Parse each CSQ value
+  parsed_list <- lapply(seq_along(csq_values), function(i) {
+    csq <- csq_values[i]
+    if (is.na(csq) || csq == "" || csq == ".") {
+      return(NULL)
     }
-
-    # Get schema
-    schema <- vep_get_schema(filename, vep_tag)
-    tag <- attr(schema, "tag")
-
-    # Get base VCF data
-    df <- vcf_to_arrow(filename, as = "data.frame", ...)
-
-    # Parse VEP annotations for each row
-    if (nrow(df) == 0) {
-        return(df)
-    }
-
-    # Get the INFO field containing annotations
-    info_col_name <- paste0("INFO.", tag)
-
-    # Check if INFO is nested or flat
-    if (info_col_name %in% names(df)) {
-        csq_values <- df[[info_col_name]]
-    } else if ("INFO" %in% names(df) && is.list(df$INFO)) {
-        # Try nested INFO structure
-        csq_values <- sapply(df$INFO, function(x) {
-            if (is.list(x) && tag %in% names(x)) {
-                x[[tag]]
-            } else {
-                NA_character_
-            }
-        })
-    } else {
-        message(
-            "VEP annotation column not found in data. Returning base VCF data."
-        )
-        return(df)
-    }
-
-    # Parse each CSQ value
-    parsed_list <- lapply(seq_along(csq_values), function(i) {
-        csq <- csq_values[i]
-        if (is.na(csq) || csq == "" || csq == ".") {
-            return(NULL)
+    tryCatch(
+      {
+        result <- vep_parse_record(csq, filename, schema)
+        if (length(result) > 0) {
+          # Take first transcript (or could aggregate)
+          result[[1]]
+        } else {
+          NULL
         }
-        tryCatch(
-            {
-                result <- vep_parse_record(csq, filename, schema)
-                if (length(result) > 0) {
-                    # Take first transcript (or could aggregate)
-                    result[[1]]
-                } else {
-                    NULL
-                }
-            },
-            error = function(e) {
-                NULL
-            }
-        )
+      },
+      error = function(e) {
+        NULL
+      }
+    )
+  })
+
+  # Filter columns if requested
+  if (!is.null(vep_columns)) {
+    valid_cols <- intersect(vep_columns, schema$name)
+    if (length(valid_cols) == 0) {
+      warning("None of the requested VEP columns found in schema")
+      return(df)
+    }
+    vep_columns <- valid_cols
+  } else {
+    vep_columns <- schema$name
+  }
+
+  # Build VEP columns
+  for (col_name in vep_columns) {
+    new_col_name <- paste0(tag, "_", col_name)
+    col_type <- schema$type[schema$name == col_name]
+
+    # Extract values from parsed list
+    values <- sapply(parsed_list, function(x) {
+      if (is.null(x) || !(col_name %in% names(x))) {
+        return(NA)
+      }
+      x[[col_name]]
     })
 
-    # Filter columns if requested
-    if (!is.null(vep_columns)) {
-        valid_cols <- intersect(vep_columns, schema$name)
-        if (length(valid_cols) == 0) {
-            warning("None of the requested VEP columns found in schema")
-            return(df)
-        }
-        vep_columns <- valid_cols
+    # Coerce to appropriate type
+    if (col_type == "Integer") {
+      df[[new_col_name]] <- as.integer(values)
+    } else if (col_type == "Float") {
+      df[[new_col_name]] <- as.numeric(values)
     } else {
-        vep_columns <- schema$name
+      df[[new_col_name]] <- as.character(values)
     }
+  }
 
-    # Build VEP columns
-    for (col_name in vep_columns) {
-        new_col_name <- paste0(tag, "_", col_name)
-        col_type <- schema$type[schema$name == col_name]
-
-        # Extract values from parsed list
-        values <- sapply(parsed_list, function(x) {
-            if (is.null(x) || !(col_name %in% names(x))) {
-                return(NA)
-            }
-            x[[col_name]]
-        })
-
-        # Coerce to appropriate type
-        if (col_type == "Integer") {
-            df[[new_col_name]] <- as.integer(values)
-        } else if (col_type == "Float") {
-            df[[new_col_name]] <- as.numeric(values)
-        } else {
-            df[[new_col_name]] <- as.character(values)
-        }
-    }
-
-    df
+  df
 }
 
 #' List VEP annotation fields in a VCF file
@@ -309,29 +309,29 @@ vcf_read_vep <- function(
 #'
 #' @export
 vep_list_fields <- function(filename) {
-    filename <- normalizePath(filename, mustWork = TRUE)
+  filename <- normalizePath(filename, mustWork = TRUE)
 
-    if (!vep_has_annotation(filename)) {
-        message("No VEP/BCSQ/ANN annotation found in file")
-        return(invisible(NULL))
-    }
+  if (!vep_has_annotation(filename)) {
+    message("No VEP/BCSQ/ANN annotation found in file")
+    return(invisible(NULL))
+  }
 
-    schema <- vep_get_schema(filename)
-    tag <- attr(schema, "tag")
+  schema <- vep_get_schema(filename)
+  tag <- attr(schema, "tag")
 
-    message(sprintf("VEP Annotation Tag: %s", tag))
-    message(sprintf("Fields (%d total):", nrow(schema)))
+  message(sprintf("VEP Annotation Tag: %s", tag))
+  message(sprintf("Fields (%d total):", nrow(schema)))
 
-    for (i in seq_len(nrow(schema))) {
-        list_marker <- if (schema$is_list[i]) ", list" else ""
-        message(sprintf(
-            "  %d. %s (%s%s)",
-            i,
-            schema$name[i],
-            schema$type[i],
-            list_marker
-        ))
-    }
+  for (i in seq_len(nrow(schema))) {
+    list_marker <- if (schema$is_list[i]) ", list" else ""
+    message(sprintf(
+      "  %d. %s (%s%s)",
+      i,
+      schema$name[i],
+      schema$type[i],
+      list_marker
+    ))
+  }
 
-    invisible(schema)
+  invisible(schema)
 }
