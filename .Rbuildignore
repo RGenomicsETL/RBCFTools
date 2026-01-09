@@ -1,3 +1,4 @@
+^ducklake/.*$
 ^.env$
 ^Dockerfile\.webr-test$
 ^test_duckdb\.sh$
