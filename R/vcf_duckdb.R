@@ -61,6 +61,8 @@ bcf_reader_copy_source <- function(dest_dir) {
   files_to_copy <- c(
     "bcf_reader.c",
     "vcf_types.h",
+    "vep_parser.c",
+    "vep_parser.h",
     "duckdb_extension.h",
     "Makefile",
     "append_metadata.sh"

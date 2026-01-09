@@ -30,11 +30,13 @@
 
 #include "duckdb_extension.h"
 #include "vcf_types.h"
+#include "vep_parser.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 // htslib headers
 #include <htslib/vcf.h>
@@ -52,6 +54,8 @@ DUCKDB_EXTENSION_EXTERN
 // =============================================================================
 
 #define BCF_READER_DEFAULT_BATCH_SIZE 2048
+#define VEP_TRANSCRIPT_ALL 0
+#define VEP_TRANSCRIPT_FIRST 1
 
 // Column indices for core VCF fields
 enum {
@@ -97,6 +101,14 @@ typedef struct {
     
     int n_format_fields;
     field_meta_t* format_fields;
+
+    // VEP/CSQ/BCSQ/ANN schema
+    int n_vep_fields;
+    int vep_col_start;       // Starting column index for VEP fields
+    vep_schema_t* vep_schema;
+    int vep_transcript_mode; // VEP_TRANSCRIPT_FIRST (scalar) for now
+    int info_col_start;
+    int format_col_start;
     
     // Total column count
     int total_columns;
@@ -196,6 +208,10 @@ static void destroy_bind_data(void* data) {
         }
         duckdb_free(bind->contig_names);
     }
+
+    if (bind->vep_schema) {
+        vep_schema_destroy(bind->vep_schema);
+    }
     
     duckdb_free(bind);
 }
@@ -271,6 +287,34 @@ static duckdb_logical_type create_bcf_field_type(int bcf_type, int is_list) {
     return element_type;
 }
 
+static duckdb_logical_type create_vep_field_type(vep_field_type_t vep_type, int is_list) {
+    duckdb_logical_type element_type;
+    
+    switch (vep_type) {
+        case VEP_TYPE_INTEGER:
+            element_type = duckdb_create_logical_type(DUCKDB_TYPE_INTEGER);
+            break;
+        case VEP_TYPE_FLOAT:
+            element_type = duckdb_create_logical_type(DUCKDB_TYPE_FLOAT);
+            break;
+        case VEP_TYPE_FLAG:
+            element_type = duckdb_create_logical_type(DUCKDB_TYPE_BOOLEAN);
+            break;
+        case VEP_TYPE_STRING:
+        default:
+            element_type = duckdb_create_logical_type(DUCKDB_TYPE_VARCHAR);
+            break;
+    }
+    
+    if (is_list) {
+        duckdb_logical_type list_type = duckdb_create_list_type(element_type);
+        duckdb_destroy_logical_type(&element_type);
+        return list_type;
+    }
+    
+    return element_type;
+}
+
 // =============================================================================
 // Schema Building - Bind Function
 // =============================================================================
@@ -326,6 +370,12 @@ static void bcf_read_bind(duckdb_bind_info info) {
     bind->include_info = 1;
     bind->include_format = 1;
     bind->n_samples = bcf_hdr_nsamples(hdr);
+    bind->n_vep_fields = 0;
+    bind->vep_col_start = COL_CORE_COUNT;
+    bind->info_col_start = COL_CORE_COUNT;
+    bind->format_col_start = COL_CORE_COUNT;
+    bind->vep_schema = NULL;
+    bind->vep_transcript_mode = VEP_TRANSCRIPT_FIRST;
     
     // Copy sample names
     if (bind->n_samples > 0) {
@@ -374,10 +424,37 @@ static void bcf_read_bind(duckdb_bind_info info) {
     // FILTER - LIST(VARCHAR) - list of filter names
     duckdb_bind_add_result_column(info, "FILTER", varchar_list_type);
     col_idx++;
+
+    // -------------------------------------------------------------------------
+    // VEP/CSQ/BCSQ/ANN fields (auto-detected)
+    // -------------------------------------------------------------------------
+    bind->vep_schema = vep_schema_parse(hdr, NULL);
+    if (bind->vep_schema) {
+        bind->n_vep_fields = bind->vep_schema->n_fields;
+        bind->vep_col_start = col_idx;
+        
+        for (int v = 0; v < bind->n_vep_fields; v++) {
+            const vep_field_t* field = vep_schema_get_field(bind->vep_schema, v);
+            if (!field) continue;
+            
+            char col_name[256];
+            snprintf(col_name, sizeof(col_name), "VEP_%s", field->name);
+            
+            // For now we expose first transcript only as scalar
+            duckdb_logical_type field_type = create_vep_field_type(field->type, 0);
+            duckdb_bind_add_result_column(info, col_name, field_type);
+            duckdb_destroy_logical_type(&field_type);
+            
+            col_idx++;
+        }
+        
+        bind->vep_transcript_mode = VEP_TRANSCRIPT_FIRST;
+    }
     
     // -------------------------------------------------------------------------
     // INFO fields (with type validation)
     // -------------------------------------------------------------------------
+    bind->info_col_start = col_idx;
     
     // Count INFO fields
     bind->n_info_fields = 0;
@@ -432,6 +509,8 @@ static void bcf_read_bind(duckdb_bind_info info) {
     // -------------------------------------------------------------------------
     // FORMAT fields per sample (with type validation)
     // -------------------------------------------------------------------------
+
+    bind->format_col_start = col_idx;
     
     if (bind->n_samples > 0) {
         // Count FORMAT fields
@@ -771,6 +850,20 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         duckdb_data_chunk_set_size(output, 0);
         return;
     }
+
+    // Determine if any VEP columns are requested for this scan
+    int need_vep = (bind->vep_schema != NULL);
+    if (need_vep) {
+        need_vep = 0;
+        for (idx_t i = 0; i < init->column_count; i++) {
+            idx_t col_id = init->column_ids[i];
+            if (col_id >= (idx_t)bind->vep_col_start &&
+                col_id < (idx_t)(bind->vep_col_start + bind->n_vep_fields)) {
+                need_vep = 1;
+                break;
+            }
+        }
+    }
     
     // For parallel scans, claim first/next contig if needed
     if (init->needs_next_contig) {
@@ -819,6 +912,12 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         
         // Unpack record
         bcf_unpack(init->rec, BCF_UN_ALL);
+
+        // Parse VEP annotation once per record if needed
+        vep_record_t* vep_rec = NULL;
+        if (need_vep) {
+            vep_rec = vep_record_parse_bcf(bind->vep_schema, init->hdr, init->rec);
+        }
         
         // Process each requested column
         for (idx_t i = 0; i < init->column_count; i++) {
@@ -908,10 +1007,40 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                 duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
                 list_data[row_count] = entry;
             }
-            else if (col_id >= COL_CORE_COUNT && 
-                     col_id < (idx_t)(COL_CORE_COUNT + bind->n_info_fields)) {
+            else if (bind->vep_schema &&
+                     col_id >= (idx_t)bind->vep_col_start &&
+                     col_id < (idx_t)(bind->vep_col_start + bind->n_vep_fields)) {
+                int field_idx = col_id - bind->vep_col_start;
+                const vep_field_t* field = vep_schema_get_field(bind->vep_schema, field_idx);
+                const vep_value_t* val = NULL;
+                if (field && vep_rec) {
+                    val = vep_record_get_value(vep_rec, 0, field_idx);
+                }
+                
+                if (field && val && !val->is_missing) {
+                    if (field->type == VEP_TYPE_STRING) {
+                        duckdb_vector_assign_string_element(vec, row_count,
+                                                            val->str_value ? val->str_value : "");
+                    } else if (field->type == VEP_TYPE_INTEGER) {
+                        int32_t* data = (int32_t*)duckdb_vector_get_data(vec);
+                        data[row_count] = val->int_value;
+                    } else if (field->type == VEP_TYPE_FLOAT) {
+                        float* data = (float*)duckdb_vector_get_data(vec);
+                        data[row_count] = val->float_value;
+                    } else if (field->type == VEP_TYPE_FLAG) {
+                        bool* data = (bool*)duckdb_vector_get_data(vec);
+                        data[row_count] = 1;
+                    }
+                } else {
+                    duckdb_vector_ensure_validity_writable(vec);
+                    uint64_t* validity = duckdb_vector_get_validity(vec);
+                    set_validity_bit(validity, row_count, 0);
+                }
+            }
+            else if (col_id >= (idx_t)bind->info_col_start && 
+                     col_id < (idx_t)(bind->info_col_start + bind->n_info_fields)) {
                 // INFO field
-                int field_idx = col_id - COL_CORE_COUNT;
+                int field_idx = col_id - bind->info_col_start;
                 field_meta_t* field = &bind->info_fields[field_idx];
                 const char* tag = field->name;
                 
@@ -1117,8 +1246,7 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
             }
             else {
                 // FORMAT field for a sample
-                int format_col_start = COL_CORE_COUNT + bind->n_info_fields;
-                int format_col_idx = col_id - format_col_start;
+                int format_col_idx = col_id - bind->format_col_start;
                 int sample_idx = format_col_idx / bind->n_format_fields;
                 int field_idx = format_col_idx % bind->n_format_fields;
                 
@@ -1325,7 +1453,10 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                 }
             }
         }
-        
+        if (vep_rec) {
+            vep_record_destroy(vep_rec);
+        }
+
         row_count++;
         init->current_row++;
     }

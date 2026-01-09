@@ -20,6 +20,7 @@
 EXTENSION_NAME ?= bcf_reader
 DUCKDB_VERSION ?= v1.2.0
 EXTENSION_VERSION ?= 1.0.0
+RBCFTOOLS_ROOT ?= ../..
 
 # Detect platform
 UNAME_S := $(shell uname -s)
@@ -47,6 +48,21 @@ endif
 CC := gcc
 CFLAGS := -O2 -Wall -Wextra -Wno-unused-parameter -fPIC
 INCLUDES := -I.
+
+# Try to auto-use the package-bundled htslib when present and no explicit
+# paths are provided. This keeps `make` working from the repo root without
+# system htslib installed.
+ifndef HTSLIB_INCLUDE
+ifndef HTSLIB_LIB
+ifndef HTSLIB_STATIC
+ifndef RBCFTOOLS_HTSLIB
+ifneq ($(wildcard $(RBCFTOOLS_ROOT)/inst/htslib/include/htslib),)
+    RBCFTOOLS_HTSLIB := 1
+endif
+endif
+endif
+endif
+endif
 
 # ============================================================================
 # htslib configuration
@@ -80,8 +96,6 @@ endif
 # Set RBCFTOOLS_HTSLIB=1 and optionally RBCFTOOLS_ROOT to package root
 ifndef HTSLIB_CONFIGURED
 ifdef RBCFTOOLS_HTSLIB
-    # Default to parent directories if not specified
-    RBCFTOOLS_ROOT ?= ../..
     HTSLIB_DIR := $(RBCFTOOLS_ROOT)/inst/htslib
     HTSLIB_INCLUDE := $(HTSLIB_DIR)/include
     HTSLIB_LIB := $(HTSLIB_DIR)/lib
@@ -148,8 +162,8 @@ endif
 
 # Build directories
 BUILD_DIR := build
-SRC_FILES := bcf_reader.c
-OBJ_FILES := $(BUILD_DIR)/bcf_reader.o
+SRC_FILES := bcf_reader.c vep_parser.c
+OBJ_FILES := $(BUILD_DIR)/bcf_reader.o $(BUILD_DIR)/vep_parser.o
 
 # Output files
 SHARED_LIB := $(BUILD_DIR)/lib$(EXTENSION_NAME)$(SHARED_EXT)
@@ -163,7 +177,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 # Compile source files - depends on vcf_types.h now
-$(BUILD_DIR)/%.o: %.c duckdb_extension.h vcf_types.h | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.c duckdb_extension.h vcf_types.h vep_parser.h | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Link shared library

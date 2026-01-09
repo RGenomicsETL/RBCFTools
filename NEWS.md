@@ -1,5 +1,10 @@
 # RBCFTools 1.23-0.0.0.9000 (development version)
 
+
+- Toward VEP fields parsing
+  - supports nanoarrow  Post hoc VEP (INFO/CSQ , INFO/ANN, INFO/BCSQ) parsing
+  - 
+
 - Parallel (contig based) duckdb extenstion based parquet convertor
 
 - reflect htslib/bcftools version in package version

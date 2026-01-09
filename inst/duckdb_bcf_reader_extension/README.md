@@ -11,6 +11,7 @@ A high-performance DuckDB extension for reading BCF/VCF genomic variant files di
 - **Parallel scanning**: Automatic parallel scan by contig when an index is available
 - **Genotype support**: Proper GT field decoding (e.g., "0/1", "1|1", "./.")
 - **Type validation**: Warns when header types don't match VCF spec and corrects schema accordingly
+- **Structured annotations**: Auto-detects INFO/CSQ, INFO/BCSQ, or INFO/ANN in the header and emits one typed column per subfield (prefixed `VEP_`), using bcftools split-vep inference. First transcript is exposed (scalar); list mode can be added later if needed.
 
 ## Requirements
 
@@ -60,6 +61,11 @@ SELECT COUNT(*) FROM bcf_read('variants.bcf');
 SELECT CHROM, POS, REF, ALT 
 FROM bcf_read('variants.vcf.gz')
 WHERE CHROM = '22' AND POS > 10000000;
+
+-- Access parsed VEP/BCSQ/ANN annotations (auto-detected)
+SELECT CHROM, POS, VEP_Consequence, VEP_SYMBOL, VEP_AF
+FROM bcf_read('annotated.vcf.gz')
+LIMIT 5;
 
 -- Read a specific region (requires index file: .tbi or .csi)
 SELECT * FROM bcf_read('variants.vcf.gz', region := 'chr1:1000000-2000000');

@@ -1072,6 +1072,68 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         }
     }
     
+    // =========================================================================
+    // VEP data storage - allocated per VEP field
+    // =========================================================================
+    // Calculate number of VEP fields
+    int n_vep = priv->n_vep_columns;
+    
+    // Per-VEP-field data arrays - store parsed values for each record
+    char*** vep_str_data = NULL;        // String values per field [n_vep][batch_size]
+    int32_t** vep_int_data = NULL;      // Integer values per field [n_vep][batch_size]
+    float** vep_float_data = NULL;      // Float values per field [n_vep][batch_size]
+    uint8_t** vep_validity = NULL;      // Validity bitmaps per field [n_vep][(batch_size+7)/8]
+    int32_t** vep_str_offsets = NULL;   // String offsets per field [n_vep][batch_size+1]
+    size_t* vep_str_sizes = NULL;       // Current string data size per field
+    char** vep_str_buffers = NULL;      // Concatenated string data per field
+    size_t* vep_str_capacity = NULL;    // Allocated capacity per field
+    
+    if (n_vep > 0 && priv->vep_schema) {
+        vep_str_data = (char***)vcf_arrow_malloc(n_vep * sizeof(char**));
+        vep_int_data = (int32_t**)vcf_arrow_malloc(n_vep * sizeof(int32_t*));
+        vep_float_data = (float**)vcf_arrow_malloc(n_vep * sizeof(float*));
+        vep_validity = (uint8_t**)vcf_arrow_malloc(n_vep * sizeof(uint8_t*));
+        vep_str_offsets = (int32_t**)vcf_arrow_malloc(n_vep * sizeof(int32_t*));
+        vep_str_sizes = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
+        vep_str_buffers = (char**)vcf_arrow_malloc(n_vep * sizeof(char*));
+        vep_str_capacity = (size_t*)vcf_arrow_malloc(n_vep * sizeof(size_t));
+        
+        if (vep_str_data) memset(vep_str_data, 0, n_vep * sizeof(char**));
+        if (vep_int_data) memset(vep_int_data, 0, n_vep * sizeof(int32_t*));
+        if (vep_float_data) memset(vep_float_data, 0, n_vep * sizeof(float*));
+        if (vep_validity) memset(vep_validity, 0, n_vep * sizeof(uint8_t*));
+        if (vep_str_offsets) memset(vep_str_offsets, 0, n_vep * sizeof(int32_t*));
+        if (vep_str_sizes) memset(vep_str_sizes, 0, n_vep * sizeof(size_t));
+        if (vep_str_buffers) memset(vep_str_buffers, 0, n_vep * sizeof(char*));
+        if (vep_str_capacity) memset(vep_str_capacity, 0, n_vep * sizeof(size_t));
+        
+        // Allocate per-field arrays based on type
+        for (int v = 0; v < n_vep; v++) {
+            int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+            const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+            vep_field_type_t field_type = field ? field->type : VEP_TYPE_STRING;
+            
+            // Allocate validity bitmap
+            vep_validity[v] = (uint8_t*)vcf_arrow_malloc((batch_size + 7) / 8);
+            if (vep_validity[v]) memset(vep_validity[v], 0, (batch_size + 7) / 8);
+            
+            if (field_type == VEP_TYPE_STRING) {
+                // String: use offsets and concatenated buffer
+                vep_str_offsets[v] = (int32_t*)vcf_arrow_malloc((batch_size + 1) * sizeof(int32_t));
+                if (vep_str_offsets[v]) memset(vep_str_offsets[v], 0, (batch_size + 1) * sizeof(int32_t));
+                vep_str_buffers[v] = NULL;
+                vep_str_capacity[v] = 0;
+                vep_str_sizes[v] = 0;
+            } else if (field_type == VEP_TYPE_INTEGER) {
+                vep_int_data[v] = (int32_t*)vcf_arrow_malloc(batch_size * sizeof(int32_t));
+                if (vep_int_data[v]) memset(vep_int_data[v], 0, batch_size * sizeof(int32_t));
+            } else if (field_type == VEP_TYPE_FLOAT) {
+                vep_float_data[v] = (float*)vcf_arrow_malloc(batch_size * sizeof(float));
+                if (vep_float_data[v]) memset(vep_float_data[v], 0, batch_size * sizeof(float));
+            }
+        }
+    }
+    
     // Read records
     int ret;
     while (n_read < batch_size) {
@@ -1610,6 +1672,89 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             }
         }
         
+        // =====================================================================
+        // Extract VEP annotation data for this record
+        // =====================================================================
+        if (n_vep > 0 && priv->vep_schema) {
+            // Parse VEP annotation from this record
+            vep_record_t* vep_rec = vep_record_parse_bcf(priv->vep_schema, priv->hdr, priv->rec);
+            
+            if (vep_rec && vep_rec->n_transcripts > 0) {
+                // For VEP_TRANSCRIPT_FIRST mode, use first transcript
+                // For VEP_TRANSCRIPT_ALL mode, we'd need list storage (not yet implemented)
+                int tr_idx = 0;  // First transcript
+                
+                for (int v = 0; v < n_vep; v++) {
+                    int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+                    const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+                    if (!field) continue;
+                    
+                    const vep_value_t* val = vep_record_get_value(vep_rec, tr_idx, field_idx);
+                    
+                    if (val && !val->is_missing) {
+                        // Set validity bit
+                        if (vep_validity[v]) {
+                            vep_validity[v][n_read / 8] |= (1 << (n_read % 8));
+                        }
+                        
+                        if (field->type == VEP_TYPE_STRING) {
+                            // Store string value
+                            if (val->str_value && vep_str_offsets[v]) {
+                                size_t len = strlen(val->str_value);
+                                
+                                // Grow buffer if needed
+                                size_t needed = vep_str_sizes[v] + len;
+                                if (needed > vep_str_capacity[v]) {
+                                    size_t new_cap = vep_str_capacity[v] == 0 ? 4096 : vep_str_capacity[v] * 2;
+                                    while (new_cap < needed) new_cap *= 2;
+                                    char* new_buf = (char*)vcf_arrow_realloc(vep_str_buffers[v], new_cap);
+                                    if (new_buf) {
+                                        vep_str_buffers[v] = new_buf;
+                                        vep_str_capacity[v] = new_cap;
+                                    }
+                                }
+                                
+                                // Copy string data
+                                if (vep_str_sizes[v] + len <= vep_str_capacity[v]) {
+                                    memcpy(vep_str_buffers[v] + vep_str_sizes[v], val->str_value, len);
+                                    vep_str_sizes[v] += len;
+                                }
+                                vep_str_offsets[v][n_read + 1] = (int32_t)vep_str_sizes[v];
+                            } else if (vep_str_offsets[v]) {
+                                vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                            }
+                        } else if (field->type == VEP_TYPE_INTEGER) {
+                            if (vep_int_data[v]) {
+                                vep_int_data[v][n_read] = val->int_value;
+                            }
+                        } else if (field->type == VEP_TYPE_FLOAT) {
+                            if (vep_float_data[v]) {
+                                vep_float_data[v][n_read] = val->float_value;
+                            }
+                        }
+                    } else {
+                        // Missing value - update offsets for strings
+                        if (field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
+                            vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                        }
+                    }
+                }
+            } else {
+                // No VEP annotation - mark all fields as missing
+                for (int v = 0; v < n_vep; v++) {
+                    int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
+                    const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
+                    if (field && field->type == VEP_TYPE_STRING && vep_str_offsets[v]) {
+                        vep_str_offsets[v][n_read + 1] = vep_str_offsets[v][n_read];
+                    }
+                }
+            }
+            
+            if (vep_rec) {
+                vep_record_destroy(vep_rec);
+            }
+        }
+        
         n_read++;
     }
     
@@ -1693,7 +1838,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     int include_samples = priv->opts.include_format && n_samples > 0;
     
     // Calculate VEP column count (must match schema)
-    int n_vep = priv->n_vep_columns;
+    // n_vep was already computed earlier from priv->n_vep_columns
     
     int64_t n_children = n_core + n_vep;  // Core fields + VEP columns
     if (n_info_fields > 0) n_children++;  // INFO struct
@@ -2011,98 +2156,160 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
     
     // =========================================================================
     // Children 7 to 7+n_vep-1: VEP columns (if VEP parsing enabled)
-    // Each VEP column is a scalar or list depending on vep_transcript_mode
-    // For now, we create placeholder NULL columns - actual VEP parsing 
-    // will be implemented when records are processed
+    // Each VEP column is populated with parsed VEP data from record reading
     // =========================================================================
-    // Note: VEP data population is not yet implemented - we just create empty columns
-    // to match the schema. Full implementation would parse CSQ/ANN/BCSQ per record.
     for (int v = 0; v < n_vep; v++) {
         int col_idx = 7 + v;
         struct ArrowArray* arr = out->children[col_idx];
         arr->length = n_read;
-        arr->null_count = n_read;  // All NULL for now
         arr->offset = 0;
         arr->n_children = 0;
         arr->children = NULL;
         
-        // Create validity bitmap (all NULL)
-        uint8_t* validity = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
-        memset(validity, 0, (n_read + 7) / 8);  // All bits 0 = all NULL
-        
-        // Determine if list type based on transcript mode
-        int transcript_all = (priv->opts.vep_transcript_mode == VEP_TRANSCRIPT_ALL);
-        
-        // Get field type to determine buffer count
+        // Get field type
         int field_idx = priv->vep_field_indices ? priv->vep_field_indices[v] : v;
         const vep_field_t* field = vep_schema_get_field(priv->vep_schema, field_idx);
         vep_field_type_t field_type = field ? field->type : VEP_TYPE_STRING;
         
+        // Determine if list type based on transcript mode
+        int transcript_all = (priv->opts.vep_transcript_mode == VEP_TRANSCRIPT_ALL);
+        
+        // Count null values from validity bitmap
+        int64_t null_count = 0;
+        if (vep_validity && vep_validity[v]) {
+            for (int64_t r = 0; r < n_read; r++) {
+                if (!(vep_validity[v][r / 8] & (1 << (r % 8)))) {
+                    null_count++;
+                }
+            }
+        } else {
+            null_count = n_read;  // All NULL if no validity bitmap
+        }
+        arr->null_count = null_count;
+        
         if (transcript_all) {
-            // List type - create empty lists
+            // List type - for now still create empty lists (TODO: full implementation)
             arr->n_buffers = 2;
             arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-            arr->buffers[0] = validity;
+            arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
+            if (vep_validity) vep_validity[v] = NULL;  // Transfer ownership
             
-            // Empty list offsets (all zeros)
             int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
             memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
             arr->buffers[1] = offsets;
             
-            // Create empty child array
             arr->n_children = 1;
             arr->children = (struct ArrowArray**)vcf_arrow_malloc(sizeof(struct ArrowArray*));
             arr->children[0] = (struct ArrowArray*)vcf_arrow_malloc(sizeof(struct ArrowArray));
             memset(arr->children[0], 0, sizeof(struct ArrowArray));
             arr->children[0]->release = &release_array_simple;
             arr->children[0]->length = 0;
-            arr->children[0]->n_buffers = 3;  // For string child
+            arr->children[0]->n_buffers = 3;
             arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
             arr->children[0]->buffers[0] = NULL;
             int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
             child_offsets[0] = 0;
             arr->children[0]->buffers[1] = child_offsets;
-            arr->children[0]->buffers[2] = vcf_arrow_malloc(1);  // Empty string data
+            arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
         } else {
-            // Scalar type - buffer count depends on field type
+            // Scalar type - use collected VEP data
             if (field_type == VEP_TYPE_STRING) {
-                // STRING: 3 buffers (validity, offsets, data)
                 arr->n_buffers = 3;
                 arr->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-                arr->buffers[0] = validity;
+                arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
+                if (vep_validity) vep_validity[v] = NULL;
                 
-                // Empty string offsets (all zeros)
-                int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
-                memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
-                arr->buffers[1] = offsets;
-                arr->buffers[2] = vcf_arrow_malloc(1);  // Empty string data
+                // Use collected string offsets and data
+                if (vep_str_offsets && vep_str_offsets[v]) {
+                    arr->buffers[1] = vep_str_offsets[v];
+                    vep_str_offsets[v] = NULL;
+                } else {
+                    int32_t* offsets = (int32_t*)vcf_arrow_malloc((n_read + 1) * sizeof(int32_t));
+                    memset(offsets, 0, (n_read + 1) * sizeof(int32_t));
+                    arr->buffers[1] = offsets;
+                }
+                
+                if (vep_str_buffers && vep_str_buffers[v] && vep_str_sizes[v] > 0) {
+                    arr->buffers[2] = vep_str_buffers[v];
+                    vep_str_buffers[v] = NULL;
+                } else {
+                    arr->buffers[2] = vcf_arrow_malloc(1);
+                }
             } else if (field_type == VEP_TYPE_INTEGER) {
-                // INTEGER: 2 buffers (validity, data)
                 arr->n_buffers = 2;
                 arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                arr->buffers[0] = validity;
-                int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
-                memset(data, 0, n_read * sizeof(int32_t));
-                arr->buffers[1] = data;
+                arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
+                if (vep_validity) vep_validity[v] = NULL;
+                
+                if (vep_int_data && vep_int_data[v]) {
+                    arr->buffers[1] = vep_int_data[v];
+                    vep_int_data[v] = NULL;
+                } else {
+                    int32_t* data = (int32_t*)vcf_arrow_malloc(n_read * sizeof(int32_t));
+                    memset(data, 0, n_read * sizeof(int32_t));
+                    arr->buffers[1] = data;
+                }
             } else if (field_type == VEP_TYPE_FLOAT) {
-                // FLOAT: 2 buffers (validity, data)
                 arr->n_buffers = 2;
                 arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                arr->buffers[0] = validity;
-                float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
-                memset(data, 0, n_read * sizeof(float));
-                arr->buffers[1] = data;
+                arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
+                if (vep_validity) vep_validity[v] = NULL;
+                
+                if (vep_float_data && vep_float_data[v]) {
+                    arr->buffers[1] = vep_float_data[v];
+                    vep_float_data[v] = NULL;
+                } else {
+                    float* data = (float*)vcf_arrow_malloc(n_read * sizeof(float));
+                    memset(data, 0, n_read * sizeof(float));
+                    arr->buffers[1] = data;
+                }
             } else {
-                // FLAG/BOOLEAN: 2 buffers (validity, data bitmap)
+                // FLAG/BOOLEAN
                 arr->n_buffers = 2;
                 arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
-                arr->buffers[0] = validity;
+                arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
+                if (vep_validity) vep_validity[v] = NULL;
                 uint8_t* data = (uint8_t*)vcf_arrow_malloc((n_read + 7) / 8);
                 memset(data, 0, (n_read + 7) / 8);
                 arr->buffers[1] = data;
             }
         }
     }
+    
+    // Free remaining VEP data that wasn't transferred
+    if (vep_validity) {
+        for (int v = 0; v < n_vep; v++) {
+            vcf_arrow_free(vep_validity[v]);
+        }
+        vcf_arrow_free(vep_validity);
+    }
+    if (vep_str_offsets) {
+        for (int v = 0; v < n_vep; v++) {
+            vcf_arrow_free(vep_str_offsets[v]);
+        }
+        vcf_arrow_free(vep_str_offsets);
+    }
+    if (vep_str_buffers) {
+        for (int v = 0; v < n_vep; v++) {
+            vcf_arrow_free(vep_str_buffers[v]);
+        }
+        vcf_arrow_free(vep_str_buffers);
+    }
+    if (vep_int_data) {
+        for (int v = 0; v < n_vep; v++) {
+            vcf_arrow_free(vep_int_data[v]);
+        }
+        vcf_arrow_free(vep_int_data);
+    }
+    if (vep_float_data) {
+        for (int v = 0; v < n_vep; v++) {
+            vcf_arrow_free(vep_float_data[v]);
+        }
+        vcf_arrow_free(vep_float_data);
+    }
+    if (vep_str_data) vcf_arrow_free(vep_str_data);
+    vcf_arrow_free(vep_str_sizes);
+    vcf_arrow_free(vep_str_capacity);
     
     // =========================================================================
     // Child 7+n_vep: INFO struct (if include_info and INFO fields exist)

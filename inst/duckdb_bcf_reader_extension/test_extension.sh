@@ -22,7 +22,7 @@ echo ""
 # Check if extension exists
 if [ ! -f "$EXTENSION" ]; then
     echo -e "${YELLOW}Extension not found. Building...${NC}"
-    cd "$SCRIPT_DIR" && make clean && make
+    cd "$SCRIPT_DIR" && make clean && make RBCFTOOLS_HTSLIB=1 RBCFTOOLS_ROOT=../..
     echo ""
 fi
 
@@ -88,6 +88,9 @@ run_test "test_format_simple.vcf - FORMAT fields" \
 
 run_test "test_format_info.vcf - Core columns" \
     "SELECT CHROM, POS, REF, ALT, QUAL, FILTER FROM bcf_read('$EXTDATA_DIR/test_format_info.vcf') LIMIT 5;"
+
+run_test "test_vep.vcf - VEP annotations parsed" \
+    "SELECT CHROM, POS, REF, ALT, VEP_Consequence, VEP_SYMBOL, VEP_AF FROM bcf_read('$EXTDATA_DIR/test_vep.vcf') LIMIT 3;"
 
 echo "=============================================="
 echo "  Testing BCF without index"
