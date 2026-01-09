@@ -199,6 +199,65 @@ expect_true(
   info = "Should have requested columns"
 )
 
+# =============================================================================
+# Test VEP parsing via DuckDB (list-typed VEP_* columns)
+# =============================================================================
+
+test_vep_vcf <- system.file(
+  "extdata",
+  "test_vep.vcf",
+  package = "RBCFTools"
+)
+
+if (!file.exists(test_vep_vcf) || !nzchar(test_vep_vcf)) {
+  exit_file("test_vep.vcf not found")
+}
+
+# Describe schema to ensure VEP columns exist and are lists
+vep_schema <- DBI::dbGetQuery(
+  con,
+  sprintf("DESCRIBE SELECT * FROM bcf_read('%s') LIMIT 0;", test_vep_vcf)
+)
+
+expect_true(
+  any(vep_schema$column_name == "VEP_Consequence"),
+  info = "VEP_Consequence column should be present"
+)
+expect_true(
+  any(vep_schema$column_name == "VEP_AF"),
+  info = "VEP_AF column should be present"
+)
+expect_true(
+  vep_schema$column_type[vep_schema$column_name == "VEP_Consequence"][1] == "VARCHAR[]",
+  info = "VEP_Consequence should be list-typed (VARCHAR[])"
+)
+expect_true(
+  vep_schema$column_type[vep_schema$column_name == "VEP_AF"][1] == "FLOAT[]",
+  info = "VEP_AF should be list-typed (FLOAT[])"
+)
+
+# Verify data: multiple transcripts preserved and first transcript parsed
+vep_data <- DBI::dbGetQuery(
+  con,
+  sprintf(
+    "SELECT list_count(VEP_Consequence) AS n_tx, list_extract(VEP_Consequence,1) AS first_cons, list_extract(VEP_SYMBOL,1) AS first_sym, list_extract(VEP_AF,1) AS first_af FROM bcf_read('%s') LIMIT 1;",
+    test_vep_vcf
+  )
+)
+
+expect_true(
+  vep_data$n_tx[1] >= 1,
+  info = "VEP should preserve at least one transcript"
+)
+expect_true(
+  !is.na(vep_data$first_cons[1]),
+  info = "First transcript consequence should not be NA"
+)
+expect_true(
+  !is.na(vep_data$first_sym[1]),
+  info = "First transcript symbol should not be NA"
+)
+
 # Test with existing connection
 result_con <- vcf_query_duckdb(test_vcf, con = con)
 expect_true(

@@ -83,8 +83,8 @@ cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
 res_bcftools_full <- time_runs(cmd_bcftools_full)
 res_bcftools_full
 #>   run elapsed  user system cache_state
-#> 1   1  67.568 0.002  0.005    cold-ish
-#> 2   2  65.829 0.001  0.007    warm-ish
+#> 1   1  66.031 0.002  0.005    cold-ish
+#> 2   2  65.740 0.004  0.005    warm-ish
 ```
 
 ### bcftools view (region)
@@ -93,56 +93,40 @@ res_bcftools_full
 cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 res_bcftools_region <- time_runs(cmd_bcftools_region)
 res_bcftools_region
-#>   run elapsed user system cache_state
-#> 1   1   0.074    0  0.004    cold-ish
-#> 2   2   0.074    0  0.003    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.077 0.001  0.003    cold-ish
+#> 2   2   0.076 0.000  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
 
 ``` r
 cmd_duckdb_full <- sprintf(
-  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path)
 )
 res_duckdb_full <- time_runs(cmd_duckdb_full)
-#> Warning in system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr =
-#> FALSE): running command 'duckdb -c "LOAD 'build/bcf_reader.duckdb_extension';
-#> SELECT COUNT(*) FROM bcf_read('../../test_very_large.bcf');" >/dev/null' had
-#> status 1
-#> Warning in system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr =
-#> FALSE): running command 'duckdb -c "LOAD 'build/bcf_reader.duckdb_extension';
-#> SELECT COUNT(*) FROM bcf_read('../../test_very_large.bcf');" >/dev/null' had
-#> status 1
 res_duckdb_full
 #>   run elapsed  user system cache_state
-#> 1   1   0.046 0.002  0.003    cold-ish
-#> 2   2   0.047 0.001  0.004    warm-ish
+#> 1   1   4.400 0.000  0.005    cold-ish
+#> 2   2   3.888 0.001  0.003    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
 
 ``` r
 cmd_duckdb_region <- sprintf(
-  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path),
   shQuote(region)
 )
 res_duckdb_region <- time_runs(cmd_duckdb_region)
-#> Warning in system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr =
-#> FALSE): running command 'duckdb -c "LOAD 'build/bcf_reader.duckdb_extension';
-#> SELECT COUNT(*) FROM bcf_read('../../test_very_large.bcf', region :=
-#> '22:20000000-21000000');" >/dev/null' had status 1
-#> Warning in system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr =
-#> FALSE): running command 'duckdb -c "LOAD 'build/bcf_reader.duckdb_extension';
-#> SELECT COUNT(*) FROM bcf_read('../../test_very_large.bcf', region :=
-#> '22:20000000-21000000');" >/dev/null' had status 1
 res_duckdb_region
-#>   run elapsed  user system cache_state
-#> 1   1   0.044 0.002  0.003    cold-ish
-#> 2   2   0.043 0.001  0.004    warm-ish
+#>   run elapsed user system cache_state
+#> 1   1   0.098    0  0.004    cold-ish
+#> 2   2   0.095    0  0.003    warm-ish
 ```
 
 ## Notes

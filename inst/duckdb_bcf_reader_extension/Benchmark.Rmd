@@ -95,7 +95,7 @@ res_bcftools_region
 
 ```{r duckdb-full, eval=can_run}
 cmd_duckdb_full <- sprintf(
-  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path)
 )
@@ -107,7 +107,7 @@ res_duckdb_full
 
 ```{r duckdb-region, eval=can_run}
 cmd_duckdb_region <- sprintf(
-  "duckdb  -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
   shQuote(duckdb_ext),
   shQuote(bcf_path),
   shQuote(region)
