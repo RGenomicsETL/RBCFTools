@@ -237,6 +237,10 @@ test_count: $(EXTENSION_FILE)
 		GROUP BY CHROM; \
 	"
 
+# Render benchmarks (requires R + rmarkdown)
+benchmark:
+	R -e "rmarkdown::render('Benchmark.Rmd')"
+
 # ============================================================================
 # Install targets
 # ============================================================================
@@ -267,4 +271,4 @@ else
 	@echo "htslib: System (pkg-config or defaults)"
 endif
 
-.PHONY: all clean test test_schema test_head test_count install info
+.PHONY: all clean test test_schema test_head test_count benchmark install info

@@ -2188,7 +2188,7 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
         arr->null_count = null_count;
         
         if (transcript_all) {
-            // List type - for now still create empty lists (TODO: full implementation)
+            // List type - create empty lists (child array type must match field_type)
             arr->n_buffers = 2;
             arr->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
             arr->buffers[0] = vep_validity ? vep_validity[v] : NULL;
@@ -2204,13 +2204,25 @@ static int vcf_stream_get_next(struct ArrowArrayStream* stream, struct ArrowArra
             memset(arr->children[0], 0, sizeof(struct ArrowArray));
             arr->children[0]->release = &release_array_simple;
             arr->children[0]->length = 0;
-            arr->children[0]->n_buffers = 3;
-            arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
-            arr->children[0]->buffers[0] = NULL;
-            int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
-            child_offsets[0] = 0;
-            arr->children[0]->buffers[1] = child_offsets;
-            arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+            arr->children[0]->n_children = 0;
+            
+            // Child buffer count depends on field type
+            if (field_type == VEP_TYPE_STRING) {
+                // String: validity, offsets, data (3 buffers)
+                arr->children[0]->n_buffers = 3;
+                arr->children[0]->buffers = (const void**)vcf_arrow_malloc(3 * sizeof(void*));
+                arr->children[0]->buffers[0] = NULL;
+                int32_t* child_offsets = (int32_t*)vcf_arrow_malloc(sizeof(int32_t));
+                child_offsets[0] = 0;
+                arr->children[0]->buffers[1] = child_offsets;
+                arr->children[0]->buffers[2] = vcf_arrow_malloc(1);
+            } else {
+                // Integer, Float, Flag: validity, data (2 buffers)
+                arr->children[0]->n_buffers = 2;
+                arr->children[0]->buffers = (const void**)vcf_arrow_malloc(2 * sizeof(void*));
+                arr->children[0]->buffers[0] = NULL;
+                arr->children[0]->buffers[1] = vcf_arrow_malloc(1);
+            }
         } else {
             // Scalar type - use collected VEP data
             if (field_type == VEP_TYPE_STRING) {

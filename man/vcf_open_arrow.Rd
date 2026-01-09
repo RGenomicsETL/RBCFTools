@@ -12,7 +12,11 @@ vcf_open_arrow(
   include_info = TRUE,
   include_format = TRUE,
   index = NULL,
-  threads = 0L
+  threads = 0L,
+  parse_vep = FALSE,
+  vep_tag = NULL,
+  vep_columns = NULL,
+  vep_transcript = c("first", "all")
 )
 }
 \arguments{
@@ -35,6 +39,17 @@ Alternatively, use htslib ##idx## syntax in filename (e.g., "file.vcf.gz##idx##c
 Note: Index is only required for region queries; whole-file streaming needs no index.}
 
 \item{threads}{Number of decompression threads (default: 0 = auto)}
+
+\item{parse_vep}{Enable VEP/BCSQ/ANN annotation parsing (default: FALSE).
+When TRUE, annotation fields are parsed and added as typed columns.}
+
+\item{vep_tag}{Annotation tag to parse ("CSQ", "BCSQ", "ANN") or NULL for auto-detect.}
+
+\item{vep_columns}{Character vector of VEP fields to extract, or NULL for all fields.}
+
+\item{vep_transcript}{Which transcript to extract: "first" (default) or "all".
+"first" returns scalar columns (one value per variant).
+"all" returns list columns (all transcripts per variant).}
 }
 \value{
 A nanoarrow_array_stream object

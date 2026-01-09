@@ -1,0 +1,106 @@
+---
+title: "BCF Reader Benchmarks"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+params:
+  bcf_path: "test_very_large.bcf"
+  region: "22:20000000-21000000"
+  duckdb_ext: "build/bcf_reader.duckdb_extension"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Overview
+
+Quick, reproducible timing comparisons between:
+
+- `bcftools view` streamed to `/dev/null`
+- DuckDB `bcf_read()` via the packaged extension
+
+The large input (`test_very_large.bcf`) is expected to live locally (never committed); generated from GLIMPSE-imputed 1000 Genomes data.
+
+## Prerequisites
+
+- `bcftools` available on `PATH`
+- DuckDB CLI installed and `duckdb` R package (for rendering)
+- Built extension at `params$duckdb_ext` (`make` in this folder)
+- Large BCF at `params$bcf_path` (defaults to `test_very_large.bcf` in this directory)
+
+```{r paths}
+bcf_path <- params$bcf_path
+region <- params$region
+duckdb_ext <- params$duckdb_ext
+
+if (!file.exists(bcf_path)) {
+  stop("BCF not found: ", bcf_path, ". Drop the file locally before running benchmarks.")
+}
+if (!file.exists(duckdb_ext)) {
+  stop("DuckDB extension not found: ", duckdb_ext, ". Build with `make` first.")
+}
+```
+
+## Benchmarks
+
+Timings are single runs using `system.time()` for wall-clock comparisons; adjust or repeat as needed. Region queries mirror full-file timings but with `-r` / `region :=`.
+
+```{r helpers}
+run_cmd <- function(cmd) {
+  system.time({
+    out <- system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)
+    attr(out, "status") <- attr(out, "status")
+    out
+  })
+}
+```
+
+### bcftools view (full file)
+
+```{r bcftools-full}
+cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
+time_bcftools_full <- run_cmd(cmd_bcftools_full)
+time_bcftools_full
+```
+
+### bcftools view (region)
+
+```{r bcftools-region}
+cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
+time_bcftools_region <- run_cmd(cmd_bcftools_region)
+time_bcftools_region
+```
+
+### DuckDB bcf_read (full file)
+
+```{r duckdb-full}
+cmd_duckdb_full <- sprintf(
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s);\"",
+  shQuote(duckdb_ext),
+  shQuote(bcf_path)
+)
+time_duckdb_full <- run_cmd(cmd_duckdb_full)
+time_duckdb_full
+```
+
+### DuckDB bcf_read (region)
+
+```{r duckdb-region}
+cmd_duckdb_region <- sprintf(
+  "duckdb -unsigned -c \"LOAD %s; SELECT COUNT(*) FROM bcf_read(%s, region := %s);\"",
+  shQuote(duckdb_ext),
+  shQuote(bcf_path),
+  shQuote(region)
+)
+time_duckdb_region <- run_cmd(cmd_duckdb_region)
+time_duckdb_region
+```
+
+## Notes
+
+- These timings are single passes; rerun and average for more stable numbers.
+- Ensure the file and its index are co-located with fast storage (local SSD preferred).
+- Adjust `region` to match indexed contigs present in `test_very_large.bcf`.

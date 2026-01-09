@@ -59,6 +59,10 @@ test-vcf-bcf: install2
 rdm: dev-install
 	R -e "rmarkdown::render('README.Rmd')"
 
+# Render DuckDB extension benchmarks (requires local test_very_large.bcf)
+benchmark-duckdb: install2
+	$(MAKE) -C inst/duckdb_bcf_reader_extension benchmark
+
 rdm2:
 	R -e "rmarkdown::render('README.Rmd')"
 

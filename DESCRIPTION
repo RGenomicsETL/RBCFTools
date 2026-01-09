@@ -15,14 +15,13 @@ Description: Bundles the 'htslib' and 'bcftools' libraries and command lines too
 License: GPL (>= 3)
 Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow
-LinkingTo: nanoarrow
+LinkingTo: nanoarrow, vctrs
 SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
 Suggests: 
     tinytest,
     vcfppR,
     duckdb,
-    DBI,
-    vctrs
+    DBI
 OS_type: unix
 URL: https://github.com/RGenomicsETL/RBCFTools, https://rgenomicsetl.github.io/RBCFTools/
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues
