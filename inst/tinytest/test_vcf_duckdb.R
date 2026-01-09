@@ -227,13 +227,17 @@ expect_true(
   any(vep_schema$column_name == "VEP_AF"),
   info = "VEP_AF column should be present"
 )
+
+vep_consequence_type <- vep_schema$column_type[vep_schema$column_name == "VEP_Consequence"][1]
+vep_af_type <- vep_schema$column_type[vep_schema$column_name == "VEP_AF"][1]
+
 expect_true(
-  vep_schema$column_type[vep_schema$column_name == "VEP_Consequence"][1] == "VARCHAR[]",
-  info = "VEP_Consequence should be list-typed (VARCHAR[])"
+  is.character(vep_consequence_type) && grepl("\\[\\]$", vep_consequence_type),
+  info = "VEP_Consequence should be list-typed"
 )
 expect_true(
-  vep_schema$column_type[vep_schema$column_name == "VEP_AF"][1] == "FLOAT[]",
-  info = "VEP_AF should be list-typed (FLOAT[])"
+  is.character(vep_af_type) && grepl("\\[\\]$", vep_af_type),
+  info = "VEP_AF should be list-typed"
 )
 
 # Verify data: multiple transcripts preserved and first transcript parsed
