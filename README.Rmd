@@ -64,20 +64,17 @@ htslib_capabilities()
 # Human-readable feature string
 htslib_feature_string()
 ```
-```{r ducklake-etl, eval=identical(Sys.getenv("DUCKLAKE_RUN"), "1")}
+```{r ducklake-minio, eval=TRUE}
 stopifnot(tolower(Sys.info()[["sysname"]]) == "linux")
 
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
 minio_bin <- Sys.which("minio")
-if (!nzchar(minio_bin)) {
-  minio_bin <- ducklake_download_minio(dest_dir = bin_dir)
-}
+if (!nzchar(minio_bin)) minio_bin <- ducklake_download_minio(dest_dir = bin_dir)
 mc_bin <- Sys.which("mc")
-if (!nzchar(mc_bin)) {
-  mc_bin <- ducklake_download_mc(dest_dir = bin_dir)
-}
+if (!nzchar(mc_bin)) mc_bin <- ducklake_download_mc(dest_dir = bin_dir)
+stopifnot(nzchar(minio_bin), nzchar(mc_bin))
 
 # Start MinIO (ephemeral) and configure mc
 data_dir <- file.path(tempdir(), "ducklake_minio")
@@ -91,51 +88,81 @@ minio_pid <- system2(minio_bin, c("server", data_dir, "--address", endpoint),
 on.exit({ if (minio_pid > 0) system2("kill", as.character(minio_pid)) }, add = TRUE)
 
 Sys.sleep(3)
-system2(mc_bin, c("alias", "set", "ducklake_local", paste0("http://", endpoint),
-                  "minioadmin", "minioadmin"))
-system2(mc_bin, c("mb", "ducklake_local/ducklake-demo"))
+alias_ok <- FALSE
+for (i in 1:10) {
+  status <- system2(mc_bin, c("alias", "set", "ducklake_local", paste0("http://", endpoint),
+                              "minioadmin", "minioadmin"), stdout = TRUE, stderr = TRUE)
+  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+    alias_ok <- TRUE
+    break
+  }
+  Sys.sleep(1)
+}
+stopifnot(alias_ok)
 
+bucket <- sprintf("ducklake-demo-%d", as.integer(Sys.time()))
+bucket_ok <- FALSE
+for (i in 1:10) {
+  status <- system2(mc_bin, c("mb", paste0("ducklake_local/", bucket)),
+                    stdout = TRUE, stderr = TRUE)
+  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+    bucket_ok <- TRUE
+    break
+  }
+  Sys.sleep(1)
+}
+stopifnot(bucket_ok)
+bucket_name <- bucket
+mc_path <- mc_bin
+minio_endpoint <- endpoint
+minio_process <- minio_pid
+```
+
+```{r ducklake-attach, eval=TRUE}
 con <- duckdb::dbConnect(duckdb::duckdb(config = list(
   allow_unsigned_extensions = "true",
   enable_external_access = "true"
 )))
-on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+stopifnot(DBI::dbIsValid(con))
 
-ext_env <- Sys.getenv("DUCKLAKE_EXT")
-if (nzchar(ext_env)) {
-  DBI::dbExecute(con, sprintf("LOAD %s", DBI::dbQuoteString(con, ext_env)))
-} else {
-  DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
-  DBI::dbExecute(con, "LOAD ducklake")
-}
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "LOAD ducklake")
 
 ducklake_create_s3_secret(
   con,
   name = "ducklake_minio",
   key_id = "minioadmin",
   secret = "minioadmin",
-  endpoint = endpoint,
+  endpoint = minio_endpoint,
   region = "us-east-1",
   use_ssl = FALSE
 )
 
+metadata_path <- file.path(tempdir(), sprintf("ducklake_meta_%s.ducklake", bucket_name))
 ducklake_attach(
   con,
-  metadata_path = "ducklake_demo.ducklake",
-  data_path = "s3://ducklake-demo",
+  metadata_path = metadata_path,
+  data_path = paste0("s3://", bucket_name),
   alias = "lake",
-  extra_options = list(SECRET = "ducklake_minio")
+  extra_options = list(OVERRIDE_DATA_PATH = TRUE)
 )
+```
 
+```{r ducklake-write, eval=TRUE}
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ducklake_write_variants(
   con,
   table = "lake.variants",
   vcf_path = vcf_file,
-  threads = 2
+  threads = 1
 )
 
 DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+if (exists("minio_process") && minio_process > 0) {
+  system2("kill", as.character(minio_process))
+}
 ```
 ### Feature Constants
 
