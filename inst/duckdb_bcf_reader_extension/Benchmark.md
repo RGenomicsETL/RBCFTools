@@ -10,6 +10,8 @@ Quick, reproducible timing comparisons between:
 
 The large input (`test_very_large.bcf`) is expected to live locally
 (never committed); generated from GLIMPSE-imputed 1000 Genomes data.
+Each command is run twice by default to surface “cold-ish” vs “warm-ish”
+cache timing (adjust `n_runs` below).
 
 ## Prerequisites
 
@@ -51,11 +53,22 @@ timings but with `-r` / `region :=`.
 
 ``` r
 run_cmd <- function(cmd) {
-  system.time({
-    out <- system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)
-    attr(out, "status") <- attr(out, "status")
-    out
+  t <- system.time({
+    system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)
   })
+  unname(t["elapsed"])
+}
+
+n_runs <- 2  # adjust to change cold/warm repetition
+
+time_runs <- function(cmd, runs = n_runs) {
+  if (!can_run) return(NULL)
+  times <- vapply(seq_len(runs), function(i) run_cmd(cmd), numeric(1))
+  data.frame(
+    run = seq_along(times),
+    elapsed = times,
+    cache_state = ifelse(seq_along(times) == 1, "cold-ish", "warm-ish")
+  )
 }
 ```
 
@@ -63,20 +76,22 @@ run_cmd <- function(cmd) {
 
 ``` r
 cmd_bcftools_full <- sprintf("bcftools view %s > /dev/null", shQuote(bcf_path))
-time_bcftools_full <- run_cmd(cmd_bcftools_full)
-time_bcftools_full
-#>    user  system elapsed 
-#>  63.957   1.058  65.699
+res_bcftools_full <- time_runs(cmd_bcftools_full)
+res_bcftools_full
+#>   run elapsed cache_state
+#> 1   1  66.157    cold-ish
+#> 2   2  70.357    warm-ish
 ```
 
 ### bcftools view (region)
 
 ``` r
 cmd_bcftools_region <- sprintf("bcftools view -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
-time_bcftools_region <- run_cmd(cmd_bcftools_region)
-time_bcftools_region
-#>    user  system elapsed 
-#>   0.064   0.019   0.086
+res_bcftools_region <- time_runs(cmd_bcftools_region)
+res_bcftools_region
+#>   run elapsed cache_state
+#> 1   1   0.075    cold-ish
+#> 2   2   0.084    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
@@ -87,10 +102,11 @@ cmd_duckdb_full <- sprintf(
   shQuote(duckdb_ext),
   shQuote(bcf_path)
 )
-time_duckdb_full <- run_cmd(cmd_duckdb_full)
-time_duckdb_full
-#>    user  system elapsed 
-#>  37.649   0.746   3.513
+res_duckdb_full <- time_runs(cmd_duckdb_full)
+res_duckdb_full
+#>   run elapsed cache_state
+#> 1   1   3.425    cold-ish
+#> 2   2   3.615    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -102,10 +118,11 @@ cmd_duckdb_region <- sprintf(
   shQuote(bcf_path),
   shQuote(region)
 )
-time_duckdb_region <- run_cmd(cmd_duckdb_region)
-time_duckdb_region
-#>    user  system elapsed 
-#>   0.088   0.024   0.097
+res_duckdb_region <- time_runs(cmd_duckdb_region)
+res_duckdb_region
+#>   run elapsed cache_state
+#> 1   1   0.099    cold-ish
+#> 2   2   0.097    warm-ish
 ```
 
 ## Notes

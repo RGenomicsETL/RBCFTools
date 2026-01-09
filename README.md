@@ -41,6 +41,7 @@ install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', '
 ``` r
 library(RBCFTools)
 #> Loading required package: parallel
+#> Loading required package: vctrs
 
 # Get library versions
 bcftools_version()
@@ -333,7 +334,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpcvbWAm/file1efc54411148a1.parquet
+#> Wrote 11 rows to /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -352,12 +353,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
-#> 2 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
-#> 3 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
-#> 4 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
-#> 5 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
-#> 6 /tmp/RtmpcvbWAm/file1efc54411148a1.parquet            0                 11
+#> 1 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
+#> 2 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
+#> 3 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
+#> 4 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
+#> 5 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
+#> 6 /tmp/Rtmp7GQlMF/file1f5e723b6ee73e.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -440,7 +441,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpcvbWAm/file1efc5472c0ec47.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmp7GQlMF/file1f5e72507f7a70.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -614,7 +615,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.nNJHbvgNan.parquet 
+#>   Output: /tmp/tmp.u8hsnGv7Ua.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -624,10 +625,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.nNJHbvgNan.parquet
+#> Wrote 11 rows to /tmp/tmp.u8hsnGv7Ua.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.76 seconds
+#>   Time: 0.51 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -668,7 +669,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.nNJHbvgNan.parquet 
+#> Parquet File Information: /tmp/tmp.u8hsnGv7Ua.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
@@ -759,9 +760,8 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
     conversion (Arrow IPC serialization); optimizing zero-copy paths
     remains open.
   - VEP/CSQ/BCSQ/ANN: DuckDB extension now parses INFO/CSQ|BCSQ|ANN into
-    typed `VEP_*` columns (first transcript only). Arrow stream parsing
-    exists but is still being hardened and aligned (transcript-all/lists
-    not yet in DuckDB).
+    typed `VEP_*` columns with all transcripts preserved as lists. Arrow
+    stream parsing exists but is still being hardened/aligned.
   - Remaining structured annotation formats (e.g., SnpEff extras) are
     not parsed beyond VCF header types.
 
