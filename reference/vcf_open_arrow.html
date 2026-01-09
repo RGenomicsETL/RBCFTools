@@ -53,7 +53,11 @@ in Arrow format.</p>
 <span>  include_info <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_format <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  threads <span class="op">=</span> <span class="fl">0L</span></span>
+<span>  threads <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  parse_vep <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  vep_tag <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vep_columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vep_transcript <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first"</span>, <span class="st">"all"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -95,6 +99,25 @@ Note: Index is only required for region queries; whole-file streaming needs no i
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
 <dd><p>Number of decompression threads (default: 0 = auto)</p></dd>
+
+
+<dt id="arg-parse-vep">parse_vep<a class="anchor" aria-label="anchor" href="#arg-parse-vep"></a></dt>
+<dd><p>Enable VEP/BCSQ/ANN annotation parsing (default: FALSE).
+When TRUE, annotation fields are parsed and added as typed columns.</p></dd>
+
+
+<dt id="arg-vep-tag">vep_tag<a class="anchor" aria-label="anchor" href="#arg-vep-tag"></a></dt>
+<dd><p>Annotation tag to parse ("CSQ", "BCSQ", "ANN") or NULL for auto-detect.</p></dd>
+
+
+<dt id="arg-vep-columns">vep_columns<a class="anchor" aria-label="anchor" href="#arg-vep-columns"></a></dt>
+<dd><p>Character vector of VEP fields to extract, or NULL for all fields.</p></dd>
+
+
+<dt id="arg-vep-transcript">vep_transcript<a class="anchor" aria-label="anchor" href="#arg-vep-transcript"></a></dt>
+<dd><p>Which transcript to extract: "first" (default) or "all".
+"first" returns scalar columns (one value per variant).
+"all" returns list columns (all transcripts per variant).</p></dd>
 
 </dl></div>
     <div class="section level2">
