@@ -103,8 +103,8 @@ cmd_bcftools_full_text <- sprintf("bcftools view -Ov %s > /dev/null", shQuote(bc
 res_bcftools_full_text <- time_runs(cmd_bcftools_full_text)
 res_bcftools_full_text
 #>   run elapsed  user system cache_state
-#> 1   1  67.899 0.002  0.005    cold-ish
-#> 2   2  66.211 0.004  0.005    warm-ish
+#> 1   1  65.785 0.004  0.004    cold-ish
+#> 2   2  66.061 0.003  0.007    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (full file, fairer)
@@ -114,8 +114,8 @@ cmd_bcftools_full_bin <- sprintf("bcftools view -Ou %s > /dev/null", shQuote(bcf
 res_bcftools_full_bin <- time_runs(cmd_bcftools_full_bin)
 res_bcftools_full_bin
 #>   run elapsed  user system cache_state
-#> 1   1  34.941 0.000  0.006    cold-ish
-#> 2   2  35.206 0.001  0.005    warm-ish
+#> 1   1  36.653 0.003  0.003    cold-ish
+#> 2   2  35.357 0.001  0.006    warm-ish
 ```
 
 ### bcftools view — text VCF emit (region)
@@ -124,9 +124,9 @@ res_bcftools_full_bin
 cmd_bcftools_region_text <- sprintf("bcftools view -Ov -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 res_bcftools_region_text <- time_runs(cmd_bcftools_region_text)
 res_bcftools_region_text
-#>   run elapsed user system cache_state
-#> 1   1   0.082    0  0.004    cold-ish
-#> 2   2   0.077    0  0.004    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.079 0.001  0.003    cold-ish
+#> 2   2   0.075 0.000  0.003    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (region, fairer)
@@ -136,8 +136,8 @@ cmd_bcftools_region_bin <- sprintf("bcftools view -Ou -r %s %s > /dev/null", shQ
 res_bcftools_region_bin <- time_runs(cmd_bcftools_region_bin)
 res_bcftools_region_bin
 #>   run elapsed  user system cache_state
-#> 1   1   0.073 0.000  0.004    cold-ish
-#> 2   2   0.069 0.001  0.003    warm-ish
+#> 1   1   0.069 0.001  0.004    cold-ish
+#> 2   2   0.071 0.000  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
@@ -150,9 +150,9 @@ cmd_duckdb_full <- sprintf(
 )
 res_duckdb_full <- time_runs(cmd_duckdb_full)
 res_duckdb_full
-#>   run elapsed  user system cache_state
-#> 1   1   3.663 0.001  0.004    cold-ish
-#> 2   2   3.056 0.000  0.004    warm-ish
+#>   run elapsed user system cache_state
+#> 1   1   3.780    0  0.004    cold-ish
+#> 2   2   4.135    0  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -166,66 +166,70 @@ cmd_duckdb_region <- sprintf(
 )
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
-#>   run elapsed  user system cache_state
-#> 1   1   0.100 0.001  0.004    cold-ish
-#> 2   2   0.096 0.000  0.003    warm-ish
+#>   run elapsed user system cache_state
+#> 1   1   0.094    0  0.004    cold-ish
+#> 2   2   0.093    0  0.003    warm-ish
 ```
 
-### Parquet conversion: single-thread vs parallel (DuckDB extension)
+### Parquet conversion: 4 threads vs 10 threads (DuckDB extension)
 
-Parallel conversion uses `vcf_to_parquet_duckdb()` (via the bcf\_reader
-extension) for direct VCF-to-Parquet export. Skips if prerequisites are
+Compares `vcf_to_parquet_duckdb()` (via the bcf\_reader extension) with
+different thread counts. Skips if prerequisites are
 missing.
 
 ``` r
 parquet_can_run <- has_bcf && has_ext && requireNamespace("RBCFTools", quietly = TRUE)
-threads_parallel <- if (parquet_can_run) max(2L, parallel::detectCores()) else 0L
 
-parquet_single <- tempfile(fileext = ".parquet")
-parquet_parallel <- tempfile(fileext = ".parquet")
+parquet_4threads <- tempfile(fileext = ".parquet")
+parquet_10threads <- tempfile(fileext = ".parquet")
 ```
 
 ``` r
-# Single-thread conversion via DuckDB bcf_reader extension
-res_parquet_single <- time_expr({
-  RBCFTools::vcf_to_parquet_duckdb(
-    input_file = bcf_path,
-    output_file = parquet_single,
-    extension_path = duckdb_ext,
-    compression = "zstd",
-    row_group_size = 100000L,
-    threads = 1L
-  )
-}, enabled = parquet_can_run)
-#> Wrote: /tmp/Rtmpvc9gKK/file21c3cd38220247.parquet
 
-# Parallel conversion via DuckDB bcf_reader extension (requires index)
-res_parquet_parallel <- if (RBCFTools::vcf_has_index(bcf_path) && threads_parallel > 1) {
+# 10-thread conversion via DuckDB bcf_reader extension (requires index)
+res_parquet_10threads <- if (RBCFTools::vcf_has_index(bcf_path)) {
   time_expr({
     RBCFTools::vcf_to_parquet_duckdb(
       input_file = bcf_path,
-      output_file = parquet_parallel,
+      output_file = parquet_10threads,
       extension_path = duckdb_ext,
       compression = "zstd",
       row_group_size = 100000L,
-      threads = threads_parallel
+      threads = 10L
     )
   }, enabled = parquet_can_run)
 } else {
   NULL
 }
-#> Processing 23 contigs (out of 23 in header) using 23 threads (DuckDB mode)
-#> Merging temporary Parquet files... to /tmp/Rtmpvc9gKK/file21c3cd2f33b9d7.parquet
-#> Merged 23 parquet files -> file21c3cd2f33b9d7.parquet (81554892 rows)
+#> Processing 23 contigs (out of 23 in header) using 10 threads (DuckDB mode)
+#> Merging temporary Parquet files... to /tmp/RtmpqNtsD2/file21ff541cb57a93.parquet
+#> Merged 23 parquet files -> file21ff541cb57a93.parquet (81554892 rows)
+```
 
-res_parquet_single
-#>         run elapsed    user system cache_state
-#> elapsed   1 266.623 256.685  4.574    cold-ish
-res_parquet_parallel
-#>         run elapsed    user system cache_state
-#> elapsed   1  73.354 239.303 38.952    cold-ish
+``` r
+# 4-thread conversion via DuckDB bcf_reader extension
+res_parquet_4threads <- time_expr({
+  RBCFTools::vcf_to_parquet_duckdb(
+    input_file = bcf_path,
+    output_file = parquet_4threads,
+    extension_path = duckdb_ext,
+    compression = "zstd",
+    row_group_size = 100000L,
+    threads = 4L
+  )
+}, enabled = parquet_can_run)
+#> Processing 23 contigs (out of 23 in header) using 4 threads (DuckDB mode)
+#> Merging temporary Parquet files... to /tmp/RtmpqNtsD2/file21ff544a37098c.parquet
+#> Merged 23 parquet files -> file21ff544a37098c.parquet (81554892 rows)
 
-unlink(c(parquet_single, parquet_parallel))
+res_parquet_4threads
+#>         run elapsed    user system cache_state
+#> elapsed   1 115.531 240.805 39.078    cold-ish
+res_parquet_10threads
+#>         run elapsed    user system cache_state
+#> elapsed   1  88.663 260.914 40.434    cold-ish
+
+unlink(c(parquet_4threads, parquet_10threads))
 ```
 
 ## Notes

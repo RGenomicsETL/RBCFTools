@@ -109,6 +109,77 @@ htslib_feature_string()
 #> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
+``` r
+# This runs only when prerequisites are available; otherwise it no-ops with a message.
+if (tolower(Sys.info()[["sysname"]]) != "linux") {
+  message("Skipping DuckLake ETL: requires Linux + MinIO + ducklake extension")
+} else if (!requireNamespace("duckdb", quietly = TRUE) ||
+           !requireNamespace("DBI", quietly = TRUE)) {
+  message("Skipping DuckLake ETL: duckdb/DBI not installed")
+} else if (!nzchar(Sys.which("mc")) || !nzchar(Sys.which("minio"))) {
+  message("Skipping DuckLake ETL: minio/mc binaries not on PATH")
+} else {
+  con <- duckdb::dbConnect(duckdb::duckdb(config = list(
+    allow_unsigned_extensions = "true",
+    enable_external_access = "true"
+  )))
+  on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+
+  # Try to install/load ducklake (network required)
+  ok <- FALSE
+  res_install <- try(DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"), silent = TRUE)
+  res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
+  ok <- !inherits(res_load, "try-error")
+  if (!ok) {
+    message("Skipping DuckLake ETL: ducklake extension not available")
+  } else {
+    tryCatch({
+      ducklake_create_s3_secret(
+        con,
+        name = "minio_secret",
+        key_id = "MINIOUSER",
+        secret = "MINIOPASS",
+        endpoint = "127.0.0.1:9000",
+        region = "us-east-1",
+        use_ssl = FALSE
+      )
+
+      ducklake_attach(
+        con,
+        metadata_path = "ducklake_demo.ducklake",
+        data_path = "s3://mybucket/rbcftools",
+        alias = "lake"
+      )
+
+      vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+      ducklake_write_variants(
+        con,
+        table = "lake.variants",
+        vcf_path = vcf_file,
+        threads = 2
+      )
+
+      DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+    }, error = function(e) {
+      message("Skipping DuckLake ETL: ", conditionMessage(e))
+    })
+  }
+}
+#> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
+#>  target signature 'duckdb_connection#Id'.
+#>  "duckdb_connection#ANY" would also be valid
+#> Processing 86 contigs using 2 threads
+#> Merging temporary Parquet files... to /tmp/RtmpxZka72/ducklake_parquet_22250abaa3fc6.parquet
+#> Merged 25 parquet files -> ducklake_parquet_22250abaa3fc6.parquet (368319 rows)
+#> Skipping DuckLake ETL: Catalog Error: Table with name variants does not exist!
+#> Did you mean "memory.lake.variants"?
+#> 
+#> LINE 1: SELECT COUNT(*) AS n FROM lake.variants
+#>                                   ^
+#> ℹ Context: rapi_prepare
+#> ℹ Error type: CATALOG
+```
+
 ### Feature Constants
 
 Use `HTS_FEATURE_*` constants to check for specific features
@@ -333,7 +404,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet
+#> Wrote 11 rows to /tmp/RtmpxZka72/file22250a71dcc875.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -352,12 +423,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
-#> 2 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
-#> 3 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
-#> 4 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
-#> 5 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
-#> 6 /tmp/Rtmp3kgfO0/file2202f110453f8e.parquet            0                 11
+#> 1 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 2 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 3 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 4 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 5 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
+#> 6 /tmp/RtmpxZka72/file22250a71dcc875.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -440,7 +511,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmp3kgfO0/file2202f177c823ce.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpxZka72/file22250a68206012.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -591,43 +662,6 @@ With MinIO running (e.g., `mc alias set myminio/ http://127.0.0.1:9000
 MINIOUSER MINIOPASS` and a bucket `mybucket` ready), you can stream
 variants into DuckLake and query them back:
 
-``` r
-con <- duckdb::dbConnect(duckdb::duckdb(config = list(
-  allow_unsigned_extensions = "true",
-  enable_external_access = "true"
-)))
-DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
-DBI::dbExecute(con, "LOAD ducklake")
-
-ducklake_create_s3_secret(
-  con,
-  name = "minio_secret",
-  key_id = "MINIOUSER",
-  secret = "MINIOPASS",
-  endpoint = "127.0.0.1:9000",
-  region = "us-east-1",
-  use_ssl = FALSE
-)
-
-ducklake_attach(
-  con,
-  metadata_path = "ducklake_demo.ducklake",
-  data_path = "s3://mybucket/rbcftools",
-  alias = "lake",
-  extra_options = list(SECRET = "minio_secret")
-)
-
-vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
-ducklake_write_variants(
-  con,
-  table = "lake.variants",
-  vcf_path = vcf_file,
-  threads = 2
-)
-
-DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
-```
-
 MinIO client install quickstart (host tools):
 
 ``` bash
@@ -672,7 +706,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.fZXga4fmdd.parquet 
+#>   Output: /tmp/tmp.j70p5DYPsz.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -682,10 +716,10 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.fZXga4fmdd.parquet
+#> Wrote 11 rows to /tmp/tmp.j70p5DYPsz.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.77 seconds
+#>   Time: 0.51 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -726,7 +760,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.fZXga4fmdd.parquet 
+#> Parquet File Information: /tmp/tmp.j70p5DYPsz.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
