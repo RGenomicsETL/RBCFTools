@@ -90,7 +90,13 @@ run_test "test_format_info.vcf - Core columns" \
     "SELECT CHROM, POS, REF, ALT, QUAL, FILTER FROM bcf_read('$EXTDATA_DIR/test_format_info.vcf') LIMIT 5;"
 
 run_test "test_vep.vcf - VEP annotations parsed" \
-    "SELECT CHROM, POS, REF, ALT, VEP_Consequence, VEP_SYMBOL, VEP_AF FROM bcf_read('$EXTDATA_DIR/test_vep.vcf') LIMIT 3;"
+    "SELECT CHROM, POS, REF, ALT, list_count(VEP_Consequence) AS n_transcripts, list_extract(VEP_Consequence,1) AS consequence_first, list_extract(VEP_SYMBOL,1) AS symbol_first, list_extract(VEP_AF,1) AS af_first FROM bcf_read('$EXTDATA_DIR/test_vep.vcf') LIMIT 3;"
+
+run_test "test_vep.vcf - VEP column schema (names & types)" \
+    "DESCRIBE SELECT * FROM bcf_read('$EXTDATA_DIR/test_vep.vcf') LIMIT 0;"
+
+run_test "test_vep.vcf - VEP columns persisted to Parquet" \
+    "COPY (SELECT * FROM bcf_read('$EXTDATA_DIR/test_vep.vcf')) TO '/tmp/test_vep_parquet.parquet' (FORMAT PARQUET); DESCRIBE SELECT * FROM '/tmp/test_vep_parquet.parquet' LIMIT 0;"
 
 echo "=============================================="
 echo "  Testing BCF without index"

@@ -1,14 +1,9 @@
 # RBCFTools 1.23-0.0.0.9000 (development version)
 
-
-- Toward VEP fields parsing
-  - supports nanoarrow  Post hoc VEP (INFO/CSQ , INFO/ANN, INFO/BCSQ) parsing
-  - 
-
-- Parallel (contig based) duckdb extenstion based parquet convertor
-
-- reflect htslib/bcftools version in package version
-
+- DuckDB `bcf_reader` extension now auto-parses VEP-style annotations (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed `VEP_*` columns with all transcripts preserved as lists (using a vendored parser); builds remain self-contained with packaged htslib.
+- Nanoarrow streaming still supports post-hoc VEP parsing; future work will align transcript-all modes across Arrow and DuckDB.
+- Parallel (contig-based) DuckDB extension Parquet converter.
+- Package version reflects bundled htslib/bcftools versions.
 - **DuckDB bcf_reader extension**: Native DuckDB table function for querying VCF/BCF files directly.
   - `bcf_reader_build()`: Build extension from source using package's bundled htslib
   - `vcf_duckdb_connect()`: Create DuckDB connection with extension loaded

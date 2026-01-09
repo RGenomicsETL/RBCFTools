@@ -440,15 +440,15 @@ static void bcf_read_bind(duckdb_bind_info info) {
             char col_name[256];
             snprintf(col_name, sizeof(col_name), "VEP_%s", field->name);
             
-            // For now we expose first transcript only as scalar
-            duckdb_logical_type field_type = create_vep_field_type(field->type, 0);
+            // Expose all transcripts as list columns for full preservation
+            duckdb_logical_type field_type = create_vep_field_type(field->type, 1);
             duckdb_bind_add_result_column(info, col_name, field_type);
             duckdb_destroy_logical_type(&field_type);
             
             col_idx++;
         }
         
-        bind->vep_transcript_mode = VEP_TRANSCRIPT_FIRST;
+        bind->vep_transcript_mode = VEP_TRANSCRIPT_ALL;
     }
     
     // -------------------------------------------------------------------------
@@ -1012,30 +1012,79 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                      col_id < (idx_t)(bind->vep_col_start + bind->n_vep_fields)) {
                 int field_idx = col_id - bind->vep_col_start;
                 const vep_field_t* field = vep_schema_get_field(bind->vep_schema, field_idx);
-                const vep_value_t* val = NULL;
-                if (field && vep_rec) {
-                    val = vep_record_get_value(vep_rec, 0, field_idx);
-                }
-                
-                if (field && val && !val->is_missing) {
+
+                duckdb_list_entry entry;
+                entry.offset = duckdb_list_vector_get_size(vec);
+                entry.length = (vep_rec && field) ? vep_rec->n_transcripts : 0;
+
+                duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
+
+                if (entry.length > 0) {
+                    duckdb_vector_ensure_validity_writable(vec);
+                    uint64_t* parent_validity = duckdb_vector_get_validity(vec);
+                    set_validity_bit(parent_validity, row_count, 1);
+
+                    duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+                    duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+
+                    // Ensure child validity writable for nulls
+                    duckdb_vector_ensure_validity_writable(child_vec);
+                    uint64_t* child_validity = duckdb_vector_get_validity(child_vec);
+
                     if (field->type == VEP_TYPE_STRING) {
-                        duckdb_vector_assign_string_element(vec, row_count,
-                                                            val->str_value ? val->str_value : "");
+                        for (idx_t t = 0; t < entry.length; t++) {
+                            const vep_value_t* val = vep_record_get_value(vep_rec, t, field_idx);
+                            if (val && !val->is_missing && val->str_value) {
+                                duckdb_vector_assign_string_element(child_vec, entry.offset + t, val->str_value);
+                                set_validity_bit(child_validity, entry.offset + t, 1);
+                            } else {
+                                set_validity_bit(child_validity, entry.offset + t, 0);
+                            }
+                        }
                     } else if (field->type == VEP_TYPE_INTEGER) {
-                        int32_t* data = (int32_t*)duckdb_vector_get_data(vec);
-                        data[row_count] = val->int_value;
+                        int32_t* data = (int32_t*)duckdb_vector_get_data(child_vec);
+                        for (idx_t t = 0; t < entry.length; t++) {
+                            const vep_value_t* val = vep_record_get_value(vep_rec, t, field_idx);
+                            if (val && !val->is_missing) {
+                                data[entry.offset + t] = val->int_value;
+                                set_validity_bit(child_validity, entry.offset + t, 1);
+                            } else {
+                                set_validity_bit(child_validity, entry.offset + t, 0);
+                            }
+                        }
                     } else if (field->type == VEP_TYPE_FLOAT) {
-                        float* data = (float*)duckdb_vector_get_data(vec);
-                        data[row_count] = val->float_value;
+                        float* data = (float*)duckdb_vector_get_data(child_vec);
+                        for (idx_t t = 0; t < entry.length; t++) {
+                            const vep_value_t* val = vep_record_get_value(vep_rec, t, field_idx);
+                            if (val && !val->is_missing) {
+                                data[entry.offset + t] = val->float_value;
+                                set_validity_bit(child_validity, entry.offset + t, 1);
+                            } else {
+                                set_validity_bit(child_validity, entry.offset + t, 0);
+                            }
+                        }
                     } else if (field->type == VEP_TYPE_FLAG) {
-                        bool* data = (bool*)duckdb_vector_get_data(vec);
-                        data[row_count] = 1;
+                        bool* data = (bool*)duckdb_vector_get_data(child_vec);
+                        for (idx_t t = 0; t < entry.length; t++) {
+                            const vep_value_t* val = vep_record_get_value(vep_rec, t, field_idx);
+                            if (val && !val->is_missing) {
+                                data[entry.offset + t] = 1;
+                                set_validity_bit(child_validity, entry.offset + t, 1);
+                            } else {
+                                set_validity_bit(child_validity, entry.offset + t, 0);
+                            }
+                        }
                     }
                 } else {
+                    // No VEP data for this record
                     duckdb_vector_ensure_validity_writable(vec);
                     uint64_t* validity = duckdb_vector_get_validity(vec);
                     set_validity_bit(validity, row_count, 0);
+                    duckdb_list_vector_set_size(vec, entry.offset);
                 }
+
+                duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
+                list_data[row_count] = entry;
             }
             else if (col_id >= (idx_t)bind->info_col_start && 
                      col_id < (idx_t)(bind->info_col_start + bind->n_info_fields)) {

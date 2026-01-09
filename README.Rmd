@@ -332,7 +332,9 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 
 ## Limitations and issues
 
-The Arrow supports involves a lot of copies at the C level, let alone additional copies and converstions when converting to parquet including Arrow IPC file serialization. Same limitation applies to the Arrow based SQL query interface. There is no particular attempt to parse further vep/snpeff/annovar info fields.
+- Arrow stream still copies at the C level and again on Parquet conversion (Arrow IPC serialization); optimizing zero-copy paths remains open.
+- VEP/CSQ/BCSQ/ANN: DuckDB extension now parses INFO/CSQ|BCSQ|ANN into typed `VEP_*` columns with all transcripts preserved as lists. Arrow stream parsing exists but is still being hardened/aligned.
+- Remaining structured annotation formats (e.g., SnpEff extras) are not parsed beyond VCF header types.
 
 ## Future directions
 
