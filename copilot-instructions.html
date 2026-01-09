@@ -36,7 +36,7 @@
 
 <div class="section level2">
 <h2 id="project-overview">Project Overview<a class="anchor" aria-label="anchor" href="#project-overview"></a></h2>
-<p>RBCFTools is an R package that bundles <a href="https://samtools.github.io/bcftools/" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a> for reading/manipulating VCF/BCF genomic variant files. It provides: - <strong>Bundled native tools</strong>: bcftools (v1.23), htslib (v1.23), bgzip, tabix—no external installation needed - <strong>Arrow streaming</strong>: Experimental VCF→Arrow conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a> (zero-copy, no heavy arrow dependency) - <strong>DuckDB integration</strong>: Custom <code>bcf_reader</code> extension for direct SQL queries on VCF files + Parquet export - <strong>Cloud support</strong>: When built with libcurl, reads from S3, GCS, HTTP directly</p>
+<p>RBCFTools is an R package that bundles <a href="https://samtools.github.io/bcftools/" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a> for reading/manipulating VCF/BCF genomic variant files. It provides: - <strong>Bundled native tools</strong>: bcftools (v1.23), htslib (v1.23), bgzip, tabix—no external installation needed - <strong>Arrow streaming</strong>: VCF→Arrow conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a> with structured VEP/CSQ/BCSQ/ANN parsing - <strong>DuckDB integration</strong>: Custom <code>bcf_reader</code> extension for direct SQL queries on VCF/BCF files + Parquet export (all VEP/CSQ/BCSQ/ANN fields parsed) - <strong>Cloud support</strong>: When built with libcurl, reads from S3, GCS, HTTP directly</p>
 <p><strong>Platform</strong>: Unix-like only (Linux, macOS). Windows is NOT supported.</p>
 </div>
 <div class="section level2">
@@ -84,11 +84,11 @@
 <div class="section level3">
 <h3 id="id_1-native-c-layer-src">1. Native C Layer (<code>src/</code>)<a class="anchor" aria-label="anchor" href="#id_1-native-c-layer-src"></a></h3>
 <ul><li>
-<strong>R↔︎C interface</strong>: Standard R <code><a href="https://rdrr.io/r/base/CallExternal.html" class="external-link">.Call()</a></code> interface with <code>SEXP</code> types. See <a href="../src/RC_BCFTools.c">RC_BCFTools.c</a> for version/feature queries</li>
+<strong>R↔︎C interface</strong>: Standard R <code><a href="https://rdrr.io/r/base/CallExternal.html" class="external-link">.Call()</a></code> interface with <code>SEXP</code> types. See <a href="../src/RC_BCFTools.c">RC_BCFTools.c</a> for version/feature queries.</li>
 <li>
-<strong>Arrow streaming</strong>: <a href="../src/vcf_arrow_stream.c">vcf_arrow_stream.c</a> implements VCF→nanoarrow conversion with <strong>VCF spec conformance checks</strong> (mimics htslib’s <code>bcf_hdr_check_sanity()</code>)—emits R warnings when correcting non-conformant headers (e.g., FORMAT/GQ should be Integer not Float)</li>
+<strong>Arrow streaming</strong>: <a href="../src/vcf_arrow_stream.c">vcf_arrow_stream.c</a> implements VCF→nanoarrow conversion with <strong>VCF spec conformance checks</strong> (mimics htslib’s <code>bcf_hdr_check_sanity()</code>)—emits R warnings when correcting non-conformant headers (e.g., FORMAT/GQ should be Integer not Float). VEP/CSQ/BCSQ/ANN annotations are parsed into typed list columns using header-declared subfields (all transcripts preserved; first-transcript helper columns exposed in R).</li>
 <li>
-<strong>Index utilities</strong>: <a href="../src/vcf_index_utils.c">vcf_index_utils.c</a> checks for .tbi/.csi indexes (works with remote files, custom index paths)</li>
+<strong>Index utilities</strong>: <a href="../src/vcf_index_utils.c">vcf_index_utils.c</a> checks for .tbi/.csi indexes (works with remote files, custom index paths).</li>
 </ul></div>
 <div class="section level3">
 <h3 id="id_2-r-api-r">2. R API (<code>R/</code>)<a class="anchor" aria-label="anchor" href="#id_2-r-api-r"></a></h3>
@@ -104,13 +104,13 @@
 <div class="section level3">
 <h3 id="id_3-duckdb-extension-instduckdb_bcf_reader_extension">3. DuckDB Extension (<code>inst/duckdb_bcf_reader_extension/</code>)<a class="anchor" aria-label="anchor" href="#id_3-duckdb-extension-instduckdb_bcf_reader_extension"></a></h3>
 <ul><li>
-<strong>Standalone C extension</strong>: <a href="../inst/duckdb_bcf_reader_extension/bcf_reader.c">bcf_reader.c</a> provides <code>bcf_read()</code> SQL function</li>
+<strong>Standalone C extension</strong>: <a href="../inst/duckdb_bcf_reader_extension/bcf_reader.c">bcf_reader.c</a> plus <a href="../inst/duckdb_bcf_reader_extension/vep_parser.c">vep_parser.c</a> provide <code>bcf_read()</code> SQL function; sources are self-contained (do not include package <code>src/</code> files).</li>
 <li>
-<strong>Build modes</strong>: Uses RBCFTools’ htslib (<code>make RBCFTOOLS_HTSLIB=1</code>) or system htslib via pkg-config</li>
+<strong>Build modes</strong>: Uses package htslib (<code>make RBCFTOOLS_HTSLIB=1</code>) or system htslib via pkg-config.</li>
 <li>
-<strong>Spec compliance</strong>: Matches nanoarrow’s VCF validation, logs warnings for non-conformant headers</li>
+<strong>Spec compliance</strong>: Matches nanoarrow’s VCF validation, logs header corrections. Parses VEP/CSQ/BCSQ/ANN fields into typed list columns named after the header key; all transcripts retained by default.</li>
 <li>
-<strong>Features</strong>: Region filtering with .tbi/.csi indexes, projection pushdown (e.g., <code>SELECT COUNT(*)</code> is fast), parallel scanning by contig</li>
+<strong>Features</strong>: Region filtering with .tbi/.csi indexes, projection pushdown (e.g., <code>SELECT COUNT(*)</code>), Parquet export, optional benchmark rendering (<code>make -C inst/duckdb_bcf_reader_extension benchmark</code>).</li>
 </ul></div>
 <div class="section level3">
 <h3 id="id_4-bundled-native-tools-instbcftools-insthtslib">4. Bundled Native Tools (<code>inst/bcftools/</code>, <code>inst/htslib/</code>)<a class="anchor" aria-label="anchor" href="#id_4-bundled-native-tools-instbcftools-insthtslib"></a></h3>
@@ -189,12 +189,13 @@
 </div>
 <div class="section level3">
 <h3 id="vepsnpeffannovar-annotations">VEP/SnpEff/ANNOVAR Annotations<a class="anchor" aria-label="anchor" href="#vepsnpeffannovar-annotations"></a></h3>
-<p><strong>Current status</strong>: Structured annotation fields (INFO/CSQ from VEP, INFO/ANN from SnpEff, INFO/BCSQ from bcftools/csq) are <strong>not specially parsed</strong>—they remain as pipe-delimited strings.</p>
-<p><strong>Known Issues</strong>: 1. String post-processing in SQL is inefficient and loses type information 2. No schema extraction from VCF header Description field</p>
-<p><strong>Test Files</strong> (in <code>inst/extdata/</code>): - <code>test_vep.vcf</code> - Full VEP annotations with 80+ fields - <code>test_vep_types.vcf</code> - VEP with typed fields (SpliceAI, gnomAD, etc.) - <code>test_vep_snpeff.vcf</code> - bcftools/csq BCSQ format</p>
-<p><strong>Implementation Plan</strong>: See <a href="../docs/VEP_ANNOTATION_PARSING_PLAN.html">docs/VEP_ANNOTATION_PARSING_PLAN.md</a> for detailed plan including: - Core parser library (<code>vep_parser.c/h</code>) inspired by bcftools <code>+split-vep</code> - Type inference from field names (e.g., <code>*_AF</code> → Float) - DuckDB extension with <code>vep_mode</code> parameter for exploded columns - Arrow stream with <code>parse_vep</code> option</p>
-<p><strong>Workarounds</strong> (current): - Use bcftools <code>+split-vep</code> plugin via <code>system2(bcftools_path(), ...)</code> upstream - Post-process with DuckDB SQL: <code>SELECT unnest(string_split(INFO_CSQ, '|')) ...</code></p>
-</div>
+<ul><li>
+<strong>Status</strong>: INFO/CSQ (VEP), INFO/ANN (SnpEff), and INFO/BCSQ (bcftools/csq) are parsed by default in Arrow streams and DuckDB. Column names match the header key (no <code>VEP_</code> prefix). All transcripts are retained as list-typed columns; Arrow exposes first-transcript helper columns for convenience.</li>
+<li>
+<strong>Type mapping</strong>: Header-declared subfields drive schema; common AF/AC/AL* fields become float/int lists. Unknown fields fall back to VARCHAR.</li>
+<li>
+<strong>Test files</strong>: <code>inst/extdata/test_vep.vcf</code>, <code>test_vep_types.vcf</code>, <code>test_vep_snpeff.vcf</code> cover multiple formats. Tinytests assert schema and multi-transcript preservation.</li>
+</ul></div>
 </div>
 <div class="section level2">
 <h2 id="common-tasks">Common Tasks<a class="anchor" aria-label="anchor" href="#common-tasks"></a></h2>
@@ -217,7 +218,7 @@
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># Or use Makefile directly</span></span>
 <span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>cd inst<span class="sc">/</span>duckdb_bcf_reader_extension</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>make RBCFTOOLS_HTSLIB<span class="ot">=</span><span class="dv">1</span>  <span class="co"># Use package htslib</span></span></code></pre></div>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>make RBCFTOOLS_HTSLIB<span class="ot">=</span><span class="dv">1</span>  <span class="co"># Use package htslib (self-contained build)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="debugging-remote-file-access">Debugging Remote File Access<a class="anchor" aria-label="anchor" href="#debugging-remote-file-access"></a></h3>
@@ -259,18 +260,15 @@
 <p>❌ <strong>Don’t</strong> use <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat()</a></code> in R code—use <code><a href="https://rdrr.io/r/base/message.html" class="external-link">message()</a></code> or <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code><br>
 ❌ <strong>Don’t</strong> use sequential <code><a href="https://rdrr.io/r/base/CallExternal.html" class="external-link">.Call()</a></code> for batch operations—prefer vectorized C code<br>
 ❌ <strong>Don’t</strong> assume Windows support—scripts must check <code>OS_type: unix</code><br>
-❌ <strong>Don’t</strong> link against system htslib/bcftools—package bundles specific versions<br>
+❌ <strong>Don’t</strong> link DuckDB extension against package <code>src/</code> objects—keep it self-contained and point only to htslib<br>
 ❌ <strong>Don’t</strong> forget to add test coverage for new features in <code>inst/tinytest/</code><br>
 ❌ <strong>Don’t</strong> modify generated files (README.md, man/*.Rd)—edit sources (README.Rmd, roxygen2 comments)<br>
-❌ <strong>Don’t</strong> over-engineer—prefer simple, robust solutions<br>
-❌ <strong>Don’t</strong> add heavy dependencies—nanoarrow is the exception, arrow package is avoided</p>
+❌ <strong>Don’t</strong> add heavy dependencies—nanoarrow is the exception; avoid the arrow R package in core paths</p>
 </div>
 <div class="section level2">
 <h2 id="known-limitations">Known Limitations<a class="anchor" aria-label="anchor" href="#known-limitations"></a></h2>
 <ul><li>
 <strong>Memory copies</strong>: Arrow streaming involves C-level copies; Parquet export adds IPC serialization overhead</li>
-<li>
-<strong>No VEP/SnpEff parsing</strong>: Structured annotations stay as raw strings (see VEP section above)</li>
 <li>
 <strong>No Windows support</strong>: htslib build system is Unix-only</li>
 <li>

@@ -7,11 +7,12 @@ RBCFTools is an R package that bundles
 [htslib](https://github.com/samtools/htslib) for reading/manipulating
 VCF/BCF genomic variant files. It provides: - **Bundled native tools**:
 bcftools (v1.23), htslib (v1.23), bgzip, tabix—no external installation
-needed - **Arrow streaming**: Experimental VCF→Arrow conversion via
-[nanoarrow](https://arrow.apache.org/nanoarrow/) (zero-copy, no heavy
-arrow dependency) - **DuckDB integration**: Custom `bcf_reader`
-extension for direct SQL queries on VCF files + Parquet export - **Cloud
-support**: When built with libcurl, reads from S3, GCS, HTTP directly
+needed - **Arrow streaming**: VCF→Arrow conversion via
+[nanoarrow](https://arrow.apache.org/nanoarrow/) with structured
+VEP/CSQ/BCSQ/ANN parsing - **DuckDB integration**: Custom `bcf_reader`
+extension for direct SQL queries on VCF/BCF files + Parquet export (all
+VEP/CSQ/BCSQ/ANN fields parsed) - **Cloud support**: When built with
+libcurl, reads from S3, GCS, HTTP directly
 
 **Platform**: Unix-like only (Linux, macOS). Windows is NOT supported.
 
@@ -78,17 +79,19 @@ Example:
   [`.Call()`](https://rdrr.io/r/base/CallExternal.html) interface with
   `SEXP` types. See
   [RC_BCFTools.c](https://rgenomicsetl.github.io/src/RC_BCFTools.c) for
-  version/feature queries
+  version/feature queries.
 - **Arrow streaming**:
   [vcf_arrow_stream.c](https://rgenomicsetl.github.io/src/vcf_arrow_stream.c)
   implements VCF→nanoarrow conversion with **VCF spec conformance
   checks** (mimics htslib’s `bcf_hdr_check_sanity()`)—emits R warnings
   when correcting non-conformant headers (e.g., FORMAT/GQ should be
-  Integer not Float)
+  Integer not Float). VEP/CSQ/BCSQ/ANN annotations are parsed into typed
+  list columns using header-declared subfields (all transcripts
+  preserved; first-transcript helper columns exposed in R).
 - **Index utilities**:
   [vcf_index_utils.c](https://rgenomicsetl.github.io/src/vcf_index_utils.c)
   checks for .tbi/.csi indexes (works with remote files, custom index
-  paths)
+  paths).
 
 ### 2. R API (`R/`)
 
@@ -114,14 +117,18 @@ Example:
 
 - **Standalone C extension**:
   [bcf_reader.c](https://rgenomicsetl.github.io/inst/duckdb_bcf_reader_extension/bcf_reader.c)
-  provides `bcf_read()` SQL function
-- **Build modes**: Uses RBCFTools’ htslib (`make RBCFTOOLS_HTSLIB=1`) or
-  system htslib via pkg-config
-- **Spec compliance**: Matches nanoarrow’s VCF validation, logs warnings
-  for non-conformant headers
+  plus
+  [vep_parser.c](https://rgenomicsetl.github.io/inst/duckdb_bcf_reader_extension/vep_parser.c)
+  provide `bcf_read()` SQL function; sources are self-contained (do not
+  include package `src/` files).
+- **Build modes**: Uses package htslib (`make RBCFTOOLS_HTSLIB=1`) or
+  system htslib via pkg-config.
+- **Spec compliance**: Matches nanoarrow’s VCF validation, logs header
+  corrections. Parses VEP/CSQ/BCSQ/ANN fields into typed list columns
+  named after the header key; all transcripts retained by default.
 - **Features**: Region filtering with .tbi/.csi indexes, projection
-  pushdown (e.g., `SELECT COUNT(*)` is fast), parallel scanning by
-  contig
+  pushdown (e.g., `SELECT COUNT(*)`), Parquet export, optional benchmark
+  rendering (`make -C inst/duckdb_bcf_reader_extension benchmark`).
 
 ### 4. Bundled Native Tools (`inst/bcftools/`, `inst/htslib/`)
 
@@ -243,29 +250,17 @@ to process per-chromosome 4. Combine results (e.g.,
 
 ### VEP/SnpEff/ANNOVAR Annotations
 
-**Current status**: Structured annotation fields (INFO/CSQ from VEP,
-INFO/ANN from SnpEff, INFO/BCSQ from bcftools/csq) are **not specially
-parsed**—they remain as pipe-delimited strings.
-
-**Known Issues**: 1. String post-processing in SQL is inefficient and
-loses type information 2. No schema extraction from VCF header
-Description field
-
-**Test Files** (in `inst/extdata/`): - `test_vep.vcf` - Full VEP
-annotations with 80+ fields - `test_vep_types.vcf` - VEP with typed
-fields (SpliceAI, gnomAD, etc.) - `test_vep_snpeff.vcf` - bcftools/csq
-BCSQ format
-
-**Implementation Plan**: See
-[docs/VEP_ANNOTATION_PARSING_PLAN.md](https://rgenomicsetl.github.io/docs/VEP_ANNOTATION_PARSING_PLAN.md)
-for detailed plan including: - Core parser library (`vep_parser.c/h`)
-inspired by bcftools `+split-vep` - Type inference from field names
-(e.g., `*_AF` → Float) - DuckDB extension with `vep_mode` parameter for
-exploded columns - Arrow stream with `parse_vep` option
-
-**Workarounds** (current): - Use bcftools `+split-vep` plugin via
-`system2(bcftools_path(), ...)` upstream - Post-process with DuckDB SQL:
-`SELECT unnest(string_split(INFO_CSQ, '|')) ...`
+- **Status**: INFO/CSQ (VEP), INFO/ANN (SnpEff), and INFO/BCSQ
+  (bcftools/csq) are parsed by default in Arrow streams and DuckDB.
+  Column names match the header key (no `VEP_` prefix). All transcripts
+  are retained as list-typed columns; Arrow exposes first-transcript
+  helper columns for convenience.
+- **Type mapping**: Header-declared subfields drive schema; common
+  AF/AC/AL\* fields become float/int lists. Unknown fields fall back to
+  VARCHAR.
+- **Test files**: `inst/extdata/test_vep.vcf`, `test_vep_types.vcf`,
+  `test_vep_snpeff.vcf` cover multiple formats. Tinytests assert schema
+  and multi-transcript preservation.
 
 ## Common Tasks
 
@@ -290,7 +285,7 @@ ext_path <- bcf_reader_build(build_dir)
 
 # Or use Makefile directly
 cd inst/duckdb_bcf_reader_extension
-make RBCFTOOLS_HTSLIB=1  # Use package htslib
+make RBCFTOOLS_HTSLIB=1  # Use package htslib (self-contained build)
 ```
 
 ### Debugging Remote File Access
@@ -338,22 +333,19 @@ code—use [`message()`](https://rdrr.io/r/base/message.html) or
 [`.Call()`](https://rdrr.io/r/base/CallExternal.html) for batch
 operations—prefer vectorized C code  
 ❌ **Don’t** assume Windows support—scripts must check `OS_type: unix`  
-❌ **Don’t** link against system htslib/bcftools—package bundles
-specific versions  
+❌ **Don’t** link DuckDB extension against package `src/` objects—keep
+it self-contained and point only to htslib  
 ❌ **Don’t** forget to add test coverage for new features in
 `inst/tinytest/`  
 ❌ **Don’t** modify generated files (README.md, man/\*.Rd)—edit sources
 (README.Rmd, roxygen2 comments)  
-❌ **Don’t** over-engineer—prefer simple, robust solutions  
-❌ **Don’t** add heavy dependencies—nanoarrow is the exception, arrow
-package is avoided
+❌ **Don’t** add heavy dependencies—nanoarrow is the exception; avoid
+the arrow R package in core paths
 
 ## Known Limitations
 
 - **Memory copies**: Arrow streaming involves C-level copies; Parquet
   export adds IPC serialization overhead
-- **No VEP/SnpEff parsing**: Structured annotations stay as raw strings
-  (see VEP section above)
 - **No Windows support**: htslib build system is Unix-only
 - **DuckDB extension unsigned**: Requires `allow_unsigned_extensions`
   config
