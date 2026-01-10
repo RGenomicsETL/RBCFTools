@@ -287,24 +287,46 @@ vcf_query_duckdb(
 
 
 ```
+### Custom Index File Path
+
+For region queries, an index file is required. By default, RBCFTools looks for `.tbi` (tabix) or `.csi` indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the `index` parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try `.tbi` first then fall back to `.csi`, while BCF files use `.csi` only.
+
+```{r index-param, eval=TRUE}
+# Explicit index file path
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
+csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
+
+stream <- vcf_open_arrow(bcf_file, index = csi_index)
+batch <- stream$get_next()
+nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
+
+# Alternative: htslib ##idx## syntax in filename
+filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
+stream2 <- vcf_open_arrow(filename_with_idx)
+batch2 <- stream2$get_next()
+nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
+```
+
+### Example Application: DuckLake ETL
+
+[`DuckLake`](https://ducklake.select/) is an integrated data lake and catalog format. It has two components, a parquet files storage and a metadata dababase layer.
+
+#### DuckLake ETL to MinIO Storage backend
+
+To mimick a S3 backend for [`DuckLake`](https://ducklake.select/) storage we use [minio](github.com/minio/minio), we convert VCF files to parquet and insert then into DuckLake and query the lake. The lake as a local duckdb metadata database in this example
 
 
-### DuckLake ETL to MinIO
-
-With MinIO running (e.g., `mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS` and a bucket `mybucket` ready), you can stream variants into DuckLake and query them back:
+##### Setup up `minio` storage backend
+We start by seting up and configuring a `minio` server
 
 ```{r ducklake-minio, eval=TRUE}
-stopifnot(tolower(Sys.info()[["sysname"]]) == "linux")
-
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
-
 minio_bin <- Sys.which("minio")
 if (!nzchar(minio_bin)) minio_bin <- ducklake_download_minio(dest_dir = bin_dir)
 mc_bin <- Sys.which("mc")
 if (!nzchar(mc_bin)) mc_bin <- ducklake_download_mc(dest_dir = bin_dir)
 stopifnot(nzchar(minio_bin), nzchar(mc_bin))
-
 # Start MinIO (ephemeral) and configure mc
 data_dir <- file.path(tempdir(), "ducklake_minio")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
@@ -360,6 +382,8 @@ minio_endpoint <- endpoint
 minio_process <- minio_pid
 ```
 
+#####  Attach a DuckLake
+
 ```{r ducklake-attach, eval=TRUE}
 con <- duckdb::dbConnect(duckdb::duckdb(config = list(
   allow_unsigned_extensions = "true",
@@ -406,11 +430,12 @@ ducklake_attach(
 DBI::dbExecute(con, "USE lake")
 ```
 
+#### Write a VCF into minio and register to the Lake
 ```{r ducklake-write, eval=TRUE}
 # Ensure we are operating inside the DuckLake catalog
 DBI::dbExecute(con, "USE lake")
 
-# Load variants via fast VCF→Parquet conversion
+# Load variants via fast VCF to Parquet conversion
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
 ducklake_load_vcf(
@@ -422,6 +447,7 @@ ducklake_load_vcf(
 )
 ```
 
+#### List lake content
 ```{r check-lake, eval=TRUE}
 DBI::dbExecute(con, "USE lake")
 DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
@@ -439,23 +465,63 @@ if (exists("minio_process") && minio_process > 0) {
 }
 ```
 
-MinIO client install quickstart (host tools):
+#### Supported Metadata Databases
 
-```bash
-# Linux amd64/arm64
-curl -sO https://dl.min.io/client/mc/release/linux-$(uname -m)/mc
-chmod +x mc
+DuckLake supports multiple catalog backends
 
-# macOS amd64/arm64
-curl -sO https://dl.min.io/client/mc/release/darwin-$(uname -m)/mc
-chmod +x mc
+- `DuckDB` : `ducklake:path/to/catalog.ducklake`
+- `SQLite`: `ducklake:sqlite://path/to/catalog.db`  
+- `PostgreSQL` : `ducklake:postgresql://user:pass@host:5432/db`
+- `MySQL`: `ducklake:mysql://user:pass@host:3306/db`
 
-./mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS
-./mc ls myminio/mybucket
+##### Connection Methods
+
+The package provides helpers for different metadata databases
+
+##### Direct Connection
+
+```r
+# DuckDB backend
+ducklake_connect_catalog(
+  con,
+  backend = "duckdb",
+  connection_string = "catalog.ducklake",
+  data_path = "s3://bucket/data/",
+  alias = "lake"
+)
+
+# PostgreSQL backend
+ducklake_connect_catalog(
+  con,
+  backend = "postgresql", 
+  connection_string = "user:pass@host:5432/db",
+  data_path = "s3://bucket/data/",
+  alias = "lake"
+)
 ```
-### Command-Line Tool
 
-A CLI tool is provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs
+##### Secret-based Connection:**
+```r
+# Create catalog secret
+ducklake_create_catalog_secret(
+  con,
+  name = "pg_catalog",
+  backend = "postgresql",
+  connection_string = "user:pass@host:5432/db",
+  data_path = "s3://bucket/data/"
+)
+
+# Connect using secret
+ducklake_connect_catalog(
+  con,
+  secret_name = "pg_catalog",
+  alias = "lake"
+)
+```
+
+### Command-Line utility
+
+CLI tools are provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs using either the [`bcf_reader`](./inst/scripts/vcf2parquet_duckdb.R) extension or via [Arrow IPC](./inst/scripts/vcf2parquet.R) 
 
 ```{bash cli-tool, eval=TRUE}
 # Get paths using system.file
@@ -479,28 +545,6 @@ $SCRIPT schema 0 --quiet -i $BCF
 $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
-```
-
-
-
-### Custom Index File Path
-
-For region queries, an index file is required. By default, RBCFTools looks for `.tbi` (tabix) or `.csi` indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the `index` parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try `.tbi` first then fall back to `.csi`, while BCF files use `.csi` only.
-
-```{r index-param, eval=TRUE}
-# Explicit index file path
-bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
-csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
-
-stream <- vcf_open_arrow(bcf_file, index = csi_index)
-batch <- stream$get_next()
-nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
-
-# Alternative: htslib ##idx## syntax in filename
-filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
-stream2 <- vcf_open_arrow(filename_with_idx)
-batch2 <- stream2$get_next()
-nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 ```
 
 
