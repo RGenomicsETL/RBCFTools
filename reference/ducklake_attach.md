@@ -53,4 +53,5 @@ Invisible NULL.
 
 ## See also
 
-`ducklake_connect_catalog` for abstracted backend support.
+[`ducklake_connect_catalog`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_connect_catalog.md)
+for abstracted backend support.

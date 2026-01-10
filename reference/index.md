@@ -28,14 +28,28 @@
   : DuckLake helpers for VCF/BCF ETL
 - [`ducklake_attach()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_attach.md)
   : Attach a DuckLake catalog (legacy function)
+- [`ducklake_connect_catalog()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_connect_catalog.md)
+  : Connect to a DuckLake catalog with abstracted backend support
+- [`ducklake_create_catalog_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_catalog_secret.md)
+  : Create a DuckLake catalog secret for database credentials
 - [`ducklake_create_s3_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.md)
   : Create or replace an S3 secret for DuckLake
 - [`ducklake_download_mc()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_mc.md)
   : Download a static MinIO client (mc) binary
 - [`ducklake_download_minio()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_minio.md)
   : Download a static MinIO server binary
+- [`ducklake_drop_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_drop_secret.md)
+  : Drop a DuckLake catalog secret
+- [`ducklake_list_secrets()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_list_secrets.md)
+  : List existing DuckLake catalog secrets
 - [`ducklake_load()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.md)
   : Load the DuckLake extension
+- [`ducklake_load_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load_vcf.md)
+  : Load VCF into DuckLake (ETL + Registration)
+- [`ducklake_register_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_register_parquet.md)
+  : Register existing Parquet files in a DuckLake table
+- [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md)
+  : Update an existing DuckLake catalog secret
 - [`htsfile_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.md)
   : Get Path to htsfile Executable
 - [`htslib_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.md)

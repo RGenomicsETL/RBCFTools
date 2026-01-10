@@ -46,11 +46,11 @@ functions to locate the executables
 
 ``` r
 bcftools_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"
+#> [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"
 # List all available tools
 bcftools_tools()
 #>  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     
@@ -96,7 +96,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"
 ```
 
 ### Feature Constants
@@ -328,7 +328,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet
+#> Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -347,12 +347,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
-#> 2 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
-#> 3 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
-#> 4 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
-#> 5 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
-#> 6 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11
+#> 1 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 2 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 3 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 4 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 5 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 6 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -435,7 +435,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpNUSlyH/file230ba14214d684.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e223a504af.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -579,25 +579,66 @@ vcf_query_duckdb(
 #> 5 chr22 16050224   A C, <NON_REF>
 ```
 
-### DuckLake ETL to MinIO
+### Custom Index File Path
 
-With MinIO running (e.g.,
-`mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS` and a
-bucket `mybucket` ready), you can stream variants into DuckLake and
-query them back:
+For region queries, an index file is required. By default, RBCFTools
+looks for `.tbi` (tabix) or `.csi` indexes using standard naming
+conventions. For non-standard index locations such as presigned URLs or
+custom paths, use the `index` parameter. Index files are only required
+for region queries; when reading an entire file without a region filter,
+no index is needed. VCF files try `.tbi` first then fall back to `.csi`,
+while BCF files use `.csi` only.
 
 ``` r
-stopifnot(tolower(Sys.info()[["sysname"]]) == "linux")
+# Explicit index file path
+bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
+csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
 
+stream <- vcf_open_arrow(bcf_file, index = csi_index)
+batch <- stream$get_next()
+nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
+#>   CHROM   POS REF
+#> 1     1 10583   G
+#> 2     1 11508   A
+#> 3     1 11565   G
+
+# Alternative: htslib ##idx## syntax in filename
+filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
+stream2 <- vcf_open_arrow(filename_with_idx)
+batch2 <- stream2$get_next()
+nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
+#>   CHROM   POS REF
+#> 1     1 10583   G
+#> 2     1 11508   A
+#> 3     1 11565   G
+```
+
+### Example Application: DuckLake ETL
+
+[`DuckLake`](https://ducklake.select/) is an integrated data lake and
+catalog format. It has two components, a parquet files storage and a
+metadata dababase layer.
+
+#### DuckLake ETL to MinIO Storage backend
+
+To mimick a S3 backend for [`DuckLake`](https://ducklake.select/)
+storage we use
+[minio](https://rgenomicsetl.github.io/RBCFTools/github.com/minio/minio),
+we convert VCF files to parquet and insert then into DuckLake and query
+the lake. The lake as a local duckdb metadata database in this example
+
+##### Setup up `minio` storage backend
+
+We start by seting up and configuring a `minio` server
+
+``` r
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
-
 minio_bin <- Sys.which("minio")
 if (!nzchar(minio_bin)) minio_bin <- ducklake_download_minio(dest_dir = bin_dir)
 mc_bin <- Sys.which("mc")
 if (!nzchar(mc_bin)) mc_bin <- ducklake_download_mc(dest_dir = bin_dir)
 stopifnot(nzchar(minio_bin), nzchar(mc_bin))
-
 # Start MinIO (ephemeral) and configure mc
 data_dir <- file.path(tempdir(), "ducklake_minio")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
@@ -653,6 +694,8 @@ minio_endpoint <- endpoint
 minio_process <- minio_pid
 ```
 
+##### Attach a DuckLake
+
 ``` r
 con <- duckdb::dbConnect(duckdb::duckdb(config = list(
   allow_unsigned_extensions = "true",
@@ -704,25 +747,35 @@ DBI::dbExecute(con, "USE lake")
 #> [1] 0
 ```
 
+#### Write a VCF into minio and register to the Lake
+
 ``` r
 # Ensure we are operating inside the DuckLake catalog
 DBI::dbExecute(con, "USE lake")
 #> [1] 0
 
-# Load variants via Parquet ingestion (ducklake_write_variants)
+# Load variants via fast VCF to Parquet conversion
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
-ducklake_write_variants(
+ext_path <- bcf_reader_build(tempdir())
+#> Building bcf_reader extension...
+#>   Build directory: /tmp/Rtmp8EfK4I
+#>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
+#>   Running: make with explicit htslib paths
+#> Extension built: /tmp/Rtmp8EfK4I/build/bcf_reader.duckdb_extension
+ducklake_load_vcf(
   con,
   table = "variants",
   vcf_path = vcf_file,
-  threads = 1,
-  method = "parquet"
+  extension_path = ext_path,
+  threads = 1
 )
+#> Wrote: /tmp/Rtmp8EfK4I/variants_20260110_205622.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
-#> Wrote 368319 rows to /tmp/RtmpNUSlyH/ducklake_parquet_230ba1224fea35.parquet
 ```
+
+#### List lake content
 
 ``` r
 DBI::dbExecute(con, "USE lake")
@@ -736,9 +789,9 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 #>                                                                                                data_file
-#> 1 s3://ducklake-demo-1767964824/data/main/variants/ducklake-019ba2ea-7f07-77d9-931e-40e5804b326a.parquet
+#> 1 s3://ducklake-demo-1768074981/data/main/variants/ducklake-019ba97b-35cf-7dd6-bbf8-af4fcbffc2cd.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
-#> 1              5918016                  6229                     NULL
+#> 1              5751658                  6275                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
 #> 1        <NA>                     NA                      NA
 #>   delete_file_encryption_key
@@ -752,25 +805,68 @@ if (exists("minio_process") && minio_process > 0) {
 }
 ```
 
-MinIO client install quickstart (host tools):
+#### Supported Metadata Databases
 
-``` bash
-# Linux amd64/arm64
-curl -sO https://dl.min.io/client/mc/release/linux-$(uname -m)/mc
-chmod +x mc
+DuckLake supports multiple catalog backends
 
-# macOS amd64/arm64
-curl -sO https://dl.min.io/client/mc/release/darwin-$(uname -m)/mc
-chmod +x mc
+- `DuckDB` : `ducklake:path/to/catalog.ducklake`
+- `SQLite`: `ducklake:sqlite://path/to/catalog.db`  
+- `PostgreSQL` : `ducklake:postgresql://user:pass@host:5432/db`
+- `MySQL`: `ducklake:mysql://user:pass@host:3306/db`
 
-./mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS
-./mc ls myminio/mybucket
+##### Connection Methods
+
+The package provides helpers for different metadata databases
+
+##### Direct Connection
+
+``` r
+# DuckDB backend
+ducklake_connect_catalog(
+  con,
+  backend = "duckdb",
+  connection_string = "catalog.ducklake",
+  data_path = "s3://bucket/data/",
+  alias = "lake"
+)
+
+# PostgreSQL backend
+ducklake_connect_catalog(
+  con,
+  backend = "postgresql", 
+  connection_string = "user:pass@host:5432/db",
+  data_path = "s3://bucket/data/",
+  alias = "lake"
+)
 ```
 
-### Command-Line Tool
+##### Secret-based Connection:\*\*
 
-A CLI tool is provided for VCF to Parquet conversion and querying,
-including threaded chunking based on contigs
+``` r
+# Create catalog secret
+ducklake_create_catalog_secret(
+  con,
+  name = "pg_catalog",
+  backend = "postgresql",
+  connection_string = "user:pass@host:5432/db",
+  data_path = "s3://bucket/data/"
+)
+
+# Connect using secret
+ducklake_connect_catalog(
+  con,
+  secret_name = "pg_catalog",
+  alias = "lake"
+)
+```
+
+### Command-Line utility
+
+CLI tools are provided for VCF to Parquet conversion and querying,
+including threaded chunking based on contigs using either the
+[`bcf_reader`](https://rgenomicsetl.github.io/RBCFTools/inst/scripts/vcf2parquet_duckdb.R)
+extension or via [Arrow
+IPC](https://rgenomicsetl.github.io/RBCFTools/inst/scripts/vcf2parquet.R)
 
 ``` bash
 # Get paths using system.file
@@ -795,21 +891,22 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
-#>   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.SALzvIIT9N.parquet 
+#>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
+#>   Output: /tmp/tmp.oGx6cRGdxH.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
 #>   Streaming: FALSE 
 #>   Include INFO: TRUE 
 #>   Include FORMAT: TRUE 
+#> [W::bcf_get_version] Couldn't get VCF version, considering as 4.2
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.SALzvIIT9N.parquet
+#> Wrote 11 rows to /tmp/tmp.oGx6cRGdxH.parquet
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.52 seconds
+#>   Time: 0.13 seconds
 #>   Output size: 0.01 MB
 #> Running query on Parquet file(s)...
 #>   CHROM   POS REF ALT
@@ -850,7 +947,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.SALzvIIT9N.parquet 
+#> Parquet File Information: /tmp/tmp.oGx6cRGdxH.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
@@ -901,40 +998,6 @@ rm -f $OUT_PQ
 #>       OG BYTE_ARRAY
 ```
 
-### Custom Index File Path
-
-For region queries, an index file is required. By default, RBCFTools
-looks for `.tbi` (tabix) or `.csi` indexes using standard naming
-conventions. For non-standard index locations such as presigned URLs or
-custom paths, use the `index` parameter. Index files are only required
-for region queries; when reading an entire file without a region filter,
-no index is needed. VCF files try `.tbi` first then fall back to `.csi`,
-while BCF files use `.csi` only.
-
-``` r
-# Explicit index file path
-bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
-csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
-
-stream <- vcf_open_arrow(bcf_file, index = csi_index)
-batch <- stream$get_next()
-nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
-#>   CHROM   POS REF
-#> 1     1 10583   G
-#> 2     1 11508   A
-#> 3     1 11565   G
-
-# Alternative: htslib ##idx## syntax in filename
-filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
-stream2 <- vcf_open_arrow(filename_with_idx)
-batch2 <- stream2$get_next()
-nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
-#>   CHROM   POS REF
-#> 1     1 10583   G
-#> 2     1 11508   A
-#> 3     1 11565   G
-```
-
 ## References
 
 - [bcftools documentation](https://samtools.github.io/bcftools/)
@@ -975,14 +1038,28 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
   : DuckLake helpers for VCF/BCF ETL
 - [`ducklake_attach()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_attach.md)
   : Attach a DuckLake catalog (legacy function)
+- [`ducklake_connect_catalog()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_connect_catalog.md)
+  : Connect to a DuckLake catalog with abstracted backend support
+- [`ducklake_create_catalog_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_catalog_secret.md)
+  : Create a DuckLake catalog secret for database credentials
 - [`ducklake_create_s3_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.md)
   : Create or replace an S3 secret for DuckLake
 - [`ducklake_download_mc()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_mc.md)
   : Download a static MinIO client (mc) binary
 - [`ducklake_download_minio()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_minio.md)
   : Download a static MinIO server binary
+- [`ducklake_drop_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_drop_secret.md)
+  : Drop a DuckLake catalog secret
+- [`ducklake_list_secrets()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_list_secrets.md)
+  : List existing DuckLake catalog secrets
 - [`ducklake_load()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.md)
   : Load the DuckLake extension
+- [`ducklake_load_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load_vcf.md)
+  : Load VCF into DuckLake (ETL + Registration)
+- [`ducklake_register_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_register_parquet.md)
+  : Register existing Parquet files in a DuckLake table
+- [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md)
+  : Update an existing DuckLake catalog secret
 - [`htsfile_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.md)
   : Get Path to htsfile Executable
 - [`htslib_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.md)

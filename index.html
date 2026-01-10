@@ -78,11 +78,11 @@
 <p>RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"</span></span>
 <span><span class="fu"><a href="reference/bgzip_path.html">bgzip_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"</span></span>
 <span><span class="fu"><a href="reference/tabix_path.html">tabix_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"</span></span>
 <span><span class="co"># List all available tools</span></span>
 <span><span class="fu"><a href="reference/bcftools_tools.html">bcftools_tools</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     </span></span>
@@ -127,7 +127,7 @@
 <span></span>
 <span><span class="co"># Human-readable feature string</span></span>
 <span><span class="fu"><a href="reference/htslib_feature_string.html">htslib_feature_string</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="feature-constants">Feature Constants<a class="anchor" aria-label="anchor" href="#feature-constants"></a>
 </h3>
@@ -336,7 +336,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -355,12 +355,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpNUSlyH/file230ba16f4f2006.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -436,7 +436,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpNUSlyH/file230ba14214d684.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e223a504af.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -573,21 +573,52 @@
 <span><span class="co">#&gt; 5 chr22 16050224   A C, &lt;NON_REF&gt;</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="ducklake-etl-to-minio">DuckLake ETL to MinIO<a class="anchor" aria-label="anchor" href="#ducklake-etl-to-minio"></a>
+<h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>
 </h3>
-<p>With MinIO running (e.g., <code>mc alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS</code> and a bucket <code>mybucket</code> ready), you can stream variants into DuckLake and query them back:</p>
+<p>For region queries, an index file is required. By default, RBCFTools looks for <code>.tbi</code> (tabix) or <code>.csi</code> indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the <code>index</code> parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try <code>.tbi</code> first then fall back to <code>.csi</code>, while BCF files use <code>.csi</code> only.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.info.html" class="external-link">Sys.info</a></span><span class="op">(</span><span class="op">)</span><span class="op">[[</span><span class="st">"sysname"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">==</span> <span class="st">"linux"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Explicit index file path</span></span>
+<span><span class="va">bcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
+<span><span class="va">csi_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf.csi"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
+<span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, index <span class="op">=</span> <span class="va">csi_index</span><span class="op">)</span></span>
+<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM   POS REF</span></span>
+<span><span class="co">#&gt; 1     1 10583   G</span></span>
+<span><span class="co">#&gt; 2     1 11508   A</span></span>
+<span><span class="co">#&gt; 3     1 11565   G</span></span>
+<span></span>
+<span><span class="co"># Alternative: htslib ##idx## syntax in filename</span></span>
+<span><span class="va">filename_with_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"##idx##"</span>, <span class="va">csi_index</span><span class="op">)</span></span>
+<span><span class="va">stream2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">filename_with_idx</span><span class="op">)</span></span>
+<span><span class="va">batch2</span> <span class="op">&lt;-</span> <span class="va">stream2</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch2</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   CHROM   POS REF</span></span>
+<span><span class="co">#&gt; 1     1 10583   G</span></span>
+<span><span class="co">#&gt; 2     1 11508   A</span></span>
+<span><span class="co">#&gt; 3     1 11565   G</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-application-ducklake-etl">Example Application: DuckLake ETL<a class="anchor" aria-label="anchor" href="#example-application-ducklake-etl"></a>
+</h3>
+<p><a href="https://ducklake.select/" class="external-link"><code>DuckLake</code></a> is an integrated data lake and catalog format. It has two components, a parquet files storage and a metadata dababase layer.</p>
+<div class="section level4">
+<h4 id="ducklake-etl-to-minio-storage-backend">DuckLake ETL to MinIO Storage backend<a class="anchor" aria-label="anchor" href="#ducklake-etl-to-minio-storage-backend"></a>
+</h4>
+<p>To mimick a S3 backend for <a href="https://ducklake.select/" class="external-link"><code>DuckLake</code></a> storage we use <a href="github.com/minio/minio">minio</a>, we convert VCF files to parquet and insert then into DuckLake and query the lake. The lake as a local duckdb metadata database in this example</p>
+<div class="section level5">
+<h5 id="setup-up-minio-storage-backend">Setup up <code>minio</code> storage backend<a class="anchor" aria-label="anchor" href="#setup-up-minio-storage-backend"></a>
+</h5>
+<p>We start by seting up and configuring a <code>minio</code> server</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">bin_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">minio_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"minio"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">minio_bin</span><span class="op">)</span><span class="op">)</span> <span class="va">minio_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ducklake_download_minio.html">ducklake_download_minio</a></span><span class="op">(</span>dest_dir <span class="op">=</span> <span class="va">bin_dir</span><span class="op">)</span></span>
 <span><span class="va">mc_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"mc"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">mc_bin</span><span class="op">)</span><span class="op">)</span> <span class="va">mc_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ducklake_download_mc.html">ducklake_download_mc</a></span><span class="op">(</span>dest_dir <span class="op">=</span> <span class="va">bin_dir</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">minio_bin</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">mc_bin</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
 <span><span class="co"># Start MinIO (ephemeral) and configure mc</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_minio"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">data_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -641,7 +672,11 @@
 <span><span class="va">mc_path</span> <span class="op">&lt;-</span> <span class="va">mc_bin</span></span>
 <span><span class="va">minio_endpoint</span> <span class="op">&lt;-</span> <span class="va">endpoint</span></span>
 <span><span class="va">minio_process</span> <span class="op">&lt;-</span> <span class="va">minio_pid</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+</div>
+<div class="section level5">
+<h5 id="attach-a-ducklake">Attach a DuckLake<a class="anchor" aria-label="anchor" href="#attach-a-ducklake"></a>
+</h5>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span>config <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  allow_unsigned_extensions <span class="op">=</span> <span class="st">"true"</span>,</span>
 <span>  enable_external_access <span class="op">=</span> <span class="st">"true"</span></span>
@@ -690,215 +725,260 @@
 <span><span class="co"># Work inside the attached lake database</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+</div>
+</div>
+<div class="section level4">
+<h4 id="write-a-vcf-into-minio-and-register-to-the-lake">Write a VCF into minio and register to the Lake<a class="anchor" aria-label="anchor" href="#write-a-vcf-into-minio-and-register-to-the-lake"></a>
+</h4>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Ensure we are operating inside the DuckLake catalog</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span></span>
-<span><span class="co"># Load variants via Parquet ingestion (ducklake_write_variants)</span></span>
+<span><span class="co"># Load variants via fast VCF to Parquet conversion</span></span>
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
-<span><span class="fu">ducklake_write_variants</span><span class="op">(</span></span>
+<span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/Rtmp8EfK4I</span></span>
+<span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
+<span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/Rtmp8EfK4I/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
 <span>  vcf_path <span class="op">=</span> <span class="va">vcf_file</span>,</span>
-<span>  threads <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"parquet"</span></span>
+<span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
+<span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmp8EfK4I/variants_20260110_205622.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
-<span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span>
-<span><span class="co">#&gt; Wrote 368319 rows to /tmp/RtmpNUSlyH/ducklake_parquet_230ba1224fea35.parquet</span></span></code></pre></div>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="list-lake-content">List lake content<a class="anchor" aria-label="anchor" href="#list-lake-content"></a>
+</h4>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"SELECT COUNT(*) AS n FROM lake.variants"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        n</span></span>
 <span><span class="co">#&gt; 1 368319</span></span></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for this table</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                                data_file</span></span>
-<span><span class="co">#&gt; 1 s3://ducklake-demo-1767964824/data/main/variants/ducklake-019ba2ea-7f07-77d9-931e-40e5804b326a.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://ducklake-demo-1768074981/data/main/variants/ducklake-019ba97b-35cf-7dd6-bbf8-af4fcbffc2cd.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
-<span><span class="co">#&gt; 1              5918016                  6229                     NULL</span></span>
+<span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
 <span><span class="co">#&gt; 1        &lt;NA&gt;                     NA                      NA</span></span>
 <span><span class="co">#&gt;   delete_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1                       NULL</span></span></code></pre></div>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists</a></span><span class="op">(</span><span class="st">"minio_process"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">minio_process</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"kill"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">minio_process</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>MinIO client install quickstart (host tools):</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># Linux amd64/arm64</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sO</span> https://dl.min.io/client/mc/release/linux-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span>/mc</span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="fu">chmod</span> +x mc</span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="co"># macOS amd64/arm64</span></span>
-<span id="cb22-6"><a href="#cb22-6" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sO</span> https://dl.min.io/client/mc/release/darwin-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span>/mc</span>
-<span id="cb22-7"><a href="#cb22-7" tabindex="-1"></a><span class="fu">chmod</span> +x mc</span>
-<span id="cb22-8"><a href="#cb22-8" tabindex="-1"></a></span>
-<span id="cb22-9"><a href="#cb22-9" tabindex="-1"></a><span class="ex">./mc</span> alias set myminio/ http://127.0.0.1:9000 MINIOUSER MINIOPASS</span>
-<span id="cb22-10"><a href="#cb22-10" tabindex="-1"></a><span class="ex">./mc</span> ls myminio/mybucket</span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="command-line-tool">Command-Line Tool<a class="anchor" aria-label="anchor" href="#command-line-tool"></a>
-</h3>
-<p>A CLI tool is provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))"</span><span class="va">)</span></span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="va">BCF</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))"</span><span class="va">)</span></span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a><span class="va">$SCRIPT</span> convert <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span></span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a></span>
-<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
-<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
-<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a></span>
-<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a><span class="co"># Describe table structure</span></span>
-<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"DESCRIBE SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">')"</span></span>
-<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a></span>
-<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a><span class="co"># Show schema</span></span>
-<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a><span class="va">$SCRIPT</span> schema 0 <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span></span>
-<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a></span>
-<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a><span class="co"># File info</span></span>
-<span id="cb23-19"><a href="#cb23-19" tabindex="-1"></a><span class="va">$SCRIPT</span> info <span class="at">-i</span> <span class="va">$OUT_PQ</span></span>
-<span id="cb23-20"><a href="#cb23-20" tabindex="-1"></a></span>
-<span id="cb23-21"><a href="#cb23-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
-<span id="cb23-22"><a href="#cb23-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
-<span id="cb23-23"><a href="#cb23-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb23-24"><a href="#cb23-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.SALzvIIT9N.parquet </span></span>
-<span id="cb23-25"><a href="#cb23-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
-<span id="cb23-26"><a href="#cb23-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
-<span id="cb23-27"><a href="#cb23-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
-<span id="cb23-28"><a href="#cb23-28" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
-<span id="cb23-29"><a href="#cb23-29" tabindex="-1"></a><span class="co">#&gt;   Include INFO: TRUE </span></span>
-<span id="cb23-30"><a href="#cb23-30" tabindex="-1"></a><span class="co">#&gt;   Include FORMAT: TRUE </span></span>
-<span id="cb23-31"><a href="#cb23-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
-<span id="cb23-32"><a href="#cb23-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
-<span id="cb23-33"><a href="#cb23-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb23-34"><a href="#cb23-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.SALzvIIT9N.parquet</span></span>
-<span id="cb23-35"><a href="#cb23-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb23-36"><a href="#cb23-36" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb23-37"><a href="#cb23-37" tabindex="-1"></a><span class="co">#&gt;   Time: 0.52 seconds</span></span>
-<span id="cb23-38"><a href="#cb23-38" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
-<span id="cb23-39"><a href="#cb23-39" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb23-40"><a href="#cb23-40" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
-<span id="cb23-41"><a href="#cb23-41" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
-<span id="cb23-42"><a href="#cb23-42" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
-<span id="cb23-43"><a href="#cb23-43" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
-<span id="cb23-44"><a href="#cb23-44" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
-<span id="cb23-45"><a href="#cb23-45" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
-<span id="cb23-46"><a href="#cb23-46" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb23-47"><a href="#cb23-47" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
-<span id="cb23-48"><a href="#cb23-48" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
-<span id="cb23-49"><a href="#cb23-49" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
-<span id="cb23-50"><a href="#cb23-50" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
-<span id="cb23-51"><a href="#cb23-51" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
-<span id="cb23-52"><a href="#cb23-52" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
-<span id="cb23-53"><a href="#cb23-53" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
-<span id="cb23-54"><a href="#cb23-54" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
-<span id="cb23-55"><a href="#cb23-55" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
-<span id="cb23-56"><a href="#cb23-56" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
-<span id="cb23-57"><a href="#cb23-57" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
-<span id="cb23-58"><a href="#cb23-58" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb23-59"><a href="#cb23-59" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb23-60"><a href="#cb23-60" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb23-61"><a href="#cb23-61" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb23-62"><a href="#cb23-62" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb23-63"><a href="#cb23-63" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb23-64"><a href="#cb23-64" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb23-65"><a href="#cb23-65" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
-<span id="cb23-66"><a href="#cb23-66" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
-<span id="cb23-67"><a href="#cb23-67" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
-<span id="cb23-68"><a href="#cb23-68" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-69"><a href="#cb23-69" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-70"><a href="#cb23-70" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-71"><a href="#cb23-71" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-72"><a href="#cb23-72" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-73"><a href="#cb23-73" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-74"><a href="#cb23-74" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-75"><a href="#cb23-75" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-76"><a href="#cb23-76" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb23-77"><a href="#cb23-77" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb23-78"><a href="#cb23-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.SALzvIIT9N.parquet </span></span>
-<span id="cb23-79"><a href="#cb23-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb23-80"><a href="#cb23-80" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
-<span id="cb23-81"><a href="#cb23-81" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
-<span id="cb23-82"><a href="#cb23-82" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
-<span id="cb23-83"><a href="#cb23-83" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb23-84"><a href="#cb23-84" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb23-85"><a href="#cb23-85" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
-<span id="cb23-86"><a href="#cb23-86" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
-<span id="cb23-87"><a href="#cb23-87" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
-<span id="cb23-88"><a href="#cb23-88" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
-<span id="cb23-89"><a href="#cb23-89" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
-<span id="cb23-90"><a href="#cb23-90" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
-<span id="cb23-91"><a href="#cb23-91" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
-<span id="cb23-92"><a href="#cb23-92" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
-<span id="cb23-93"><a href="#cb23-93" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
-<span id="cb23-94"><a href="#cb23-94" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb23-95"><a href="#cb23-95" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
-<span id="cb23-96"><a href="#cb23-96" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
-<span id="cb23-97"><a href="#cb23-97" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
-<span id="cb23-98"><a href="#cb23-98" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
-<span id="cb23-99"><a href="#cb23-99" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
-<span id="cb23-100"><a href="#cb23-100" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
-<span id="cb23-101"><a href="#cb23-101" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
-<span id="cb23-102"><a href="#cb23-102" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
-<span id="cb23-103"><a href="#cb23-103" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
-<span id="cb23-104"><a href="#cb23-104" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
-<span id="cb23-105"><a href="#cb23-105" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb23-106"><a href="#cb23-106" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
-<span id="cb23-107"><a href="#cb23-107" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb23-108"><a href="#cb23-108" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb23-109"><a href="#cb23-109" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb23-110"><a href="#cb23-110" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb23-111"><a href="#cb23-111" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
-<span id="cb23-112"><a href="#cb23-112" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb23-113"><a href="#cb23-113" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb23-114"><a href="#cb23-114" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb23-115"><a href="#cb23-115" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb23-116"><a href="#cb23-116" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb23-117"><a href="#cb23-117" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb23-118"><a href="#cb23-118" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb23-119"><a href="#cb23-119" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
-<span id="cb23-120"><a href="#cb23-120" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb23-121"><a href="#cb23-121" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb23-122"><a href="#cb23-122" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb23-123"><a href="#cb23-123" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb23-124"><a href="#cb23-124" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb23-125"><a href="#cb23-125" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb23-126"><a href="#cb23-126" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="supported-metadata-databases">Supported Metadata Databases<a class="anchor" aria-label="anchor" href="#supported-metadata-databases"></a>
+</h4>
+<p>DuckLake supports multiple catalog backends</p>
+<ul>
+<li>
+<code>DuckDB</code> : <code>ducklake:path/to/catalog.ducklake</code>
+</li>
+<li>
+<code>SQLite</code>: <code>ducklake:sqlite://path/to/catalog.db</code><br>
+</li>
+<li>
+<code>PostgreSQL</code> : <code>ducklake:postgresql://user:pass@host:5432/db</code>
+</li>
+<li>
+<code>MySQL</code>: <code>ducklake:mysql://user:pass@host:3306/db</code>
+</li>
+</ul>
+<div class="section level5">
+<h5 id="connection-methods">Connection Methods<a class="anchor" aria-label="anchor" href="#connection-methods"></a>
+</h5>
+<p>The package provides helpers for different metadata databases</p>
 </div>
-<div class="section level3">
-<h3 id="custom-index-file-path">Custom Index File Path<a class="anchor" aria-label="anchor" href="#custom-index-file-path"></a>
-</h3>
-<p>For region queries, an index file is required. By default, RBCFTools looks for <code>.tbi</code> (tabix) or <code>.csi</code> indexes using standard naming conventions. For non-standard index locations such as presigned URLs or custom paths, use the <code>index</code> parameter. Index files are only required for region queries; when reading an entire file without a region filter, no index is needed. VCF files try <code>.tbi</code> first then fall back to <code>.csi</code>, while BCF files use <code>.csi</code> only.</p>
+<div class="section level5">
+<h5 id="direct-connection">Direct Connection<a class="anchor" aria-label="anchor" href="#direct-connection"></a>
+</h5>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># DuckDB backend</span></span>
+<span><span class="fu"><a href="reference/ducklake_connect_catalog.html">ducklake_connect_catalog</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  backend <span class="op">=</span> <span class="st">"duckdb"</span>,</span>
+<span>  connection_string <span class="op">=</span> <span class="st">"catalog.ducklake"</span>,</span>
+<span>  data_path <span class="op">=</span> <span class="st">"s3://bucket/data/"</span>,</span>
+<span>  alias <span class="op">=</span> <span class="st">"lake"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># PostgreSQL backend</span></span>
+<span><span class="fu"><a href="reference/ducklake_connect_catalog.html">ducklake_connect_catalog</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  backend <span class="op">=</span> <span class="st">"postgresql"</span>, </span>
+<span>  connection_string <span class="op">=</span> <span class="st">"user:pass@host:5432/db"</span>,</span>
+<span>  data_path <span class="op">=</span> <span class="st">"s3://bucket/data/"</span>,</span>
+<span>  alias <span class="op">=</span> <span class="st">"lake"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="secret-based-connection">Secret-based Connection:**<a class="anchor" aria-label="anchor" href="#secret-based-connection"></a>
+</h5>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Explicit index file path</span></span>
-<span><span class="va">bcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
-<span><span class="va">csi_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G_3samples.bcf.csi"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Create catalog secret</span></span>
+<span><span class="fu"><a href="reference/ducklake_create_catalog_secret.html">ducklake_create_catalog_secret</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  name <span class="op">=</span> <span class="st">"pg_catalog"</span>,</span>
+<span>  backend <span class="op">=</span> <span class="st">"postgresql"</span>,</span>
+<span>  connection_string <span class="op">=</span> <span class="st">"user:pass@host:5432/db"</span>,</span>
+<span>  data_path <span class="op">=</span> <span class="st">"s3://bucket/data/"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">stream</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, index <span class="op">=</span> <span class="va">csi_index</span><span class="op">)</span></span>
-<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="va">stream</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   CHROM   POS REF</span></span>
-<span><span class="co">#&gt; 1     1 10583   G</span></span>
-<span><span class="co">#&gt; 2     1 11508   A</span></span>
-<span><span class="co">#&gt; 3     1 11565   G</span></span>
-<span></span>
-<span><span class="co"># Alternative: htslib ##idx## syntax in filename</span></span>
-<span><span class="va">filename_with_idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"##idx##"</span>, <span class="va">csi_index</span><span class="op">)</span></span>
-<span><span class="va">stream2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcf_open_arrow.html">vcf_open_arrow</a></span><span class="op">(</span><span class="va">filename_with_idx</span><span class="op">)</span></span>
-<span><span class="va">batch2</span> <span class="op">&lt;-</span> <span class="va">stream2</span><span class="op">$</span><span class="fu">get_next</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">nanoarrow</span><span class="fu">::</span><span class="fu"><a href="https://arrow.apache.org/nanoarrow/latest/r/reference/convert_array.html" class="external-link">convert_array</a></span><span class="op">(</span><span class="va">batch2</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   CHROM   POS REF</span></span>
-<span><span class="co">#&gt; 1     1 10583   G</span></span>
-<span><span class="co">#&gt; 2     1 11508   A</span></span>
-<span><span class="co">#&gt; 3     1 11565   G</span></span></code></pre></div>
+<span><span class="co"># Connect using secret</span></span>
+<span><span class="fu"><a href="reference/ducklake_connect_catalog.html">ducklake_connect_catalog</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  secret_name <span class="op">=</span> <span class="st">"pg_catalog"</span>,</span>
+<span>  alias <span class="op">=</span> <span class="st">"lake"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="command-line-utility">Command-Line utility<a class="anchor" aria-label="anchor" href="#command-line-utility"></a>
+</h3>
+<p>CLI tools are provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs using either the <a href="./inst/scripts/vcf2parquet_duckdb.R"><code>bcf_reader</code></a> extension or via <a href="./inst/scripts/vcf2parquet.R">Arrow IPC</a></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="va">BCF</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="va">$SCRIPT</span> convert <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
+<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT CHROM, POS, REF, ALT FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
+<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a></span>
+<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a><span class="co"># Describe table structure</span></span>
+<span id="cb25-13"><a href="#cb25-13" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"DESCRIBE SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">')"</span></span>
+<span id="cb25-14"><a href="#cb25-14" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" tabindex="-1"></a><span class="co"># Show schema</span></span>
+<span id="cb25-16"><a href="#cb25-16" tabindex="-1"></a><span class="va">$SCRIPT</span> schema 0 <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span></span>
+<span id="cb25-17"><a href="#cb25-17" tabindex="-1"></a></span>
+<span id="cb25-18"><a href="#cb25-18" tabindex="-1"></a><span class="co"># File info</span></span>
+<span id="cb25-19"><a href="#cb25-19" tabindex="-1"></a><span class="va">$SCRIPT</span> info <span class="at">-i</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb25-20"><a href="#cb25-20" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb25-22"><a href="#cb25-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
+<span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.oGx6cRGdxH.parquet </span></span>
+<span id="cb25-25"><a href="#cb25-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
+<span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
+<span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
+<span id="cb25-28"><a href="#cb25-28" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
+<span id="cb25-29"><a href="#cb25-29" tabindex="-1"></a><span class="co">#&gt;   Include INFO: TRUE </span></span>
+<span id="cb25-30"><a href="#cb25-30" tabindex="-1"></a><span class="co">#&gt;   Include FORMAT: TRUE </span></span>
+<span id="cb25-31"><a href="#cb25-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_get_version] Couldn't get VCF version, considering as 4.2</span></span>
+<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.oGx6cRGdxH.parquet</span></span>
+<span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.13 seconds</span></span>
+<span id="cb25-39"><a href="#cb25-39" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
+<span id="cb25-40"><a href="#cb25-40" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb25-41"><a href="#cb25-41" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
+<span id="cb25-42"><a href="#cb25-42" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
+<span id="cb25-43"><a href="#cb25-43" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
+<span id="cb25-44"><a href="#cb25-44" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
+<span id="cb25-45"><a href="#cb25-45" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
+<span id="cb25-46"><a href="#cb25-46" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
+<span id="cb25-47"><a href="#cb25-47" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
+<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
+<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
+<span id="cb25-51"><a href="#cb25-51" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
+<span id="cb25-52"><a href="#cb25-52" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
+<span id="cb25-53"><a href="#cb25-53" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
+<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
+<span id="cb25-55"><a href="#cb25-55" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
+<span id="cb25-56"><a href="#cb25-56" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
+<span id="cb25-57"><a href="#cb25-57" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
+<span id="cb25-58"><a href="#cb25-58" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
+<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
+<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
+<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
+<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
+<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.oGx6cRGdxH.parquet </span></span>
+<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
+<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
+<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
+<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb25-86"><a href="#cb25-86" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
+<span id="cb25-87"><a href="#cb25-87" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
+<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
+<span id="cb25-89"><a href="#cb25-89" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
+<span id="cb25-90"><a href="#cb25-90" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
+<span id="cb25-91"><a href="#cb25-91" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
+<span id="cb25-92"><a href="#cb25-92" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
+<span id="cb25-93"><a href="#cb25-93" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
+<span id="cb25-94"><a href="#cb25-94" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
+<span id="cb25-95"><a href="#cb25-95" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-96"><a href="#cb25-96" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
+<span id="cb25-97"><a href="#cb25-97" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
+<span id="cb25-98"><a href="#cb25-98" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
+<span id="cb25-99"><a href="#cb25-99" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
+<span id="cb25-100"><a href="#cb25-100" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
+<span id="cb25-101"><a href="#cb25-101" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
+<span id="cb25-102"><a href="#cb25-102" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
+<span id="cb25-103"><a href="#cb25-103" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
+<span id="cb25-104"><a href="#cb25-104" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
+<span id="cb25-105"><a href="#cb25-105" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
+<span id="cb25-106"><a href="#cb25-106" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-107"><a href="#cb25-107" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
+<span id="cb25-108"><a href="#cb25-108" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-109"><a href="#cb25-109" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-110"><a href="#cb25-110" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-111"><a href="#cb25-111" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb25-112"><a href="#cb25-112" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
+<span id="cb25-113"><a href="#cb25-113" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb25-114"><a href="#cb25-114" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-115"><a href="#cb25-115" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb25-116"><a href="#cb25-116" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-117"><a href="#cb25-117" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-118"><a href="#cb25-118" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-119"><a href="#cb25-119" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb25-120"><a href="#cb25-120" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
+<span id="cb25-121"><a href="#cb25-121" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb25-122"><a href="#cb25-122" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-123"><a href="#cb25-123" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb25-124"><a href="#cb25-124" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-125"><a href="#cb25-125" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-126"><a href="#cb25-126" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-127"><a href="#cb25-127" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">

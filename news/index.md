@@ -2,6 +2,35 @@
 
 ## RBCFTools 1.23-0.0.0.9000 (development version)
 
+- **DuckLake catalog connection abstraction**: Support for DuckDB,
+  SQLite, PostgreSQL, MySQL backends
+
+  - [`ducklake_connect_catalog()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_connect_catalog.md):
+    Abstracted connection function for multiple catalog backends
+  - [`ducklake_create_catalog_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_catalog_secret.md):
+    Create catalog secrets for credential management
+  - [`ducklake_list_secrets()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_list_secrets.md):
+    List existing catalog secrets
+  - [`ducklake_drop_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_drop_secret.md):
+    Remove catalog secrets
+  - [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md):
+    Update existing catalog secrets
+  - [`ducklake_parse_connection_string()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_parse_connection_string.md):
+    Parse DuckLake connection strings
+
+- **Removed deprecated function**: `ducklake_write_variants()` removed
+  without deprecation
+
+- **DuckDB bcf_reader extension**: Native DuckDB table function for
+  querying VCF/BCF files directly.
+
+  - [`bcf_reader_build()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcf_reader_build.md):
+    Build extension from source using package’s bundled htslib
+  - [`vcf_duckdb_connect()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.md):
+    Create DuckDB connection with extension loaded
+  - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md):
+    Query VCF/BCF files with SQL
+
 - DuckDB `bcf_reader` extension now auto-parses VEP-style annotations
   (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed `VEP_*` columns with all
   transcripts preserved as lists (using a vendored parser); builds
@@ -14,16 +43,6 @@
 - Parallel (contig-based) DuckDB extension Parquet converter.
 
 - Package version reflects bundled htslib/bcftools versions.
-
-- **DuckDB bcf_reader extension**: Native DuckDB table function for
-  querying VCF/BCF files directly.
-
-  - [`bcf_reader_build()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcf_reader_build.md):
-    Build extension from source using package’s bundled htslib
-  - [`vcf_duckdb_connect()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.md):
-    Create DuckDB connection with extension loaded
-  - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md):
-    Query VCF/BCF files with SQL
 
 - to parquet conversion now support parrallel threading based conversion
 

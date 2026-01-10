@@ -34,10 +34,22 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.0.9000" id="rbcftools-123-0009000-development-version">RBCFTools 1.23-0.0.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0009000-development-version"></a></h2>
-<ul><li><p>DuckDB <code>bcf_reader</code> extension now auto-parses VEP-style annotations (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed <code>VEP_*</code> columns with all transcripts preserved as lists (using a vendored parser); builds remain self-contained with packaged htslib.</p></li>
-<li><p>Arrow VCF stream (nanoarrow) now aligns VEP parsing semantics with DuckDB (schema and typing improvements; transcript handling under active development).</p></li>
-<li><p>Parallel (contig-based) DuckDB extension Parquet converter.</p></li>
-<li><p>Package version reflects bundled htslib/bcftools versions.</p></li>
+<ul><li>
+<p><strong>DuckLake catalog connection abstraction</strong>: Support for DuckDB, SQLite, PostgreSQL, MySQL backends</p>
+<ul><li>
+<code><a href="../reference/ducklake_connect_catalog.html">ducklake_connect_catalog()</a></code>: Abstracted connection function for multiple catalog backends</li>
+<li>
+<code><a href="../reference/ducklake_create_catalog_secret.html">ducklake_create_catalog_secret()</a></code>: Create catalog secrets for credential management</li>
+<li>
+<code><a href="../reference/ducklake_list_secrets.html">ducklake_list_secrets()</a></code>: List existing catalog secrets</li>
+<li>
+<code><a href="../reference/ducklake_drop_secret.html">ducklake_drop_secret()</a></code>: Remove catalog secrets</li>
+<li>
+<code><a href="../reference/ducklake_update_secret.html">ducklake_update_secret()</a></code>: Update existing catalog secrets</li>
+<li>
+<code><a href="../reference/ducklake_parse_connection_string.html">ducklake_parse_connection_string()</a></code>: Parse DuckLake connection strings</li>
+</ul></li>
+<li><p><strong>Removed deprecated function</strong>: <code>ducklake_write_variants()</code> removed without deprecation</p></li>
 <li>
 <p><strong>DuckDB bcf_reader extension</strong>: Native DuckDB table function for querying VCF/BCF files directly.</p>
 <ul><li>
@@ -47,6 +59,10 @@
 <li>
 <code><a href="../reference/vcf_query_duckdb.html">vcf_query_duckdb()</a></code>: Query VCF/BCF files with SQL</li>
 </ul></li>
+<li><p>DuckDB <code>bcf_reader</code> extension now auto-parses VEP-style annotations (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed <code>VEP_*</code> columns with all transcripts preserved as lists (using a vendored parser); builds remain self-contained with packaged htslib.</p></li>
+<li><p>Arrow VCF stream (nanoarrow) now aligns VEP parsing semantics with DuckDB (schema and typing improvements; transcript handling under active development).</p></li>
+<li><p>Parallel (contig-based) DuckDB extension Parquet converter.</p></li>
+<li><p>Package version reflects bundled htslib/bcftools versions.</p></li>
 <li><p>to parquet conversion now support parrallel threading based conversion</p></li>
 <li><p>vcf2parquet.R script in inst/</p></li>
 <li>
