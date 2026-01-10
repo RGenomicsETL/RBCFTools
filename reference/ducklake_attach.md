@@ -1,6 +1,6 @@
-# Attach a DuckLake catalog
+# Attach a DuckLake catalog (legacy function)
 
-Attach a DuckLake catalog
+Attach a DuckLake catalog (legacy function)
 
 ## Usage
 
@@ -50,3 +50,7 @@ ducklake_attach(
 ## Value
 
 Invisible NULL.
+
+## See also
+
+`ducklake_connect_catalog` for abstracted backend support.

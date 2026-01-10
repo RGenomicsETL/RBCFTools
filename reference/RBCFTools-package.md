@@ -1,9 +1,11 @@
-# RBCFTools: 'htslib' and 'bcftools' Libraries and Command Line Tools Wrapper
+# RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers And 'BCF'/'VCF' to 'Parquet' Convertors
 
 Bundles the 'htslib' and 'bcftools' libraries and command lines tools
 for reading and manipulating VCF/BCF files. Includes experimental
 streaming facilities from VCF to Apache Arrow via 'nanoarrow', enabling
-export to Arrow IPC format and Parquet format using 'duckdb'.
+export to Arrow IPC format and Parquet format using 'duckdb' including a
+\`bcf_reader\` extension. Utilities for reading and writing VCF/BCF
+files into \`DuckLake\` provided.
 
 ## See also
 

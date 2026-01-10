@@ -6,21 +6,24 @@
   (INFO/CSQ, INFO/BCSQ, INFO/ANN) into typed `VEP_*` columns with all
   transcripts preserved as lists (using a vendored parser); builds
   remain self-contained with packaged htslib.
+
 - Arrow VCF stream (nanoarrow) now aligns VEP parsing semantics with
   DuckDB (schema and typing improvements; transcript handling under
   active development).
+
 - Parallel (contig-based) DuckDB extension Parquet converter.
+
 - Package version reflects bundled htslib/bcftools versions.
+
 - **DuckDB bcf_reader extension**: Native DuckDB table function for
   querying VCF/BCF files directly.
+
   - [`bcf_reader_build()`](https://rgenomicsetl.github.io/RBCFTools/reference/bcf_reader_build.md):
     Build extension from source using package’s bundled htslib
   - [`vcf_duckdb_connect()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.md):
     Create DuckDB connection with extension loaded
   - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md):
     Query VCF/BCF files with SQL
-
-## RBCFTools 1.23-0.0.0.9000 (development version)
 
 - to parquet conversion now support parrallel threading based conversion
 

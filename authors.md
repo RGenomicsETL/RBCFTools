@@ -18,12 +18,12 @@
 Source:
 [`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
 
-Toure S (2026). *RBCFTools: 'htslib' and 'bcftools' Libraries and
-Command Line Tools Wrapper*. R package version 1.23-0.0.0.9000,
-<https://github.com/RGenomicsETL/RBCFTools>.
+Toure S (2026). *RBCFTools: 'BCFTools', 'libbcftools' and 'htslib'
+Wrappers And 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
+1.23-0.0.0.9000, <https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
-      title = {RBCFTools: 'htslib' and 'bcftools' Libraries and Command Line Tools Wrapper},
+      title = {RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers And 'BCF'/'VCF' to 'Parquet' Convertors},
       author = {Sounkou Mahamane Toure},
       year = {2026},
       note = {R package version 1.23-0.0.0.9000},
