@@ -1,5 +1,9 @@
 # Changelog
 
+## RBCFTools 1.23-0.0.1
+
+- First Release to start proper semantic versioning of the Package API
+
 ## RBCFTools 1.23-0.0.0.9000 (development version)
 
 - **DuckLake catalog connection abstraction**: Support for DuckDB,
@@ -17,9 +21,6 @@
     Update existing catalog secrets
   - [`ducklake_parse_connection_string()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_parse_connection_string.md):
     Parse DuckLake connection strings
-
-- **Removed deprecated function**: `ducklake_write_variants()` removed
-  without deprecation
 
 - **DuckDB bcf_reader extension**: Native DuckDB table function for
   querying VCF/BCF files directly.
