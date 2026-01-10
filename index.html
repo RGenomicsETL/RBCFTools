@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="BCFTools, libbcftools and htslib Wrappers and BCF/VCF to Parquet Convertors">
-<meta name="description" content="Bundles the htslib and bcftools libraries and command lines tools for reading and manipulating VCF/BCF files. Includes experimental streaming facilities from VCF to Apache Arrow via nanoarrow, enabling export to Arrow IPC format and Parquet format using duckdb including a `bcf_reader` extension. Utilities for reading and writing VCF/BCF files into `DuckLake` provided.">
-<meta property="og:description" content="Bundles the htslib and bcftools libraries and command lines tools for reading and manipulating VCF/BCF files. Includes experimental streaming facilities from VCF to Apache Arrow via nanoarrow, enabling export to Arrow IPC format and Parquet format using duckdb including a `bcf_reader` extension. Utilities for reading and writing VCF/BCF files into `DuckLake` provided.">
+<meta name="description" content="Bundles the htslib and bcftools libraries and command lines tools for reading and manipulating VCF/BCF files. Includes streaming facilities from VCF to Apache Arrow via nanoarrow, enabling export to Arrow IPC format and Parquet format using duckdb including a `bcf_reader` extension. Utilities for reading and writing VCF/BCF files into `DuckLake` provided.">
+<meta property="og:description" content="Bundles the htslib and bcftools libraries and command lines tools for reading and manipulating VCF/BCF files. Includes streaming facilities from VCF to Apache Arrow via nanoarrow, enabling export to Arrow IPC format and Parquet format using duckdb including a `bcf_reader` extension. Utilities for reading and writing VCF/BCF files into `DuckLake` provided.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -51,13 +51,18 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes experimental support for streaming VCF/BCF to Apache Arrow (IPC) format via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>, with export to Parquet format using <a href="https://duckdb.org/" class="external-link">duckdb</a> via either the <a href="https://duckdb.org/community_extensions/extensions/nanoarrow.html" class="external-link">duckdb nanoarrow extension</a> or a <a href="inst/duckdb_bcf_reader_extension/"><code>bcf_reader</code></a> extension bundled in this package.</p>
+<p>RBCFTools provides R bindings to <a href="https://github.com/samtools/bcftools" class="external-link">bcftools</a> and <a href="https://github.com/samtools/htslib" class="external-link">htslib</a>, the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>, with export to Parquet format using <a href="https://duckdb.org/" class="external-link">duckdb</a> via either the <a href="https://duckdb.org/community_extensions/extensions/nanoarrow.html" class="external-link">duckdb nanoarrow extension</a> or a <a href="inst/duckdb_bcf_reader_extension/"><code>bcf_reader</code></a> extension bundled in this package.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of RBCFTools from <a href="https://github.com/RGenomicsETL/RBCFTools" class="external-link">GitHub</a> for unix-alikes (we do not support windows)</p>
+<p>You can install the development version of RBCFTools from r-universe for unix-alikes (we do not support windows)</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'RBCFTools'</span>, repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'https://rgenomicsetl.r-universe.dev'</span>, <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
+<span>    <span class="st">'RBCFTools'</span>,</span>
+<span>    repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>              <span class="st">'https://rgenomicsetl.r-universe.dev'</span>,</span>
+<span>              <span class="st">'https://cloud.r-project.org'</span><span class="op">)</span></span>
+<span>      <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="version-information">Version Information<a class="anchor" aria-label="anchor" href="#version-information"></a>
@@ -65,7 +70,6 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/RGenomicsETL/RBCFTools" class="external-link">RBCFTools</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: parallel</span></span>
-<span></span>
 <span><span class="co"># Get library versions</span></span>
 <span><span class="fu"><a href="reference/bcftools_version.html">bcftools_version</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "1.23"</span></span>
@@ -150,7 +154,7 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="example-query-remote-vcf-from-s3-using-bcftools">Example Query Remote VCF from S3 using bcftools<a class="anchor" aria-label="anchor" href="#example-query-remote-vcf-from-s3-using-bcftools"></a>
+<h2 id="example-query-of-remote-vcf-from-s3-using-bcftools">Example Query Of Remote VCF from S3 using bcftools<a class="anchor" aria-label="anchor" href="#example-query-of-remote-vcf-from-s3-using-bcftools"></a>
 </h2>
 <p>With libcurl support, bcftools can directly query remote files. Here we count variants in a small region from the 1000 Genomes cohort VCF on S3:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -176,9 +180,9 @@
 <span><span class="co">#&gt; [1] 4622</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="experimental-vcf-to-arrow-streams-and-duckdb-bcf_reader-extension">(Experimental) VCF to Arrow Streams and Duckdb <code>bcf_reader</code> extension<a class="anchor" aria-label="anchor" href="#experimental-vcf-to-arrow-streams-and-duckdb-bcf_reader-extension"></a>
+<h2 id="vcf-to-arrow-streams-and-duckdb-bcf_reader-extension">VCF to Arrow Streams and Duckdb <code>bcf_reader</code> extension<a class="anchor" aria-label="anchor" href="#vcf-to-arrow-streams-and-duckdb-bcf_reader-extension"></a>
 </h2>
-<p>RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>. This enables integration with tools like <a href="https://github.com/duckdb/duckdb-r" class="external-link">duckdb</a> and Parquet format convertion when serializing to Arrow IPC. We also support the <a href="inst/duckdb_bcf_reader_extension/"><code>bcf_reader</code></a> duckdb extension to read directly into duckb</p>
+<p>RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via <a href="https://arrow.apache.org/nanoarrow/" class="external-link">nanoarrow</a>. This enables integration with tools like <a href="https://github.com/duckdb/duckdb-r" class="external-link">duckdb</a> and Parquet format convertion when serializing to Arrow IPC. We also support the <a href="inst/duckdb_bcf_reader_extension/"><code>bcf_reader</code></a> duckdb extension to read directly into duckb.</p>
 <p>The <code>nanoarrow</code> stream conversion and <code>bcf_reader</code> perform VCF spec conformance checks on headers (similar to htslib’s <code>bcf_hdr_check_sanity()</code>) and emits R warning or duckdb logs when correcting non-conformant fields</p>
 <div class="section level3">
 <h3 id="read-vcf-as-arrow-stream">Read VCF as Arrow Stream<a class="anchor" aria-label="anchor" href="#read-vcf-as-arrow-stream"></a>
@@ -336,7 +340,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet.html">vcf_to_parquet</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpod4RDs/file3425a51bda19de.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -355,12 +359,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -436,7 +440,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e223a504af.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpod4RDs/file3425a5671483e6.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -599,17 +603,18 @@
 <span><span class="co">#&gt; 2     1 11508   A</span></span>
 <span><span class="co">#&gt; 3     1 11565   G</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="example-application-ducklake-etl">Example Application: DuckLake ETL<a class="anchor" aria-label="anchor" href="#example-application-ducklake-etl"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="example-application-ducklake-etl">Example Application: DuckLake ETL<a class="anchor" aria-label="anchor" href="#example-application-ducklake-etl"></a>
+</h2>
 <p><a href="https://ducklake.select/" class="external-link"><code>DuckLake</code></a> is an integrated data lake and catalog format. It has two components, a parquet files storage and a metadata dababase layer.</p>
-<div class="section level4">
-<h4 id="ducklake-etl-to-minio-storage-backend">DuckLake ETL to MinIO Storage backend<a class="anchor" aria-label="anchor" href="#ducklake-etl-to-minio-storage-backend"></a>
-</h4>
+<div class="section level3">
+<h3 id="ducklake-etl-to-minio-storage-backend">DuckLake ETL to MinIO Storage backend<a class="anchor" aria-label="anchor" href="#ducklake-etl-to-minio-storage-backend"></a>
+</h3>
 <p>To mimick a S3 backend for <a href="https://ducklake.select/" class="external-link"><code>DuckLake</code></a> storage we use <a href="github.com/minio/minio">minio</a>, we convert VCF files to parquet and insert then into DuckLake and query the lake. The lake as a local duckdb metadata database in this example</p>
-<div class="section level5">
-<h5 id="setup-up-minio-storage-backend">Setup up <code>minio</code> storage backend<a class="anchor" aria-label="anchor" href="#setup-up-minio-storage-backend"></a>
-</h5>
+<div class="section level4">
+<h4 id="setup-up-minio-storage-backend">Setup up <code>minio</code> storage backend<a class="anchor" aria-label="anchor" href="#setup-up-minio-storage-backend"></a>
+</h4>
 <p>We start by seting up and configuring a <code>minio</code> server</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
@@ -673,9 +678,9 @@
 <span><span class="va">minio_endpoint</span> <span class="op">&lt;-</span> <span class="va">endpoint</span></span>
 <span><span class="va">minio_process</span> <span class="op">&lt;-</span> <span class="va">minio_pid</span></span></code></pre></div>
 </div>
-<div class="section level5">
-<h5 id="attach-a-ducklake">Attach a DuckLake<a class="anchor" aria-label="anchor" href="#attach-a-ducklake"></a>
-</h5>
+<div class="section level4">
+<h4 id="attach-a-ducklake">Attach a DuckLake<a class="anchor" aria-label="anchor" href="#attach-a-ducklake"></a>
+</h4>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span>config <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  allow_unsigned_extensions <span class="op">=</span> <span class="st">"true"</span>,</span>
@@ -727,9 +732,9 @@
 <span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level4">
-<h4 id="write-a-vcf-into-minio-and-register-to-the-lake">Write a VCF into minio and register to the Lake<a class="anchor" aria-label="anchor" href="#write-a-vcf-into-minio-and-register-to-the-lake"></a>
-</h4>
+<div class="section level3">
+<h3 id="write-a-vcf-into-minio-and-register-to-the-lake">Write a VCF into minio and register to the Lake<a class="anchor" aria-label="anchor" href="#write-a-vcf-into-minio-and-register-to-the-lake"></a>
+</h3>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Ensure we are operating inside the DuckLake catalog</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
@@ -739,10 +744,10 @@
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span><span class="co">#&gt;   Build directory: /tmp/Rtmp8EfK4I</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/Rtmpod4RDs</span></span>
 <span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span><span class="co">#&gt; Extension built: /tmp/Rtmp8EfK4I/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/Rtmpod4RDs/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
@@ -750,14 +755,14 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/Rtmp8EfK4I/variants_20260110_205622.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpod4RDs/variants_20260110_212324.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="list-lake-content">List lake content<a class="anchor" aria-label="anchor" href="#list-lake-content"></a>
-</h4>
+<div class="section level3">
+<h3 id="list-lake-content">List lake content<a class="anchor" aria-label="anchor" href="#list-lake-content"></a>
+</h3>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
@@ -768,7 +773,7 @@
 <code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for this table</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                                data_file</span></span>
-<span><span class="co">#&gt; 1 s3://ducklake-demo-1768074981/data/main/variants/ducklake-019ba97b-35cf-7dd6-bbf8-af4fcbffc2cd.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://ducklake-demo-1768076603/data/main/variants/ducklake-019ba993-f51f-7bcc-9c92-2ee5bdd7c6c8.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
@@ -781,9 +786,9 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"kill"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">minio_process</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="supported-metadata-databases">Supported Metadata Databases<a class="anchor" aria-label="anchor" href="#supported-metadata-databases"></a>
-</h4>
+<div class="section level3">
+<h3 id="supported-metadata-databases">Supported Metadata Databases<a class="anchor" aria-label="anchor" href="#supported-metadata-databases"></a>
+</h3>
 <p>DuckLake supports multiple catalog backends</p>
 <ul>
 <li>
@@ -799,14 +804,14 @@
 <code>MySQL</code>: <code>ducklake:mysql://user:pass@host:3306/db</code>
 </li>
 </ul>
-<div class="section level5">
-<h5 id="connection-methods">Connection Methods<a class="anchor" aria-label="anchor" href="#connection-methods"></a>
-</h5>
+<div class="section level4">
+<h4 id="connection-methods">Connection Methods<a class="anchor" aria-label="anchor" href="#connection-methods"></a>
+</h4>
 <p>The package provides helpers for different metadata databases</p>
 </div>
-<div class="section level5">
-<h5 id="direct-connection">Direct Connection<a class="anchor" aria-label="anchor" href="#direct-connection"></a>
-</h5>
+<div class="section level4">
+<h4 id="direct-connection">Direct Connection<a class="anchor" aria-label="anchor" href="#direct-connection"></a>
+</h4>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># DuckDB backend</span></span>
 <span><span class="fu"><a href="reference/ducklake_connect_catalog.html">ducklake_connect_catalog</a></span><span class="op">(</span></span>
@@ -825,7 +830,6 @@
 <span>  data_path <span class="op">=</span> <span class="st">"s3://bucket/data/"</span>,</span>
 <span>  alias <span class="op">=</span> <span class="st">"lake"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
 <div class="section level5">
 <h5 id="secret-based-connection">Secret-based Connection:**<a class="anchor" aria-label="anchor" href="#secret-based-connection"></a>
 </h5>
@@ -848,9 +852,10 @@
 </div>
 </div>
 </div>
-<div class="section level3">
-<h3 id="command-line-utility">Command-Line utility<a class="anchor" aria-label="anchor" href="#command-line-utility"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="command-line-utilities">Command-Line utilities<a class="anchor" aria-label="anchor" href="#command-line-utilities"></a>
+</h2>
 <p>CLI tools are provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs using either the <a href="./inst/scripts/vcf2parquet_duckdb.R"><code>bcf_reader</code></a> extension or via <a href="./inst/scripts/vcf2parquet.R">Arrow IPC</a></p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
 <span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))"</span><span class="va">)</span></span>
@@ -875,7 +880,7 @@
 <span id="cb25-21"><a href="#cb25-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb25-22"><a href="#cb25-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.oGx6cRGdxH.parquet </span></span>
+<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.glQPi6Y82F.parquet </span></span>
 <span id="cb25-25"><a href="#cb25-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
@@ -886,7 +891,7 @@
 <span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.oGx6cRGdxH.parquet</span></span>
+<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.glQPi6Y82F.parquet</span></span>
 <span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
 <span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.13 seconds</span></span>
@@ -930,7 +935,7 @@
 <span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.oGx6cRGdxH.parquet </span></span>
+<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.glQPi6Y82F.parquet </span></span>
 <span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
 <span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
@@ -979,7 +984,6 @@
 <span id="cb25-125"><a href="#cb25-125" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
 <span id="cb25-126"><a href="#cb25-126" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
 <span id="cb25-127"><a href="#cb25-127" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
