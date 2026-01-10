@@ -279,9 +279,9 @@ cmd_query <- function(opts) {
 
     # Replace placeholders in query
     query <- opts$query
-    query <- gsub("\\{file\\}", opts$input, query, fixed = TRUE)
+    query <- gsub("\\{file\\}", opts$input, query, fixed = FALSE)
     if (!is.null(opts$region)) {
-      query <- gsub("\\{region\\}", opts$region, query, fixed = TRUE)
+      query <- gsub("\\{region\\}", opts$region, query, fixed = FALSE)
     }
 
     tryCatch(

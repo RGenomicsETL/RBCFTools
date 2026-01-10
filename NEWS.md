@@ -1,3 +1,7 @@
+# RBCFTools 1.23-0.0.1.9000  (development version)
+
+- bug fixes in the cli argument passing
+
 # RBCFTools 1.23-0.0.1
 
 - First Release to start proper semantic versioning of the Package API

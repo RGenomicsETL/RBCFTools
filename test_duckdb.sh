@@ -33,7 +33,7 @@ echo ""
 
 # Convert BCF to Parquet using native DuckDB mode with parallel processing
 echo "=== Step 2: Convert VCF/BCF to Parquet (DuckDB mode) ==="
-$SCRIPT convert \
+time $SCRIPT convert \
     --row-group-size 100000 -t $threads -c zstd -i $BCF -o $OUT_PQ --ext-path "$EXT_PATH"
 
 if [ $? -ne 0 ]; then

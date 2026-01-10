@@ -350,9 +350,13 @@ vcf_query_duckdb <- function(
   if (is.null(query)) {
     sql <- sprintf("SELECT * FROM %s", bcf_read_call)
   } else {
-    # Replace {file} placeholder with actual bcf_read() call
+    # Replace {file} and {region} placeholders
     sql <- gsub("\\{file\\}", file, query, fixed = FALSE)
-    sql <- gsub("bcf_read\\s*\\(\\s*'[^']*'\\s*\\)", bcf_read_call, sql)
+    if (!is.null(region) && nzchar(region)) {
+      sql <- gsub("\\{region\\}", region, sql, fixed = FALSE)
+    }
+    # Replace bcf_read() calls (with or without region parameter) with the proper call
+    sql <- gsub("bcf_read\\s*\\([^)]*\\)", bcf_read_call, sql)
     # If query doesn't contain bcf_read, handle it appropriately
     if (!grepl("bcf_read", sql, ignore.case = TRUE)) {
       # If query contains "FROM vcf", replace "vcf" with the bcf_read call

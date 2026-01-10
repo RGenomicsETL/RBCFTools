@@ -593,18 +593,28 @@ static void bcf_read_bind(duckdb_bind_info info) {
     
     // Only set up parallel scan if no user-specified region
     if (!region || strlen(region) == 0) {
-        // Try to load index using *_load3 for remote file support
-        // HTS_IDX_SILENT_FAIL suppresses warnings when index doesn't exist
+        // Try to load index using *_load3 with minimal flags to avoid network timeouts
+        // Only use HTS_IDX_SAVE_REMOTE for actual remote protocols
+        int is_remote = (strncmp(file_path, "http://", 7) == 0 || 
+                         strncmp(file_path, "https://", 8) == 0 ||
+                         strncmp(file_path, "ftp://", 6) == 0 ||
+                         strncmp(file_path, "s3://", 5) == 0 ||
+                         strncmp(file_path, "gs://", 5) == 0);
+        
         hts_idx_t* idx = NULL;
         tbx_t* tbx = NULL;
         enum htsExactFormat fmt = hts_get_format(fp)->format;
+        int flags = HTS_IDX_SILENT_FAIL;
+        if (is_remote) {
+            flags |= HTS_IDX_SAVE_REMOTE;
+        }
         
         if (fmt == bcf) {
-            idx = bcf_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
+            idx = bcf_index_load3(file_path, NULL, flags);
         } else {
-            tbx = tbx_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
+            tbx = tbx_index_load3(file_path, NULL, flags);
             if (!tbx) {
-                idx = bcf_index_load3(file_path, NULL, HTS_IDX_SAVE_REMOTE | HTS_IDX_SILENT_FAIL);
+                idx = bcf_index_load3(file_path, NULL, flags);
             }
         }
         
