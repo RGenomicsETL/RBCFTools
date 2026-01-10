@@ -17,22 +17,26 @@ reading and manipulating VCF/BCF files. The package bundles these
 libraries and command-line tools (bcftools, bgzip, tabix), so no
 external installation is required. When compiled with libcurl, remote
 file access from S3, GCS, and HTTP URLs is supported. The package also
-includes experimental support for streaming VCF/BCF to Apache Arrow
-(IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with
-export to Parquet format using [duckdb](https://duckdb.org/) via either
-the [duckdb nanoarrow
+includes support for streaming VCF/BCF to Apache Arrow (IPC) format via
+[nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet
+format using [duckdb](https://duckdb.org/) via either the [duckdb
+nanoarrow
 extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled
 in this package.
 
 ## Installation
 
-You can install the development version of RBCFTools from
-[GitHub](https://github.com/RGenomicsETL/RBCFTools) for unix-alikes (we
-do not support windows)
+You can install the development version of RBCFTools from r-universe for
+unix-alikes (we do not support windows)
 
 ``` r
-install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))
+install.packages(
+    'RBCFTools',
+    repos = c(
+              'https://rgenomicsetl.r-universe.dev',
+              'https://cloud.r-project.org')
+      )
 ```
 
 ## Version Information
@@ -40,7 +44,6 @@ install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', '
 ``` r
 library(RBCFTools)
 #> Loading required package: parallel
-
 # Get library versions
 bcftools_version()
 #> [1] "1.23"
@@ -130,7 +133,7 @@ htslib_has_feature(HTS_FEATURE_BZIP2)
 
 These are useful for conditionally enabling features in your code.
 
-## Example Query Remote VCF from S3 using bcftools
+## Example Query Of Remote VCF from S3 using bcftools
 
 With libcurl support, bcftools can directly query remote files. Here we
 count variants in a small region from the 1000 Genomes cohort VCF on S3:
@@ -160,14 +163,14 @@ length(result)
 #> [1] 4622
 ```
 
-## (Experimental) VCF to Arrow Streams and Duckdb `bcf_reader` extension
+## VCF to Arrow Streams and Duckdb `bcf_reader` extension
 
 RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion
 via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables
 integration with tools like [duckdb](https://github.com/duckdb/duckdb-r)
 and Parquet format convertion when serializing to Arrow IPC. We also
 support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) duckdb
-extension to read directly into duckb
+extension to read directly into duckb.
 
 The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec
 conformance checks on headers (similar to htslib’s
@@ -336,7 +339,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet
+#> Wrote 11 rows to /tmp/Rtmpod4RDs/file3425a51bda19de.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -355,12 +358,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
-#> 2 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
-#> 3 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
-#> 4 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
-#> 5 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
-#> 6 /tmp/Rtmp8EfK4I/file33c5e257bbae56.parquet            0                 11
+#> 1 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
+#> 2 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
+#> 3 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
+#> 4 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
+#> 5 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
+#> 6 /tmp/Rtmpod4RDs/file3425a51bda19de.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -443,7 +446,7 @@ vcf_to_parquet(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmp8EfK4I/file33c5e223a504af.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmpod4RDs/file3425a5671483e6.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -621,20 +624,20 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 #> 3     1 11565   G
 ```
 
-### Example Application: DuckLake ETL
+## Example Application: DuckLake ETL
 
 [`DuckLake`](https://ducklake.select/) is an integrated data lake and
 catalog format. It has two components, a parquet files storage and a
 metadata dababase layer.
 
-#### DuckLake ETL to MinIO Storage backend
+### DuckLake ETL to MinIO Storage backend
 
 To mimick a S3 backend for [`DuckLake`](https://ducklake.select/)
 storage we use [minio](github.com/minio/minio), we convert VCF files to
 parquet and insert then into DuckLake and query the lake. The lake as a
 local duckdb metadata database in this example
 
-##### Setup up `minio` storage backend
+#### Setup up `minio` storage backend
 
 We start by seting up and configuring a `minio` server
 
@@ -701,7 +704,7 @@ minio_endpoint <- endpoint
 minio_process <- minio_pid
 ```
 
-##### Attach a DuckLake
+#### Attach a DuckLake
 
 ``` r
 con <- duckdb::dbConnect(duckdb::duckdb(config = list(
@@ -754,7 +757,7 @@ DBI::dbExecute(con, "USE lake")
 #> [1] 0
 ```
 
-#### Write a VCF into minio and register to the Lake
+### Write a VCF into minio and register to the Lake
 
 ``` r
 # Ensure we are operating inside the DuckLake catalog
@@ -765,10 +768,10 @@ DBI::dbExecute(con, "USE lake")
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/Rtmp8EfK4I
+#>   Build directory: /tmp/Rtmpod4RDs
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> Extension built: /tmp/Rtmp8EfK4I/build/bcf_reader.duckdb_extension
+#> Extension built: /tmp/Rtmpod4RDs/build/bcf_reader.duckdb_extension
 ducklake_load_vcf(
   con,
   table = "variants",
@@ -776,13 +779,13 @@ ducklake_load_vcf(
   extension_path = ext_path,
   threads = 1
 )
-#> Wrote: /tmp/Rtmp8EfK4I/variants_20260110_205622.parquet
+#> Wrote: /tmp/Rtmpod4RDs/variants_20260110_212324.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
 ```
 
-#### List lake content
+### List lake content
 
 ``` r
 DBI::dbExecute(con, "USE lake")
@@ -796,7 +799,7 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 #>                                                                                                data_file
-#> 1 s3://ducklake-demo-1768074981/data/main/variants/ducklake-019ba97b-35cf-7dd6-bbf8-af4fcbffc2cd.parquet
+#> 1 s3://ducklake-demo-1768076603/data/main/variants/ducklake-019ba993-f51f-7bcc-9c92-2ee5bdd7c6c8.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
 #> 1              5751658                  6275                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
@@ -812,7 +815,7 @@ if (exists("minio_process") && minio_process > 0) {
 }
 ```
 
-#### Supported Metadata Databases
+### Supported Metadata Databases
 
 DuckLake supports multiple catalog backends
 
@@ -821,11 +824,11 @@ DuckLake supports multiple catalog backends
 - `PostgreSQL` : `ducklake:postgresql://user:pass@host:5432/db`
 - `MySQL`: `ducklake:mysql://user:pass@host:3306/db`
 
-##### Connection Methods
+#### Connection Methods
 
 The package provides helpers for different metadata databases
 
-##### Direct Connection
+#### Direct Connection
 
 ``` r
 # DuckDB backend
@@ -867,7 +870,7 @@ ducklake_connect_catalog(
 )
 ```
 
-### Command-Line utility
+## Command-Line utilities
 
 CLI tools are provided for VCF to Parquet conversion and querying,
 including threaded chunking based on contigs using either the
@@ -898,7 +901,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.oGx6cRGdxH.parquet 
+#>   Output: /tmp/tmp.glQPi6Y82F.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -909,7 +912,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.oGx6cRGdxH.parquet
+#> Wrote 11 rows to /tmp/tmp.glQPi6Y82F.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.13 seconds
@@ -953,7 +956,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.oGx6cRGdxH.parquet 
+#> Parquet File Information: /tmp/tmp.glQPi6Y82F.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
