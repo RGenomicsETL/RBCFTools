@@ -159,15 +159,40 @@ ducklake_create_s3_secret(
   use_ssl = FALSE
 )
 
+# Test the new abstracted catalog connection system
 meta_path <- file.path(tempfile("ducklake_meta_"))
 data_path <- "s3://ducklake-test"
-ducklake_attach(
+
+# Test 1: Direct DuckDB backend connection
+ducklake_connect_catalog(
   con,
-  metadata_path = meta_path,
+  backend = "duckdb",
+  connection_string = meta_path,
   data_path = data_path,
   alias = "lake",
   extra_options = list(SECRET = "ducklake_minio")
 )
+
+# Test 2: Create and use a secret
+ducklake_create_catalog_secret(
+  con,
+  name = "test_ducklake_secret",
+  backend = "duckdb",
+  connection_string = meta_path,
+  data_path = data_path,
+  metadata_parameters = list()
+)
+
+# Test 3: Connect using secret
+ducklake_connect_catalog(
+  con,
+  secret_name = "test_ducklake_secret",
+  alias = "lake_secret"
+)
+
+# Test 4: List secrets
+secrets <- ducklake_list_secrets(con)
+expect_true("test_ducklake_secret" %in% secrets$name)
 
 vcf_file <- system.file(
   "extdata",
@@ -178,10 +203,13 @@ if (!file.exists(vcf_file)) {
   exit_file("fixture VCF not found")
 }
 
-ducklake_write_variants(
+# Build bcf_reader extension for VCF loading
+ext_path <- bcf_reader_build(tempdir())
+ducklake_load_vcf(
   con,
   table = "lake.variants",
   vcf_path = vcf_file,
+  extension_path = ext_path,
   threads = 2
 )
 
@@ -190,3 +218,8 @@ variant_count <- DBI::dbGetQuery(
   "SELECT COUNT(*) AS n FROM lake.variants"
 )$n[1]
 expect_true(is.numeric(variant_count) && variant_count > 0)
+
+# Test 5: Clean up secret
+ducklake_drop_secret(con, "test_ducklake_secret")
+secrets_after <- ducklake_list_secrets(con)
+expect_true(!"test_ducklake_secret" %in% secrets_after$name)

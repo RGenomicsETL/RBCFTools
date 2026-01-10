@@ -2,7 +2,7 @@
 % Please edit documentation in R/ducklake.R
 \name{ducklake_attach}
 \alias{ducklake_attach}
-\title{Attach a DuckLake catalog}
+\title{Attach a DuckLake catalog (legacy function)}
 \usage{
 ducklake_attach(
   con,
@@ -33,5 +33,8 @@ ducklake_attach(
 Invisible NULL.
 }
 \description{
-Attach a DuckLake catalog
+Attach a DuckLake catalog (legacy function)
+}
+\seealso{
+\code{\link{ducklake_connect_catalog}} for abstracted backend support.
 }

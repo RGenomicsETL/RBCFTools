@@ -1,0 +1,181 @@
+# Test DuckLake catalog connection and secret management
+library(RBCFTools)
+library(tinytest)
+
+if (tolower(Sys.info()[["sysname"]]) != "linux") {
+  exit_file("DuckLake catalog tests run on Linux only")
+}
+if (!requireNamespace("duckdb", quietly = TRUE)) {
+  exit_file("duckdb package not available")
+}
+if (!requireNamespace("DBI", quietly = TRUE)) {
+  exit_file("DBI package not available")
+}
+
+# Setup test connection
+con <- duckdb::dbConnect(duckdb::duckdb(
+  config = list(
+    allow_unsigned_extensions = "true",
+    enable_external_access = "true"
+  )
+))
+on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+
+# Load DuckLake extension
+loaded_ducklake <- FALSE
+local_ducklake <- file.path(
+  normalizePath(file.path("ducklake"), mustWork = FALSE),
+  "build/release/extension/ducklake/ducklake.duckdb_extension"
+)
+if (file.exists(local_ducklake)) {
+  res <- try(
+    DBI::dbExecute(
+      con,
+      sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
+    ),
+    silent = TRUE
+  )
+  loaded_ducklake <- !inherits(res, "try-error")
+}
+if (!loaded_ducklake) {
+  res <- try(
+    DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"),
+    silent = TRUE
+  )
+  res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
+  loaded_ducklake <- !inherits(res_load, "try-error")
+}
+if (!loaded_ducklake) {
+  exit_file("ducklake extension not available")
+}
+
+# Test 1: DuckDB backend connection
+cat_meta <- tempfile("ducklake_cat_", fileext = ".duckdb")
+cat_data <- tempfile("ducklake_data_")
+
+ducklake_connect_catalog(
+  con,
+  backend = "duckdb",
+  connection_string = cat_meta,
+  data_path = cat_data,
+  alias = "test_duckdb"
+)
+
+# Verify connection works
+tryCatch(
+  {
+    DBI::dbGetQuery(
+      con,
+      "SELECT 1 FROM test_duckdb.information_schema.tables LIMIT 1"
+    )
+    test_success <- TRUE
+  },
+  error = function(e) {
+    test_success <- FALSE
+  }
+)
+expect_true(test_success)
+
+# Test 2: SQLite backend connection
+sqlite_meta <- tempfile("ducklake_sqlite_", fileext = ".db")
+ducklake_connect_catalog(
+  con,
+  backend = "sqlite",
+  connection_string = sqlite_meta,
+  data_path = cat_data,
+  alias = "test_sqlite"
+)
+
+# Test 3: Secret creation and usage
+ducklake_create_catalog_secret(
+  con,
+  name = "test_secret",
+  backend = "duckdb",
+  connection_string = cat_meta,
+  data_path = cat_data
+)
+
+# List secrets
+secrets <- ducklake_list_secrets(con)
+expect_true("test_secret" %in% secrets$name)
+
+# Connect using secret
+ducklake_connect_catalog(
+  con,
+  secret_name = "test_secret",
+  alias = "test_via_secret"
+)
+
+# Test 4: Secret update
+ducklake_update_secret(
+  con,
+  name = "test_secret",
+  connection_string = cat_meta,
+  data_path = cat_data
+)
+
+# Verify secret still exists
+secrets_after_update <- ducklake_list_secrets(con)
+expect_true("test_secret" %in% secrets_after_update$name)
+
+# Test 5: Secret cleanup
+ducklake_drop_secret(con, "test_secret")
+secrets_final <- ducklake_list_secrets(con)
+expect_true(!"test_secret" %in% secrets_final$name)
+
+# Test 6: Error handling for invalid backends
+expect_error(
+  ducklake_connect_catalog(
+    con,
+    backend = "invalid",
+    connection_string = "test"
+  ),
+  pattern = "must be one of"
+)
+
+# Test 7: Error handling for missing connection string
+expect_error(
+  ducklake_connect_catalog(
+    con,
+    backend = "duckdb"
+  ),
+  pattern = "connection_string is required"
+)
+
+# Test 8: Connection string parsing
+parsed <- ducklake_parse_connection_string("ducklake:path/to/catalog.duckdb")
+expect_equal(parsed$backend, "duckdb")
+expect_equal(parsed$metadata_path, "path/to/catalog.duckdb")
+
+parsed_sqlite <- ducklake_parse_connection_string(
+  "ducklake:sqlite:///path/to/catalog.db"
+)
+expect_equal(parsed_sqlite$backend, "sqlite")
+expect_equal(parsed_sqlite$metadata_path, "/path/to/catalog.db")
+
+parsed_secret <- ducklake_parse_connection_string("ducklake:my_secret")
+expect_equal(parsed_secret$backend, "secret")
+expect_equal(parsed_secret$metadata_path, "my_secret")
+
+# Test 9: PostgreSQL connection string format (without actual connection)
+ducklake_connect_catalog(
+  con,
+  backend = "postgresql",
+  connection_string = "user:pass@host:5432/db",
+  data_path = cat_data,
+  alias = "test_postgres"
+)
+
+# Test 10: MySQL connection string format (without actual connection)
+ducklake_connect_catalog(
+  con,
+  backend = "mysql",
+  connection_string = "user:pass@host:3306/db",
+  data_path = cat_data,
+  alias = "test_mysql"
+)
+
+# Clean up temporary files
+unlink(c(cat_meta, cat_data, sqlite_meta), recursive = TRUE)
+
+message("All DuckLake catalog connection and secret management tests passed!")

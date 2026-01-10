@@ -9,8 +9,6 @@
   - `vcf_duckdb_connect()`: Create DuckDB connection with extension loaded
   - `vcf_query_duckdb()`: Query VCF/BCF files with SQL
 
-# RBCFTools 1.23-0.0.0.9000 (development version)
-
 
 - to parquet conversion now support parrallel threading based conversion
 - vcf2parquet.R script in inst/

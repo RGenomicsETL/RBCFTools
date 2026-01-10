@@ -410,14 +410,15 @@ DBI::dbExecute(con, "USE lake")
 # Ensure we are operating inside the DuckLake catalog
 DBI::dbExecute(con, "USE lake")
 
-# Load variants via Parquet ingestion (ducklake_write_variants)
+# Load variants via fast VCF→Parquet conversion
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
-ducklake_write_variants(
+ext_path <- bcf_reader_build(tempdir())
+ducklake_load_vcf(
   con,
   table = "variants",
   vcf_path = vcf_file,
-  threads = 1,
-  method = "parquet"
+  extension_path = ext_path,
+  threads = 1
 )
 ```
 
