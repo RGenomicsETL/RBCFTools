@@ -576,17 +576,16 @@ if (file.exists(test_vcf_indexed) && nzchar(test_vcf_indexed)) {
   if (has_index) {
     parquet_parallel <- tempfile(fileext = ".parquet")
 
-    # Test parallel conversion with 2 threads
+    # Test conversion using subranges function as replacement
     expect_message(
-      vcf_to_parquet_duckdb_parallel(
+      vcf_to_parquet_duckdb(
         test_vcf_indexed,
         parquet_parallel,
         extension_path = ext_path,
-        threads = 2L,
         compression = "zstd"
       ),
-      pattern = "Processing.*contigs.*threads",
-      info = "vcf_to_parquet_duckdb_parallel should show progress"
+      pattern = "Wrote.*parquet",
+      info = "vcf_to_parquet_duckdb should show progress"
     )
 
     expect_true(
@@ -615,16 +614,16 @@ if (file.exists(test_vcf_indexed) && nzchar(test_vcf_indexed)) {
   }
 }
 
-# Test error handling in parallel function
+# Test error handling when no extension path provided
 expect_error(
-  vcf_to_parquet_duckdb_parallel(
+  vcf_to_parquet_duckdb(
     test_vcf,
     tempfile(fileext = ".parquet"),
     extension_path = NULL,
-    con = con # This should error as con can't be used across processes
+    con = NULL
   ),
-  pattern = "extension_path must be provided|Shared connections",
-  info = "Should error when con is provided instead of extension_path"
+  pattern = "auto-detected|extension",
+  info = "Should work without extension path when con is NULL"
 )
 
 # =============================================================================

@@ -685,7 +685,7 @@ static void bcf_read_global_init(duckdb_init_info info) {
         if (max_threads > 16) max_threads = 16;
         duckdb_init_set_max_threads(info, max_threads);
     } else {
-        // Single-threaded scan
+        // Single-threaded scan (single contig or no index)
         global->n_contigs = 0;
         global->contig_names = NULL;
         duckdb_init_set_max_threads(info, 1);

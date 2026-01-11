@@ -234,16 +234,29 @@ cmd_convert <- function(opts) {
 
   tryCatch(
     {
-      vcf_to_parquet_duckdb(
-        input_file = opts$input,
-        output_file = opts$output,
-        extension_path = ext_path,
-        columns = opts$columns,
-        region = opts$region,
-        compression = opts$compression,
-        row_group_size = opts$row_group_size,
-        threads = opts$threads
-      )
+      if (opts$threads > 1) {
+        # Use parallel function for multiple threads
+        vcf_to_parquet_duckdb_parallel(
+          input_file = opts$input,
+          output_file = opts$output,
+          extension_path = ext_path,
+          columns = opts$columns,
+          compression = opts$compression,
+          row_group_size = opts$row_group_size,
+          threads = opts$threads
+        )
+      } else {
+        # Use chunked function for single thread
+        vcf_to_parquet_duckdb_chunked(
+          input_file = opts$input,
+          output_file = opts$output,
+          extension_path = ext_path,
+          columns = opts$columns,
+          compression = opts$compression,
+          row_group_size = opts$row_group_size,
+          threads = opts$threads
+        )
+      }
 
       elapsed <- as.numeric(difftime(
         Sys.time(),
