@@ -52,8 +52,7 @@ vcf_to_parquet_duckdb(
 
   Number of parallel threads for processing (default: 1). When threads
   \> 1 and file is indexed, uses parallel processing by splitting work
-  across chromosomes/contigs. See
-  [`vcf_to_parquet_duckdb_parallel`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.md).
+  across chromosomes/contigs. See `vcf_to_parquet_duckdb_parallel`.
 
 - con:
 
