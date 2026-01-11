@@ -74,6 +74,11 @@ This function:
 
 Contigs that return no variants are skipped automatically.
 
+## See also
+
+[`vcf_to_parquet_duckdb`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.md)
+for single-threaded conversion
+
 ## Examples
 
 ``` r
