@@ -59,7 +59,7 @@ DUCKDB_EXTENSION_EXTERN
 #define VEP_TRANSCRIPT_FIRST 1
 
 // Debug/progress tracking
-#define BCF_READER_PROGRESS_INTERVAL 10000  // Print progress every N records
+#define BCF_READER_PROGRESS_INTERVAL 100000  // Print progress every N records
 
 // Column indices for core VCF fields
 enum {
@@ -769,6 +769,7 @@ static void bcf_read_local_init(duckdb_init_info info) {
         }
         
         // If iterator is NULL, the region/contig was not found
+        // TODO: distinguish between contig not found vs. no overlapping records
         if (!local->itr) {
             char err[512];
             snprintf(err, sizeof(err), 
