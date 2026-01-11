@@ -163,8 +163,28 @@ SEXP RC_vcf_get_contig_lengths(SEXP filename_sexp) {
     for (int i = 0; i < nseq; i++) {
         SET_STRING_ELT(names, i, Rf_mkChar(seqnames[i]));
         
-        // Get sequence length from header
-        int len = bcf_hdr_id2length(hdr, BCF_DT_CTG, i);
+        // Get sequence length from header record
+        int len = 0;
+        bcf_hrec_t *hrec = bcf_hdr_id2hrec(hdr, BCF_DT_CTG, i, BCF_HL_CTG);
+        if (hrec && hrec->nkeys > 0) {
+            // Find the length attribute in the contig header record
+            for (int j = 0; j < hrec->nkeys; j++) {
+                if (hrec->keys[j] && hrec->vals[j] && strcmp(hrec->keys[j], "length") == 0) {
+                    len = atoi(hrec->vals[j]);
+                    break;
+                }
+            }
+        }
+        INTEGER(result)[i] = len;
+        if (hrec && hrec->nkeys > 0) {
+            // Find the length attribute in the contig header record
+            for (int j = 0; j < hrec->nkeys; j++) {
+                if (hrec->keys[j] && hrec->vals[j] && strcmp(hrec->keys[j], "length") == 0) {
+                    len = atoi(hrec->vals[j]);
+                    break;
+                }
+            }
+        }
         INTEGER(result)[i] = len;
     }
     
