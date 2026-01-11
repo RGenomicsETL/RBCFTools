@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
+#include <time.h>
 
 // htslib headers
 #include <htslib/vcf.h>
@@ -56,6 +57,9 @@ DUCKDB_EXTENSION_EXTERN
 #define BCF_READER_DEFAULT_BATCH_SIZE 2048
 #define VEP_TRANSCRIPT_ALL 0
 #define VEP_TRANSCRIPT_FIRST 1
+
+// Debug/progress tracking
+#define BCF_READER_PROGRESS_INTERVAL 100  // Print progress every N records
 
 // Column indices for core VCF fields
 enum {
@@ -157,6 +161,12 @@ typedef struct {
     int assigned_contig;       // Which contig this thread is scanning (-1 = all)
     const char* contig_name;   // Name of assigned contig (reference, don't free)
     int needs_next_contig;     // Flag to request next contig assignment
+    
+    // Debug/progress tracking
+    int64_t total_records_processed;  // Total records processed by this thread
+    struct timespec batch_start_time;  // Start time for performance measurement
+    struct timespec last_progress_time;  // Last time progress was logged
+    int timing_initialized;           // Flag to indicate timing is set up
 } bcf_init_data_t;
 
 // =============================================================================
@@ -772,6 +782,12 @@ static void bcf_read_local_init(duckdb_init_info info) {
     local->current_row = 0;
     local->done = 0;
     
+// Initialize debug/progress tracking
+    local->total_records_processed = 0;
+    memset(&local->batch_start_time, 0, sizeof(local->batch_start_time));
+    memset(&local->last_progress_time, 0, sizeof(local->last_progress_time));
+    local->timing_initialized = 0;
+    
     // Get projection pushdown info
     local->column_count = duckdb_init_get_column_count(info);
     local->column_ids = (idx_t*)duckdb_malloc(sizeof(idx_t) * local->column_count);
@@ -795,6 +811,117 @@ static inline void set_validity_bit(uint64_t* validity, idx_t row, int is_valid)
         validity[entry_idx] |= ((uint64_t)1 << bit_idx);
     } else {
         validity[entry_idx] &= ~((uint64_t)1 << bit_idx);
+    }
+}
+
+// Single-pass comma-separated string list processing
+static void process_comma_separated_list(duckdb_vector vec, idx_t row, const char* value) {
+    if (!value || strcmp(value, ".") == 0) {
+        // NULL value - empty list
+        duckdb_vector_ensure_validity_writable(vec);
+        uint64_t* validity = duckdb_vector_get_validity(vec);
+        set_validity_bit(validity, row, 0);
+        duckdb_list_entry entry = {duckdb_list_vector_get_size(vec), 0};
+        duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
+        list_data[row] = entry;
+        return;
+    }
+    
+    duckdb_list_entry entry;
+    entry.offset = duckdb_list_vector_get_size(vec);
+    entry.length = 0;
+    
+    duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
+    
+    // Single-pass: count tokens and assign in one go
+    const char* p = value;
+    const char* token_start = p;
+    int token_count = 0;
+    
+    // First pass: count tokens
+    while (*p) {
+        if (*p == ',') {
+            token_count++;
+            token_start = p + 1;
+        }
+        p++;
+    }
+    if (p > token_start) token_count++;  // Last token
+    
+    entry.length = token_count;
+    
+    // Reserve and fill
+    if (entry.length > 0) {
+        duckdb_list_vector_reserve(vec, entry.offset + entry.length);
+        duckdb_list_vector_set_size(vec, entry.offset + entry.length);
+        
+        // Second pass: assign tokens
+        p = value;
+        token_start = p;
+        int write_idx = 0;
+        
+        while (*p) {
+            if (*p == ',') {
+                // Assign current token
+                duckdb_vector_assign_string_element_len(child_vec, entry.offset + write_idx, 
+                                                     token_start, p - token_start);
+                write_idx++;
+                token_start = p + 1;
+            }
+            p++;
+        }
+        
+        // Last token
+        if (p > token_start) {
+            duckdb_vector_assign_string_element_len(child_vec, entry.offset + write_idx, 
+                                                 token_start, p - token_start);
+        }
+    }
+    
+    duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
+    list_data[row] = entry;
+}
+
+// =============================================================================
+// Helper: Print debug progress
+// =============================================================================
+
+static void print_progress(bcf_init_data_t* init, const char* context) {
+    if (init->total_records_processed % BCF_READER_PROGRESS_INTERVAL == 0) {
+        // Calculate records per second if we have timing
+        double records_per_sec = 0.0;
+        if (init->timing_initialized) {
+            struct timespec now;
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            
+            // Calculate elapsed time since last progress report
+            double elapsed = (now.tv_sec - init->last_progress_time.tv_sec) + 
+                          (now.tv_nsec - init->last_progress_time.tv_nsec) / 1e9;
+            
+            // Calculate rate - for very fast processing, use total elapsed time
+            if (elapsed > 0.001) {  // Only calculate after 1ms to avoid division by zero
+                records_per_sec = BCF_READER_PROGRESS_INTERVAL / elapsed;
+            } else {
+                // If processing is very fast (<1ms per 100 records), use total time
+                double total_elapsed = (now.tv_sec - init->batch_start_time.tv_sec) + 
+                                     (now.tv_nsec - init->batch_start_time.tv_nsec) / 1e9;
+                if (total_elapsed > 0.001) {
+                    records_per_sec = init->total_records_processed / total_elapsed;
+                }
+            }
+            
+            // Update last progress time
+            init->last_progress_time = now;
+            
+            // Debug: print elapsed time for first few intervals
+            if (init->total_records_processed <= 300) {
+                fprintf(stderr, "[bcf_reader] DEBUG: elapsed=%.6f sec, timing_initialized=%d\n", 
+                        elapsed, init->timing_initialized);
+            }
+        }
+        
+        fprintf(stderr, "[bcf_reader] %s: Processed %ld records (%.0f rec/s)\n", 
+                context, init->total_records_processed, records_per_sec);
     }
 }
 
@@ -888,6 +1015,13 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
     idx_t vector_size = duckdb_vector_size();
     idx_t row_count = 0;
     
+    // Cache vector pointers to reduce repeated calls
+    duckdb_vector* vectors = (duckdb_vector*)duckdb_malloc(init->column_count * sizeof(duckdb_vector));
+    
+    for (idx_t i = 0; i < init->column_count; i++) {
+        vectors[i] = duckdb_data_chunk_get_vector(output, i);
+    }
+    
     // Read records
     while (row_count < vector_size) {
         int ret;
@@ -923,16 +1057,25 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         // Unpack record
         bcf_unpack(init->rec, BCF_UN_ALL);
 
+        // Update debug/progress counters
+        init->total_records_processed++;
+        if (init->total_records_processed == 1) {
+            // First record - start timing
+            clock_gettime(CLOCK_MONOTONIC, &init->batch_start_time);
+            init->last_progress_time = init->batch_start_time;
+            init->timing_initialized = 1;
+        }
+
         // Parse VEP annotation once per record if needed
         vep_record_t* vep_rec = NULL;
         if (need_vep) {
             vep_rec = vep_record_parse_bcf(bind->vep_schema, init->hdr, init->rec);
         }
         
-        // Process each requested column
+        // Process each requested column (using cached vectors)
         for (idx_t i = 0; i < init->column_count; i++) {
             idx_t col_id = init->column_ids[i];
-            duckdb_vector vec = duckdb_data_chunk_get_vector(output, i);
+            duckdb_vector vec = vectors[i];
             
             // Core VCF columns
             if (col_id == COL_CHROM) {
@@ -1109,7 +1252,7 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                     int* dummy = NULL;
                     int ndummy = 0;
                     int ret_info = bcf_get_info_flag(init->hdr, init->rec, tag, &dummy, &ndummy);
-                    free(dummy);
+                    if (dummy) free(dummy);  // Only free if allocated
                     data[row_count] = (ret_info == 1);
                 }
                 else if (field->header_type == BCF_HT_INT) {
@@ -1247,45 +1390,8 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                     
                     if (ret_info > 0 && value && strcmp(value, ".") != 0) {
                         if (field->is_list) {
-                            // List of strings - split by comma
-                            duckdb_list_entry entry;
-                            entry.offset = duckdb_list_vector_get_size(vec);
-                            entry.length = 0;
-                            
-                            duckdb_vector child_vec = duckdb_list_vector_get_child(vec);
-                            
-                            char* value_copy = strdup_duckdb(value);
-                            
-                            // First count the number of tokens
-                            char* tok;
-                            char* saveptr = NULL;
-                            for (tok = strtok_r(value_copy, ",", &saveptr); 
-                                 tok != NULL; 
-                                 tok = strtok_r(NULL, ",", &saveptr)) {
-                                entry.length++;
-                            }
-                            duckdb_free(value_copy);
-                            
-                            // Reserve and set size
-                            if (entry.length > 0) {
-                                duckdb_list_vector_reserve(vec, entry.offset + entry.length);
-                                duckdb_list_vector_set_size(vec, entry.offset + entry.length);
-                                
-                                // Parse again and fill in values
-                                value_copy = strdup_duckdb(value);
-                                saveptr = NULL;
-                                int write_idx = 0;
-                                for (tok = strtok_r(value_copy, ",", &saveptr); 
-                                     tok != NULL; 
-                                     tok = strtok_r(NULL, ",", &saveptr)) {
-                                    duckdb_vector_assign_string_element(child_vec, entry.offset + write_idx, tok);
-                                    write_idx++;
-                                }
-                                duckdb_free(value_copy);
-                            }
-                            
-                            duckdb_list_entry* list_data = (duckdb_list_entry*)duckdb_vector_get_data(vec);
-                            list_data[row_count] = entry;
+                            // Use optimized single-pass comma-separated list processing
+                            process_comma_separated_list(vec, row_count, value);
                         } else {
                             duckdb_vector_assign_string_element(vec, row_count, value);
                         }
@@ -1505,8 +1611,11 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                                 set_validity_bit(validity, row_count, 0);
                             }
                             
-                            if (values) free(values[0]);
-                            free(values);
+                            if (values) {
+                                // htslib: for string FORMAT fields, free only the array
+                                // The string pointers within are managed by htslib
+                                free(values);
+                            }
                         }
                     }
                 }
@@ -1518,7 +1627,19 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
 
         row_count++;
         init->current_row++;
+        
+        // Print progress every N records
+        if (init->is_parallel && init->contig_name) {
+            char context[256];
+            snprintf(context, sizeof(context), "scan (contig: %s)", init->contig_name);
+            print_progress(init, context);
+        } else {
+            print_progress(init, "scan");
+        }
     }
+    
+    // Cleanup cached vectors
+    duckdb_free(vectors);
     
     duckdb_data_chunk_set_size(output, row_count);
 }
