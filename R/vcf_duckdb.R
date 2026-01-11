@@ -710,6 +710,8 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #' )
 #' }
 #'
+#' @seealso \code{\link{vcf_to_parquet_duckdb}} for single-threaded conversion
+#'
 #' @export
 vcf_to_parquet_duckdb_parallel <- function(
   input_file,
