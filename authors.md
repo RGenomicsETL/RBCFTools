@@ -20,12 +20,12 @@ Source:
 
 Toure S (2026). *RBCFTools: 'BCFTools', 'libbcftools' and 'htslib'
 Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
-1.23-0.0.1.9000, <https://github.com/RGenomicsETL/RBCFTools>.
+1.23-0.0.2, <https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
       title = {RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 1.23-0.0.1.9000},
+      note = {R package version 1.23-0.0.2},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }

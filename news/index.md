@@ -1,5 +1,9 @@
 # Changelog
 
+## RBCFTools 1.23-0.0.2
+
+- Version pining release for production testing
+
 ## RBCFTools 1.23-0.0.1.9000 (development version)
 
 - bug fixes in the cli argument passing
