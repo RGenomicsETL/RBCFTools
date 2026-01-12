@@ -103,8 +103,8 @@ cmd_bcftools_full_text <- sprintf("bcftools view -Ov %s > /dev/null", shQuote(bc
 res_bcftools_full_text <- time_runs(cmd_bcftools_full_text)
 res_bcftools_full_text
 #>   run elapsed  user system cache_state
-#> 1   1  65.785 0.004  0.004    cold-ish
-#> 2   2  66.061 0.003  0.007    warm-ish
+#> 1   1  69.149 0.003  0.005    cold-ish
+#> 2   2  68.883 0.001  0.007    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (full file, fairer)
@@ -114,8 +114,8 @@ cmd_bcftools_full_bin <- sprintf("bcftools view -Ou %s > /dev/null", shQuote(bcf
 res_bcftools_full_bin <- time_runs(cmd_bcftools_full_bin)
 res_bcftools_full_bin
 #>   run elapsed  user system cache_state
-#> 1   1  36.653 0.003  0.003    cold-ish
-#> 2   2  35.357 0.001  0.006    warm-ish
+#> 1   1  35.331 0.001  0.005    cold-ish
+#> 2   2  35.661 0.002  0.004    warm-ish
 ```
 
 ### bcftools view — text VCF emit (region)
@@ -124,9 +124,9 @@ res_bcftools_full_bin
 cmd_bcftools_region_text <- sprintf("bcftools view -Ov -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 res_bcftools_region_text <- time_runs(cmd_bcftools_region_text)
 res_bcftools_region_text
-#>   run elapsed  user system cache_state
-#> 1   1   0.079 0.001  0.003    cold-ish
-#> 2   2   0.075 0.000  0.003    warm-ish
+#>   run elapsed user system cache_state
+#> 1   1   0.074    0  0.003    cold-ish
+#> 2   2   0.075    0  0.003    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (region, fairer)
@@ -136,8 +136,8 @@ cmd_bcftools_region_bin <- sprintf("bcftools view -Ou -r %s %s > /dev/null", shQ
 res_bcftools_region_bin <- time_runs(cmd_bcftools_region_bin)
 res_bcftools_region_bin
 #>   run elapsed  user system cache_state
-#> 1   1   0.069 0.001  0.004    cold-ish
-#> 2   2   0.071 0.000  0.004    warm-ish
+#> 1   1   0.066 0.001  0.003    cold-ish
+#> 2   2   0.068 0.000  0.003    warm-ish
 ```
 
 ### DuckDB bcf\_read (full file)
@@ -150,9 +150,9 @@ cmd_duckdb_full <- sprintf(
 )
 res_duckdb_full <- time_runs(cmd_duckdb_full)
 res_duckdb_full
-#>   run elapsed user system cache_state
-#> 1   1   3.780    0  0.004    cold-ish
-#> 2   2   4.135    0  0.004    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   4.630 0.000  0.004    cold-ish
+#> 2   2   4.345 0.001  0.003    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -167,8 +167,8 @@ cmd_duckdb_region <- sprintf(
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
 #>   run elapsed user system cache_state
-#> 1   1   0.094    0  0.004    cold-ish
-#> 2   2   0.093    0  0.003    warm-ish
+#> 1   1   0.100    0  0.004    cold-ish
+#> 2   2   0.102    0  0.003    warm-ish
 ```
 
 ### Parquet conversion: 4 threads vs 10 threads (DuckDB extension)
@@ -202,8 +202,8 @@ res_parquet_10threads <- if (RBCFTools::vcf_has_index(bcf_path)) {
   NULL
 }
 #> Processing 23 contigs (out of 23 in header) using 10 threads (DuckDB mode)
-#> Merging temporary Parquet files... to /tmp/RtmpqNtsD2/file21ff541cb57a93.parquet
-#> Merged 23 parquet files -> file21ff541cb57a93.parquet (81554892 rows)
+#> Merging temporary Parquet files... to /tmp/Rtmpsken0u/file2f6e885b4e9e6d.parquet
+#> Merged 23 parquet files -> file2f6e885b4e9e6d.parquet (81554892 rows)
 ```
 
 ``` r
@@ -219,15 +219,15 @@ res_parquet_4threads <- time_expr({
   )
 }, enabled = parquet_can_run)
 #> Processing 23 contigs (out of 23 in header) using 4 threads (DuckDB mode)
-#> Merging temporary Parquet files... to /tmp/RtmpqNtsD2/file21ff544a37098c.parquet
-#> Merged 23 parquet files -> file21ff544a37098c.parquet (81554892 rows)
+#> Merging temporary Parquet files... to /tmp/Rtmpsken0u/file2f6e88fe43fd.parquet
+#> Merged 23 parquet files -> file2f6e88fe43fd.parquet (81554892 rows)
 
 res_parquet_4threads
 #>         run elapsed    user system cache_state
-#> elapsed   1 115.531 240.805 39.078    cold-ish
+#> elapsed   1 131.833 262.433 36.738    cold-ish
 res_parquet_10threads
 #>         run elapsed    user system cache_state
-#> elapsed   1  88.663 260.914 40.434    cold-ish
+#> elapsed   1 105.702 262.699 37.689    cold-ish
 
 unlink(c(parquet_4threads, parquet_10threads))
 ```
