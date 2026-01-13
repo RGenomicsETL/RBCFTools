@@ -24,6 +24,7 @@ Other contributors:
 \itemize{
   \item Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas and Davies, Robert M (Authors of included htslib library and bcftools command line tools) [copyright holder]
   \item Zilong Li \email{zilong.dk@gmail.com} (Author of the vcfpp library from whom makefiles and configure strategy is borrowed) [copyright holder]
+  \item Duckdb C API and extension and API authors (Authors of the duckdb extension and API used for parquet export) [copyright holder]
 }
 
 }

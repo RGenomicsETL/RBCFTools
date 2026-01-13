@@ -134,6 +134,7 @@ parse_args <- function(args) {
       i <- i + 2
     } else if (arg == "--columns") {
       opts$columns <- strsplit(args[i + 1], ",")[[1]]
+      opts$columns <- trimws(opts$columns)
       i <- i + 2
     } else if (arg == "--row-group-size") {
       opts$row_group_size <- as.integer(args[i + 1])
@@ -216,13 +217,18 @@ cmd_convert <- function(opts) {
   }
 
   ext_path <- get_extension_path(opts)
+  threads <- opts$threads
+  if (!is.null(opts$region) && threads > 1) {
+    cat("  Region requested; using single-threaded mode to honor region filter.\n")
+    threads <- 1L
+  }
 
   cat("Converting VCF to Parquet (DuckDB mode)...\n")
   cat("  Input:", opts$input, "\n")
   cat("  Output:", opts$output, "\n")
   cat("  Compression:", opts$compression, "\n")
   cat("  Row group size:", opts$row_group_size, "\n")
-  cat("  Threads:", opts$threads, "\n")
+  cat("  Threads:", threads, "\n")
   if (!is.null(opts$region)) {
     cat("  Region:", opts$region, "\n")
   }
@@ -234,29 +240,16 @@ cmd_convert <- function(opts) {
 
   tryCatch(
     {
-      if (opts$threads > 1) {
-        # Use parallel function for multiple threads
-        vcf_to_parquet_duckdb_parallel(
-          input_file = opts$input,
-          output_file = opts$output,
-          extension_path = ext_path,
-          columns = opts$columns,
-          compression = opts$compression,
-          row_group_size = opts$row_group_size,
-          threads = opts$threads
-        )
-      } else {
-        # Use chunked function for single thread
-        vcf_to_parquet_duckdb_chunked(
-          input_file = opts$input,
-          output_file = opts$output,
-          extension_path = ext_path,
-          columns = opts$columns,
-          compression = opts$compression,
-          row_group_size = opts$row_group_size,
-          threads = opts$threads
-        )
-      }
+      vcf_to_parquet_duckdb(
+        input_file = opts$input,
+        output_file = opts$output,
+        extension_path = ext_path,
+        columns = opts$columns,
+        region = opts$region,
+        compression = opts$compression,
+        row_group_size = opts$row_group_size,
+        threads = threads
+      )
 
       elapsed <- as.numeric(difftime(
         Sys.time(),

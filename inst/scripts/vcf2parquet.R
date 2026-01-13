@@ -30,15 +30,20 @@ COMMANDS:
 CONVERT OPTIONS:
   -i, --input      Input VCF/BCF file (required)
   -o, --output     Output Parquet file (required)
-  -c, --compression  Compression: snappy, gzip, zstd, lz4, uncompressed (default: snappy)
+  -c, --compression  Compression: snappy, gzip, zstd, lz4, uncompressed (default: zstd)
   -b, --batch-size   Number of records per batch (default: 10000)
   -r, --region     Region to extract (e.g., chr1:1000-2000)
   -s, --samples    Sample filter (comma-separated or file)
   -t, --threads    Number of parallel threads (default: 1, requires indexed file)
   --streaming      Use streaming mode for large files
+  --index          Custom index file path (auto-detect by default)
   --no-info        Exclude INFO fields
   --no-format      Exclude FORMAT/sample data
   --row-group-size  Rows per row group (default: 100000)
+  --parse-vep      Parse VEP/CSQ/ANN/BCSQ annotations
+  --vep-tag        VEP tag to parse (default: auto-detect)
+  --vep-columns    Comma-separated VEP columns to extract (default: all)
+  --vep-transcript Transcript selection: first|all (default: first)
   --quiet          Suppress warnings
 
 QUERY OPTIONS:
@@ -127,6 +132,9 @@ parse_args <- function(args) {
     } else if (arg %in% c("-s", "--samples")) {
       opts$samples <- args[i + 1]
       i <- i + 2
+    } else if (arg == "--index") {
+      opts$index <- args[i + 1]
+      i <- i + 2
     } else if (arg %in% c("-t", "--threads")) {
       opts$threads <- as.integer(args[i + 1])
       i <- i + 2
@@ -144,6 +152,19 @@ parse_args <- function(args) {
       i <- i + 1
     } else if (arg == "--row-group-size") {
       opts$row_group_size <- as.integer(args[i + 1])
+      i <- i + 2
+    } else if (arg == "--parse-vep") {
+      opts$parse_vep <- TRUE
+      i <- i + 1
+    } else if (arg == "--vep-tag") {
+      opts$vep_tag <- args[i + 1]
+      i <- i + 2
+    } else if (arg == "--vep-columns") {
+      opts$vep_columns <- strsplit(args[i + 1], ",")[[1]]
+      opts$vep_columns <- trimws(opts$vep_columns)
+      i <- i + 2
+    } else if (arg == "--vep-transcript") {
+      opts$vep_transcript <- args[i + 1]
       i <- i + 2
     } else if (arg == "--quiet") {
       opts$quiet <- TRUE
@@ -179,6 +200,12 @@ if (is.null(opts$include_format)) {
 if (is.null(opts$streaming)) {
   opts$streaming <- FALSE
 }
+if (is.null(opts$parse_vep)) {
+  opts$parse_vep <- FALSE
+}
+if (is.null(opts$vep_transcript)) {
+  opts$vep_transcript <- "first"
+}
 if (is.null(opts$threads)) {
   opts$threads <- 1L
 }
@@ -205,9 +232,22 @@ cmd_convert <- function(opts) {
   if (!is.null(opts$samples)) {
     cat("  Samples:", opts$samples, "\n")
   }
+  if (!is.null(opts$index)) {
+    cat("  Index:", opts$index, "\n")
+  }
   cat("  Streaming:", opts$streaming, "\n")
   cat("  Include INFO:", opts$include_info, "\n")
   cat("  Include FORMAT:", opts$include_format, "\n")
+  if (isTRUE(opts$parse_vep)) {
+    cat("  Parse VEP:", opts$parse_vep, "\n")
+    if (!is.null(opts$vep_tag)) {
+      cat("  VEP tag:", opts$vep_tag, "\n")
+    }
+    if (!is.null(opts$vep_columns)) {
+      cat("  VEP columns:", paste(opts$vep_columns, collapse = ", "), "\n")
+    }
+    cat("  VEP transcript:", opts$vep_transcript, "\n")
+  }
 
   start_time <- Sys.time()
 
@@ -221,10 +261,15 @@ cmd_convert <- function(opts) {
         streaming = opts$streaming,
         threads = opts$threads,
         batch_size = opts$batch_size,
+        index = opts$index,
         region = opts$region,
         samples = opts$samples,
         include_info = opts$include_info,
-        include_format = opts$include_format
+        include_format = opts$include_format,
+        parse_vep = opts$parse_vep,
+        vep_tag = opts$vep_tag,
+        vep_columns = opts$vep_columns,
+        vep_transcript = opts$vep_transcript
       )
 
       elapsed <- as.numeric(difftime(
