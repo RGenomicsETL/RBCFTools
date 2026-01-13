@@ -30,3 +30,6 @@ Other contributors:
 
 - Zilong Li <zilong.dk@gmail.com> (Author of the vcfpp library from whom
   makefiles and configure strategy is borrowed) \[copyright holder\]
+
+- Duckdb C API and extension and API authors (Authors of the duckdb
+  extension and API used for parquet export) \[copyright holder\]
