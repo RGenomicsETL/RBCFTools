@@ -342,7 +342,6 @@ endpoint <- sprintf("127.0.0.1:%d", port)
 # Start MinIO server
 cmd <- paste(minio_bin, "server", data_dir, "--address", endpoint)
 system(paste0(cmd, " &"))
-cat("MinIO server started in background\n")
 
 # Give MinIO time to start
 Sys.sleep(5)
@@ -350,13 +349,11 @@ Sys.sleep(5)
 # Configure mc alias
 mc_cmd <- paste0(mc_bin, " alias set ducklake_local http://", endpoint, " minioadmin minioadmin")
 system(mc_cmd)
-cat("Configured mc alias\n")
 
 # Create bucket with unique name
 bucket <- sprintf("readme-demo-%d", as.integer(Sys.time()))
 bucket_cmd <- sprintf("%s mb ducklake_local/%s", mc_bin, bucket)
 system(bucket_cmd)
-cat("Created bucket\n")
 
 # Store variables for later use
 minio_endpoint <- endpoint
@@ -447,7 +444,6 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 # Clean up MinIO server
 system(sprintf("pkill -f 'minio server %s'", endpoint))
-cat("MinIO server stopped\n")
 ```
 
 ### Supported Metadata Databases
