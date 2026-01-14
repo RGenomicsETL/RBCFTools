@@ -1,7 +1,16 @@
 # Changelog
 
+## RBCFTools 1.23-0.0.2.9000 (development version)
+
+- added processx to suggests and use it instead of system2 in docs and
+  tests
+- renamed `vcf_query` to `vcf_query_arrow` and vcf_to_parquet to
+  vcf_to_parquet
+
 ## RBCFTools 1.23-0.0.2
 
+- renamed `vcf_query` to `vcf_query_arrow` and vcf_to_parquet to
+  vcf_to_parquet
 - Version pining release for production testing
 
 ## RBCFTools 1.23-0.0.1.9000 (development version)
@@ -64,12 +73,10 @@
     Open VCF/BCF as Arrow array stream
   - [`vcf_to_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.md):
     Convert to data.frame/tibble/batches
-  - [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md):
-    Export to Parquet format via DuckDB
+  - `vcf_to_parquet()`: Export to Parquet format via DuckDB
   - [`vcf_to_arrow_ipc()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow_ipc.md):
     Export to Arrow IPC format (streaming, no memory overhead)
-  - [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md):
-    SQL queries on VCF files via DuckDB
+  - `vcf_query()`: SQL queries on VCF files via DuckDB
 
 - **Streaming mode for large files**:
   `vcf_to_parquet(..., streaming = TRUE)` streams VCF -\> Arrow IPC -\>

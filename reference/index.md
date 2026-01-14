@@ -115,7 +115,7 @@
   : Check if VCF/BCF file has an index
 - [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
   : Create an Arrow stream from a VCF/BCF file
-- [`vcf_query()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.md)
+- [`vcf_query_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_arrow.md)
   : Query VCF/BCF with DuckDB
 - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md)
   : Query a VCF/BCF file using DuckDB SQL
@@ -131,13 +131,13 @@
   : Read VCF/BCF file into a data frame or list of batches
 - [`vcf_to_arrow_ipc()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow_ipc.md)
   : Write VCF/BCF to Arrow IPC format
-- [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)
+- [`vcf_to_parquet_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_arrow.md)
   : Write VCF/BCF to Parquet format
 - [`vcf_to_parquet_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.md)
   : Export VCF/BCF to Parquet using DuckDB
 - [`vcf_to_parquet_duckdb_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.md)
   : Parallel VCF to Parquet conversion using DuckDB
-- [`vcf_to_parquet_parallel()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.md)
+- [`vcf_to_parquet_parallel_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel_arrow.md)
   : Parallel VCF to Parquet conversion
 - [`vep_detect_tag()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_detect_tag.md)
   : Detect VEP annotation tag in VCF file

@@ -61,7 +61,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contigs.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_has_index.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.html</loc></url>
-<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_read_vep.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_samples_duckdb.html</loc></url>
@@ -69,10 +69,10 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_summary_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow_ipc.html</loc></url>
-<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.html</loc></url>
-<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_detect_tag.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_get_schema.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_has_annotation.html</loc></url>

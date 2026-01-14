@@ -98,8 +98,7 @@ Example:
 - **[vcf_arrow.R](https://rgenomicsetl.github.io/R/vcf_arrow.R)**:
   [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md),
   [`vcf_to_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_arrow.md),
-  [`vcf_to_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet.md)—streaming
-  VCF reads with nanoarrow integration
+  `vcf_to_parquet()`—streaming VCF reads with nanoarrow integration
 - **[vcf_duckdb.R](https://rgenomicsetl.github.io/R/vcf_duckdb.R)**:
   Functions to build/load the `bcf_reader` extension, query VCFs via SQL
   ([`vcf_duckdb_connect()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.md),

@@ -33,8 +33,14 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
+<ul><li>added processx to suggests and use it instead of system2 in docs and tests</li>
+<li>renamed <code>vcf_query</code> to <code>vcf_query_arrow</code> and vcf_to_parquet to vcf_to_parquet</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2" id="rbcftools-123-002">RBCFTools 1.23-0.0.2<a class="anchor" aria-label="anchor" href="#rbcftools-123-002"></a></h2>
-<ul><li>Version pining release for production testing</li>
+<ul><li>renamed <code>vcf_query</code> to <code>vcf_query_arrow</code> and vcf_to_parquet to vcf_to_parquet</li>
+<li>Version pining release for production testing</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.1.9000" id="rbcftools-123-0019000-development-version">RBCFTools 1.23-0.0.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0019000-development-version"></a></h2>
@@ -83,11 +89,11 @@
 <li>
 <code><a href="../reference/vcf_to_arrow.html">vcf_to_arrow()</a></code>: Convert to data.frame/tibble/batches</li>
 <li>
-<code><a href="../reference/vcf_to_parquet.html">vcf_to_parquet()</a></code>: Export to Parquet format via DuckDB</li>
+<code>vcf_to_parquet()</code>: Export to Parquet format via DuckDB</li>
 <li>
 <code><a href="../reference/vcf_to_arrow_ipc.html">vcf_to_arrow_ipc()</a></code>: Export to Arrow IPC format (streaming, no memory overhead)</li>
 <li>
-<code><a href="../reference/vcf_query.html">vcf_query()</a></code>: SQL queries on VCF files via DuckDB</li>
+<code>vcf_query()</code>: SQL queries on VCF files via DuckDB</li>
 </ul></li>
 <li><p><strong>Streaming mode for large files</strong>: <code>vcf_to_parquet(..., streaming = TRUE)</code> streams VCF -&gt; Arrow IPC -&gt; Parquet without loading into R memory. Requires DuckDB nanoarrow extension (auto-installed on first use).</p></li>
 <li>
