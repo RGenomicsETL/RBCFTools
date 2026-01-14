@@ -577,7 +577,9 @@ ducklake_list_files(con, "lake", "variants")
 ### Snapshots and time travel
 
 ```{r ducklake-snapshots, eval=TRUE}
-ducklake_snapshots(con, "lake")
+ducklake_snapshots(con, "lake") |> head()
+ducklake_snapshots(con, "lake") |> tail()
+
 ducklake_current_snapshot(con, "lake")
 ```
 
