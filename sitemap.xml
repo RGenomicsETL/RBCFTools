@@ -40,6 +40,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_set_option.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_snapshots.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/format_kv_metadata_sql.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_capabilities.html</loc></url>
@@ -55,6 +56,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_version.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/index.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/linking_info.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_kv_metadata.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.html</loc></url>
@@ -71,6 +73,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contigs.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_sample_names.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_has_index.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_header_metadata.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb_parallel.html</loc></url>

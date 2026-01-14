@@ -16,6 +16,7 @@ vcf_to_parquet_duckdb(
   threads = 1L,
   tidy_format = FALSE,
   partition_by = NULL,
+  include_metadata = TRUE,
   con = NULL
 )
 ```
@@ -71,6 +72,16 @@ vcf_to_parquet_duckdb(
   per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
   columns like SAMPLE_ID, enabling fast row group pruning.
 
+- include_metadata:
+
+  Logical, if TRUE embeds the full VCF header as Parquet key-value
+  metadata. Default TRUE. This preserves all VCF schema information
+  (INFO, FORMAT, FILTER definitions, contigs, samples) enabling
+  round-trip back to VCF format. Use
+  [`parquet_kv_metadata`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_kv_metadata.md)
+  to read the header back. Note: Not supported with `partition_by`
+  (Parquet limitation for partitioned writes).
+
 - con:
 
   Optional existing DuckDB connection (with extension loaded).
@@ -85,8 +96,11 @@ Invisible path to output file/directory
 if (FALSE) { # \dontrun{
 ext_path <- bcf_reader_build(tempdir())
 
-# Export entire file
+# Export entire file with metadata
 vcf_to_parquet_duckdb("variants.vcf.gz", "variants.parquet", ext_path)
+
+# Read back the embedded metadata
+parquet_kv_metadata("variants.parquet")
 
 # Export specific columns
 vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,

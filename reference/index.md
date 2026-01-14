@@ -105,6 +105,8 @@
   : Get htslib Version
 - [`linking_info()`](https://rgenomicsetl.github.io/RBCFTools/reference/linking_info.md)
   : Get All Linking Information for RBCFTools
+- [`parquet_kv_metadata()`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_kv_metadata.md)
+  : Read Parquet key-value metadata
 - [`print(`*`<vcf_duckdb>`*`)`](https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.md)
   : Print method for vcf_duckdb objects
 - [`print_makevars_config()`](https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.md)
@@ -135,6 +137,8 @@
   : Get contig names from VCF/BCF file
 - [`vcf_has_index()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_has_index.md)
   : Check if VCF/BCF file has an index
+- [`vcf_header_metadata()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_header_metadata.md)
+  : Extract VCF header for Parquet key-value storage
 - [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
   : Create an Arrow stream from a VCF/BCF file
 - [`vcf_open_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.md)

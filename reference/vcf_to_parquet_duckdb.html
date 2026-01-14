@@ -50,6 +50,7 @@
 <span>  threads <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  partition_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  include_metadata <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -105,6 +106,14 @@ efficient per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
 columns like SAMPLE_ID, enabling fast row group pruning.</p></dd>
 
 
+<dt id="arg-include-metadata">include_metadata<a class="anchor" aria-label="anchor" href="#arg-include-metadata"></a></dt>
+<dd><p>Logical, if TRUE embeds the full VCF header as Parquet
+key-value metadata. Default TRUE. This preserves all VCF schema information
+(INFO, FORMAT, FILTER definitions, contigs, samples) enabling round-trip back
+to VCF format. Use <code><a href="parquet_kv_metadata.html">parquet_kv_metadata</a></code> to read the header back.
+Note: Not supported with <code>partition_by</code> (Parquet limitation for partitioned writes).</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
@@ -119,8 +128,11 @@ columns like SAMPLE_ID, enabling fast row group pruning.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Export entire file</span></span></span>
+<span class="r-in"><span><span class="co"># Export entire file with metadata</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="st">"variants.parquet"</span>, <span class="va">ext_path</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Read back the embedded metadata</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="parquet_kv_metadata.html">parquet_kv_metadata</a></span><span class="op">(</span><span class="st">"variants.parquet"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Export specific columns</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="st">"variants_slim.parquet"</span>, <span class="va">ext_path</span>,</span></span>
