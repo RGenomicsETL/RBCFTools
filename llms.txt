@@ -331,7 +331,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet
+#> Wrote 11 rows to /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -350,12 +350,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
-#> 2 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
-#> 3 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
-#> 4 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
-#> 5 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
-#> 6 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11
+#> 1 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
+#> 2 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
+#> 3 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
+#> 4 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
+#> 5 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
+#> 6 /tmp/RtmpT73jCy/file3d59bf1c38fdaf.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -438,7 +438,7 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmpv5bLcA/file3d49b358b0916f.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpT73jCy/file3d59bf3d74e5eb.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -508,9 +508,9 @@ DBI::dbGetQuery(con, sprintf("
 #>   CHROM n_variants min_pos   max_pos
 #> 1    19      35918  111129  59084689
 #> 2     1      35846  536895 249211717
-#> 3    17      27325    6102  81052229
-#> 4    11      24472  180184 134257519
-#> 5     2      22032   42993 242836470
+#> 3     9      32002   15883 141111540
+#> 4    17      27325    6102  81052229
+#> 5    11      24472  180184 134257519
 
 # Export directly to Parquet
 parquet_out <- tempfile(fileext = ".parquet")
@@ -652,8 +652,6 @@ endpoint <- sprintf("127.0.0.1:%d", port)
 # Start MinIO server
 cmd <- paste(minio_bin, "server", data_dir, "--address", endpoint)
 system(paste0(cmd, " &"))
-cat("MinIO server started in background\n")
-#> MinIO server started in background
 
 # Give MinIO time to start
 Sys.sleep(5)
@@ -661,15 +659,11 @@ Sys.sleep(5)
 # Configure mc alias
 mc_cmd <- paste0(mc_bin, " alias set ducklake_local http://", endpoint, " minioadmin minioadmin")
 system(mc_cmd)
-cat("Configured mc alias\n")
-#> Configured mc alias
 
 # Create bucket with unique name
 bucket <- sprintf("readme-demo-%d", as.integer(Sys.time()))
 bucket_cmd <- sprintf("%s mb ducklake_local/%s", mc_bin, bucket)
 system(bucket_cmd)
-cat("Created bucket\n")
-#> Created bucket
 
 # Store variables for later use
 minio_endpoint <- endpoint
@@ -743,10 +737,10 @@ DBI::dbExecute(con, "USE lake")
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/Rtmpv5bLcA
+#>   Build directory: /tmp/RtmpT73jCy
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> Extension built: /tmp/Rtmpv5bLcA/build/bcf_reader.duckdb_extension
+#> Extension built: /tmp/RtmpT73jCy/build/bcf_reader.duckdb_extension
 ducklake_load_vcf(
   con,
   table = "variants",
@@ -754,7 +748,7 @@ ducklake_load_vcf(
   extension_path = ext_path,
   threads = 1
 )
-#> Wrote: /tmp/Rtmpv5bLcA/variants_20260114_172822.parquet
+#> Wrote: /tmp/RtmpT73jCy/variants_20260114_174252.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
@@ -774,7 +768,7 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 #>                                                                                              data_file
-#> 1 s3://readme-demo-1768408102/data/main/variants/ducklake-019bbd56-3aaf-718b-8545-45c23eec93fc.parquet
+#> 1 s3://readme-demo-1768408971/data/main/variants/ducklake-019bbd63-8001-77c8-8bf9-6f67ef3af9f9.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
 #> 1              5751658                  6275                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
@@ -788,8 +782,6 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 # Clean up MinIO server
 system(sprintf("pkill -f 'minio server %s'", endpoint))
-cat("MinIO server stopped\n")
-#> MinIO server stopped
 ```
 
 ### Supported Metadata Databases
@@ -879,7 +871,7 @@ $SCRIPT info -i $OUT_PQ
 rm -f $OUT_PQ
 #> Converting VCF to Parquet...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf 
-#>   Output: /tmp/tmp.TJPOA9LgsX.parquet 
+#>   Output: /tmp/tmp.gLksFlXYHm.parquet 
 #>   Compression: zstd 
 #>   Batch size: 10000 
 #>   Threads: 1 
@@ -890,7 +882,7 @@ rm -f $OUT_PQ
 #> [W::bcf_hdr_check_sanity] AD should be declared as Number=R
 #> [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer
 #> [W::bcf_hdr_check_sanity] GT should be declared as Number=1
-#> Wrote 11 rows to /tmp/tmp.TJPOA9LgsX.parquet
+#> Wrote 11 rows to /tmp/tmp.gLksFlXYHm.parquet
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.13 seconds
@@ -934,7 +926,7 @@ rm -f $OUT_PQ
 #> 8  YES <NA>    <NA>  <NA>
 #> 9  YES <NA>    <NA>  <NA>
 #> Unknown option: 0 
-#> Parquet File Information: /tmp/tmp.TJPOA9LgsX.parquet 
+#> Parquet File Information: /tmp/tmp.gLksFlXYHm.parquet 
 #> 
 #> File size: 0.01 MB 
 #> Total rows: 11 
