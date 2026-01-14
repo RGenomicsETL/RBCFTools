@@ -15,6 +15,7 @@ vcf_to_parquet_duckdb(
   row_group_size = 100000L,
   threads = 1L,
   tidy_format = FALSE,
+  partition_by = NULL,
   con = NULL
 )
 ```
@@ -27,7 +28,7 @@ vcf_to_parquet_duckdb(
 
 - output_file:
 
-  Path to output Parquet file
+  Path to output Parquet file or directory (when using partition_by)
 
 - extension_path:
 
@@ -61,13 +62,22 @@ vcf_to_parquet_duckdb(
   Logical, if TRUE exports data in tidy (long) format with one row per
   variant-sample combination and a SAMPLE_ID column. Default FALSE.
 
+- partition_by:
+
+  Optional character vector of columns to partition by (Hive-style).
+  Creates a directory structure like
+  `output_dir/SAMPLE_ID=HG00098/data_0.parquet`. Particularly useful
+  with `tidy_format = TRUE` to partition by SAMPLE_ID for efficient
+  per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
+  columns like SAMPLE_ID, enabling fast row group pruning.
+
 - con:
 
   Optional existing DuckDB connection (with extension loaded).
 
 ## Value
 
-Invisible path to output file
+Invisible path to output file/directory
 
 ## Examples
 
@@ -91,6 +101,18 @@ vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
 # Export in tidy format (one row per variant-sample)
 vcf_to_parquet_duckdb("cohort.vcf.gz", "cohort_tidy.parquet", ext_path,
   tidy_format = TRUE
+)
+
+# Tidy format with Hive partitioning by SAMPLE_ID (efficient per-sample queries)
+vcf_to_parquet_duckdb("cohort.vcf.gz", "cohort_partitioned/", ext_path,
+  tidy_format = TRUE,
+  partition_by = "SAMPLE_ID"
+)
+
+# Partition by both CHROM and SAMPLE_ID for large cohorts
+vcf_to_parquet_duckdb("wgs_cohort.vcf.gz", "wgs_partitioned/", ext_path,
+  tidy_format = TRUE,
+  partition_by = c("CHROM", "SAMPLE_ID")
 )
 
 # Parallel mode for whole-genome VCF (requires index)

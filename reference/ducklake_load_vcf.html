@@ -55,7 +55,8 @@ registers the Parquet file in a DuckLake catalog table.</p>
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  allow_evolution <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  partition_by <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -119,6 +120,14 @@ different annotations (e.g., VEP columns) or different samples (FORMAT_*_SampleN
 row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
 Ideal for cohort analysis and combining multiple single-sample VCFs.</p></dd>
 
+
+<dt id="arg-partition-by">partition_by<a class="anchor" aria-label="anchor" href="#arg-partition-by"></a></dt>
+<dd><p>Optional character vector of columns to partition by (Hive-style).
+Creates directory structure like <code>output_dir/SAMPLE_ID=HG00098/data_0.parquet</code>.
+Note: DuckLake registration currently requires single Parquet files; when using
+partition_by, the output_path should point to the partition directory and
+files should be registered separately.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -140,6 +149,11 @@ which preserves existing data files without rewriting.</p>
 When building cohort tables from multiple single-sample VCFs, use <code>tidy_format = TRUE</code>
 to get one row per variant-sample combination with a <code>SAMPLE_ID</code> column. This format
 is ideal for downstream analysis and MERGE/UPSERT operations on DuckLake tables.</p>
+<p><strong>Partitioning (<code>partition_by</code>):</strong>
+When using <code>partition_by</code>, the output is a Hive-partitioned directory structure.
+This is useful for large cohorts where you want efficient per-sample queries.
+DuckDB auto-generates Bloom filters for VARCHAR columns like SAMPLE_ID.
+Note: For DuckLake, partitioned output requires manual file registration.</p>
     </div>
 
     <div class="section level2">

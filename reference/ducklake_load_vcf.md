@@ -19,7 +19,8 @@ ducklake_load_vcf(
   columns = NULL,
   overwrite = FALSE,
   allow_evolution = FALSE,
-  tidy_format = FALSE
+  tidy_format = FALSE,
+  partition_by = NULL
 )
 ```
 
@@ -83,6 +84,15 @@ ducklake_load_vcf(
   variant-sample combination and a SAMPLE_ID column. Default FALSE.
   Ideal for cohort analysis and combining multiple single-sample VCFs.
 
+- partition_by:
+
+  Optional character vector of columns to partition by (Hive-style).
+  Creates directory structure like
+  `output_dir/SAMPLE_ID=HG00098/data_0.parquet`. Note: DuckLake
+  registration currently requires single Parquet files; when using
+  partition_by, the output_path should point to the partition directory
+  and files should be registered separately.
+
 ## Value
 
 Invisibly returns the path to the created Parquet file.
@@ -113,6 +123,12 @@ multiple single-sample VCFs, use `tidy_format = TRUE` to get one row per
 variant-sample combination with a `SAMPLE_ID` column. This format is
 ideal for downstream analysis and MERGE/UPSERT operations on DuckLake
 tables.
+
+**Partitioning (`partition_by`):** When using `partition_by`, the output
+is a Hive-partitioned directory structure. This is useful for large
+cohorts where you want efficient per-sample queries. DuckDB
+auto-generates Bloom filters for VARCHAR columns like SAMPLE_ID. Note:
+For DuckLake, partitioned output requires manual file registration.
 
 ## Examples
 

@@ -35,6 +35,29 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="new-vcf_open_duckdb-function-1-23-0-0-2-9000">New vcf_open_duckdb() function<a class="anchor" aria-label="anchor" href="#new-vcf_open_duckdb-function-1-23-0-0-2-9000"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/vcf_open_duckdb.html">vcf_open_duckdb()</a></code></strong>: Open VCF/BCF files as DuckDB tables or views
+<ul><li>In-memory or file-backed database support</li>
+<li>
+<strong>Lazy by default</strong>: <code>as_view = TRUE</code> (default) creates instant views that re-read VCF on each query</li>
+<li>
+<code>as_view = FALSE</code> materializes data to a table for fast repeated queries</li>
+<li>
+<code>tidy_format = TRUE</code> for one row per variant-sample with SAMPLE_ID column</li>
+<li>
+<code>columns</code> parameter for selecting specific columns</li>
+<li>
+<code>threads</code> parameter for parallel loading by chromosome (requires <code>as_view = FALSE</code>)</li>
+<li>
+<code>partition_by</code> for creating partitioned tables</li>
+<li>Returns a <code>vcf_duckdb</code> object with connection, table name, and metadata</li>
+<li>
+<code><a href="../reference/vcf_close_duckdb.html">vcf_close_duckdb()</a></code> for proper cleanup</li>
+<li>Print method shows connection details</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000">Native tidy_format in bcf_reader extension<a class="anchor" aria-label="anchor" href="#native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000"></a></h3>
 <ul><li>
 <strong>C-level <code>tidy_format</code> parameter</strong>: The DuckDB bcf_reader extension now supports native tidy format output directly at the C level, emitting one row per variant-sample combination with a <code>SAMPLE_ID</code> column
@@ -64,6 +87,24 @@
 <li>Removed <code>vcf_to_parquet_tidy_parallel()</code>
 </li>
 <li>Removed <code>build_tidy_sql()</code> helper</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="hive-style-partitioning-for-parquet-exports-1-23-0-0-2-9000">Hive-style partitioning for Parquet exports<a class="anchor" aria-label="anchor" href="#hive-style-partitioning-for-parquet-exports-1-23-0-0-2-9000"></a></h3>
+<ul><li>
+<strong>New <code>partition_by</code> parameter</strong> for efficient per-sample queries on large cohorts:
+<ul><li>
+<code>vcf_to_parquet_duckdb(..., partition_by = "SAMPLE_ID")</code> - create Hive-partitioned directory</li>
+<li>
+<code>vcf_to_parquet_duckdb_parallel(..., partition_by = "SAMPLE_ID")</code> - parallel partitioned export</li>
+<li>
+<code>ducklake_load_vcf(..., partition_by = "SAMPLE_ID")</code> - load partitioned VCF to DuckLake</li>
+<li>Creates directory structure like <code>output_dir/SAMPLE_ID=HG00098/data_0.parquet</code>
+</li>
+<li>DuckDB auto-generates Bloom filters for VARCHAR columns (SAMPLE_ID) for efficient row group pruning</li>
+<li>Supports multi-column partitioning, e.g. <code>partition_by = c("CHROM", "SAMPLE_ID")</code>
+</li>
+<li>Ideal for large cohort VCFs exported in tidy format</li>
 </ul></li>
 </ul></div>
 <div class="section level3">

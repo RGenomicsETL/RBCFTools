@@ -54,6 +54,7 @@ processes a different chromosome, then results are merged into a single Parquet 
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  partition_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,6 +95,13 @@ processes a different chromosome, then results are merged into a single Parquet 
 <dd><p>Logical, if TRUE exports data in tidy (long) format. Default FALSE.</p></dd>
 
 
+<dt id="arg-partition-by">partition_by<a class="anchor" aria-label="anchor" href="#arg-partition-by"></a></dt>
+<dd><p>Optional character vector of columns to partition by (Hive-style).
+Creates directory structure like <code>output_dir/SAMPLE_ID=HG00098/data_0.parquet</code>.
+Note: When using partition_by, each contig's data is partitioned separately then
+merged into the final partitioned output.</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
@@ -110,6 +118,10 @@ processes a different chromosome, then results are merged into a single Parquet 
 <li><p>Writes each contig to a temporary Parquet file</p></li>
 <li><p>Merges all temporary files into final output using DuckDB</p></li>
 </ol><p>Contigs that return no variants are skipped automatically.</p>
+<p>When <code>partition_by</code> is specified, the function creates a Hive-partitioned directory
+structure. This is especially useful with <code>tidy_format = TRUE</code> and
+<code>partition_by = "SAMPLE_ID"</code> for efficient per-sample queries on large cohorts.
+DuckDB auto-generates Bloom filters for VARCHAR columns like SAMPLE_ID.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -134,6 +146,11 @@ processes a different chromosome, then results are merged into a single Parquet 
 <span class="r-in"><span><span class="co"># Tidy format output</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb_parallel</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs_tidy.parquet"</span>, <span class="va">ext_path</span>,</span></span>
 <span class="r-in"><span>  threads <span class="op">=</span> <span class="fl">8</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Tidy format with Hive partitioning by SAMPLE_ID</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb_parallel</span><span class="op">(</span><span class="st">"wgs_cohort.vcf.gz"</span>, <span class="st">"wgs_partitioned/"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  threads <span class="op">=</span> <span class="fl">8</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span>, partition_by <span class="op">=</span> <span class="st">"SAMPLE_ID"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

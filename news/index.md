@@ -2,6 +2,27 @@
 
 ## RBCFTools 1.23-0.0.2.9000 (development version)
 
+### New vcf_open_duckdb() function
+
+- **[`vcf_open_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.md)**:
+  Open VCF/BCF files as DuckDB tables or views
+  - In-memory or file-backed database support
+  - **Lazy by default**: `as_view = TRUE` (default) creates instant
+    views that re-read VCF on each query
+  - `as_view = FALSE` materializes data to a table for fast repeated
+    queries
+  - `tidy_format = TRUE` for one row per variant-sample with SAMPLE_ID
+    column
+  - `columns` parameter for selecting specific columns
+  - `threads` parameter for parallel loading by chromosome (requires
+    `as_view = FALSE`)
+  - `partition_by` for creating partitioned tables
+  - Returns a `vcf_duckdb` object with connection, table name, and
+    metadata
+  - [`vcf_close_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_close_duckdb.md)
+    for proper cleanup
+  - Print method shows connection details
+
 ### Native tidy_format in bcf_reader extension
 
 - **C-level `tidy_format` parameter**: The DuckDB bcf_reader extension
@@ -29,6 +50,24 @@
   - Removed `vcf_to_parquet_tidy()`
   - Removed `vcf_to_parquet_tidy_parallel()`
   - Removed `build_tidy_sql()` helper
+
+### Hive-style partitioning for Parquet exports
+
+- **New `partition_by` parameter** for efficient per-sample queries on
+  large cohorts:
+  - `vcf_to_parquet_duckdb(..., partition_by = "SAMPLE_ID")` - create
+    Hive-partitioned directory
+  - `vcf_to_parquet_duckdb_parallel(..., partition_by = "SAMPLE_ID")` -
+    parallel partitioned export
+  - `ducklake_load_vcf(..., partition_by = "SAMPLE_ID")` - load
+    partitioned VCF to DuckLake
+  - Creates directory structure like
+    `output_dir/SAMPLE_ID=HG00098/data_0.parquet`
+  - DuckDB auto-generates Bloom filters for VARCHAR columns (SAMPLE_ID)
+    for efficient row group pruning
+  - Supports multi-column partitioning,
+    e.g. `partition_by = c("CHROM", "SAMPLE_ID")`
+  - Ideal for large cohort VCFs exported in tidy format
 
 ### DuckLake utilities
 

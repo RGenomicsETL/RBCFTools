@@ -49,6 +49,7 @@
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  partition_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -62,7 +63,7 @@
 
 
 <dt id="arg-output-file">output_file<a class="anchor" aria-label="anchor" href="#arg-output-file"></a></dt>
-<dd><p>Path to output Parquet file</p></dd>
+<dd><p>Path to output Parquet file or directory (when using partition_by)</p></dd>
 
 
 <dt id="arg-extension-path">extension_path<a class="anchor" aria-label="anchor" href="#arg-extension-path"></a></dt>
@@ -96,13 +97,21 @@ work across chromosomes/contigs. See <code><a href="vcf_to_parquet_duckdb_parall
 row per variant-sample combination and a SAMPLE_ID column. Default FALSE.</p></dd>
 
 
+<dt id="arg-partition-by">partition_by<a class="anchor" aria-label="anchor" href="#arg-partition-by"></a></dt>
+<dd><p>Optional character vector of columns to partition by (Hive-style).
+Creates a directory structure like <code>output_dir/SAMPLE_ID=HG00098/data_0.parquet</code>.
+Particularly useful with <code>tidy_format = TRUE</code> to partition by SAMPLE_ID for
+efficient per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
+columns like SAMPLE_ID, enabling fast row group pruning.</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisible path to output file</p>
+    <p>Invisible path to output file/directory</p>
     </div>
 
     <div class="section level2">
@@ -126,6 +135,18 @@ row per variant-sample combination and a SAMPLE_ID column. Default FALSE.</p></d
 <span class="r-in"><span><span class="co"># Export in tidy format (one row per variant-sample)</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="st">"cohort_tidy.parquet"</span>, <span class="va">ext_path</span>,</span></span>
 <span class="r-in"><span>  tidy_format <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Tidy format with Hive partitioning by SAMPLE_ID (efficient per-sample queries)</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="st">"cohort_partitioned/"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  tidy_format <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  partition_by <span class="op">=</span> <span class="st">"SAMPLE_ID"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Partition by both CHROM and SAMPLE_ID for large cohorts</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"wgs_cohort.vcf.gz"</span>, <span class="st">"wgs_partitioned/"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  tidy_format <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  partition_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"SAMPLE_ID"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Parallel mode for whole-genome VCF (requires index)</span></span></span>

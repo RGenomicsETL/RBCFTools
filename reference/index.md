@@ -105,6 +105,8 @@
   : Get htslib Version
 - [`linking_info()`](https://rgenomicsetl.github.io/RBCFTools/reference/linking_info.md)
   : Get All Linking Information for RBCFTools
+- [`print(`*`<vcf_duckdb>`*`)`](https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.md)
+  : Print method for vcf_duckdb objects
 - [`print_makevars_config()`](https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.md)
   : Print Makevars Configuration for LinkingTo
 - [`ref_cache_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.md)
@@ -115,6 +117,8 @@
   : Get Path to tabix Executable
 - [`vcf_arrow_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_arrow_schema.md)
   : Get the Arrow schema for a VCF file
+- [`vcf_close_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_close_duckdb.md)
+  : Close a VCF DuckDB connection
 - [`vcf_count_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_duckdb.md)
   : Count variants in a VCF/BCF file
 - [`vcf_count_per_contig()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_count_per_contig.md)
@@ -133,6 +137,8 @@
   : Check if VCF/BCF file has an index
 - [`vcf_open_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.md)
   : Create an Arrow stream from a VCF/BCF file
+- [`vcf_open_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.md)
+  : Open a VCF/BCF file as a DuckDB table or view
 - [`vcf_query_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_arrow.md)
   : Query VCF/BCF with DuckDB
 - [`vcf_query_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_duckdb.md)
