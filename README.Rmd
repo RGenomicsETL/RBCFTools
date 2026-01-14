@@ -485,7 +485,8 @@ DBI::dbGetQuery(con, "
   FROM variants
 ")
 
-DBI::dbGetQuery(con, "DESCRIBE variants")
+DBI::dbGetQuery(con, "DESCRIBE variants") |>
+  head(20)
 ```
 
 ```{r ducklake-files, eval=TRUE}
