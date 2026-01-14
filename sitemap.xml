@@ -18,6 +18,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_tools.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bcftools_version.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/bgzip_path.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/build_tidy_sql.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_attach.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_connect_catalog.html</loc></url>
@@ -67,6 +68,7 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_duckdb_connect.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contig_lengths.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_contigs.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_get_sample_names.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_has_index.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_arrow.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_query_arrow.html</loc></url>
@@ -81,6 +83,8 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_duckdb_parallel.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel_arrow.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_tidy.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_tidy_parallel.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_detect_tag.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_get_schema.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/vep_has_annotation.html</loc></url>

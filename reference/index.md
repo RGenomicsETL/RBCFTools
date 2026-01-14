@@ -157,6 +157,8 @@
   : Parallel VCF to Parquet conversion using DuckDB
 - [`vcf_to_parquet_parallel_arrow()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel_arrow.md)
   : Parallel VCF to Parquet conversion
+- [`vcf_to_parquet_tidy()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_tidy.md)
+  : Export VCF/BCF to tidy (long) Parquet format
 - [`vep_detect_tag()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_detect_tag.md)
   : Detect VEP annotation tag in VCF file
 - [`vep_get_schema()`](https://rgenomicsetl.github.io/RBCFTools/reference/vep_get_schema.md)

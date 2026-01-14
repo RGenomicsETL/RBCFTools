@@ -35,6 +35,17 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
 <div class="section level3">
+<h3 id="tidy-vcf-export-1-23-0-0-2-9000">Tidy VCF export<a class="anchor" aria-label="anchor" href="#tidy-vcf-export-1-23-0-0-2-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/vcf_to_parquet_tidy.html">vcf_to_parquet_tidy()</a></code>: Export VCF/BCF to tidy (long) format Parquet where each row is one variant-sample combination
+<ul><li>Adds <code>SAMPLE_ID</code> column and transforms <code>FORMAT_&lt;field&gt;_&lt;sample&gt;</code> to <code>FORMAT_&lt;field&gt;</code>
+</li>
+<li>Supports single-sample (simple rename) and multi-sample (unnest-based unpivot) VCFs</li>
+<li>Compatible with <code>threads</code> parameter for parallel processing</li>
+<li>Ideal for combining multiple single-sample VCFs or appending to DuckLake tables</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="ducklake-utilities-1-23-0-0-2-9000">DuckLake utilities<a class="anchor" aria-label="anchor" href="#ducklake-utilities-1-23-0-0-2-9000"></a></h3>
 <ul><li>
 <code>allow_evolution</code> parameter for <code><a href="../reference/ducklake_load_vcf.html">ducklake_load_vcf()</a></code> and <code><a href="../reference/ducklake_register_parquet.html">ducklake_register_parquet()</a></code> to auto-add new columns via ALTER TABLE</li>
