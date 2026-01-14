@@ -330,25 +330,34 @@ bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Use installed MinIO and MC binaries
-minio_bin <- "/root/go/bin/minio"
-mc_bin <- "/root/go/bin/mc"
+minio_bin <- Sys.which('minio')
+mc_bin <- Sys.which('mc')
 
 # Start MinIO (ephemeral) and configure mc
 data_dir <- file.path(tempdir(), "ducklake_minio")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-port <- sample(19000:19999, 1)
+port <- 9000
 endpoint <- sprintf("127.0.0.1:%d", port)
 
 # Start MinIO server
-cmd <- paste(minio_bin, "server", data_dir, "--address", endpoint)
-system(paste0(cmd, " &"))
-
+cmd <- sprintf(
+  "%s server %s --address %s > /dev/null 2>&1 & echo $!",
+  shQuote(minio_bin),
+  shQuote(data_dir),
+  endpoint
+)
+pid_output <- system(cmd, intern = TRUE)
+pid <- as.integer(pid_output)
+pid
 # Give MinIO time to start
-Sys.sleep(5)
+Sys.sleep(10)
 
 # Configure mc alias
+# remove previous alias
+system(sprintf("%s alias remove ducklake_local 2>/dev/null", mc_bin), 
+       ignore.stdout = TRUE, ignore.stderr = TRUE)
 mc_cmd <- paste0(mc_bin, " alias set ducklake_local http://", endpoint, " minioadmin minioadmin")
-system(mc_cmd)
+system(mc_cmd, intern=TRUE)
 
 # Create bucket with unique name
 bucket <- sprintf("readme-demo-%d", as.integer(Sys.time()))
@@ -437,13 +446,8 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 ```{r ducklake-files, eval=TRUE}
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
-```
-
-```{r ducklake-cleanup, eval=TRUE}
 DBI::dbDisconnect(con, shutdown = TRUE)
-
-# Clean up MinIO server
-system(sprintf("pkill -f 'minio server %s'", endpoint))
+tools::pskill(pid)
 ```
 
 ### Supported Metadata Databases
