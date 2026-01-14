@@ -472,19 +472,17 @@ print(variant_counts)
 variants_schema <- DBI::dbGetQuery(con, "DESCRIBE variants")
 variants_vep_schema <- DBI::dbGetQuery(con, "DESCRIBE variants_vep")
 
-cat("Variants table columns:\n")
-print(variants_schema$column_name)
-cat("\nVEP Variants table columns:\n")
-print(variants_vep_schema$column_name)
+variants_schema$column_name
+
+variants_vep_schema$column_name
 ```
 
 ```{r ducklake-files, eval=TRUE}
 # List physical files managed by DuckLake for both tables
-cat("Files for 'variants' table:\n")
-print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')"))
 
-cat("\nFiles for 'variants_vep' table:\n")
-print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants_vep')"))
+DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
+
+DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants_vep')")
 
 DBI::dbDisconnect(con, shutdown = TRUE)
 tools::pskill(pid)
