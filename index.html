@@ -168,7 +168,6 @@
 <span><span class="va">s3_vcf_uri</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">s3_vcf_file</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use processx instead of system2</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"processx"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"processx required"</span><span class="op">)</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"index"</span>, <span class="st">"-n"</span>, <span class="va">s3_vcf_uri</span><span class="op">)</span>,</span>
@@ -340,7 +339,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpN1237M/file3d89271643a030.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -359,12 +358,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpN1237M/file3d89271643a030.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmp8Sg4Jj/file3d96095425ae44.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -440,7 +439,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpN1237M/file3d892779d16d3e.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmp8Sg4Jj/file3d960963424a87.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -618,6 +617,7 @@
 <p>We start by seting up and configuring a <code>minio</code> server</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># DuckLake with S3-compatible storage using local MinIO</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"processx"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"processx required"</span><span class="op">)</span></span>
 <span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">bin_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -631,32 +631,69 @@
 <span><span class="va">port</span> <span class="op">&lt;-</span> <span class="fl">9000</span></span>
 <span><span class="va">endpoint</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"127.0.0.1:%d"</span>, <span class="va">port</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Start MinIO server</span></span>
+<span><span class="co"># Start MinIO server in background</span></span>
 <span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>  <span class="st">"%s server %s --address %s &gt; /dev/null 2&gt;&amp;1 &amp; echo $!"</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/shQuote.html" class="external-link">shQuote</a></span><span class="op">(</span><span class="va">minio_bin</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/shQuote.html" class="external-link">shQuote</a></span><span class="op">(</span><span class="va">data_dir</span><span class="op">)</span>,</span>
 <span>  <span class="va">endpoint</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">pid_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="va">cmd</span>, intern <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">pid_output</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="st">"sh"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-c"</span>, <span class="va">cmd</span><span class="op">)</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">stdout</span></span>
 <span><span class="va">pid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pid_output</span><span class="op">)</span></span>
 <span><span class="va">pid</span></span>
-<span><span class="co">#&gt; [1] 4033078</span></span>
+<span><span class="co">#&gt; [1] 4036362</span></span>
 <span><span class="co"># Give MinIO time to start</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Configure mc alias</span></span>
 <span><span class="co"># remove previous alias</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s alias remove ducklake_local 2&gt;/dev/null"</span>, <span class="va">mc_bin</span><span class="op">)</span>, </span>
-<span>       ignore.stdout <span class="op">=</span> <span class="cn">TRUE</span>, ignore.stderr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">mc_cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="st">" alias set ducklake_local http://"</span>, <span class="va">endpoint</span>, <span class="st">" minioadmin minioadmin"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="va">mc_cmd</span>, intern<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Added `ducklake_local` successfully."</span></span>
+<span><span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span></span>
+<span>  <span class="va">mc_bin</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"alias"</span>, <span class="st">"remove"</span>, <span class="st">"ducklake_local"</span><span class="op">)</span>,</span>
+<span>  error_on_status <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  echo <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; $status</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stdout</span></span>
+<span><span class="co">#&gt; [1] "Removed `ducklake_local` successfully.\n"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stderr</span></span>
+<span><span class="co">#&gt; [1] ""</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $timeout</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span><span class="va">mc_cmd_args</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"alias"</span>, <span class="st">"set"</span>, <span class="st">"ducklake_local"</span>, </span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"http://"</span>, <span class="va">endpoint</span><span class="op">)</span>, <span class="st">"minioadmin"</span>, <span class="st">"minioadmin"</span><span class="op">)</span></span>
+<span><span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="va">mc_cmd_args</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $status</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stdout</span></span>
+<span><span class="co">#&gt; [1] "Added `ducklake_local` successfully.\n"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stderr</span></span>
+<span><span class="co">#&gt; [1] ""</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $timeout</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
 <span></span>
 <span><span class="co"># Create bucket with unique name</span></span>
 <span><span class="va">bucket</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"readme-demo-%d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">bucket_cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s mb ducklake_local/%s"</span>, <span class="va">mc_bin</span>, <span class="va">bucket</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="va">bucket_cmd</span><span class="op">)</span></span>
+<span><span class="va">bucket_cmd_args</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mb"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ducklake_local/"</span>, <span class="va">bucket</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="va">bucket_cmd_args</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $status</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stdout</span></span>
+<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768411323`.\n"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stderr</span></span>
+<span><span class="co">#&gt; [1] ""</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $timeout</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
 <span></span>
 <span><span class="co"># Store variables for later use</span></span>
 <span><span class="va">minio_endpoint</span> <span class="op">&lt;-</span> <span class="va">endpoint</span></span>
@@ -731,10 +768,10 @@
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span><span class="co">#&gt;   Build directory: /tmp/RtmpN1237M</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/Rtmp8Sg4Jj</span></span>
 <span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span><span class="co">#&gt; Extension built: /tmp/RtmpN1237M/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/Rtmp8Sg4Jj/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
@@ -742,7 +779,7 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpN1237M/variants_20260114_181538.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmp8Sg4Jj/variants_20260114_182204.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
@@ -760,7 +797,7 @@
 <code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for this table</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                              data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768410938/data/main/variants/ducklake-019bbd81-80c0-7cfa-9c6c-0bbbdb0a5fbf.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768411323/data/main/variants/ducklake-019bbd87-61fe-7c5a-abef-0d9b7d26de66.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
@@ -768,7 +805,9 @@
 <span><span class="co">#&gt;   delete_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1                       NULL</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/pskill.html" class="external-link">pskill</a></span><span class="op">(</span><span class="va">pid</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists</a></span><span class="op">(</span><span class="st">"pid"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric</a></span><span class="op">(</span><span class="va">pid</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/pskill.html" class="external-link">pskill</a></span><span class="op">(</span><span class="va">pid</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="supported-metadata-databases">Supported Metadata Databases<a class="anchor" aria-label="anchor" href="#supported-metadata-databases"></a>
@@ -864,7 +903,7 @@
 <span id="cb24-21"><a href="#cb24-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb24-22"><a href="#cb24-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
 <span id="cb24-23"><a href="#cb24-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb24-24"><a href="#cb24-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.f0Nbx2hJw7.parquet </span></span>
+<span id="cb24-24"><a href="#cb24-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.BUfnEdjh3J.parquet </span></span>
 <span id="cb24-25"><a href="#cb24-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb24-26"><a href="#cb24-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb24-27"><a href="#cb24-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
@@ -875,7 +914,7 @@
 <span id="cb24-32"><a href="#cb24-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
 <span id="cb24-33"><a href="#cb24-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
 <span id="cb24-34"><a href="#cb24-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb24-35"><a href="#cb24-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.f0Nbx2hJw7.parquet</span></span>
+<span id="cb24-35"><a href="#cb24-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.BUfnEdjh3J.parquet</span></span>
 <span id="cb24-36"><a href="#cb24-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb24-37"><a href="#cb24-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
 <span id="cb24-38"><a href="#cb24-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.13 seconds</span></span>
@@ -919,7 +958,7 @@
 <span id="cb24-76"><a href="#cb24-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb24-77"><a href="#cb24-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb24-78"><a href="#cb24-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb24-79"><a href="#cb24-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.f0Nbx2hJw7.parquet </span></span>
+<span id="cb24-79"><a href="#cb24-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.BUfnEdjh3J.parquet </span></span>
 <span id="cb24-80"><a href="#cb24-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb24-81"><a href="#cb24-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
 <span id="cb24-82"><a href="#cb24-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
