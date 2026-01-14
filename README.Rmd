@@ -110,8 +110,7 @@ res <- processx::run(
   error_on_status = FALSE,
   echo = FALSE
 )
-result <- strsplit(res$stdout, "\n")[[1]]
-length(result[result != ""])
+res$stdou
 ```
 
 ##  VCF to Arrow Streams and Duckdb `bcf_reader` extension
