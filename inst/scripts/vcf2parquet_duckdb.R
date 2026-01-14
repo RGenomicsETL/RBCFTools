@@ -33,6 +33,8 @@ CONVERT OPTIONS:
   -c, --compression  Compression: snappy, gzip, zstd, none (default: zstd)
   -r, --region     Region to extract (e.g., chr1:1000-2000, requires index)
   -t, --threads    Number of parallel threads (default: 1, requires indexed file)
+  --tidy           Output tidy (long) format with SAMPLE_ID column
+                   Each row becomes one variant-sample combination
   --columns        Comma-separated column names to include (default: all)
   --row-group-size  Rows per row group (default: 100000)
   --build-dir      Directory to build extension (default: tempdir)
@@ -59,28 +61,31 @@ INFO OPTIONS:
 EXAMPLES:
   # Convert VCF to Parquet
   vcf2parquet_duckdb.R convert -i variants.vcf.gz -o variants.parquet
-  
+
   # Convert with zstd compression
   vcf2parquet_duckdb.R convert -i variants.vcf.gz -o variants.parquet -c zstd
-  
+
   # Convert using 8 parallel threads (requires indexed file)
   vcf2parquet_duckdb.R convert -i variants.vcf.gz -o variants.parquet -t 8
-  
+
   # Convert region only
   vcf2parquet_duckdb.R convert -i variants.vcf.gz -o chr1.parquet -r chr1:1-1000000
-  
+
   # Convert specific columns only
   vcf2parquet_duckdb.R convert -i variants.vcf.gz -o slim.parquet --columns CHROM,POS,REF,ALT
-  
+
+  # Convert to tidy format (one row per variant-sample)
+  vcf2parquet_duckdb.R convert -i cohort.vcf.gz -o cohort_tidy.parquet --tidy
+
   # Show VCF schema
   vcf2parquet_duckdb.R schema -i variants.vcf.gz
-  
+
   # Query VCF file directly with SQL
   vcf2parquet_duckdb.R query -i variants.vcf.gz -q \"SELECT CHROM, COUNT(*) as n FROM bcf_read('{file}') GROUP BY CHROM\"
-  
+
   # Query with region filter
   vcf2parquet_duckdb.R query -i variants.vcf.gz -r chr22 -q \"SELECT * FROM bcf_read('{file}', region := '{region}') LIMIT 10\"
-  
+
   # Query Parquet file
   vcf2parquet_duckdb.R query -i variants.parquet -q \"SELECT CHROM, POS FROM parquet_scan('variants.parquet') WHERE CHROM='chr1'\"
 
@@ -147,6 +152,9 @@ parse_args <- function(args) {
       i <- i + 2
     } else if (arg == "--quiet") {
       opts$quiet <- TRUE
+      i <- i + 1
+    } else if (arg == "--tidy") {
+      opts$tidy <- TRUE
       i <- i + 1
     } else {
       cat("Unknown option:", arg, "\n")
@@ -223,12 +231,17 @@ cmd_convert <- function(opts) {
     threads <- 1L
   }
 
+  tidy_mode <- !is.null(opts$tidy) && opts$tidy
+
   cat("Converting VCF to Parquet (DuckDB mode)...\n")
   cat("  Input:", opts$input, "\n")
   cat("  Output:", opts$output, "\n")
   cat("  Compression:", opts$compression, "\n")
   cat("  Row group size:", opts$row_group_size, "\n")
   cat("  Threads:", threads, "\n")
+  if (tidy_mode) {
+    cat("  Format: tidy (one row per variant-sample)\n")
+  }
   if (!is.null(opts$region)) {
     cat("  Region:", opts$region, "\n")
   }
@@ -240,16 +253,29 @@ cmd_convert <- function(opts) {
 
   tryCatch(
     {
-      vcf_to_parquet_duckdb(
-        input_file = opts$input,
-        output_file = opts$output,
-        extension_path = ext_path,
-        columns = opts$columns,
-        region = opts$region,
-        compression = opts$compression,
-        row_group_size = opts$row_group_size,
-        threads = threads
-      )
+      if (tidy_mode) {
+        vcf_to_parquet_tidy(
+          input_file = opts$input,
+          output_file = opts$output,
+          extension_path = ext_path,
+          columns = opts$columns,
+          region = opts$region,
+          compression = opts$compression,
+          row_group_size = opts$row_group_size,
+          threads = threads
+        )
+      } else {
+        vcf_to_parquet_duckdb(
+          input_file = opts$input,
+          output_file = opts$output,
+          extension_path = ext_path,
+          columns = opts$columns,
+          region = opts$region,
+          compression = opts$compression,
+          row_group_size = opts$row_group_size,
+          threads = threads
+        )
+      }
 
       elapsed <- as.numeric(difftime(
         Sys.time(),
