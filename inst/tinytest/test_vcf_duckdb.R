@@ -849,6 +849,276 @@ if (file.exists(sites_only_vcf) && nzchar(sites_only_vcf)) {
 }
 
 # =============================================================================
+# Test partition_by parameter in vcf_to_parquet_duckdb
+# =============================================================================
+
+# Test tidy format with Hive partitioning by SAMPLE_ID
+partition_out_dir <- tempfile()
+
+expect_message(
+  vcf_to_parquet_duckdb(
+    test_vcf,
+    partition_out_dir,
+    extension_path = ext_path,
+    tidy_format = TRUE,
+    partition_by = "SAMPLE_ID"
+  ),
+  pattern = "Wrote:",
+  info = "vcf_to_parquet_duckdb with partition_by should write output"
+)
+
+expect_true(
+  dir.exists(partition_out_dir),
+  info = "Partitioned output should be a directory"
+)
+
+# Check for Hive-style partition directories
+partition_dirs <- list.dirs(partition_out_dir, recursive = FALSE)
+expect_true(
+  length(partition_dirs) == 3,
+  info = "Should have 3 partition directories (one per sample)"
+)
+
+# Partition dirs should be named SAMPLE_ID=<sample_name>
+expect_true(
+  all(grepl("^SAMPLE_ID=", basename(partition_dirs))),
+  info = "Partition directories should be named SAMPLE_ID=<value>"
+)
+
+# Check that parquet files exist inside partitions
+partition_files <- list.files(
+  partition_out_dir,
+  pattern = "\\.parquet$",
+  recursive = TRUE
+)
+expect_true(
+  length(partition_files) >= 3,
+  info = "Should have parquet files in partition directories"
+)
+
+# Read the partitioned data using DuckDB with hive_partitioning
+verify_partition_con <- DBI::dbConnect(duckdb::duckdb())
+partition_data <- DBI::dbGetQuery(
+  verify_partition_con,
+  sprintf(
+    "SELECT * FROM read_parquet('%s/**/*.parquet', hive_partitioning=true) LIMIT 100",
+    partition_out_dir
+  )
+)
+
+expect_true(
+  "SAMPLE_ID" %in% names(partition_data),
+  info = "Partitioned data should have SAMPLE_ID column from Hive partitioning"
+)
+
+# Verify total row count is correct
+partition_count <- DBI::dbGetQuery(
+  verify_partition_con,
+  sprintf(
+    "SELECT COUNT(*) as n FROM read_parquet('%s/**/*.parquet', hive_partitioning=true)",
+    partition_out_dir
+  )
+)$n[1]
+
+expect_equal(
+  partition_count,
+  orig_count * 3L, # 11 variants x 3 samples
+  info = "Partitioned data should have correct total row count"
+)
+
+# Test that filtering by SAMPLE_ID works efficiently
+single_sample_count <- DBI::dbGetQuery(
+  verify_partition_con,
+  sprintf(
+    "SELECT COUNT(*) as n FROM read_parquet('%s/**/*.parquet', hive_partitioning=true) WHERE SAMPLE_ID = 'HG00098'",
+    partition_out_dir
+  )
+)$n[1]
+
+expect_equal(
+  single_sample_count,
+  orig_count, # 11 variants for one sample
+  info = "Filtering by SAMPLE_ID should return correct count"
+)
+
+DBI::dbDisconnect(verify_partition_con, shutdown = TRUE)
+unlink(partition_out_dir, recursive = TRUE)
+
+# =============================================================================
+# Test vcf_open_duckdb
+# =============================================================================
+
+# Test basic view creation (default)
+vcf_obj <- vcf_open_duckdb(test_vcf, ext_path, table_name = "test_variants")
+
+expect_true(
+  inherits(vcf_obj, "vcf_duckdb"),
+  info = "vcf_open_duckdb should return vcf_duckdb object"
+)
+expect_equal(
+  vcf_obj$table,
+  "test_variants",
+  info = "Table name should match"
+)
+expect_true(
+  vcf_obj$is_view,
+  info = "Default should create view (lazy)"
+)
+expect_null(
+  vcf_obj$row_count,
+  info = "Views should not have row_count"
+)
+
+# Query the view
+query_result <- DBI::dbGetQuery(vcf_obj$con, "SELECT COUNT(*) as n FROM test_variants")
+expect_equal(
+  query_result$n[1],
+  11L,
+  info = "Query should return correct count"
+)
+
+vcf_close_duckdb(vcf_obj)
+
+# Test table creation (as_view = FALSE)
+vcf_table <- vcf_open_duckdb(test_vcf, ext_path, as_view = FALSE, table_name = "table_variants")
+
+expect_false(
+  vcf_table$is_view,
+  info = "as_view = FALSE should create table"
+)
+expect_equal(
+  vcf_table$row_count,
+  11L,
+  info = "Tables should have row_count"
+)
+
+# Query the table
+table_result <- DBI::dbGetQuery(vcf_table$con, "SELECT CHROM, POS FROM table_variants LIMIT 3")
+expect_equal(
+  nrow(table_result),
+  3L,
+  info = "Table query should return results"
+)
+
+vcf_close_duckdb(vcf_table)
+
+# Test tidy format as view (default)
+vcf_tidy <- vcf_open_duckdb(test_vcf, ext_path, tidy_format = TRUE, table_name = "tidy_variants")
+
+expect_true(
+  vcf_tidy$tidy_format,
+  info = "tidy_format should be TRUE"
+)
+expect_true(
+  vcf_tidy$is_view,
+  info = "Default tidy format should create view"
+)
+expect_null(
+  vcf_tidy$row_count,
+  info = "Views should not have row_count"
+)
+
+# Verify tidy format works via query
+tidy_count <- DBI::dbGetQuery(vcf_tidy$con, "SELECT COUNT(*) as n FROM tidy_variants")
+expect_equal(
+  tidy_count$n[1],
+  33L, # 11 variants * 3 samples
+  info = "Tidy format should have variants * samples rows"
+)
+
+tidy_result <- DBI::dbGetQuery(vcf_tidy$con, "SELECT DISTINCT SAMPLE_ID FROM tidy_variants")
+expect_equal(
+  nrow(tidy_result),
+  3L,
+  info = "Tidy format should have 3 distinct samples"
+)
+
+vcf_close_duckdb(vcf_tidy)
+
+# Test column selection
+vcf_cols <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
+  columns = c("CHROM", "POS", "REF", "ALT"),
+  table_name = "slim_variants"
+)
+
+cols_result <- DBI::dbGetQuery(vcf_cols$con, "SELECT * FROM slim_variants LIMIT 1")
+expect_true(
+  all(c("CHROM", "POS", "REF", "ALT") %in% names(cols_result)),
+  info = "Selected columns should be present"
+)
+expect_false(
+  "INFO_DP" %in% names(cols_result),
+  info = "Non-selected columns should not be present"
+)
+
+vcf_close_duckdb(vcf_cols)
+
+# Test file-backed database
+db_path <- tempfile(fileext = ".duckdb")
+vcf_file_db <- vcf_open_duckdb(test_vcf, ext_path, dbdir = db_path, table_name = "persisted")
+
+expect_equal(
+  vcf_file_db$dbdir,
+  db_path,
+  info = "dbdir should match"
+)
+vcf_close_duckdb(vcf_file_db)
+
+expect_true(
+  file.exists(db_path),
+  info = "Database file should exist after close"
+)
+
+# Reopen and verify data persisted
+reopen_con <- vcf_duckdb_connect(ext_path, dbdir = db_path, read_only = TRUE)
+reopen_result <- DBI::dbGetQuery(reopen_con, "SELECT COUNT(*) as n FROM persisted")
+expect_equal(
+  reopen_result$n[1],
+  11L,
+  info = "Data should persist in file-backed database"
+)
+DBI::dbDisconnect(reopen_con, shutdown = TRUE)
+unlink(db_path)
+
+# Test overwrite functionality with file-backed database (requires as_view = FALSE to persist)
+overwrite_db <- tempfile(fileext = ".duckdb")
+vcf_first <- vcf_open_duckdb(test_vcf, ext_path, table_name = "overwrite_test", dbdir = overwrite_db, as_view = FALSE)
+vcf_close_duckdb(vcf_first)
+
+# Reopen same database - table should exist, can't create again without overwrite
+vcf_reopen <- vcf_duckdb_connect(ext_path, dbdir = overwrite_db)
+table_exists <- DBI::dbExistsTable(vcf_reopen, "overwrite_test")
+expect_true(
+  table_exists,
+  info = "Table should exist after first creation"
+)
+DBI::dbDisconnect(vcf_reopen, shutdown = TRUE)
+
+# Test that overwrite = TRUE works
+vcf_overwritten <- vcf_open_duckdb(test_vcf, ext_path,
+  table_name = "overwrite_test",
+  dbdir = overwrite_db,
+  as_view = FALSE,
+  overwrite = TRUE
+)
+expect_equal(
+  vcf_overwritten$row_count,
+  11L,
+  info = "Overwritten table should have correct row count"
+)
+vcf_close_duckdb(vcf_overwritten)
+unlink(overwrite_db)
+
+# Test print method
+vcf_print <- vcf_open_duckdb(test_vcf, ext_path)
+expect_silent(
+  capture.output(print(vcf_print))
+)
+vcf_close_duckdb(vcf_print)
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 

@@ -13,6 +13,7 @@ vcf_to_parquet_duckdb_parallel(
   row_group_size = 100000L,
   columns = NULL,
   tidy_format = FALSE,
+  partition_by = NULL,
   con = NULL
 )
 }
@@ -32,6 +33,11 @@ vcf_to_parquet_duckdb_parallel(
 \item{columns}{Optional character vector of columns to include}
 
 \item{tidy_format}{Logical, if TRUE exports data in tidy (long) format. Default FALSE.}
+
+\item{partition_by}{Optional character vector of columns to partition by (Hive-style).
+Creates directory structure like \code{output_dir/SAMPLE_ID=HG00098/data_0.parquet}.
+Note: When using partition_by, each contig's data is partitioned separately then
+merged into the final partitioned output.}
 
 \item{con}{Optional existing DuckDB connection (with extension loaded).}
 }
@@ -54,6 +60,11 @@ This function:
 }
 
 Contigs that return no variants are skipped automatically.
+
+When \code{partition_by} is specified, the function creates a Hive-partitioned directory
+structure. This is especially useful with \code{tidy_format = TRUE} and
+\code{partition_by = "SAMPLE_ID"} for efficient per-sample queries on large cohorts.
+DuckDB auto-generates Bloom filters for VARCHAR columns like SAMPLE_ID.
 }
 \examples{
 \dontrun{
@@ -72,6 +83,11 @@ vcf_to_parquet_duckdb_parallel(
 # Tidy format output
 vcf_to_parquet_duckdb_parallel("wgs.vcf.gz", "wgs_tidy.parquet", ext_path,
   threads = 8, tidy_format = TRUE
+)
+
+# Tidy format with Hive partitioning by SAMPLE_ID
+vcf_to_parquet_duckdb_parallel("wgs_cohort.vcf.gz", "wgs_partitioned/", ext_path,
+  threads = 8, tidy_format = TRUE, partition_by = "SAMPLE_ID"
 )
 }
 

@@ -919,6 +919,11 @@ ducklake_register_parquet <- function(
 #' @param tidy_format Logical, if TRUE exports data in tidy (long) format with one
 #'   row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
 #'   Ideal for cohort analysis and combining multiple single-sample VCFs.
+#' @param partition_by Optional character vector of columns to partition by (Hive-style).
+#'   Creates directory structure like `output_dir/SAMPLE_ID=HG00098/data_0.parquet`.
+#'   Note: DuckLake registration currently requires single Parquet files; when using
+#'   partition_by, the output_path should point to the partition directory and
+#'   files should be registered separately.
 #'
 #' @return Invisibly returns the path to the created Parquet file.
 #' @export
@@ -942,6 +947,12 @@ ducklake_register_parquet <- function(
 #' When building cohort tables from multiple single-sample VCFs, use `tidy_format = TRUE`
 #' to get one row per variant-sample combination with a `SAMPLE_ID` column. This format
 #' is ideal for downstream analysis and MERGE/UPSERT operations on DuckLake tables.
+#'
+#' **Partitioning (`partition_by`):**
+#' When using `partition_by`, the output is a Hive-partitioned directory structure.
+#' This is useful for large cohorts where you want efficient per-sample queries.
+#' DuckDB auto-generates Bloom filters for VARCHAR columns like SAMPLE_ID.
+#' Note: For DuckLake, partitioned output requires manual file registration.
 #'
 #' @examples
 #' \dontrun{
@@ -983,7 +994,8 @@ ducklake_load_vcf <- function(
   columns = NULL,
   overwrite = FALSE,
   allow_evolution = FALSE,
-  tidy_format = FALSE
+  tidy_format = FALSE,
+  partition_by = NULL
 ) {
   if (missing(con) || is.null(con)) {
     stop("con must be provided", call. = FALSE)
@@ -1034,11 +1046,20 @@ ducklake_load_vcf <- function(
   # Determine output path
   if (is.null(output_path)) {
     # Generate a unique filename based on table name and timestamp
-    output_file <- sprintf(
-      "%s_%s.parquet",
-      gsub("\\.", "_", table),
-      format(Sys.time(), "%Y%m%d_%H%M%S")
-    )
+    if (!is.null(partition_by)) {
+      # For partitioned output, use a directory
+      output_file <- sprintf(
+        "%s_%s/",
+        gsub("\\.", "_", table),
+        format(Sys.time(), "%Y%m%d_%H%M%S")
+      )
+    } else {
+      output_file <- sprintf(
+        "%s_%s.parquet",
+        gsub("\\.", "_", table),
+        format(Sys.time(), "%Y%m%d_%H%M%S")
+      )
+    }
     output_path <- file.path(tempdir(), output_file)
     temp_output <- TRUE
   } else {
@@ -1055,8 +1076,24 @@ ducklake_load_vcf <- function(
     compression = compression,
     row_group_size = row_group_size,
     threads = threads,
-    tidy_format = tidy_format
+    tidy_format = tidy_format,
+    partition_by = partition_by
   )
+
+  # Construct read path: for partitioned output, use glob pattern
+  if (!is.null(partition_by)) {
+    read_path <- paste0(output_path, "**/*.parquet")
+    # Use hive_partitioning=true to include partition columns in the result
+    read_parquet_call <- sprintf(
+      "read_parquet(%s, hive_partitioning=true)",
+      DBI::dbQuoteString(con, read_path)
+    )
+  } else {
+    read_parquet_call <- sprintf(
+      "read_parquet(%s)",
+      DBI::dbQuoteString(con, output_path)
+    )
+  }
 
   # Insert into DuckLake table
   table_exists <- tryCatch(
@@ -1082,7 +1119,7 @@ ducklake_load_vcf <- function(
       )$column_name
       file_schema <- DBI::dbGetQuery(
         con,
-        sprintf("DESCRIBE SELECT * FROM read_parquet(%s)", DBI::dbQuoteString(con, output_path))
+        sprintf("DESCRIBE SELECT * FROM %s", read_parquet_call)
       )
       new_cols <- file_schema[!file_schema$column_name %in% existing_cols, ]
       if (nrow(new_cols) > 0) {
@@ -1095,23 +1132,28 @@ ducklake_load_vcf <- function(
     }
 
     insert_sql <- sprintf(
-      "INSERT INTO %s SELECT * FROM read_parquet(%s)",
+      "INSERT INTO %s SELECT * FROM %s",
       quoted_table,
-      DBI::dbQuoteString(con, output_path)
+      read_parquet_call
     )
     DBI::dbExecute(con, insert_sql)
   } else {
     create_sql <- sprintf(
-      "CREATE TABLE %s AS SELECT * FROM read_parquet(%s)",
+      "CREATE TABLE %s AS SELECT * FROM %s",
       quoted_table,
-      DBI::dbQuoteString(con, output_path)
+      read_parquet_call
     )
     DBI::dbExecute(con, create_sql)
   }
 
-  # Clean up temp file
-  if (temp_output && file.exists(output_path)) {
-    unlink(output_path)
+  # Clean up temp files
+  if (temp_output) {
+    if (!is.null(partition_by)) {
+      # Remove partition directory
+      unlink(output_path, recursive = TRUE)
+    } else if (file.exists(output_path)) {
+      unlink(output_path)
+    }
   }
 
   invisible(output_path)

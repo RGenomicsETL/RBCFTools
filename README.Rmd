@@ -259,6 +259,54 @@ DBI::dbGetQuery(con, sprintf("
 DBI::dbDisconnect(con)
 ```
 
+### Open VCF as DuckDB Table/View
+
+The `vcf_open_duckdb()` function provides a convenient interface to open VCF/BCF files as DuckDB tables or views, similar to `vcf_open_arrow()` for Arrow streams. By default it creates a **lazy view** that reads from the VCF on each query - instant to create with no memory overhead.
+
+```{r duckdb-open, eval=TRUE}
+# Build extension
+ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
+vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+
+# Open as lazy view (default) - instant creation
+vcf <- vcf_open_duckdb(vcf_file, ext_path)
+print(vcf)
+
+# Query the view
+DBI::dbGetQuery(vcf$con, "SELECT CHROM, POS, REF, ALT FROM variants LIMIT 5")
+
+# Close connection
+vcf_close_duckdb(vcf)
+```
+
+For repeated queries on the same data, materialize to a table with `as_view = FALSE`:
+
+```{r duckdb-table, eval=TRUE}
+# Materialize to in-memory table (slower to create, fast queries)
+vcf <- vcf_open_duckdb(vcf_file, ext_path, as_view = FALSE)
+print(vcf)
+
+# Multiple fast queries on materialized data
+DBI::dbGetQuery(vcf$con, "SELECT COUNT(*) as n FROM variants")
+DBI::dbGetQuery(vcf$con, "SELECT CHROM, COUNT(*) as n FROM variants GROUP BY CHROM")
+
+vcf_close_duckdb(vcf)
+```
+
+For large VCF files, use tidy format and parallel loading:
+
+```{r duckdb-tidy-open, eval=TRUE}
+# Tidy format with column selection
+vcf <- vcf_open_duckdb(
+  vcf_file, ext_path,
+  tidy_format = TRUE,
+  columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT")
+)
+
+DBI::dbGetQuery(vcf$con, "SELECT * FROM variants LIMIT 6")
+vcf_close_duckdb(vcf)
+```
+
 ### Tidy (Long) Format Export
 
 Export VCF/BCF to a "tidy" format where each row is one variant-sample combination. The native `tidy_format` parameter in the bcf_reader extension transforms wide `FORMAT_<field>_<sample>` columns into a single `SAMPLE_ID` column plus `FORMAT_<field>` columns - much faster than SQL-level UNNEST.
