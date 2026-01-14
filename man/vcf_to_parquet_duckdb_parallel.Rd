@@ -12,6 +12,7 @@ vcf_to_parquet_duckdb_parallel(
   compression = "zstd",
   row_group_size = 100000L,
   columns = NULL,
+  tidy_format = FALSE,
   con = NULL
 )
 }
@@ -29,6 +30,8 @@ vcf_to_parquet_duckdb_parallel(
 \item{row_group_size}{Row group size}
 
 \item{columns}{Optional character vector of columns to include}
+
+\item{tidy_format}{Logical, if TRUE exports data in tidy (long) format. Default FALSE.}
 
 \item{con}{Optional existing DuckDB connection (with extension loaded).}
 }
@@ -64,6 +67,11 @@ vcf_to_parquet_duckdb_parallel(
   "wgs.vcf.gz", "wgs.parquet", ext_path,
   threads = 16,
   columns = c("CHROM", "POS", "REF", "ALT")
+)
+
+# Tidy format output
+vcf_to_parquet_duckdb_parallel("wgs.vcf.gz", "wgs_tidy.parquet", ext_path,
+  threads = 8, tidy_format = TRUE
 )
 }
 

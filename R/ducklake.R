@@ -916,6 +916,9 @@ ducklake_register_parquet <- function(
 #'   Default: FALSE. When TRUE, new columns found in the VCF are added via ALTER TABLE
 #'   before insertion, making all columns queryable. Useful for combining VCFs with
 #'   different annotations (e.g., VEP columns) or different samples (FORMAT_*_SampleName).
+#' @param tidy_format Logical, if TRUE exports data in tidy (long) format with one
+#'   row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
+#'   Ideal for cohort analysis and combining multiple single-sample VCFs.
 #'
 #' @return Invisibly returns the path to the created Parquet file.
 #' @export
@@ -934,6 +937,11 @@ ducklake_register_parquet <- function(
 #' or different annotation fields), enable `allow_evolution` to automatically
 #' add new columns to the table schema. This uses DuckLake's `ALTER TABLE ADD COLUMN`
 #' which preserves existing data files without rewriting.
+#'
+#' **Tidy Format (`tidy_format = TRUE`):**
+#' When building cohort tables from multiple single-sample VCFs, use `tidy_format = TRUE`
+#' to get one row per variant-sample combination with a `SAMPLE_ID` column. This format
+#' is ideal for downstream analysis and MERGE/UPSERT operations on DuckLake tables.
 #'
 #' @examples
 #' \dontrun{
@@ -954,6 +962,11 @@ ducklake_register_parquet <- function(
 #'   allow_evolution = TRUE
 #' )
 #'
+#' # Load VCF in tidy format (one row per variant-sample)
+#' ducklake_load_vcf(con, "variants_tidy", "cohort.vcf.gz", ext_path,
+#'   tidy_format = TRUE
+#' )
+#'
 #' # Query - all columns from both VCFs are available
 #' DBI::dbGetQuery(con, "SELECT CHROM, COUNT(*) FROM variants GROUP BY CHROM")
 #' }
@@ -969,7 +982,8 @@ ducklake_load_vcf <- function(
   region = NULL,
   columns = NULL,
   overwrite = FALSE,
-  allow_evolution = FALSE
+  allow_evolution = FALSE,
+  tidy_format = FALSE
 ) {
   if (missing(con) || is.null(con)) {
     stop("con must be provided", call. = FALSE)
@@ -1040,7 +1054,8 @@ ducklake_load_vcf <- function(
     region = region,
     compression = compression,
     row_group_size = row_group_size,
-    threads = threads
+    threads = threads,
+    tidy_format = tidy_format
   )
 
   # Insert into DuckLake table

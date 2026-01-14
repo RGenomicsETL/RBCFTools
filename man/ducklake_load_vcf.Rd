@@ -16,7 +16,8 @@ ducklake_load_vcf(
   region = NULL,
   columns = NULL,
   overwrite = FALSE,
-  allow_evolution = FALSE
+  allow_evolution = FALSE,
+  tidy_format = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,10 @@ ducklake_load_vcf(
 Default: FALSE. When TRUE, new columns found in the VCF are added via ALTER TABLE
 before insertion, making all columns queryable. Useful for combining VCFs with
 different annotations (e.g., VEP columns) or different samples (FORMAT_*_SampleName).}
+
+\item{tidy_format}{Logical, if TRUE exports data in tidy (long) format with one
+row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
+Ideal for cohort analysis and combining multiple single-sample VCFs.}
 }
 \value{
 Invisibly returns the path to the created Parquet file.
@@ -70,6 +75,11 @@ When loading multiple VCFs with different schemas (e.g., different samples
 or different annotation fields), enable \code{allow_evolution} to automatically
 add new columns to the table schema. This uses DuckLake's \verb{ALTER TABLE ADD COLUMN}
 which preserves existing data files without rewriting.
+
+\strong{Tidy Format (\code{tidy_format = TRUE}):}
+When building cohort tables from multiple single-sample VCFs, use \code{tidy_format = TRUE}
+to get one row per variant-sample combination with a \code{SAMPLE_ID} column. This format
+is ideal for downstream analysis and MERGE/UPSERT operations on DuckLake tables.
 }
 \examples{
 \dontrun{
@@ -88,6 +98,11 @@ ducklake_load_vcf(con, "variants", "sample1.vcf.gz", ext_path, threads = 8)
 # Load second VCF with different annotations, evolving schema
 ducklake_load_vcf(con, "variants", "sample2_vep.vcf.gz", ext_path,
   allow_evolution = TRUE
+)
+
+# Load VCF in tidy format (one row per variant-sample)
+ducklake_load_vcf(con, "variants_tidy", "cohort.vcf.gz", ext_path,
+  tidy_format = TRUE
 )
 
 # Query - all columns from both VCFs are available

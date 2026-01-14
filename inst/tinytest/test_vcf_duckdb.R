@@ -671,20 +671,21 @@ DBI::dbDisconnect(verify_con3, shutdown = TRUE)
 unlink(parquet_full)
 
 # =============================================================================
-# Test vcf_to_parquet_tidy - Tidy (long) format export
+# Test tidy_format parameter in vcf_to_parquet_duckdb
 # =============================================================================
 
 # Test multi-sample VCF tidy export
 tidy_out <- tempfile(fileext = ".parquet")
 
 expect_message(
-  vcf_to_parquet_tidy(
+  vcf_to_parquet_duckdb(
     test_vcf,
     tidy_out,
-    extension_path = ext_path
+    extension_path = ext_path,
+    tidy_format = TRUE
   ),
-  pattern = "Wrote tidy format",
-  info = "vcf_to_parquet_tidy should write output with message"
+  pattern = "Wrote:",
+  info = "vcf_to_parquet_duckdb with tidy_format=TRUE should write output"
 )
 
 expect_true(
@@ -741,13 +742,14 @@ if (file.exists(single_sample_vcf) && nzchar(single_sample_vcf)) {
   tidy_single_out <- tempfile(fileext = ".parquet")
 
   expect_message(
-    vcf_to_parquet_tidy(
+    vcf_to_parquet_duckdb(
       single_sample_vcf,
       tidy_single_out,
       extension_path = ext_path,
-      region = "1:536000-600000"
+      region = "1:536000-600000",
+      tidy_format = TRUE
     ),
-    pattern = "Wrote tidy format",
+    pattern = "Wrote:",
     info = "Should work with single-sample VCF"
   )
 
@@ -779,14 +781,15 @@ if (file.exists(single_sample_vcf) && nzchar(single_sample_vcf)) {
 tidy_cols_out <- tempfile(fileext = ".parquet")
 
 expect_message(
-  vcf_to_parquet_tidy(
+  vcf_to_parquet_duckdb(
     test_vcf,
     tidy_cols_out,
     extension_path = ext_path,
-    columns = c("CHROM", "POS", "REF", "ALT")
+    columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT"),
+    tidy_format = TRUE
   ),
-  pattern = "Wrote tidy format",
-  info = "vcf_to_parquet_tidy should work with columns parameter"
+  pattern = "Wrote:",
+  info = "vcf_to_parquet_duckdb tidy should work with columns parameter"
 )
 
 verify_cols_con <- DBI::dbConnect(duckdb::duckdb())
@@ -825,14 +828,16 @@ sites_only_vcf <- system.file(
 if (file.exists(sites_only_vcf) && nzchar(sites_only_vcf)) {
   sites_tidy_out <- tempfile(fileext = ".parquet")
 
+  # Sites-only VCF - tidy_format works, but no SAMPLE_ID column (no samples)
   expect_message(
-    vcf_to_parquet_tidy(
+    vcf_to_parquet_duckdb(
       sites_only_vcf,
       sites_tidy_out,
-      extension_path = ext_path
+      extension_path = ext_path,
+      tidy_format = TRUE
     ),
-    pattern = "sites-only|standard export",
-    info = "Sites-only VCF should fall back to standard export"
+    pattern = "Wrote:",
+    info = "Sites-only VCF with tidy_format should still work"
   )
 
   expect_true(

@@ -9,6 +9,7 @@ vcf_query_duckdb(
   extension_path = NULL,
   query = NULL,
   region = NULL,
+  tidy_format = FALSE,
   con = NULL
 )
 }
@@ -21,6 +22,9 @@ vcf_query_duckdb(
 or if NULL, returns all rows with \verb{SELECT * FROM bcf_read('\{file\}')}.}
 
 \item{region}{Optional genomic region for indexed files (e.g., "chr1:1000-2000")}
+
+\item{tidy_format}{Logical, if TRUE returns data in tidy (long) format with one
+row per variant-sample combination and a SAMPLE_ID column. Default FALSE.}
 
 \item{con}{Optional existing DuckDB connection (with extension already loaded).
 If provided, extension_path is ignored.}
@@ -52,6 +56,9 @@ vcf_query_duckdb("variants.vcf.gz", ext_path,
 
 # Region query (requires index)
 vcf_query_duckdb("variants.vcf.gz", ext_path, region = "chr1:1000000-2000000")
+
+# Tidy format - one row per variant-sample
+vcf_query_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE)
 
 # Reuse connection for multiple queries
 con <- vcf_duckdb_connect(ext_path)

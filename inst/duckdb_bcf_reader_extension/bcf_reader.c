@@ -99,6 +99,10 @@ typedef struct {
     int n_samples;             // Number of samples
     char** sample_names;       // Sample names (owned)
     
+    // Tidy format options
+    int tidy_format;           // If true, emit one row per variant-sample with SAMPLE_ID column
+    int sample_id_col_idx;     // Column index for SAMPLE_ID (when tidy_format=true)
+    
     // Field metadata
     int n_info_fields;
     field_meta_t* info_fields;
@@ -161,6 +165,10 @@ typedef struct {
     int assigned_contig;       // Which contig this thread is scanning (-1 = all)
     const char* contig_name;   // Name of assigned contig (reference, don't free)
     int needs_next_contig;     // Flag to request next contig assignment
+    
+    // Tidy format state: tracks which sample we're emitting for current record
+    int tidy_current_sample;   // Current sample index in tidy mode (-1 = need to read next record)
+    int tidy_record_valid;     // Whether we have a valid record buffered for tidy mode
     
     // Debug/progress tracking
     int64_t total_records_processed;  // Total records processed by this thread
@@ -352,6 +360,14 @@ static void bcf_read_bind(duckdb_bind_info info) {
     }
     if (region_val) duckdb_destroy_value(&region_val);
     
+    // Get optional tidy_format named parameter (default: false)
+    int tidy_format = 0;
+    duckdb_value tidy_val = duckdb_bind_get_named_parameter(info, "tidy_format");
+    if (tidy_val && !duckdb_is_null_value(tidy_val)) {
+        tidy_format = duckdb_get_bool(tidy_val);
+    }
+    if (tidy_val) duckdb_destroy_value(&tidy_val);
+    
     // Open the file to read header
     htsFile* fp = hts_open(file_path, "r");
     if (!fp) {
@@ -380,6 +396,8 @@ static void bcf_read_bind(duckdb_bind_info info) {
     bind->include_info = 1;
     bind->include_format = 1;
     bind->n_samples = bcf_hdr_nsamples(hdr);
+    bind->tidy_format = tidy_format;
+    bind->sample_id_col_idx = -1;  // Will be set if tidy_format=true
     bind->n_vep_fields = 0;
     bind->vep_col_start = COL_CORE_COUNT;
     bind->info_col_start = COL_CORE_COUNT;
@@ -572,21 +590,46 @@ static void bcf_read_bind(duckdb_bind_info info) {
             }
         }
         
-        // Add FORMAT columns for each sample
-        for (int s = 0; s < bind->n_samples; s++) {
+        // Add FORMAT columns for each sample (or single set for tidy format)
+        if (bind->tidy_format) {
+            // Tidy format: Add SAMPLE_ID column, then FORMAT_<field> (no sample suffix)
+            bind->sample_id_col_idx = col_idx;
+            duckdb_bind_add_result_column(info, "SAMPLE_ID", varchar_type);
+            col_idx++;
+            
+            // Update format_col_start to be after SAMPLE_ID
+            bind->format_col_start = col_idx;
+            
+            // Add FORMAT columns once (no sample suffix)
             for (int f = 0; f < bind->n_format_fields; f++) {
                 field_meta_t* field = &bind->format_fields[f];
                 
-                // Column name: FORMAT_<fieldname>_<samplename>
-                char col_name[512];
-                snprintf(col_name, sizeof(col_name), "FORMAT_%s_%s", 
-                         field->name, bind->sample_names[s]);
+                char col_name[256];
+                snprintf(col_name, sizeof(col_name), "FORMAT_%s", field->name);
                 
                 duckdb_logical_type field_type = create_bcf_field_type(field->header_type, field->is_list);
                 duckdb_bind_add_result_column(info, col_name, field_type);
                 duckdb_destroy_logical_type(&field_type);
                 
                 col_idx++;
+            }
+        } else {
+            // Wide format: Add FORMAT columns for each sample
+            for (int s = 0; s < bind->n_samples; s++) {
+                for (int f = 0; f < bind->n_format_fields; f++) {
+                    field_meta_t* field = &bind->format_fields[f];
+                    
+                    // Column name: FORMAT_<fieldname>_<samplename>
+                    char col_name[512];
+                    snprintf(col_name, sizeof(col_name), "FORMAT_%s_%s", 
+                             field->name, bind->sample_names[s]);
+                    
+                    duckdb_logical_type field_type = create_bcf_field_type(field->header_type, field->is_list);
+                    duckdb_bind_add_result_column(info, col_name, field_type);
+                    duckdb_destroy_logical_type(&field_type);
+                    
+                    col_idx++;
+                }
             }
         }
     }
@@ -1023,53 +1066,75 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         vectors[i] = duckdb_data_chunk_get_vector(output, i);
     }
     
+    // Tidy format variables
+    int tidy_mode = bind->tidy_format && bind->n_samples > 0;
+    int current_sample = 0;  // Which sample we're emitting (only used in tidy mode)
+    
     // Read records
     while (row_count < vector_size) {
-        int ret;
+        // In tidy mode, only read a new record when we've emitted all samples
+        int need_read = 1;
+        if (tidy_mode && init->tidy_record_valid) {
+            // We have a buffered record - check if we still have samples to emit
+            if (init->tidy_current_sample < bind->n_samples) {
+                need_read = 0;
+                current_sample = init->tidy_current_sample;
+            }
+        }
         
-        if (init->itr) {
-            if (init->tbx) {
-                // VCF with tabix: read text line then parse
-                ret = tbx_itr_next(init->fp, init->tbx, init->itr, &init->kstr);
-                if (ret >= 0) {
-                    ret = vcf_parse1(&init->kstr, init->hdr, init->rec);
-                    init->kstr.l = 0;
+        if (need_read) {
+            int ret;
+            
+            if (init->itr) {
+                if (init->tbx) {
+                    // VCF with tabix: read text line then parse
+                    ret = tbx_itr_next(init->fp, init->tbx, init->itr, &init->kstr);
+                    if (ret >= 0) {
+                        ret = vcf_parse1(&init->kstr, init->hdr, init->rec);
+                        init->kstr.l = 0;
+                    }
+                } else {
+                    // BCF with index
+                    ret = bcf_itr_next(init->fp, init->itr, init->rec);
                 }
             } else {
-                // BCF with index
-                ret = bcf_itr_next(init->fp, init->itr, init->rec);
+                ret = bcf_read(init->fp, init->hdr, init->rec);
             }
-        } else {
-            ret = bcf_read(init->fp, init->hdr, init->rec);
-        }
-        
-        if (ret < 0) {
-            // End of current contig/file
-            if (init->is_parallel) {
-                // Try to claim next contig
-                if (claim_next_contig(init, global)) {
-                    continue;  // Continue reading from new contig
+            
+            if (ret < 0) {
+                // End of current contig/file
+                if (init->is_parallel) {
+                    // Try to claim next contig
+                    if (claim_next_contig(init, global)) {
+                        continue;  // Continue reading from new contig
+                    }
                 }
+                init->done = 1;
+                break;
             }
-            init->done = 1;
-            break;
+            
+            // Unpack record
+            bcf_unpack(init->rec, BCF_UN_ALL);
+            
+            // For tidy mode, reset sample counter
+            if (tidy_mode) {
+                init->tidy_current_sample = 0;
+                init->tidy_record_valid = 1;
+                current_sample = 0;
+            }
+            
+            // Update debug/progress counters (only when reading a new record)
+            if (!init->timing_initialized) {
+                // First record - start timing
+                clock_gettime(CLOCK_MONOTONIC, &init->batch_start_time);
+                init->last_progress_time = init->batch_start_time;
+                init->timing_initialized = 1;
+            }
         }
-        
-        // Unpack record
-        bcf_unpack(init->rec, BCF_UN_ALL);
 
-        // Update debug/progress counters
-        init->total_records_processed++;
-        if (init->total_records_processed == 1) {
-            // First record - start timing
-            clock_gettime(CLOCK_MONOTONIC, &init->batch_start_time);
-            init->last_progress_time = init->batch_start_time;
-            init->timing_initialized = 1;
-        }
-
-        // Parse VEP annotation once per record if needed
+        // Parse VEP annotation once per record if needed (only on first sample in tidy mode)
         vep_record_t* vep_rec = NULL;
-        if (need_vep) {
+        if (need_vep && (!tidy_mode || current_sample == 0)) {
             vep_rec = vep_record_parse_bcf(bind->vep_schema, init->hdr, init->rec);
         }
         
@@ -1410,11 +1475,25 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
                     free(value);
                 }
             }
-            else {
+            else if (tidy_mode && col_id == (idx_t)bind->sample_id_col_idx) {
+                // SAMPLE_ID column in tidy mode
+                duckdb_vector_assign_string_element(vec, row_count, bind->sample_names[current_sample]);
+            }
+            else if (col_id >= (idx_t)bind->format_col_start) {
                 // FORMAT field for a sample
                 int format_col_idx = col_id - bind->format_col_start;
-                int sample_idx = format_col_idx / bind->n_format_fields;
-                int field_idx = format_col_idx % bind->n_format_fields;
+                int sample_idx, field_idx;
+                
+                if (tidy_mode) {
+                    // In tidy mode: column index directly maps to field (no sample suffix)
+                    // SAMPLE_ID column is at sample_id_col_idx, FORMAT columns start after that
+                    field_idx = format_col_idx;
+                    sample_idx = current_sample;
+                } else {
+                    // Wide mode: column index encodes both sample and field
+                    sample_idx = format_col_idx / bind->n_format_fields;
+                    field_idx = format_col_idx % bind->n_format_fields;
+                }
                 
                 if (sample_idx < bind->n_samples && field_idx < bind->n_format_fields) {
                     field_meta_t* field = &bind->format_fields[field_idx];
@@ -1629,13 +1708,27 @@ static void bcf_read_function(duckdb_function_info info, duckdb_data_chunk outpu
         row_count++;
         init->current_row++;
         
-        // Print progress every N records
-        if (init->is_parallel && init->contig_name) {
-            char context[256];
-            snprintf(context, sizeof(context), "scan (contig: %s)", init->contig_name);
-            print_progress(init, context);
+        // In tidy mode, advance to next sample (or mark record as consumed)
+        if (tidy_mode) {
+            init->tidy_current_sample++;
+            if (init->tidy_current_sample >= bind->n_samples) {
+                // All samples emitted for this record - next iteration will read new record
+                init->tidy_record_valid = 0;
+                init->total_records_processed++;
+            }
         } else {
-            print_progress(init, "scan");
+            init->total_records_processed++;
+        }
+        
+        // Print progress every N records (only count actual VCF records, not per-sample rows)
+        if (!tidy_mode || !init->tidy_record_valid) {
+            if (init->is_parallel && init->contig_name) {
+                char context[256];
+                snprintf(context, sizeof(context), "scan (contig: %s)", init->contig_name);
+                print_progress(init, context);
+            } else {
+                print_progress(init, "scan");
+            }
         }
     }
     
@@ -1655,9 +1748,12 @@ static void register_bcf_read_function(duckdb_connection connection) {
     
     // Parameters
     duckdb_logical_type varchar_type = duckdb_create_logical_type(DUCKDB_TYPE_VARCHAR);
+    duckdb_logical_type bool_type = duckdb_create_logical_type(DUCKDB_TYPE_BOOLEAN);
     duckdb_table_function_add_parameter(tf, varchar_type);  // file_path
     duckdb_table_function_add_named_parameter(tf, "region", varchar_type);  // optional region
+    duckdb_table_function_add_named_parameter(tf, "tidy_format", bool_type);  // optional tidy format
     duckdb_destroy_logical_type(&varchar_type);
+    duckdb_destroy_logical_type(&bool_type);
     
     // Callbacks - use global init + local init for parallel scan support
     duckdb_table_function_set_bind(tf, bcf_read_bind);

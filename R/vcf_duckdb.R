@@ -284,6 +284,8 @@ vcf_duckdb_connect <- function(
 #' @param query SQL query string. Use `bcf_read('{file}')` to reference the file,
 #'   or if NULL, returns all rows with `SELECT * FROM bcf_read('{file}')`.
 #' @param region Optional genomic region for indexed files (e.g., "chr1:1000-2000")
+#' @param tidy_format Logical, if TRUE returns data in tidy (long) format with one
+#'   row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
 #' @param con Optional existing DuckDB connection (with extension already loaded).
 #'   If provided, extension_path is ignored.
 #'
@@ -310,6 +312,9 @@ vcf_duckdb_connect <- function(
 #' # Region query (requires index)
 #' vcf_query_duckdb("variants.vcf.gz", ext_path, region = "chr1:1000000-2000000")
 #'
+#' # Tidy format - one row per variant-sample
+#' vcf_query_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE)
+#'
 #' # Reuse connection for multiple queries
 #' con <- vcf_duckdb_connect(ext_path)
 #' vcf_query_duckdb("file1.vcf.gz", con = con)
@@ -321,6 +326,7 @@ vcf_query_duckdb <- function(
   extension_path = NULL,
   query = NULL,
   region = NULL,
+  tidy_format = FALSE,
   con = NULL
 ) {
   # Check if file is a remote URL
@@ -339,9 +345,17 @@ vcf_query_duckdb <- function(
     stop("Either extension_path or con must be provided", call. = FALSE)
   }
 
-  # Build bcf_read() call
+  # Build bcf_read() call with optional parameters
+  bcf_params <- c()
   if (!is.null(region) && nzchar(region)) {
-    bcf_read_call <- sprintf("bcf_read('%s', region := '%s')", file, region)
+    bcf_params <- c(bcf_params, sprintf("region := '%s'", region))
+  }
+  if (isTRUE(tidy_format)) {
+    bcf_params <- c(bcf_params, "tidy_format := true")
+  }
+
+  if (length(bcf_params) > 0) {
+    bcf_read_call <- sprintf("bcf_read('%s', %s)", file, paste(bcf_params, collapse = ", "))
   } else {
     bcf_read_call <- sprintf("bcf_read('%s')", file)
   }
@@ -391,20 +405,26 @@ vcf_query_duckdb <- function(
 #' @param file Path to VCF, VCF.GZ, or BCF file
 #' @param extension_path Path to the bcf_reader.duckdb_extension file.
 #' @param region Optional genomic region for indexed files
+#' @param tidy_format Logical, if TRUE counts rows in tidy format (one per variant-sample).
+#'   Default FALSE returns count of variants.
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
-#' @return Integer count of variants
+#' @return Integer count of variants (or variant-sample combinations if tidy_format=TRUE)
 #' @export
 #' @examples
 #' \dontrun{
 #' ext_path <- bcf_reader_build(tempdir())
 #' vcf_count_duckdb("variants.vcf.gz", ext_path)
 #' vcf_count_duckdb("variants.vcf.gz", ext_path, region = "chr22")
+#'
+#' # Count variant-sample rows (variants * samples)
+#' vcf_count_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE)
 #' }
 vcf_count_duckdb <- function(
   file,
   extension_path = NULL,
   region = NULL,
+  tidy_format = FALSE,
   con = NULL
 ) {
   result <- vcf_query_duckdb(
@@ -412,6 +432,7 @@ vcf_count_duckdb <- function(
     extension_path = extension_path,
     query = "SELECT COUNT(*) as n FROM bcf_read('{file}')",
     region = region,
+    tidy_format = tidy_format,
     con = con
   )
   as.integer(result$n)
@@ -423,6 +444,7 @@ vcf_count_duckdb <- function(
 #'
 #' @param file Path to VCF, VCF.GZ, or BCF file
 #' @param extension_path Path to the bcf_reader.duckdb_extension file.
+#' @param tidy_format Logical, if TRUE returns schema for tidy format. Default FALSE.
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
 #' @return A data.frame with column_name and column_type
@@ -431,8 +453,12 @@ vcf_count_duckdb <- function(
 #' \dontrun{
 #' ext_path <- bcf_reader_build(tempdir())
 #' vcf_schema_duckdb("variants.vcf.gz", ext_path)
+#'
+#' # Compare wide vs tidy schemas
+#' vcf_schema_duckdb("cohort.vcf.gz", ext_path) # FORMAT_GT_Sample1, FORMAT_GT_Sample2...
+#' vcf_schema_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE) # SAMPLE_ID, FORMAT_GT
 #' }
-vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
+vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, con = NULL) {
   # Check if file is a remote URL
   is_remote <- grepl("^(s3|gs|http|https|ftp)://", file, ignore.case = TRUE)
 
@@ -453,8 +479,12 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
     on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
   }
 
-  # Create a view and describe it
-  sql <- sprintf("SELECT * FROM bcf_read('%s') LIMIT 0", file)
+  # Build bcf_read call with tidy_format option
+  if (isTRUE(tidy_format)) {
+    sql <- sprintf("SELECT * FROM bcf_read('%s', tidy_format := true) LIMIT 0", file)
+  } else {
+    sql <- sprintf("SELECT * FROM bcf_read('%s') LIMIT 0", file)
+  }
   result <- DBI::dbGetQuery(con, sql)
 
   data.frame(
@@ -478,6 +508,8 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #' @param threads Number of parallel threads for processing (default: 1).
 #'   When threads > 1 and file is indexed, uses parallel processing by splitting
 #'   work across chromosomes/contigs. See \code{\link{vcf_to_parquet_duckdb_parallel}}.
+#' @param tidy_format Logical, if TRUE exports data in tidy (long) format with one
+#'   row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
 #' @return Invisible path to output file
@@ -499,6 +531,11 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #'   region = "chr22"
 #' )
 #'
+#' # Export in tidy format (one row per variant-sample)
+#' vcf_to_parquet_duckdb("cohort.vcf.gz", "cohort_tidy.parquet", ext_path,
+#'   tidy_format = TRUE
+#' )
+#'
 #' # Parallel mode for whole-genome VCF (requires index)
 #' vcf_to_parquet_duckdb("wgs.vcf.gz", "wgs.parquet", ext_path, threads = 8)
 #' }
@@ -511,6 +548,7 @@ vcf_to_parquet_duckdb <- function(
   compression = "zstd",
   row_group_size = 100000L,
   threads = 1L,
+  tidy_format = FALSE,
   con = NULL
 ) {
   # Check if file is a remote URL
@@ -543,6 +581,7 @@ vcf_to_parquet_duckdb <- function(
       compression = compression,
       row_group_size = row_group_size,
       columns = columns,
+      tidy_format = tidy_format,
       con = con
     ))
   }
@@ -554,13 +593,17 @@ vcf_to_parquet_duckdb <- function(
     paste(columns, collapse = ", ")
   }
 
-  # Build bcf_read call
+  # Build bcf_read call with optional parameters
+  bcf_params <- c()
   if (!is.null(region) && nzchar(region)) {
-    bcf_read_call <- sprintf(
-      "bcf_read('%s', region := '%s')",
-      input_file,
-      region
-    )
+    bcf_params <- c(bcf_params, sprintf("region := '%s'", region))
+  }
+  if (isTRUE(tidy_format)) {
+    bcf_params <- c(bcf_params, "tidy_format := true")
+  }
+
+  if (length(bcf_params) > 0) {
+    bcf_read_call <- sprintf("bcf_read('%s', %s)", input_file, paste(bcf_params, collapse = ", "))
   } else {
     bcf_read_call <- sprintf("bcf_read('%s')", input_file)
   }
@@ -681,6 +724,7 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #' @param compression Parquet compression codec
 #' @param row_group_size Row group size
 #' @param columns Optional character vector of columns to include
+#' @param tidy_format Logical, if TRUE exports data in tidy (long) format. Default FALSE.
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
 #' @return Invisibly returns the output path
@@ -708,6 +752,11 @@ vcf_summary_duckdb <- function(file, extension_path = NULL, con = NULL) {
 #'   threads = 16,
 #'   columns = c("CHROM", "POS", "REF", "ALT")
 #' )
+#'
+#' # Tidy format output
+#' vcf_to_parquet_duckdb_parallel("wgs.vcf.gz", "wgs_tidy.parquet", ext_path,
+#'   threads = 8, tidy_format = TRUE
+#' )
 #' }
 #'
 #' @seealso \code{\link{vcf_to_parquet_duckdb}} for single-threaded conversion
@@ -721,6 +770,7 @@ vcf_to_parquet_duckdb_parallel <- function(
   compression = "zstd",
   row_group_size = 100000L,
   columns = NULL,
+  tidy_format = FALSE,
   con = NULL
 ) {
   if (!requireNamespace("parallel", quietly = TRUE)) {
@@ -764,7 +814,8 @@ vcf_to_parquet_duckdb_parallel <- function(
       columns = columns,
       compression = compression,
       row_group_size = row_group_size,
-      threads = 1
+      threads = 1,
+      tidy_format = tidy_format
     ))
   }
 
@@ -803,7 +854,8 @@ vcf_to_parquet_duckdb_parallel <- function(
       columns = columns,
       compression = compression,
       row_group_size = row_group_size,
-      threads = 1
+      threads = 1,
+      tidy_format = tidy_format
     ))
   }
 
@@ -824,7 +876,8 @@ vcf_to_parquet_duckdb_parallel <- function(
     ext_path,
     compression_codec,
     rg_size,
-    cols
+    cols,
+    tidy
   ) {
     contig <- contigs_list[i]
     temp_file <- file.path(out_dir, sprintf("contig_%04d.parquet", i))
@@ -840,7 +893,8 @@ vcf_to_parquet_duckdb_parallel <- function(
           region = contig,
           compression = compression_codec,
           row_group_size = rg_size,
-          threads = 1
+          threads = 1,
+          tidy_format = tidy
         )
 
         # Return temp file path only if it exists and has content
@@ -871,7 +925,8 @@ vcf_to_parquet_duckdb_parallel <- function(
       ext_path = extension_path,
       compression_codec = compression,
       rg_size = row_group_size,
-      cols = columns
+      cols = columns,
+      tidy = tidy_format
     )
   } else {
     temp_files <- parallel::mclapply(
@@ -884,6 +939,7 @@ vcf_to_parquet_duckdb_parallel <- function(
       compression_codec = compression,
       rg_size = row_group_size,
       cols = columns,
+      tidy = tidy_format,
       mc.cores = threads
     )
   }
@@ -916,447 +972,6 @@ vcf_to_parquet_duckdb_parallel <- function(
   )
 
   invisible(output_file)
-}
-
-
-# -----------------------------------------------------------------------------
-# Tidy (Long) Format Export Functions
-# -----------------------------------------------------------------------------
-
-#' Export VCF/BCF to tidy (long) Parquet format
-#'
-#' Converts VCF/BCF to a "tidy" format where each row represents one
-#' variant-sample combination. FORMAT columns are unpivoted from wide
-#' `FORMAT_<field>_<sample>` columns to a single `SAMPLE_ID` column plus
-#' `FORMAT_<field>` columns.
-#'
-#' This format is ideal for:
-#' - Combining multiple single-sample VCFs into a cohesive dataset
-#' - Appending new samples to existing variant tables
-#' - Downstream analysis with tools that expect long-format data
-#' - Building variant cohort tables for MERGE/UPSERT operations
-#'
-#' @param input_file Path to input VCF, VCF.GZ, or BCF file
-#' @param output_file Path to output Parquet file
-#' @param extension_path Path to the bcf_reader.duckdb_extension file.
-#' @param columns Optional character vector of non-FORMAT columns to include.
-#'   FORMAT columns are always included and transformed to tidy format.
-#'   NULL includes all columns.
-#' @param region Optional genomic region to export (requires index)
-#' @param compression Parquet compression: "snappy", "zstd", "gzip", or "none"
-#' @param row_group_size Number of rows per row group (default: 100000)
-#' @param threads Number of parallel threads for processing (default: 1).
-#'   When threads > 1 and file is indexed, uses parallel processing by splitting
-#'   work across chromosomes/contigs.
-#' @param con Optional existing DuckDB connection (with extension loaded).
-#'
-#' @return Invisible path to output file
-#' @export
-#' @examples
-#' \dontrun{
-#' ext_path <- bcf_reader_build(tempdir())
-#'
-#' # Convert single-sample VCF to tidy format
-#' vcf_to_parquet_tidy("sample1.vcf.gz", "sample1_tidy.parquet", ext_path)
-#'
-#' # Convert multi-sample VCF - creates one row per variant-sample
-#' vcf_to_parquet_tidy("cohort.vcf.gz", "cohort_tidy.parquet", ext_path)
-#'
-#' # Select specific columns (FORMAT columns always included)
-#' vcf_to_parquet_tidy("sample.vcf.gz", "slim.parquet", ext_path,
-#'   columns = c("CHROM", "POS", "REF", "ALT")
-#' )
-#'
-#' # Parallel processing for large files
-#' vcf_to_parquet_tidy("wgs.vcf.gz", "wgs_tidy.parquet", ext_path, threads = 8)
-#'
-#' # Multiple single-sample VCFs can be combined:
-#' vcf_to_parquet_tidy("sampleA.vcf.gz", "sampleA.parquet", ext_path)
-#' vcf_to_parquet_tidy("sampleB.vcf.gz", "sampleB.parquet", ext_path)
-#' # Then union in DuckDB or append to DuckLake table
-#' }
-vcf_to_parquet_tidy <- function(
-  input_file,
-  output_file,
-  extension_path = NULL,
-  columns = NULL,
-  region = NULL,
-  compression = "zstd",
-  row_group_size = 100000L,
-  threads = 1L,
-  con = NULL
-) {
-  # Validate input
-  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
-  if (!is_remote) {
-    if (!file.exists(input_file)) {
-      stop("Input file not found: ", input_file, call. = FALSE)
-    }
-    input_file <- normalizePath(input_file, mustWork = TRUE)
-  }
-
-  if (is.null(con) && is.null(extension_path)) {
-    stop("Either extension_path or con must be provided", call. = FALSE)
-  }
-
-  output_file <- normalizePath(output_file, mustWork = FALSE)
-
-  # Setup connection early to check for sites-only VCF before parallel dispatch
-  own_con <- is.null(con)
-  if (own_con) {
-    con <- vcf_duckdb_connect(extension_path)
-    on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
-  }
-
-  # Check for sites-only VCF (no FORMAT columns) before any processing
-  schema <- vcf_schema_duckdb(input_file, con = con)
-  format_cols <- grep("^FORMAT_", schema$column_name, value = TRUE)
-
-  if (length(format_cols) == 0) {
-    message("No FORMAT columns found (sites-only VCF). Using standard export.")
-    return(vcf_to_parquet_duckdb(
-      input_file = input_file,
-      output_file = output_file,
-      extension_path = extension_path,
-      columns = columns,
-      region = region,
-      compression = compression,
-      row_group_size = row_group_size,
-      threads = threads,
-      con = con
-    ))
-  }
-
-  # Use parallel processing if threads > 1
-  if (threads > 1) {
-    return(vcf_to_parquet_tidy_parallel(
-      input_file = input_file,
-      output_file = output_file,
-      extension_path = extension_path,
-      threads = threads,
-      compression = compression,
-      row_group_size = row_group_size,
-      columns = columns,
-      con = NULL # parallel needs extension_path, not con
-    ))
-  }
-
-  # Parse sample names from FORMAT_GT_<sample> pattern
-  # GT is always present and is always a simple field name (no underscores)
-  gt_cols <- grep("^FORMAT_GT_", format_cols, value = TRUE)
-  if (length(gt_cols) == 0) {
-    # No GT column - likely malformed VCF, fall back
-    message("No FORMAT_GT column found. Using standard export.")
-    return(vcf_to_parquet_duckdb(
-      input_file = input_file,
-      output_file = output_file,
-      extension_path = extension_path,
-      columns = columns,
-      region = region,
-      compression = compression,
-      row_group_size = row_group_size,
-      threads = 1L,
-      con = con
-    ))
-  }
-  sample_names <- sub("^FORMAT_GT_", "", gt_cols)
-
-  if (length(sample_names) == 0) {
-    stop("Could not determine sample names from FORMAT columns", call. = FALSE)
-  }
-
-  # Extract FORMAT field names using known sample names
-
-  # Sample names and field names can both contain underscores (e.g., MIN_DP, test_deep_variant)
-  # Use the first sample to extract field names by removing "_<sample>" suffix
-  first_sample <- sample_names[1]
-  sample_suffix_pattern <- sprintf("_%s$", first_sample)
-  sample_format_cols <- grep(sample_suffix_pattern, format_cols, value = TRUE)
-  format_fields <- sub(sample_suffix_pattern, "", sample_format_cols)
-  format_fields <- sub("^FORMAT_", "", format_fields)
-
-  # Build the tidy SQL query
-  sql <- build_tidy_sql(
-    input_file = input_file,
-    region = region,
-    schema = schema,
-    sample_names = sample_names,
-    format_fields = format_fields,
-    format_cols = format_cols,
-    columns = columns
-  )
-
-  # Map compression
-  duckdb_compression <- toupper(compression)
-
-  # Execute COPY
-  copy_sql <- sprintf(
-    "COPY (%s) TO '%s' (FORMAT PARQUET, COMPRESSION '%s', ROW_GROUP_SIZE %d)",
-    sql,
-    output_file,
-    duckdb_compression,
-    as.integer(row_group_size)
-  )
-
-  DBI::dbExecute(con, copy_sql)
-  message("Wrote tidy format: ", output_file)
-  invisible(output_file)
-}
-
-
-#' Parallel tidy VCF to Parquet conversion
-#'
-#' Processes VCF/BCF file in parallel by splitting work across chromosomes/contigs,
-#' converting to tidy (long) format. Requires an indexed file.
-#'
-#' @inheritParams vcf_to_parquet_tidy
-#' @param threads Number of parallel threads (default: auto-detect)
-#'
-#' @return Invisibly returns the output path
-#' @keywords internal
-vcf_to_parquet_tidy_parallel <- function(
-  input_file,
-  output_file,
-  extension_path = NULL,
-  threads = parallel::detectCores(),
-  compression = "zstd",
-  row_group_size = 100000L,
-  columns = NULL,
-  con = NULL
-) {
-  if (!requireNamespace("parallel", quietly = TRUE)) {
-    stop("Package 'parallel' required for parallel processing")
-  }
-
-  # Check that we have extension_path for workers
-  if (is.null(extension_path)) {
-    if (!is.null(con)) {
-      stop(
-        "Parallel processing requires extension_path parameter. ",
-        "Shared connections cannot be used across processes.",
-        call. = FALSE
-      )
-    }
-    stop("extension_path must be provided for parallel processing", call. = FALSE)
-  }
-
-  # Normalize paths
-  is_remote <- grepl("^(s3|gs|http|https|ftp)://", input_file, ignore.case = TRUE)
-  if (!is_remote) {
-    input_file <- normalizePath(input_file, mustWork = TRUE)
-  }
-  output_file <- normalizePath(output_file, mustWork = FALSE)
-
-  # Check for index
-  has_idx <- vcf_has_index(input_file)
-  if (!has_idx) {
-    warning("No index found. Falling back to single-threaded mode.")
-    return(vcf_to_parquet_tidy(
-      input_file = input_file,
-      output_file = output_file,
-      extension_path = extension_path,
-      columns = columns,
-      compression = compression,
-      row_group_size = row_group_size,
-      threads = 1
-    ))
-  }
-
-  # Get contigs with data
-  contig_counts <- vcf_count_per_contig(input_file)
-  contigs <- names(contig_counts)[contig_counts > 0]
-
-  if (length(contigs) == 0) {
-    stop("No contigs have variants")
-  }
-
-  threads <- min(threads, length(contigs))
-
-  message(sprintf(
-    "Processing %d contigs using %d threads (tidy format)",
-    length(contigs), threads
-  ))
-
-  # Single contig/thread fallback
-
-  if (length(contigs) == 1 || threads == 1) {
-    return(vcf_to_parquet_tidy(
-      input_file = input_file,
-      output_file = output_file,
-      extension_path = extension_path,
-      columns = columns,
-      compression = compression,
-      row_group_size = row_group_size,
-      threads = 1
-    ))
-  }
-
-  # Create temp directory
-  temp_dir <- tempfile("vcf_tidy_parallel_")
-  dir.create(temp_dir, recursive = TRUE)
-  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
-
-  duckdb_compression <- toupper(compression)
-
-  # Process each contig
-  process_contig_tidy <- function(i, vcf_file, out_dir, contigs_list,
-                                  ext_path, compression_codec, rg_size, cols) {
-    contig <- contigs_list[i]
-    temp_file <- file.path(out_dir, sprintf("contig_%04d.parquet", i))
-
-    tryCatch(
-      {
-        vcf_to_parquet_tidy(
-          input_file = vcf_file,
-          output_file = temp_file,
-          extension_path = ext_path,
-          columns = cols,
-          region = contig,
-          compression = compression_codec,
-          row_group_size = rg_size,
-          threads = 1
-        )
-
-        if (file.exists(temp_file) && file.size(temp_file) > 0) {
-          return(temp_file)
-        }
-        return(NULL)
-      },
-      error = function(e) NULL
-    )
-  }
-
-  # Run in parallel
-  if (.Platform$OS.type == "windows") {
-    cl <- parallel::makeCluster(threads)
-    on.exit(parallel::stopCluster(cl), add = TRUE)
-    parallel::clusterEvalQ(cl, library(RBCFTools))
-    temp_files <- parallel::parLapply(
-      cl, seq_along(contigs), process_contig_tidy,
-      vcf_file = input_file, out_dir = temp_dir, contigs_list = contigs,
-      ext_path = extension_path, compression_codec = compression,
-      rg_size = row_group_size, cols = columns
-    )
-  } else {
-    temp_files <- parallel::mclapply(
-      seq_along(contigs), process_contig_tidy,
-      vcf_file = input_file, out_dir = temp_dir, contigs_list = contigs,
-      ext_path = extension_path, compression_codec = compression,
-      rg_size = row_group_size, cols = columns,
-      mc.cores = threads
-    )
-  }
-
-  # Filter successful files
-  temp_files <- Filter(Negate(is.null), temp_files)
-  temp_files <- unlist(temp_files, use.names = FALSE)
-  temp_files <- temp_files[nzchar(temp_files) & file.exists(temp_files) & file.size(temp_files) > 0]
-
-  if (length(temp_files) == 0) {
-    stop("No variants found in any contig")
-  }
-
-  # Merge files
-  message("Merging temporary Parquet files... to ", output_file)
-  merge_parquet_files(temp_files, output_file, duckdb_compression, row_group_size)
-
-  invisible(output_file)
-}
-
-
-#' Build SQL for tidy (unpivot) transformation
-#'
-#' @param input_file VCF file path
-#' @param region Optional region
-#' @param schema Schema data frame
-#' @param sample_names Vector of sample names
-#' @param format_fields Vector of FORMAT field names (GT, DP, etc.)
-#' @param format_cols Vector of all FORMAT column names
-#' @param columns Optional vector of non-FORMAT columns to include
-#' @return SQL query string
-#' @keywords internal
-build_tidy_sql <- function(
-  input_file,
-  region,
-  schema,
-  sample_names,
-  format_fields,
-  format_cols,
-  columns = NULL
-) {
-  # Build bcf_read call
-  if (!is.null(region) && nzchar(region)) {
-    bcf_read_call <- sprintf("bcf_read('%s', region := '%s')", input_file, region)
-  } else {
-    bcf_read_call <- sprintf("bcf_read('%s')", input_file)
-  }
-
-  # Get non-FORMAT columns
-  all_non_format_cols <- setdiff(schema$column_name, format_cols)
-
-  # Filter to requested columns if specified
-  if (!is.null(columns)) {
-    non_format_cols <- intersect(columns, all_non_format_cols)
-    if (length(non_format_cols) == 0) {
-      warning("None of the specified columns found. Using all non-FORMAT columns.")
-      non_format_cols <- all_non_format_cols
-    }
-  } else {
-    non_format_cols <- all_non_format_cols
-  }
-
-  # Single-sample optimization: just rename columns
-  if (length(sample_names) == 1) {
-    sample_name <- sample_names[1]
-
-    # Build column renames: FORMAT_GT_SampleName AS FORMAT_GT
-    format_renames <- vapply(format_fields, function(field) {
-      old_col <- sprintf("FORMAT_%s_%s", field, sample_name)
-      sprintf('"%s" AS FORMAT_%s', old_col, field)
-    }, character(1))
-
-    # Full query with SAMPLE_ID column
-    sql <- sprintf(
-      "SELECT %s, '%s' AS SAMPLE_ID, %s FROM %s",
-      paste(sprintf('"%s"', non_format_cols), collapse = ", "),
-      sample_name,
-      paste(format_renames, collapse = ", "),
-      bcf_read_call
-    )
-
-    return(sql)
-  }
-
-  # Multi-sample case: use unnest approach (more reliable than UNPIVOT)
-  # Based on DuckDB internals: UNPIVOT is rewritten to unnest calls
-  #
-  # SELECT cols...,
-  #   unnest(['S1', 'S2', ...]) AS SAMPLE_ID,
-  #   unnest(["FORMAT_GT_S1", "FORMAT_GT_S2", ...]) AS FORMAT_GT,
-  #   unnest(["FORMAT_DP_S1", "FORMAT_DP_S2", ...]) AS FORMAT_DP,
-  #   ...
-  # FROM bcf_read(...)
-
-  # Build sample names list: ['HG00098', 'HG00100', ...]
-  sample_names_list <- sprintf("['%s']", paste(sample_names, collapse = "', '"))
-
-  # Build unnest for each FORMAT field
-  format_unnests <- vapply(format_fields, function(field) {
-    # Column references for this field across all samples
-    col_refs <- sprintf('"%s"', sprintf("FORMAT_%s_%s", field, sample_names))
-    sprintf("unnest([%s]) AS FORMAT_%s", paste(col_refs, collapse = ", "), field)
-  }, character(1))
-
-  # Build complete query
-  sql <- sprintf(
-    "SELECT %s, unnest(%s) AS SAMPLE_ID, %s FROM %s",
-    paste(sprintf('"%s"', non_format_cols), collapse = ", "),
-    sample_names_list,
-    paste(format_unnests, collapse = ", "),
-    bcf_read_call
-  )
-
-  sql
 }
 
 

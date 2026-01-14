@@ -261,7 +261,7 @@ DBI::dbDisconnect(con)
 
 ### Tidy (Long) Format Export
 
-Export VCF/BCF to a "tidy" format where each row is one variant-sample combination. This transforms wide `FORMAT_<field>_<sample>` columns into a single `SAMPLE_ID` column plus `FORMAT_<field>` columns.
+Export VCF/BCF to a "tidy" format where each row is one variant-sample combination. The native `tidy_format` parameter in the bcf_reader extension transforms wide `FORMAT_<field>_<sample>` columns into a single `SAMPLE_ID` column plus `FORMAT_<field>` columns - much faster than SQL-level UNNEST.
 
 ```{r tidy-format, eval=TRUE}
 # Build extension
@@ -271,7 +271,8 @@ ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
 vcf_3samples <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
 tidy_out <- tempfile(fileext = ".parquet")
 
-vcf_to_parquet_tidy(vcf_3samples, tidy_out, extension_path = ext_path)
+# Use tidy_format parameter directly
+vcf_to_parquet_duckdb(vcf_3samples, tidy_out, extension_path = ext_path, tidy_format = TRUE)
 
 # Query the tidy output
 con <- duckdb::dbConnect(duckdb::duckdb())

@@ -13,6 +13,7 @@ vcf_to_parquet_duckdb(
   compression = "zstd",
   row_group_size = 100000L,
   threads = 1L,
+  tidy_format = FALSE,
   con = NULL
 )
 }
@@ -34,6 +35,9 @@ vcf_to_parquet_duckdb(
 \item{threads}{Number of parallel threads for processing (default: 1).
 When threads > 1 and file is indexed, uses parallel processing by splitting
 work across chromosomes/contigs. See \code{\link{vcf_to_parquet_duckdb_parallel}}.}
+
+\item{tidy_format}{Logical, if TRUE exports data in tidy (long) format with one
+row per variant-sample combination and a SAMPLE_ID column. Default FALSE.}
 
 \item{con}{Optional existing DuckDB connection (with extension loaded).}
 }
@@ -58,6 +62,11 @@ vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,
 # Export a region
 vcf_to_parquet_duckdb("variants.vcf.gz", "chr22.parquet", ext_path,
   region = "chr22"
+)
+
+# Export in tidy format (one row per variant-sample)
+vcf_to_parquet_duckdb("cohort.vcf.gz", "cohort_tidy.parquet", ext_path,
+  tidy_format = TRUE
 )
 
 # Parallel mode for whole-genome VCF (requires index)

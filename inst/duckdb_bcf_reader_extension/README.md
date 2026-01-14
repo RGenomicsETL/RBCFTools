@@ -12,6 +12,7 @@ A high-performance DuckDB extension for reading BCF/VCF genomic variant files di
 - **Genotype support**: Proper GT field decoding (e.g., "0/1", "1|1", "./.")
 - **Type validation**: Warns when header types don't match VCF spec and corrects schema accordingly
 - **Structured annotations**: Auto-detects INFO/CSQ, INFO/BCSQ, or INFO/ANN in the header and emits one typed column per subfield (prefixed `VEP_`), using bcftools split-vep inference. First transcript is exposed (scalar); list mode can be added later if needed.
+- **Tidy format output**: Native `tidy_format` parameter emits one row per variant-sample combination with a `SAMPLE_ID` column, ideal for cohort analysis and downstream tools expecting long-format data.
 
 ## Requirements
 
@@ -69,6 +70,20 @@ LIMIT 5;
 
 -- Read a specific region (requires index file: .tbi or .csi)
 SELECT * FROM bcf_read('variants.vcf.gz', region := 'chr1:1000000-2000000');
+
+-- Tidy format: one row per variant-sample combination (ideal for cohort analysis)
+SELECT CHROM, POS, SAMPLE_ID, FORMAT_GT, FORMAT_DP
+FROM bcf_read('cohort.vcf.gz', tidy_format := true)
+LIMIT 10;
+
+-- Compare wide vs tidy format
+-- Wide format (default): 1 row per variant, FORMAT columns have sample suffix
+SELECT CHROM, POS, FORMAT_GT_HG00098, FORMAT_GT_HG00100
+FROM bcf_read('variants.vcf.gz');
+
+-- Tidy format: N rows per variant (one per sample), SAMPLE_ID column added
+SELECT CHROM, POS, SAMPLE_ID, FORMAT_GT
+FROM bcf_read('variants.vcf.gz', tidy_format := true);
 
 -- Access INFO fields
 SELECT CHROM, POS, INFO_AC, INFO_AF, INFO_DP
@@ -145,6 +160,23 @@ FORMAT fields are prefixed with `FORMAT_` and suffixed with the sample name:
 | FORMAT_GQ_\<sample\> | INTEGER/FLOAT | Genotype quality |
 | FORMAT_PL_\<sample\> | LIST(INTEGER) | Phred-scaled likelihoods |
 
+### Tidy Format (tidy_format := true)
+
+When `tidy_format := true`, the schema changes to emit one row per variant-sample:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| SAMPLE_ID | VARCHAR | Sample name (new column) |
+| FORMAT_GT | VARCHAR | Genotype for this sample |
+| FORMAT_AD | LIST(INTEGER) | Allelic depths for this sample |
+| FORMAT_DP | INTEGER | Read depth for this sample |
+| FORMAT_GQ | INTEGER/FLOAT | Genotype quality for this sample |
+| FORMAT_PL | LIST(INTEGER) | Phred-scaled likelihoods for this sample |
+
+**Example:** A VCF with 3 samples and 10 variants:
+- Wide format (default): 10 rows, columns like `FORMAT_GT_Sample1`, `FORMAT_GT_Sample2`, `FORMAT_GT_Sample3`
+- Tidy format: 30 rows, columns `SAMPLE_ID`, `FORMAT_GT` (one row per variant-sample)
+
 ## Type Validation
 
 The extension validates field types against the VCF 4.3 specification and emits warnings when headers don't match:
@@ -172,6 +204,7 @@ Known VCF spec field definitions are enforced:
 3. **Select only needed columns**: Projection pushdown skips parsing unused fields
 4. **Export to Parquet**: For repeated queries, convert to Parquet once
 5. **Use BCF format**: BCF is faster to parse than VCF.gz
+6. **Use tidy_format for cohorts**: When building per-sample analysis tables, use `tidy_format := true` to get data in long format directly from the extension (much faster than SQL-level UNPIVOT)
 
 ## Testing
 

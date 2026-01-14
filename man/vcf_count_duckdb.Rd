@@ -4,7 +4,13 @@
 \alias{vcf_count_duckdb}
 \title{Count variants in a VCF/BCF file}
 \usage{
-vcf_count_duckdb(file, extension_path = NULL, region = NULL, con = NULL)
+vcf_count_duckdb(
+  file,
+  extension_path = NULL,
+  region = NULL,
+  tidy_format = FALSE,
+  con = NULL
+)
 }
 \arguments{
 \item{file}{Path to VCF, VCF.GZ, or BCF file}
@@ -13,10 +19,13 @@ vcf_count_duckdb(file, extension_path = NULL, region = NULL, con = NULL)
 
 \item{region}{Optional genomic region for indexed files}
 
+\item{tidy_format}{Logical, if TRUE counts rows in tidy format (one per variant-sample).
+Default FALSE returns count of variants.}
+
 \item{con}{Optional existing DuckDB connection (with extension loaded).}
 }
 \value{
-Integer count of variants
+Integer count of variants (or variant-sample combinations if tidy_format=TRUE)
 }
 \description{
 Fast variant count using DuckDB projection pushdown.
@@ -26,5 +35,8 @@ Fast variant count using DuckDB projection pushdown.
 ext_path <- bcf_reader_build(tempdir())
 vcf_count_duckdb("variants.vcf.gz", ext_path)
 vcf_count_duckdb("variants.vcf.gz", ext_path, region = "chr22")
+
+# Count variant-sample rows (variants * samples)
+vcf_count_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE)
 }
 }
