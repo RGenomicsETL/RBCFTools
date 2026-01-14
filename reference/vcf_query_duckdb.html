@@ -47,6 +47,7 @@ The file is exposed as a table via the <code>bcf_read()</code> function.</p>
 <span>  extension_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  query <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -70,6 +71,11 @@ or if NULL, returns all rows with <code>SELECT * FROM bcf_read('{file}')</code>.
 
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
 <dd><p>Optional genomic region for indexed files (e.g., "chr1:1000-2000")</p></dd>
+
+
+<dt id="arg-tidy-format">tidy_format<a class="anchor" aria-label="anchor" href="#arg-tidy-format"></a></dt>
+<dd><p>Logical, if TRUE returns data in tidy (long) format with one
+row per variant-sample combination and a SAMPLE_ID column. Default FALSE.</p></dd>
 
 
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
@@ -103,6 +109,9 @@ If provided, extension_path is ignored.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Region query (requires index)</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_query_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>, region <span class="op">=</span> <span class="st">"chr1:1000000-2000000"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Tidy format - one row per variant-sample</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_query_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="va">ext_path</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Reuse connection for multiple queries</span></span></span>
 <span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="vcf_duckdb_connect.html">vcf_duckdb_connect</a></span><span class="op">(</span><span class="va">ext_path</span><span class="op">)</span></span></span>

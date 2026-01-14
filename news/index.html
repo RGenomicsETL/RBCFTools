@@ -35,14 +35,35 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
 <div class="section level3">
-<h3 id="tidy-vcf-export-1-23-0-0-2-9000">Tidy VCF export<a class="anchor" aria-label="anchor" href="#tidy-vcf-export-1-23-0-0-2-9000"></a></h3>
+<h3 id="native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000">Native tidy_format in bcf_reader extension<a class="anchor" aria-label="anchor" href="#native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000"></a></h3>
 <ul><li>
-<code><a href="../reference/vcf_to_parquet_tidy.html">vcf_to_parquet_tidy()</a></code>: Export VCF/BCF to tidy (long) format Parquet where each row is one variant-sample combination
-<ul><li>Adds <code>SAMPLE_ID</code> column and transforms <code>FORMAT_&lt;field&gt;_&lt;sample&gt;</code> to <code>FORMAT_&lt;field&gt;</code>
+<strong>C-level <code>tidy_format</code> parameter</strong>: The DuckDB bcf_reader extension now supports native tidy format output directly at the C level, emitting one row per variant-sample combination with a <code>SAMPLE_ID</code> column
+<ul><li>Much faster than SQL-level UNNEST approach (no intermediate data duplication)</li>
+<li>Works with projection pushdown - only reads requested columns</li>
+<li>Integrates with all vcf_*duckdb functions via <code>tidy_format = TRUE</code> parameter</li>
+</ul></li>
+<li>
+<strong>Updated R wrapper functions</strong> with <code>tidy_format</code> parameter:
+<ul><li>
+<code>vcf_query_duckdb(..., tidy_format = TRUE)</code> - query in tidy format</li>
+<li>
+<code>vcf_count_duckdb(..., tidy_format = TRUE)</code> - count variant-sample rows</li>
+<li>
+<code>vcf_schema_duckdb(..., tidy_format = TRUE)</code> - show tidy schema</li>
+<li>
+<code>vcf_to_parquet_duckdb(..., tidy_format = TRUE)</code> - export in tidy format</li>
+<li>
+<code>vcf_to_parquet_duckdb_parallel(..., tidy_format = TRUE)</code> - parallel tidy export</li>
+<li>
+<code>ducklake_load_vcf(..., tidy_format = TRUE)</code> - load VCF in tidy format to DuckLake</li>
+</ul></li>
+<li>
+<strong>Removed SQL-based tidy functions</strong> (replaced by native <code>tidy_format</code> parameter):
+<ul><li>Removed <code>vcf_to_parquet_tidy()</code>
 </li>
-<li>Supports single-sample (simple rename) and multi-sample (unnest-based unpivot) VCFs</li>
-<li>Compatible with <code>threads</code> parameter for parallel processing</li>
-<li>Ideal for combining multiple single-sample VCFs or appending to DuckLake tables</li>
+<li>Removed <code>vcf_to_parquet_tidy_parallel()</code>
+</li>
+<li>Removed <code>build_tidy_sql()</code> helper</li>
 </ul></li>
 </ul></div>
 <div class="section level3">

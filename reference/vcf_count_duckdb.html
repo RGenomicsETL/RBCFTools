@@ -39,7 +39,13 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vcf_count_duckdb</span><span class="op">(</span><span class="va">file</span>, extension_path <span class="op">=</span> <span class="cn">NULL</span>, region <span class="op">=</span> <span class="cn">NULL</span>, con <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vcf_count_duckdb</span><span class="op">(</span></span>
+<span>  <span class="va">file</span>,</span>
+<span>  extension_path <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -58,13 +64,18 @@
 <dd><p>Optional genomic region for indexed files</p></dd>
 
 
+<dt id="arg-tidy-format">tidy_format<a class="anchor" aria-label="anchor" href="#arg-tidy-format"></a></dt>
+<dd><p>Logical, if TRUE counts rows in tidy format (one per variant-sample).
+Default FALSE returns count of variants.</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Integer count of variants</p>
+    <p>Integer count of variants (or variant-sample combinations if tidy_format=TRUE)</p>
     </div>
 
     <div class="section level2">
@@ -73,6 +84,9 @@
 <span class="r-in"><span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_count_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_count_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>, region <span class="op">=</span> <span class="st">"chr22"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Count variant-sample rows (variants * samples)</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_count_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="va">ext_path</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

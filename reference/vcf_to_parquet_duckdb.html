@@ -48,6 +48,7 @@
 <span>  compression <span class="op">=</span> <span class="st">"zstd"</span>,</span>
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -90,6 +91,11 @@ When threads &gt; 1 and file is indexed, uses parallel processing by splitting
 work across chromosomes/contigs. See <code><a href="vcf_to_parquet_duckdb_parallel.html">vcf_to_parquet_duckdb_parallel</a></code>.</p></dd>
 
 
+<dt id="arg-tidy-format">tidy_format<a class="anchor" aria-label="anchor" href="#arg-tidy-format"></a></dt>
+<dd><p>Logical, if TRUE exports data in tidy (long) format with one
+row per variant-sample combination and a SAMPLE_ID column. Default FALSE.</p></dd>
+
+
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
 <dd><p>Optional existing DuckDB connection (with extension loaded).</p></dd>
 
@@ -115,6 +121,11 @@ work across chromosomes/contigs. See <code><a href="vcf_to_parquet_duckdb_parall
 <span class="r-in"><span><span class="co"># Export a region</span></span></span>
 <span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="st">"chr22.parquet"</span>, <span class="va">ext_path</span>,</span></span>
 <span class="r-in"><span>  region <span class="op">=</span> <span class="st">"chr22"</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Export in tidy format (one row per variant-sample)</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="st">"cohort_tidy.parquet"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  tidy_format <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Parallel mode for whole-genome VCF (requires index)</span></span></span>

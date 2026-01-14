@@ -53,6 +53,7 @@ processes a different chromosome, then results are merged into a single Parquet 
 <span>  compression <span class="op">=</span> <span class="st">"zstd"</span>,</span>
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tidy_format <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  con <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -87,6 +88,10 @@ processes a different chromosome, then results are merged into a single Parquet 
 
 <dt id="arg-columns">columns<a class="anchor" aria-label="anchor" href="#arg-columns"></a></dt>
 <dd><p>Optional character vector of columns to include</p></dd>
+
+
+<dt id="arg-tidy-format">tidy_format<a class="anchor" aria-label="anchor" href="#arg-tidy-format"></a></dt>
+<dd><p>Logical, if TRUE exports data in tidy (long) format. Default FALSE.</p></dd>
 
 
 <dt id="arg-con">con<a class="anchor" aria-label="anchor" href="#arg-con"></a></dt>
@@ -124,6 +129,11 @@ processes a different chromosome, then results are merged into a single Parquet 
 <span class="r-in"><span>  <span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs.parquet"</span>, <span class="va">ext_path</span>,</span></span>
 <span class="r-in"><span>  threads <span class="op">=</span> <span class="fl">16</span>,</span></span>
 <span class="r-in"><span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Tidy format output</span></span></span>
+<span class="r-in"><span><span class="fu">vcf_to_parquet_duckdb_parallel</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="st">"wgs_tidy.parquet"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  threads <span class="op">=</span> <span class="fl">8</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
