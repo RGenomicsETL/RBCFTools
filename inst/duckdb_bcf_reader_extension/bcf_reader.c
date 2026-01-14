@@ -132,10 +132,10 @@ typedef struct {
 // =============================================================================
 
 typedef struct {
-    int current_contig;        // Next contig to assign (atomic-like access via DuckDB)
-    int n_contigs;             // Total number of contigs
-    char** contig_names;       // Contig names (reference to bind data)
-    int has_region;            // User specified a region
+    volatile int current_contig;  // Next contig to assign (use atomic ops!)
+    int n_contigs;                // Total number of contigs
+    char** contig_names;          // Contig names (reference to bind data)
+    int has_region;               // User specified a region
 } bcf_global_init_data_t;
 
 // =============================================================================
@@ -979,12 +979,12 @@ static int claim_next_contig(bcf_init_data_t* init, bcf_global_init_data_t* glob
         return 0;
     }
     
-    // Atomically claim next contig (DuckDB ensures thread-safe access to global state)
-    int next = global->current_contig;
+    // Atomically claim next contig using fetch-and-add
+    // This prevents race conditions where two threads grab the same contig
+    int next = __sync_fetch_and_add(&global->current_contig, 1);
     if (next >= global->n_contigs) {
         return 0;  // No more contigs
     }
-    global->current_contig++;
     
     // Destroy old iterator if exists
     if (init->itr) {
