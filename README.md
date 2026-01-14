@@ -302,7 +302,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpE8p45e/file19ab9145b15b5.parquet
+#> Wrote 11 rows to /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -321,12 +321,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                   file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
-#> 2 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
-#> 3 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
-#> 4 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
-#> 5 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
-#> 6 /tmp/RtmpE8p45e/file19ab9145b15b5.parquet            0                 11
+#> 1 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
+#> 2 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
+#> 3 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
+#> 4 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
+#> 5 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
+#> 6 /tmp/RtmpV8CQgU/file1ed2b36322ac4.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -409,7 +409,7 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpE8p45e/file19ab979e00cdb.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpV8CQgU/file1ed2b45c4f487.parquet (streaming mode)
 ```
 
 ### Query VCF with duckdb after converting the Stream
@@ -622,7 +622,7 @@ tidy_out <- tempfile(fileext = ".parquet")
 
 # Use tidy_format parameter directly
 vcf_to_parquet_duckdb(vcf_3samples, tidy_out, extension_path = ext_path, tidy_format = TRUE)
-#> Wrote: /tmp/RtmpE8p45e/file19ab9435f189c.parquet
+#> Wrote: /tmp/RtmpV8CQgU/file1ed2b79d390b2.parquet
 
 # Query the tidy output
 con <- duckdb::dbConnect(duckdb::duckdb())
@@ -772,7 +772,7 @@ cmd <- sprintf(
 pid_output <- processx::run("sh", c("-c", cmd), echo = FALSE)$stdout
 pid <- as.integer(pid_output)
 pid
-#> [1] 105608
+#> [1] 126638
 # Give MinIO time to start
 Sys.sleep(10)
 
@@ -785,13 +785,13 @@ processx::run(
   echo = FALSE
 )
 #> $status
-#> [1] 0
+#> [1] 1
 #> 
 #> $stdout
-#> [1] "Removed `ducklake_local` successfully.\n"
+#> [1] ""
 #> 
 #> $stderr
-#> [1] ""
+#> [1] "mc: <ERROR> No such alias `ducklake_local` found. Use `mc alias set mycloud ducklake_local ...` to add an alias. Use the alias for S3 operations.\n"
 #> 
 #> $timeout
 #> [1] FALSE
@@ -818,7 +818,7 @@ processx::run(mc_bin, bucket_cmd_args, echo = FALSE)
 #> [1] 0
 #> 
 #> $stdout
-#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768431713`.\n"
+#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768432554`.\n"
 #> 
 #> $stderr
 #> [1] ""
@@ -897,7 +897,7 @@ DBI::dbExecute(con, "USE lake")
 # Load variants via fast VCF to Parquet conversion
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
-#> bcf_reader extension already exists at: /tmp/RtmpE8p45e/build/bcf_reader.duckdb_extension
+#> bcf_reader extension already exists at: /tmp/RtmpV8CQgU/build/bcf_reader.duckdb_extension
 #> Use force=TRUE to rebuild.
 ducklake_load_vcf(
   con,
@@ -907,7 +907,7 @@ ducklake_load_vcf(
   threads = 1,
   tidy_format = TRUE
 )
-#> Wrote: /tmp/RtmpE8p45e/variants_20260115_000153.parquet
+#> Wrote: /tmp/RtmpV8CQgU/variants_20260115_001554.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
@@ -929,7 +929,7 @@ variants_count
 vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
 local_parquet2 <- tempfile(fileext = ".parquet")
 vcf_to_parquet_duckdb(vcf_file2, local_parquet2, extension_path = ext_path)
-#> Wrote: /tmp/RtmpE8p45e/file19ab91046882.parquet
+#> Wrote: /tmp/RtmpV8CQgU/file1ed2b2fa09d0f.parquet
 
 DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM read_parquet('%s')", local_parquet2))
 #>     n
@@ -942,7 +942,7 @@ processx::run(mc_bin, mc_cmd_args, echo = FALSE)
 #> [1] 0
 #> 
 #> $stdout
-#> [1] "`/tmp/RtmpE8p45e/file19ab91046882.parquet` -> `ducklake_local/readme-demo-1768431713/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬─────────────┐\n│ Total      │ Transferred │ Duration │ Speed       │\n│ 120.96 KiB │ 120.96 KiB  │ 00m00s   │ 12.62 MiB/s │\n└────────────┴─────────────┴──────────┴─────────────┘\n"
+#> [1] "`/tmp/RtmpV8CQgU/file1ed2b2fa09d0f.parquet` -> `ducklake_local/readme-demo-1768432554/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬─────────────┐\n│ Total      │ Transferred │ Duration │ Speed       │\n│ 120.96 KiB │ 120.96 KiB  │ 00m00s   │ 11.67 MiB/s │\n└────────────┴─────────────┴──────────┴─────────────┘\n"
 #> 
 #> $stderr
 #> [1] ""
@@ -1012,8 +1012,8 @@ DBI::dbGetQuery(con, "DESCRIBE variants") |>
 ``` r
 ducklake_list_files(con, "lake", "variants")
 #>                                                                                              data_file
-#> 1 s3://readme-demo-1768431713/data/main/variants/ducklake-019bbebe-8170-7256-ab2b-be69287832ab.parquet
-#> 2                                       s3://readme-demo-1768431713/data/variants/variants_vep.parquet
+#> 1 s3://readme-demo-1768432554/data/main/variants/ducklake-019bbecb-551f-76f5-b0d1-d2d2e56126a6.parquet
+#> 2                                       s3://readme-demo-1768432554/data/variants/variants_vep.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
 #> 1              5751964                  6113                     NULL
 #> 2               123858                 14951                     NULL
@@ -1030,12 +1030,12 @@ ducklake_list_files(con, "lake", "variants")
 ``` r
 ducklake_snapshots(con, "lake") |> head()
 #>   snapshot_id       snapshot_time schema_version
-#> 1           0 2026-01-14 23:01:53              0
-#> 2           1 2026-01-14 23:01:54              1
-#> 3           2 2026-01-14 23:01:54              2
-#> 4           3 2026-01-14 23:01:54              3
-#> 5           4 2026-01-14 23:01:54              4
-#> 6           5 2026-01-14 23:01:54              5
+#> 1           0 2026-01-14 23:15:54              0
+#> 2           1 2026-01-14 23:15:55              1
+#> 3           2 2026-01-14 23:15:55              2
+#> 4           3 2026-01-14 23:15:55              3
+#> 5           4 2026-01-14 23:15:55              4
+#> 6           5 2026-01-14 23:15:55              5
 #>                                                  changes author commit_message
 #> 1                                  schemas_created, main   <NA>           <NA>
 #> 2 tables_created, tables_inserted_into, main.variants, 1   <NA>           <NA>
@@ -1052,12 +1052,12 @@ ducklake_snapshots(con, "lake") |> head()
 #> 6              <NA>
 ducklake_snapshots(con, "lake") |> tail()
 #>    snapshot_id       snapshot_time schema_version                 changes
-#> 84          83 2026-01-14 23:01:55             83       tables_altered, 1
-#> 85          84 2026-01-14 23:01:55             84       tables_altered, 1
-#> 86          85 2026-01-14 23:01:55             85       tables_altered, 1
-#> 87          86 2026-01-14 23:01:55             86       tables_altered, 1
-#> 88          87 2026-01-14 23:01:55             87       tables_altered, 1
-#> 89          88 2026-01-14 23:01:55             87 tables_inserted_into, 1
+#> 84          83 2026-01-14 23:15:56             83       tables_altered, 1
+#> 85          84 2026-01-14 23:15:56             84       tables_altered, 1
+#> 86          85 2026-01-14 23:15:56             85       tables_altered, 1
+#> 87          86 2026-01-14 23:15:56             86       tables_altered, 1
+#> 88          87 2026-01-14 23:15:56             87       tables_altered, 1
+#> 89          88 2026-01-14 23:15:56             87 tables_inserted_into, 1
 #>    author commit_message commit_extra_info
 #> 84   <NA>           <NA>              <NA>
 #> 85   <NA>           <NA>              <NA>
@@ -1081,7 +1081,7 @@ ducklake_options(con, "lake")
 #> 4     version                                          DuckLake format version
 #>                               value  scope scope_entry
 #> 1                 DuckDB d1dc88f950 GLOBAL        <NA>
-#> 2 s3://readme-demo-1768431713/data/ GLOBAL        <NA>
+#> 2 s3://readme-demo-1768432554/data/ GLOBAL        <NA>
 #> 3                             false GLOBAL        <NA>
 #> 4                               0.3 GLOBAL        <NA>
 ducklake_set_option(con, "lake", "parquet_compression", "zstd")
@@ -1100,7 +1100,7 @@ ducklake_options(con, "lake")
 #> 5                                                                          DuckLake format version
 #>                               value  scope scope_entry
 #> 1                 DuckDB d1dc88f950 GLOBAL        <NA>
-#> 2 s3://readme-demo-1768431713/data/ GLOBAL        <NA>
+#> 2 s3://readme-demo-1768432554/data/ GLOBAL        <NA>
 #> 3                             false GLOBAL        <NA>
 #> 4                              zstd GLOBAL        <NA>
 #> 5                               0.3 GLOBAL        <NA>
@@ -1199,19 +1199,19 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> 
-#> real 0m1.568s
-#> user 0m3.597s
-#> sys  0m1.927s
+#> real 0m1.548s
+#> user 0m3.547s
+#> sys  0m1.983s
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpHZMcSo 
+#>   Build directory: /tmp/Rtmp0Q9lMU 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpHZMcSo
+#>   Build directory: /tmp/Rtmp0Q9lMU
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpHZMcSo'
+#> make[1]: Entering directory '/tmp/Rtmp0Q9lMU'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpHZMcSo'
-#> make[1]: Entering directory '/tmp/RtmpHZMcSo'
+#> make[1]: Leaving directory '/tmp/Rtmp0Q9lMU'
+#> make[1]: Entering directory '/tmp/Rtmp0Q9lMU'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -1221,47 +1221,47 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpHZMcSo'
-#> Extension built: /tmp/RtmpHZMcSo/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpHZMcSo/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/Rtmp0Q9lMU'
+#> Extension built: /tmp/Rtmp0Q9lMU/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmp0Q9lMU/build/bcf_reader.duckdb_extension 
 #> 
 #> Converting VCF to Parquet (DuckDB mode)...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
-#>   Output: /tmp/tmp.B4Ie2UMUOi.parquet 
+#>   Output: /tmp/tmp.EX4VAxe4gf.parquet 
 #>   Compression: zstd 
 #>   Row group size: 100000 
 #>   Threads: 4 
 #> Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0004.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0003.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0002.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0001.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0008.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0007.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0006.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0005.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0012.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0010.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0011.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0009.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0016.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0013.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0014.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0015.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0020.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0018.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0024.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0017.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0022.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0019.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0021.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0023.parquet
-#> Wrote: /tmp/RtmpHZMcSo/vcf_duckdb_parallel_1a3814c295ae6/contig_0025.parquet
-#> Merging temporary Parquet files... to /tmp/tmp.B4Ie2UMUOi.parquet
-#> Merged 25 parquet files -> tmp.B4Ie2UMUOi.parquet (368319 rows)
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0003.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0004.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0002.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0001.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0008.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0007.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0006.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0005.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0012.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0010.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0011.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0009.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0014.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0016.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0013.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0015.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0018.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0020.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0017.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0022.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0024.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0019.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0021.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0023.parquet
+#> Wrote: /tmp/Rtmp0Q9lMU/vcf_duckdb_parallel_1efb34bfff3ad/contig_0025.parquet
+#> Merging temporary Parquet files... to /tmp/tmp.EX4VAxe4gf.parquet
+#> Merged 25 parquet files -> tmp.EX4VAxe4gf.parquet (368319 rows)
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.90 seconds
+#>   Time: 0.89 seconds
 #>   Output size: 3.77 MB
 #> Running query on Parquet file...
 #>   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END FORMAT_GT_test_deep_variant
@@ -1313,15 +1313,15 @@ rm -f $OUT_PQ
 #> 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES <NA>    <NA>  <NA>
 #> 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpjHlDys 
+#>   Build directory: /tmp/Rtmp4HufGC 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpjHlDys
+#>   Build directory: /tmp/Rtmp4HufGC
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpjHlDys'
+#> make[1]: Entering directory '/tmp/Rtmp4HufGC'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpjHlDys'
-#> make[1]: Entering directory '/tmp/RtmpjHlDys'
+#> make[1]: Leaving directory '/tmp/Rtmp4HufGC'
+#> make[1]: Entering directory '/tmp/Rtmp4HufGC'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -1331,9 +1331,9 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpjHlDys'
-#> Extension built: /tmp/RtmpjHlDys/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpjHlDys/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/Rtmp4HufGC'
+#> Extension built: /tmp/Rtmp4HufGC/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmp4HufGC/build/bcf_reader.duckdb_extension 
 #> 
 #> VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
 #> 
@@ -1354,7 +1354,7 @@ rm -f $OUT_PQ
 #>     FORMAT_VAF_test_deep_variant        list
 #>      FORMAT_PL_test_deep_variant        list
 #>  FORMAT_MED_DP_test_deep_variant     integer
-#> Parquet File Information: /tmp/tmp.B4Ie2UMUOi.parquet 
+#> Parquet File Information: /tmp/tmp.EX4VAxe4gf.parquet 
 #> 
 #> File size: 3.77 MB 
 #> Total rows: 368319 
