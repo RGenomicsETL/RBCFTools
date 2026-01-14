@@ -526,7 +526,7 @@ time $SCRIPT convert --quiet -i $BCF -o $OUT_PQ -t 4  > $Log 2>&1
 cat $Log
 
 # Query with DuckDB SQL
-$SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
+$SCRIPT query -i $OUT_PQ -q "SELECT * FROM parquet_scan('$OUT_PQ') LIMIT 5"
 
 # Describe table structure
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
