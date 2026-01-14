@@ -13,41 +13,23 @@ if (!requireNamespace("DBI", quietly = TRUE)) {
 }
 
 # Setup test connection
-con <- duckdb::dbConnect(duckdb::duckdb(
-  config = list(
-    allow_unsigned_extensions = "true",
-    enable_external_access = "true"
-  )
-))
+# make temporary DuckDB file
+tmp_duckdb_file <- tempfile(fileext = ".duckdb")
+con <- DBI::dbConnect(duckdb::duckdb(tmp_duckdb_file),
+  allow_unsigned_extensions = "true",
+  enable_external_access = "true"
+)
 on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
-# Load DuckLake extension
-loaded_ducklake <- FALSE
-local_ducklake <- file.path(
-  normalizePath(file.path("ducklake"), mustWork = FALSE),
-  "build/release/extension/ducklake/ducklake.duckdb_extension"
-)
-if (file.exists(local_ducklake)) {
-  res <- try(
-    DBI::dbExecute(
-      con,
-      sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
-    ),
-    silent = TRUE
-  )
-  loaded_ducklake <- !inherits(res, "try-error")
+# Verify connection is valid
+if (!DBI::dbIsValid(con)) {
+  message("DuckDB connection is not valid")
+  exit_file("DuckDB connection is not valid")
 }
-if (!loaded_ducklake) {
-  res <- try(
-    DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"),
-    silent = TRUE
-  )
-  res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
-  loaded_ducklake <- !inherits(res_load, "try-error")
-}
-if (!loaded_ducklake) {
-  exit_file("ducklake extension not available")
-}
+
+# Install and load DuckLake from official extensions
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "LOAD ducklake")
 
 # Load sqlite_scanner extension for SQLite support
 try(DBI::dbExecute(con, "INSTALL sqlite_scanner"), silent = TRUE)

@@ -81,56 +81,100 @@ on.exit(
   add = TRUE
 )
 
-Sys.sleep(3)
+# Wait for MinIO server to be ready
+max_retries <- 10
+for (i in 1:max_retries) {
+  Sys.sleep(2)
 
-alias_res <- processx::run(
-  mc_bin,
-  c(
-    "alias",
-    "set",
-    "ducklake_local",
-    paste0("http://", endpoint),
-    "minioadmin",
-    "minioadmin"
-  ),
-  error_on_status = FALSE
-)
-if (alias_res$exit_code != 0) {
-  exit_file("failed to configure mc alias")
-}
-
-bucket_res <- processx::run(
-  mc_bin,
-  c("mb", "ducklake_local/ducklake-test"),
-  error_on_status = FALSE
-)
-if (bucket_res$status != 0) {
-  exit_file("failed to create minio bucket")
-}
-
-con <- duckdb::dbConnect(duckdb::duckdb(
-  config = list(
-    allow_unsigned_extensions = "true",
-    enable_external_access = "true"
+  # Try to remove existing alias first
+  tryCatch(
+    processx::run(
+      mc_bin,
+      c("alias", "remove", "ducklake_local"),
+      error_on_status = FALSE
+    ),
+    error = function(e) NULL
   )
-))
+
+  alias_res <- tryCatch(
+    processx::run(
+      mc_bin,
+      c(
+        "alias",
+        "set",
+        "ducklake_local",
+        paste0("http://", endpoint),
+        "minioadmin",
+        "minioadmin"
+      ),
+      error_on_status = FALSE
+    ),
+    error = function(e) list(exit_code = -1, stderr = conditionMessage(e))
+  )
+
+  # Check if alias was set successfully
+  if (
+    !is.null(alias_res) &&
+      is.list(alias_res) &&
+      !is.null(alias_res$exit_code) &&
+      is.numeric(alias_res$exit_code) &&
+      alias_res$exit_code == 0
+  ) {
+    break
+  }
+
+  if (i == max_retries) {
+    error_msg <- if (!is.null(alias_res) && !is.null(alias_res$stderr)) {
+      alias_res$stderr
+    } else {
+      "Max retries reached"
+    }
+    exit_file(sprintf(
+      "failed to configure mc alias after %d attempts: %s",
+      max_retries,
+      error_msg
+    ))
+  }
+}
+
+bucket_res <- tryCatch(
+  processx::run(
+    mc_bin,
+    c("mb", "ducklake_local/ducklake-test"),
+    error_on_status = FALSE
+  ),
+  error = function(e) list(exit_code = -1, stderr = conditionMessage(e))
+)
+
+# Check result safely
+if (
+  is.null(bucket_res) ||
+    !is.list(bucket_res) ||
+    is.null(bucket_res$exit_code) ||
+    !is.numeric(bucket_res$exit_code) ||
+    bucket_res$exit_code != 0
+) {
+  error_msg <- if (!is.null(bucket_res) && !is.null(bucket_res$stderr)) {
+    bucket_res$stderr
+  } else {
+    "unknown error"
+  }
+  exit_file(sprintf("failed to create minio bucket: %s", error_msg))
+}
+# temporary duckdb file
+tmp_duckdb_file <- tempfile(fileext = ".duckdb")
+
+con <- DBI::dbConnect(duckdb::duckdb(tmp_duckdb_file),
+  allow_unsigned_extensions = "true",
+  enable_external_access = "true"
+)
 on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 try(DBI::dbExecute(con, "INSTALL httpfs"), silent = TRUE)
 try(DBI::dbExecute(con, "LOAD httpfs"), silent = TRUE)
 
-# Try local build first, then official install; skip if unavailable
-loaded_ducklake <- FALSE
-
-res <- try(
-  DBI::dbExecute(
-    con,
-    sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
-  ),
-  silent = TRUE
-)
-if (inherits(res, "try-error")) {
-  DBI::dbExecute(con, "INSTALL ducklake")
-}
+# Install and load DuckLake from official extensions
+DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "LOAD ducklake")
 
 message("Creating secret for MinIO access")
 ducklake_create_s3_secret(
