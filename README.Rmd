@@ -199,7 +199,6 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-# describe using duckdb
 
 ```
 
@@ -441,49 +440,74 @@ ducklake_load_vcf(
 ```
 
 ### Add another VCF file with different schema
-```{r ducklake-add-second, eval=TRUE}
-# Ensure we are operating inside the DuckLake catalog
-DBI::dbExecute(con, "USE lake")
 
-# Load a second VCF file with potentially different schema (VEP annotations)
+DuckLake supports schema evolution via `ALTER TABLE`. Use `allow_evolution = TRUE` to automatically add new columns from incoming files.
+
+```{r ducklake-add-second, eval=TRUE}
+DBI::dbExecute(con, "USE lake")
+variants_count <- DBI::dbGetQuery(con, "SELECT COUNT(*) as n FROM variants")$n[1]
+variants_count
+
 vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
-ducklake_load_vcf(
+local_parquet2 <- tempfile(fileext = ".parquet")
+vcf_to_parquet_duckdb(vcf_file2, local_parquet2, extension_path = ext_path)
+
+DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM read_parquet('%s')", local_parquet2))
+
+s3_parquet2 <- paste0(data_path_s3, "variants/variants_vep.parquet")
+mc_cmd_args <- c("cp", local_parquet2, paste0("ducklake_local/", bucket_name, "/data/variants/variants_vep.parquet"))
+processx::run(mc_bin, mc_cmd_args, echo = FALSE)
+
+DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM read_parquet('%s')", s3_parquet2))
+
+ducklake_register_parquet(
   con,
-  table = "variants_vep",
-  vcf_path = vcf_file2,
-  extension_path = ext_path,
-  threads = 1
+  table = "lake.variants",
+  parquet_files = s3_parquet2,
+  create_table = FALSE,
+  allow_evolution = TRUE
 )
+
+variants_count_after <- DBI::dbGetQuery(con, "SELECT COUNT(*) as n FROM variants")$n[1]
+variants_count_after
 ```
 
 ### List lake content
 ```{r check-lake, eval=TRUE}
 DBI::dbExecute(con, "USE lake")
 
-# Query both tables to show different schemas
-variant_counts <- DBI::dbGetQuery(con, "
-  SELECT 'variants' as table_name, COUNT(*) as n FROM variants
-  UNION ALL
-  SELECT 'variants_vep' as table_name, COUNT(*) as n FROM variants_vep
+DBI::dbGetQuery(con, "
+  SELECT 
+    COUNT(*) as total_variants,
+    COUNT(DISTINCT CHROM) as n_chromosomes,
+    MIN(POS) as min_position,
+    MAX(POS) as max_position
+  FROM variants
 ")
-print(variant_counts)
 
-# Show schema differences between the two tables
-variants_schema <- DBI::dbGetQuery(con, "DESCRIBE variants")
-variants_vep_schema <- DBI::dbGetQuery(con, "DESCRIBE variants_vep")
-
-variants_schema$column_name
-
-variants_vep_schema$column_name
+DBI::dbGetQuery(con, "DESCRIBE variants")
 ```
 
 ```{r ducklake-files, eval=TRUE}
-# List physical files managed by DuckLake for both tables
+ducklake_list_files(con, "lake", "variants")
+```
 
-DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
+### Snapshots and time travel
 
-DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants_vep')")
+```{r ducklake-snapshots, eval=TRUE}
+ducklake_snapshots(con, "lake")
+ducklake_current_snapshot(con, "lake")
+```
 
+### Configuration
+
+```{r ducklake-config, eval=TRUE}
+ducklake_options(con, "lake")
+ducklake_set_option(con, "lake", "parquet_compression", "zstd")
+ducklake_options(con, "lake")
+```
+
+```{r ducklake-cleanup, eval=TRUE}
 DBI::dbDisconnect(con, shutdown = TRUE)
 tools::pskill(pid)
 ```

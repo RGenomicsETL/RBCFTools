@@ -1,5 +1,18 @@
 # RBCFTools 1.23-0.0.2.9000 (development version)
 
+## DuckLake utilities
+
+- `allow_evolution` parameter for `ducklake_load_vcf()` and `ducklake_register_parquet()` to auto-add new columns via ALTER TABLE
+- `ducklake_snapshots()`: list snapshot history
+- `ducklake_current_snapshot()`: get current snapshot ID
+- `ducklake_set_commit_message()`: set author/message for transactions
+- `ducklake_options()`: get DuckLake configuration
+- `ducklake_set_option()`: set compression, row group size, etc.
+- `ducklake_query_snapshot()`: time travel queries at specific versions
+- `ducklake_list_files()`: list Parquet files managed by DuckLake
+- `ducklake_merge()`: upsert data using MERGE INTO syntax
+
+## Other changes
 
 - added processx to suggests and use it instead of system2 in docs and tests
 - renamed `vcf_query` to `vcf_query_arrow` and vcf_to_parquet to vcf_to_parquet

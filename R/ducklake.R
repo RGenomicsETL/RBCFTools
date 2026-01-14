@@ -734,26 +734,44 @@ ducklake_attach <- function(
 #' @param parquet_files Character vector of Parquet file paths/URIs.
 #' @param create_table Logical, create the table if it doesn't exist. Default: TRUE.
 #'   When TRUE, schema is inferred from the first Parquet file.
+#' @param allow_missing Logical, allow missing columns (filled with defaults). Default: FALSE.
+#' @param ignore_extra_columns Logical, ignore extra columns in files. Default: FALSE.
+#' @param allow_evolution Logical, evolve table schema by adding new columns from files.
+#'   Default: FALSE. When TRUE, new columns found in files are added via ALTER TABLE
+#'   before registration, making all columns queryable.
 #'
 #' @return Invisibly returns the number of files registered.
 #' @export
 #'
 #' @details
 #' This function uses DuckLake's `ducklake_add_data_files()` to register
-
 #' external Parquet files in the catalog. The files must already exist and
 #' have a schema compatible with the target table.
+#'
+#' **Schema Evolution (`allow_evolution = TRUE`):**
+#' When enabled, the function compares each file's schema against the table schema
+#' and adds any missing columns via `ALTER TABLE ADD COLUMN` before registration.
+#' This allows combining VCF files with different annotations (e.g., VEP columns)
+#' into a single table where all columns are queryable.
 #'
 #' @examples
 #' \dontrun{
 #' # Register a Parquet file created by vcf_to_parquet_duckdb()
 #' ducklake_register_parquet(con, "variants", "s3://bucket/variants.parquet")
+#'
+#' # Register with schema evolution (add new columns from file)
+#' ducklake_register_parquet(con, "variants", "s3://bucket/vep_variants.parquet",
+#'   allow_evolution = TRUE
+#' )
 #' }
 ducklake_register_parquet <- function(
   con,
   table,
   parquet_files,
-  create_table = TRUE
+  create_table = TRUE,
+  allow_missing = FALSE,
+  ignore_extra_columns = FALSE,
+  allow_evolution = FALSE
 ) {
   if (missing(con) || is.null(con)) {
     stop("con must be provided", call. = FALSE)
@@ -768,8 +786,18 @@ ducklake_register_parquet <- function(
     stop("Package 'DBI' is required", call. = FALSE)
   }
 
-  # Parse table name
+  # Warn about conflicting options
 
+  if (isTRUE(allow_evolution) && isTRUE(ignore_extra_columns)) {
+    warning(
+      "allow_evolution and ignore_extra_columns are mutually exclusive; ",
+      "allow_evolution takes precedence",
+      call. = FALSE
+    )
+    ignore_extra_columns <- FALSE
+  }
+
+  # Parse table name
   table_parts <- strsplit(table, "\\.", fixed = FALSE)[[1]]
   quoted_table <- if (length(table_parts) == 2) {
     DBI::dbQuoteIdentifier(
@@ -809,15 +837,51 @@ ducklake_register_parquet <- function(
   # Register files using ducklake_add_data_files
   n_registered <- 0
   for (pq_file in parquet_files) {
-    add_sql <- sprintf(
-      "CALL ducklake_add_data_files(%s, %s, %s)",
-      DBI::dbQuoteString(con, table_parts[length(table_parts)]),
-      DBI::dbQuoteString(
+    # Schema evolution: add new columns from file before registration
+    if (isTRUE(allow_evolution)) {
+      existing_cols <- DBI::dbGetQuery(
         con,
-        if (length(table_parts) == 2) table_parts[1] else "main"
-      ),
+        sprintf("SELECT column_name FROM (DESCRIBE %s)", quoted_table)
+      )$column_name
+      file_schema <- DBI::dbGetQuery(
+        con,
+        sprintf("DESCRIBE SELECT * FROM read_parquet(%s)", DBI::dbQuoteString(con, pq_file))
+      )
+      new_cols <- file_schema[!file_schema$column_name %in% existing_cols, ]
+      if (nrow(new_cols) > 0) {
+        alter_statements <- sprintf(
+          'ALTER TABLE %s ADD COLUMN "%s" %s',
+          quoted_table, new_cols$column_name, new_cols$column_type
+        )
+        invisible(lapply(alter_statements, function(sql) DBI::dbExecute(con, sql)))
+      }
+    }
+
+    # Build ducklake_add_data_files call
+    # Note: order is (catalog, table, file, schema => ...) for DuckLake API
+    catalog_name <- if (length(table_parts) == 2) table_parts[1] else "main"
+    table_name <- table_parts[length(table_parts)]
+
+    call_params <- c(
+      DBI::dbQuoteString(con, catalog_name),
+      DBI::dbQuoteString(con, table_name),
       DBI::dbQuoteString(con, pq_file)
     )
+
+    # Add schema evolution options
+    # When allow_evolution is TRUE, we always need allow_missing for the original table's columns
+    if (isTRUE(allow_missing) || isTRUE(allow_evolution)) {
+      call_params <- c(call_params, "allow_missing => true")
+    }
+    if (isTRUE(ignore_extra_columns)) {
+      call_params <- c(call_params, "ignore_extra_columns => true")
+    }
+
+    add_sql <- sprintf(
+      "CALL ducklake_add_data_files(%s)",
+      paste(call_params, collapse = ", ")
+    )
+
     tryCatch(
       {
         DBI::dbExecute(con, add_sql)
@@ -848,6 +912,10 @@ ducklake_register_parquet <- function(
 #' @param region Optional region filter (e.g., "chr1:1000-2000").
 #' @param columns Optional character vector of columns to include.
 #' @param overwrite Logical, drop existing table first.
+#' @param allow_evolution Logical, evolve table schema by adding new columns from VCF.
+#'   Default: FALSE. When TRUE, new columns found in the VCF are added via ALTER TABLE
+#'   before insertion, making all columns queryable. Useful for combining VCFs with
+#'   different annotations (e.g., VEP columns) or different samples (FORMAT_*_SampleName).
 #'
 #' @return Invisibly returns the path to the created Parquet file.
 #' @export
@@ -861,6 +929,12 @@ ducklake_register_parquet <- function(
 #' 1. VCF → Parquet via `vcf_to_parquet_duckdb()` (bcf_reader)
 #' 2. Register Parquet in DuckLake catalog
 #'
+#' **Schema Evolution (`allow_evolution = TRUE`):**
+#' When loading multiple VCFs with different schemas (e.g., different samples
+#' or different annotation fields), enable `allow_evolution` to automatically
+#' add new columns to the table schema. This uses DuckLake's `ALTER TABLE ADD COLUMN`
+#' which preserves existing data files without rewriting.
+#'
 #' @examples
 #' \dontrun{
 #' # Build extension
@@ -872,10 +946,15 @@ ducklake_register_parquet <- function(
 #' ducklake_attach(con, "catalog.ducklake", "/data/parquet/", alias = "lake")
 #' DBI::dbExecute(con, "USE lake")
 #'
-#' # Load VCF
-#' ducklake_load_vcf(con, "variants", "sample.vcf.gz", ext_path, threads = 8)
+#' # Load first VCF
+#' ducklake_load_vcf(con, "variants", "sample1.vcf.gz", ext_path, threads = 8)
 #'
-#' # Query
+#' # Load second VCF with different annotations, evolving schema
+#' ducklake_load_vcf(con, "variants", "sample2_vep.vcf.gz", ext_path,
+#'   allow_evolution = TRUE
+#' )
+#'
+#' # Query - all columns from both VCFs are available
 #' DBI::dbGetQuery(con, "SELECT CHROM, COUNT(*) FROM variants GROUP BY CHROM")
 #' }
 ducklake_load_vcf <- function(
@@ -889,7 +968,8 @@ ducklake_load_vcf <- function(
   row_group_size = 100000L,
   region = NULL,
   columns = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  allow_evolution = FALSE
 ) {
   if (missing(con) || is.null(con)) {
     stop("con must be provided", call. = FALSE)
@@ -979,6 +1059,26 @@ ducklake_load_vcf <- function(
   )
 
   if (table_exists) {
+    # Schema evolution: add new columns before insert
+    if (isTRUE(allow_evolution)) {
+      existing_cols <- DBI::dbGetQuery(
+        con,
+        sprintf("SELECT column_name FROM (DESCRIBE %s)", quoted_table)
+      )$column_name
+      file_schema <- DBI::dbGetQuery(
+        con,
+        sprintf("DESCRIBE SELECT * FROM read_parquet(%s)", DBI::dbQuoteString(con, output_path))
+      )
+      new_cols <- file_schema[!file_schema$column_name %in% existing_cols, ]
+      if (nrow(new_cols) > 0) {
+        alter_statements <- sprintf(
+          'ALTER TABLE %s ADD COLUMN "%s" %s',
+          quoted_table, new_cols$column_name, new_cols$column_type
+        )
+        invisible(lapply(alter_statements, function(sql) DBI::dbExecute(con, sql)))
+      }
+    }
+
     insert_sql <- sprintf(
       "INSERT INTO %s SELECT * FROM read_parquet(%s)",
       quoted_table,
@@ -1000,4 +1100,215 @@ ducklake_load_vcf <- function(
   }
 
   invisible(output_path)
+}
+
+#' List DuckLake snapshots
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name (alias used in ATTACH).
+#'
+#' @return Data frame with snapshot history.
+#' @export
+ducklake_snapshots <- function(con, catalog = "lake") {
+  DBI::dbGetQuery(con, sprintf("SELECT * FROM %s.snapshots()", catalog))
+}
+
+#' Get current snapshot ID
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name.
+#'
+#' @return Integer snapshot ID.
+#' @export
+ducklake_current_snapshot <- function(con, catalog = "lake") {
+  DBI::dbGetQuery(con, sprintf("FROM %s.current_snapshot()", catalog))$id[1]
+}
+
+#' Set commit message for current transaction
+#'
+#' Must be called within a transaction (BEGIN/COMMIT block).
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name.
+#' @param author Author name.
+#' @param message Commit message.
+#' @param extra_info Optional JSON string with extra metadata.
+#'
+#' @return Invisible NULL.
+#' @export
+ducklake_set_commit_message <- function(
+  con,
+  catalog = "lake",
+  author,
+  message,
+  extra_info = NULL
+) {
+  if (is.null(extra_info)) {
+    sql <- sprintf(
+      "CALL %s.set_commit_message(%s, %s)",
+      catalog,
+      DBI::dbQuoteString(con, author),
+      DBI::dbQuoteString(con, message)
+    )
+  } else {
+    sql <- sprintf(
+      "CALL %s.set_commit_message(%s, %s, extra_info => %s)",
+      catalog,
+      DBI::dbQuoteString(con, author),
+      DBI::dbQuoteString(con, message),
+      DBI::dbQuoteString(con, extra_info)
+    )
+  }
+  DBI::dbExecute(con, sql)
+  invisible(NULL)
+}
+
+#' Get DuckLake configuration options
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name.
+#'
+#' @return Data frame with current options.
+#' @export
+ducklake_options <- function(con, catalog = "lake") {
+  DBI::dbGetQuery(con, sprintf("FROM %s.options()", catalog))
+}
+
+#' Set DuckLake configuration option
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name.
+#' @param option Option name (e.g., "parquet_compression", "parquet_row_group_size").
+#' @param value Option value.
+#' @param schema Optional schema scope.
+#' @param table_name Optional table scope.
+#'
+#' @return Invisible NULL.
+#' @export
+#'
+#' @details
+#' Common options:
+#' - `parquet_compression`: snappy, zstd, gzip, lz4
+#' - `parquet_row_group_size`: rows per row group (default 122880)
+#' - `target_file_size`: target file size for compaction (default 512MB
+#' - `data_inlining_row_limit`: max rows to inline (default 0)
+ducklake_set_option <- function(
+  con,
+  catalog = "lake",
+  option,
+  value,
+  schema = NULL,
+  table_name = NULL
+) {
+  params <- c(
+    DBI::dbQuoteString(con, option),
+    DBI::dbQuoteString(con, as.character(value))
+  )
+  if (!is.null(schema)) {
+    params <- c(params, sprintf("schema => %s", DBI::dbQuoteString(con, schema)))
+  }
+  if (!is.null(table_name)) {
+    params <- c(params, sprintf("table_name => %s", DBI::dbQuoteString(con, table_name)))
+  }
+  sql <- sprintf("CALL %s.set_option(%s)", catalog, paste(params, collapse = ", "))
+  DBI::dbExecute(con, sql)
+  invisible(NULL)
+}
+
+#' Query table at a specific snapshot (time travel)
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param table Table name.
+#' @param snapshot_id Snapshot version to query.
+#' @param query SQL query (use 'tbl' as table alias).
+#'
+#' @return Query result as data frame.
+#' @export
+ducklake_query_snapshot <- function(con, table, snapshot_id, query = "SELECT * FROM tbl") {
+  sql <- sprintf(
+    "WITH tbl AS (SELECT * FROM %s AT (VERSION => %d)) %s",
+    table, as.integer(snapshot_id), query
+  )
+  DBI::dbGetQuery(con, sql)
+}
+
+#' List files managed by DuckLake for a table
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param catalog DuckLake catalog name.
+#' @param table Table name.
+#' @param schema Schema name (default "main").
+#'
+#' @return Data frame with file information.
+#' @export
+ducklake_list_files <- function(con, catalog = "lake", table, schema = "main") {
+  DBI::dbGetQuery(
+    con,
+    sprintf(
+      "FROM ducklake_list_files(%s, %s, schema => %s)",
+      DBI::dbQuoteString(con, catalog),
+      DBI::dbQuoteString(con, table),
+      DBI::dbQuoteString(con, schema)
+    )
+  )
+}
+
+#' Merge/upsert data into a DuckLake table
+#'
+#' @param con DuckDB connection with DuckLake attached.
+#' @param target Target table name.
+#' @param source Source table/query.
+#' @param on_cols Column(s) to match on.
+#' @param when_matched Action when matched: "UPDATE", "DELETE", or NULL.
+#' @param when_not_matched Action when not matched: "INSERT" or NULL.
+#' @param update_cols Columns to update (NULL = all columns).
+#'
+#' @return Number of rows affected.
+#' @export
+ducklake_merge <- function(
+  con,
+  target,
+  source,
+  on_cols,
+  when_matched = "UPDATE",
+  when_not_matched = "INSERT",
+  update_cols = NULL
+) {
+  on_clause <- paste(
+    sprintf("%s.%s = source.%s", target, on_cols, on_cols),
+    collapse = " AND "
+  )
+
+  matched_clause <- if (!is.null(when_matched)) {
+    if (when_matched == "UPDATE") {
+      if (is.null(update_cols)) {
+        "WHEN MATCHED THEN UPDATE"
+      } else {
+        set_clause <- paste(
+          sprintf("%s = source.%s", update_cols, update_cols),
+          collapse = ", "
+        )
+        sprintf("WHEN MATCHED THEN UPDATE SET %s", set_clause)
+      }
+    } else if (when_matched == "DELETE") {
+      "WHEN MATCHED THEN DELETE"
+    } else {
+      ""
+    }
+  } else {
+    ""
+  }
+
+  not_matched_clause <- if (!is.null(when_not_matched) && when_not_matched == "INSERT") {
+    "WHEN NOT MATCHED THEN INSERT"
+  } else {
+    ""
+  }
+
+  sql <- sprintf(
+    "MERGE INTO %s USING (%s) AS source ON (%s) %s %s",
+    target, source, on_clause, matched_clause, not_matched_clause
+  )
+
+  DBI::dbExecute(con, sql)
 }
