@@ -294,7 +294,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet
+#> Wrote 11 rows to /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -312,13 +312,13 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 5     1 13327   G   C
 #> 6     1 14699   C   G
 pq_me |> head()
-#>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
-#> 2 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
-#> 3 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
-#> 4 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
-#> 5 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
-#> 6 /tmp/RtmpqXgQ5A/file3e71e96283a299.parquet            0                 11
+#>                                   file_name row_group_id row_group_num_rows
+#> 1 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
+#> 2 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
+#> 3 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
+#> 4 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
+#> 5 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
+#> 6 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -401,7 +401,7 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpqXgQ5A/file3e71e95e91af84.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/Rtmpv5D3hF/file3e936217c6b4a5.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -622,7 +622,7 @@ cmd <- sprintf(
 pid_output <- processx::run("sh", c("-c", cmd), echo = FALSE)$stdout
 pid <- as.integer(pid_output)
 pid
-#> [1] 4092660
+#> [1] 4101230
 # Give MinIO time to start
 Sys.sleep(10)
 
@@ -668,7 +668,7 @@ processx::run(mc_bin, bucket_cmd_args, echo = FALSE)
 #> [1] 0
 #> 
 #> $stdout
-#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768415290`.\n"
+#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768416636`.\n"
 #> 
 #> $stderr
 #> [1] ""
@@ -748,10 +748,10 @@ DBI::dbExecute(con, "USE lake")
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpqXgQ5A
+#>   Build directory: /tmp/Rtmpv5D3hF
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> Extension built: /tmp/RtmpqXgQ5A/build/bcf_reader.duckdb_extension
+#> Extension built: /tmp/Rtmpv5D3hF/build/bcf_reader.duckdb_extension
 ducklake_load_vcf(
   con,
   table = "variants",
@@ -759,10 +759,29 @@ ducklake_load_vcf(
   extension_path = ext_path,
   threads = 1
 )
-#> Wrote: /tmp/RtmpqXgQ5A/variants_20260114_192810.parquet
+#> Wrote: /tmp/Rtmpv5D3hF/variants_20260114_195036.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
+```
+
+### Add another VCF file with different schema
+
+``` r
+# Ensure we are operating inside the DuckLake catalog
+DBI::dbExecute(con, "USE lake")
+#> [1] 0
+
+# Load a second VCF file with potentially different schema (VEP annotations)
+vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
+ducklake_load_vcf(
+  con,
+  table = "variants_vep",
+  vcf_path = vcf_file2,
+  extension_path = ext_path,
+  threads = 1
+)
+#> Wrote: /tmp/Rtmpv5D3hF/variants_vep_20260114_195037.parquet
 ```
 
 ### List lake content
@@ -770,22 +789,113 @@ ducklake_load_vcf(
 ``` r
 DBI::dbExecute(con, "USE lake")
 #> [1] 0
-DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
-#>        n
-#> 1 368319
+
+# Query both tables to show different schemas
+variant_counts <- DBI::dbGetQuery(con, "
+  SELECT 'variants' as table_name, COUNT(*) as n FROM variants
+  UNION ALL
+  SELECT 'variants_vep' as table_name, COUNT(*) as n FROM variants_vep
+")
+print(variant_counts)
+#>     table_name      n
+#> 1     variants 368319
+#> 2 variants_vep    802
+
+# Show schema differences between the two tables
+variants_schema <- DBI::dbGetQuery(con, "DESCRIBE variants")
+variants_vep_schema <- DBI::dbGetQuery(con, "DESCRIBE variants_vep")
+
+cat("Variants table columns:\n")
+#> Variants table columns:
+print(variants_schema$column_name)
+#>  [1] "CHROM"                           "POS"                            
+#>  [3] "ID"                              "REF"                            
+#>  [5] "ALT"                             "QUAL"                           
+#>  [7] "FILTER"                          "INFO_END"                       
+#>  [9] "FORMAT_GT_test_deep_variant"     "FORMAT_GQ_test_deep_variant"    
+#> [11] "FORMAT_DP_test_deep_variant"     "FORMAT_MIN_DP_test_deep_variant"
+#> [13] "FORMAT_AD_test_deep_variant"     "FORMAT_VAF_test_deep_variant"   
+#> [15] "FORMAT_PL_test_deep_variant"     "FORMAT_MED_DP_test_deep_variant"
+cat("\nVEP Variants table columns:\n")
+#> 
+#> VEP Variants table columns:
+print(variants_vep_schema$column_name)
+#>  [1] "CHROM"                   "POS"                    
+#>  [3] "ID"                      "REF"                    
+#>  [5] "ALT"                     "QUAL"                   
+#>  [7] "FILTER"                  "VEP_Allele"             
+#>  [9] "VEP_Consequence"         "VEP_IMPACT"             
+#> [11] "VEP_SYMBOL"              "VEP_Gene"               
+#> [13] "VEP_Feature_type"        "VEP_Feature"            
+#> [15] "VEP_BIOTYPE"             "VEP_EXON"               
+#> [17] "VEP_INTRON"              "VEP_HGVSc"              
+#> [19] "VEP_HGVSp"               "VEP_cDNA_position"      
+#> [21] "VEP_CDS_position"        "VEP_Protein_position"   
+#> [23] "VEP_Amino_acids"         "VEP_Codons"             
+#> [25] "VEP_Existing_variation"  "VEP_ALLELE_NUM"         
+#> [27] "VEP_DISTANCE"            "VEP_STRAND"             
+#> [29] "VEP_FLAGS"               "VEP_VARIANT_CLASS"      
+#> [31] "VEP_SYMBOL_SOURCE"       "VEP_HGNC_ID"            
+#> [33] "VEP_CANONICAL"           "VEP_TSL"                
+#> [35] "VEP_APPRIS"              "VEP_CCDS"               
+#> [37] "VEP_ENSP"                "VEP_SWISSPROT"          
+#> [39] "VEP_TREMBL"              "VEP_UNIPARC"            
+#> [41] "VEP_SOURCE"              "VEP_GENE_PHENO"         
+#> [43] "VEP_SIFT"                "VEP_PolyPhen"           
+#> [45] "VEP_DOMAINS"             "VEP_miRNA"              
+#> [47] "VEP_HGVS_OFFSET"         "VEP_AF"                 
+#> [49] "VEP_AFR_AF"              "VEP_AMR_AF"             
+#> [51] "VEP_EAS_AF"              "VEP_EUR_AF"             
+#> [53] "VEP_SAS_AF"              "VEP_AA_AF"              
+#> [55] "VEP_EA_AF"               "VEP_gnomAD_AF"          
+#> [57] "VEP_gnomAD_AFR_AF"       "VEP_gnomAD_AMR_AF"      
+#> [59] "VEP_gnomAD_ASJ_AF"       "VEP_gnomAD_EAS_AF"      
+#> [61] "VEP_gnomAD_FIN_AF"       "VEP_gnomAD_NFE_AF"      
+#> [63] "VEP_gnomAD_OTH_AF"       "VEP_gnomAD_SAS_AF"      
+#> [65] "VEP_MAX_AF"              "VEP_MAX_AF_POPS"        
+#> [67] "VEP_CLIN_SIG"            "VEP_SOMATIC"            
+#> [69] "VEP_PHENO"               "VEP_PUBMED"             
+#> [71] "VEP_MOTIF_NAME"          "VEP_MOTIF_POS"          
+#> [73] "VEP_HIGH_INF_POS"        "VEP_MOTIF_SCORE_CHANGE" 
+#> [75] "VEP_LoF"                 "VEP_LoF_filter"         
+#> [77] "VEP_LoF_flags"           "VEP_LoF_info"           
+#> [79] "VEP_CADD_PHRED"          "VEP_CADD_RAW"           
+#> [81] "VEP_gnomAD2.1"           "VEP_gnomAD2.1_AF_raw"   
+#> [83] "VEP_gnomAD2.1_AF_popmax" "VEP_gnomAD2.1_AF_afr"   
+#> [85] "VEP_gnomAD2.1_AF_amr"    "VEP_gnomAD2.1_AF_asj"   
+#> [87] "VEP_gnomAD2.1_AF_eas"    "VEP_gnomAD2.1_AF_fin"   
+#> [89] "VEP_gnomAD2.1_AF_nfe"    "VEP_gnomAD2.1_AF_oth"   
+#> [91] "VEP_gnomAD2.1_AF_sas"    "INFO_CSQ"               
+#> [93] "INFO_AF"
 ```
 
 ``` r
-# List physical files managed by DuckLake for this table
-DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
+# List physical files managed by DuckLake for both tables
+cat("Files for 'variants' table:\n")
+#> Files for 'variants' table:
+print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')"))
 #>                                                                                              data_file
-#> 1 s3://readme-demo-1768415290/data/main/variants/ducklake-019bbdc3-e83c-7020-ba35-63d0ac8ab6c6.parquet
+#> 1 s3://readme-demo-1768416636/data/main/variants/ducklake-019bbdd8-716d-7c9a-88c4-420d4fd18f0f.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
 #> 1              5751658                  6275                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
 #> 1        <NA>                     NA                      NA
 #>   delete_file_encryption_key
 #> 1                       NULL
+
+cat("\nFiles for 'variants_vep' table:\n")
+#> 
+#> Files for 'variants_vep' table:
+print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants_vep')"))
+#>                                                                                                  data_file
+#> 1 s3://readme-demo-1768416636/data/main/variants_vep/ducklake-019bbdd8-722b-7c69-bc4b-e2297a900fff.parquet
+#>   data_file_size_bytes data_file_footer_size data_file_encryption_key
+#> 1               183084                 15439                     NULL
+#>   delete_file delete_file_size_bytes delete_file_footer_size
+#> 1        <NA>                     NA                      NA
+#>   delete_file_encryption_key
+#> 1                       NULL
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 tools::pskill(pid)
 ```
@@ -879,19 +989,19 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> 
-#> real 0m1.573s
-#> user 0m3.572s
-#> sys  0m1.997s
+#> real 0m1.558s
+#> user 0m3.462s
+#> sys  0m1.949s
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpaKXGnv 
+#>   Build directory: /tmp/Rtmpjd6igN 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpaKXGnv
+#>   Build directory: /tmp/Rtmpjd6igN
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpaKXGnv'
+#> make[1]: Entering directory '/tmp/Rtmpjd6igN'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpaKXGnv'
-#> make[1]: Entering directory '/tmp/RtmpaKXGnv'
+#> make[1]: Leaving directory '/tmp/Rtmpjd6igN'
+#> make[1]: Entering directory '/tmp/Rtmpjd6igN'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -901,44 +1011,44 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpaKXGnv'
-#> Extension built: /tmp/RtmpaKXGnv/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpaKXGnv/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/Rtmpjd6igN'
+#> Extension built: /tmp/Rtmpjd6igN/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmpjd6igN/build/bcf_reader.duckdb_extension 
 #> 
 #> Converting VCF to Parquet (DuckDB mode)...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
-#>   Output: /tmp/tmp.kdptmDOiAk.parquet 
+#>   Output: /tmp/tmp.vxEA9eNwli.parquet 
 #>   Compression: zstd 
 #>   Row group size: 100000 
 #>   Threads: 4 
 #> Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0004.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0003.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0002.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0001.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0008.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0007.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0006.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0005.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0012.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0010.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0011.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0009.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0014.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0016.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0015.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0013.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0018.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0020.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0017.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0024.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0022.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0019.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0021.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0023.parquet
-#> Wrote: /tmp/RtmpaKXGnv/vcf_duckdb_parallel_3e74236ad2f620/contig_0025.parquet
-#> Merging temporary Parquet files... to /tmp/tmp.kdptmDOiAk.parquet
-#> Merged 25 parquet files -> tmp.kdptmDOiAk.parquet (368319 rows)
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0004.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0003.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0002.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0001.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0008.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0007.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0006.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0005.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0012.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0010.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0011.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0009.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0016.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0015.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0014.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0013.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0018.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0020.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0024.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0017.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0019.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0022.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0021.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0023.parquet
+#> Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0025.parquet
+#> Merging temporary Parquet files... to /tmp/tmp.vxEA9eNwli.parquet
+#> Merged 25 parquet files -> tmp.vxEA9eNwli.parquet (368319 rows)
 #> 
 #> ✓ Conversion complete!
 #>   Time: 0.90 seconds
@@ -993,15 +1103,15 @@ rm -f $OUT_PQ
 #> 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES <NA>    <NA>  <NA>
 #> 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpGamDLQ 
+#>   Build directory: /tmp/RtmpzpCiOY 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpGamDLQ
+#>   Build directory: /tmp/RtmpzpCiOY
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpGamDLQ'
+#> make[1]: Entering directory '/tmp/RtmpzpCiOY'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpGamDLQ'
-#> make[1]: Entering directory '/tmp/RtmpGamDLQ'
+#> make[1]: Leaving directory '/tmp/RtmpzpCiOY'
+#> make[1]: Entering directory '/tmp/RtmpzpCiOY'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -1011,9 +1121,9 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpGamDLQ'
-#> Extension built: /tmp/RtmpGamDLQ/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpGamDLQ/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/RtmpzpCiOY'
+#> Extension built: /tmp/RtmpzpCiOY/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/RtmpzpCiOY/build/bcf_reader.duckdb_extension 
 #> 
 #> VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
 #> 
@@ -1034,7 +1144,7 @@ rm -f $OUT_PQ
 #>     FORMAT_VAF_test_deep_variant        list
 #>      FORMAT_PL_test_deep_variant        list
 #>  FORMAT_MED_DP_test_deep_variant     integer
-#> Parquet File Information: /tmp/tmp.kdptmDOiAk.parquet 
+#> Parquet File Information: /tmp/tmp.vxEA9eNwli.parquet 
 #> 
 #> File size: 3.77 MB 
 #> Total rows: 368319 
