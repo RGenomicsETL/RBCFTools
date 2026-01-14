@@ -104,7 +104,6 @@ s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 
 ```{r s3-example, eval=TRUE}
 # Use processx instead of system2
-if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
 res <- processx::run(
   bcftools_path(),
   c("index", "-n", s3_vcf_uri),
@@ -326,6 +325,7 @@ We start by seting up and configuring a `minio` server
 
 ```{r ducklake-minio, eval=TRUE}
 # DuckLake with S3-compatible storage using local MinIO
+if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -339,14 +339,14 @@ dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 port <- 9000
 endpoint <- sprintf("127.0.0.1:%d", port)
 
-# Start MinIO server
+# Start MinIO server in background
 cmd <- sprintf(
   "%s server %s --address %s > /dev/null 2>&1 & echo $!",
   shQuote(minio_bin),
   shQuote(data_dir),
   endpoint
 )
-pid_output <- system(cmd, intern = TRUE)
+pid_output <- processx::run("sh", c("-c", cmd), echo = FALSE)$stdout
 pid <- as.integer(pid_output)
 pid
 # Give MinIO time to start
@@ -354,15 +354,20 @@ Sys.sleep(10)
 
 # Configure mc alias
 # remove previous alias
-system(sprintf("%s alias remove ducklake_local 2>/dev/null", mc_bin), 
-       ignore.stdout = TRUE, ignore.stderr = TRUE)
-mc_cmd <- paste0(mc_bin, " alias set ducklake_local http://", endpoint, " minioadmin minioadmin")
-system(mc_cmd, intern=TRUE)
+processx::run(
+  mc_bin,
+  c("alias", "remove", "ducklake_local"),
+  error_on_status = FALSE,
+  echo = FALSE
+)
+mc_cmd_args <- c("alias", "set", "ducklake_local", 
+                  paste0("http://", endpoint), "minioadmin", "minioadmin")
+processx::run(mc_bin, mc_cmd_args, echo = FALSE)
 
 # Create bucket with unique name
 bucket <- sprintf("readme-demo-%d", as.integer(Sys.time()))
-bucket_cmd <- sprintf("%s mb ducklake_local/%s", mc_bin, bucket)
-system(bucket_cmd)
+bucket_cmd_args <- c("mb", paste0("ducklake_local/", bucket))
+processx::run(mc_bin, bucket_cmd_args, echo = FALSE)
 
 # Store variables for later use
 minio_endpoint <- endpoint
@@ -447,7 +452,9 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 DBI::dbDisconnect(con, shutdown = TRUE)
-tools::pskill(pid)
+if (exists("pid") && is.numeric(pid)) {
+  tools::pskill(pid)
+}
 ```
 
 ### Supported Metadata Databases
