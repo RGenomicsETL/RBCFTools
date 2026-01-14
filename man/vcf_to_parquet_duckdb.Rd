@@ -15,6 +15,7 @@ vcf_to_parquet_duckdb(
   threads = 1L,
   tidy_format = FALSE,
   partition_by = NULL,
+  include_metadata = TRUE,
   con = NULL
 )
 }
@@ -46,6 +47,12 @@ Particularly useful with \code{tidy_format = TRUE} to partition by SAMPLE_ID for
 efficient per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
 columns like SAMPLE_ID, enabling fast row group pruning.}
 
+\item{include_metadata}{Logical, if TRUE embeds the full VCF header as Parquet
+key-value metadata. Default TRUE. This preserves all VCF schema information
+(INFO, FORMAT, FILTER definitions, contigs, samples) enabling round-trip back
+to VCF format. Use \code{\link{parquet_kv_metadata}} to read the header back.
+Note: Not supported with \code{partition_by} (Parquet limitation for partitioned writes).}
+
 \item{con}{Optional existing DuckDB connection (with extension loaded).}
 }
 \value{
@@ -58,8 +65,11 @@ Convert a VCF/BCF file to Parquet format for fast subsequent queries.
 \dontrun{
 ext_path <- bcf_reader_build(tempdir())
 
-# Export entire file
+# Export entire file with metadata
 vcf_to_parquet_duckdb("variants.vcf.gz", "variants.parquet", ext_path)
+
+# Read back the embedded metadata
+parquet_kv_metadata("variants.parquet")
 
 # Export specific columns
 vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,

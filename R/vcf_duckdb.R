@@ -1068,6 +1068,125 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, 
   )
 }
 
+# -----------------------------------------------------------------------------
+# VCF Header Metadata Utilities
+# -----------------------------------------------------------------------------
+
+#' Extract VCF header for Parquet key-value storage
+#'
+#' Extracts the full VCF header from a file for embedding in Parquet metadata.
+#' This allows round-tripping back to VCF format by preserving all header
+#' information (INFO, FORMAT, FILTER definitions, contigs, samples).
+#'
+#' @param file Path to VCF, VCF.GZ, or BCF file
+#'
+#' @return A named list with two elements:
+#'   \itemize{
+#'     \item `vcf_header`: The complete VCF header (all lines starting with #)
+#'     \item `RBCFTools_version`: Package version that created the Parquet
+#'   }
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+#' meta <- vcf_header_metadata(vcf_file)
+#' cat(meta$vcf_header)
+#' }
+vcf_header_metadata <- function(file) {
+  if (!file.exists(file)) {
+    stop("File not found: ", file, call. = FALSE)
+  }
+
+  # Read VCF header using bcftools
+  header_lines <- tryCatch(
+    {
+      system2(
+        bcftools_path(),
+        args = c("view", "-h", shQuote(file)),
+        stdout = TRUE,
+        stderr = FALSE
+      )
+    },
+    error = function(e) {
+      stop("Failed to read VCF header: ", conditionMessage(e), call. = FALSE)
+    }
+  )
+
+  if (length(header_lines) == 0) {
+    stop("Empty VCF header", call. = FALSE)
+  }
+
+  list(
+    vcf_header = paste(header_lines, collapse = "\n"),
+    RBCFTools_version = as.character(utils::packageVersion("RBCFTools"))
+  )
+}
+
+#' Format metadata for DuckDB KV_METADATA clause
+#'
+#' @param metadata Named list of key-value pairs
+#' @return Character string with KV_METADATA SQL clause
+#' @keywords internal
+format_kv_metadata_sql <- function(metadata) {
+  if (is.null(metadata) || length(metadata) == 0) {
+    return("")
+  }
+
+  # Build key-value pairs with proper SQL escaping
+  kv_pairs <- vapply(names(metadata), function(key) {
+    value <- as.character(metadata[[key]])
+    # Escape single quotes by doubling them
+    value <- gsub("'", "''", value, fixed = TRUE)
+    sprintf("'%s': '%s'", key, value)
+  }, character(1))
+
+  sprintf("KV_METADATA {%s}", paste(kv_pairs, collapse = ", "))
+}
+
+#' Read Parquet key-value metadata
+#'
+#' Reads the custom key-value metadata stored in a Parquet file's footer.
+#' This includes the full VCF header if the file was created with
+#' \code{\link{vcf_to_parquet_duckdb}} with `include_metadata = TRUE`.
+#'
+#' @param file Path to Parquet file
+#' @param con Optional existing DuckDB connection
+#'
+#' @return A data frame with columns: key, value. Returns empty data frame
+#'   if no custom metadata exists.
+#' @export
+#' @examples
+#' \dontrun{
+#' meta <- parquet_kv_metadata("variants.parquet")
+#' # Get the VCF header
+#' vcf_header <- meta[meta$key == "vcf_header", "value"]
+#' cat(vcf_header)
+#' }
+parquet_kv_metadata <- function(file, con = NULL) {
+  if (!file.exists(file)) {
+    stop("File not found: ", file, call. = FALSE)
+  }
+
+  own_con <- is.null(con)
+  if (own_con) {
+    con <- DBI::dbConnect(duckdb::duckdb())
+    on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+  }
+
+  sql <- sprintf(
+    "SELECT key::VARCHAR AS key, value::VARCHAR AS value FROM parquet_kv_metadata('%s')",
+    file
+  )
+
+  tryCatch(
+    DBI::dbGetQuery(con, sql),
+    error = function(e) {
+      data.frame(key = character(0), value = character(0), stringsAsFactors = FALSE)
+    }
+  )
+}
+
 #' Export VCF/BCF to Parquet using DuckDB
 #'
 #' Convert a VCF/BCF file to Parquet format for fast subsequent queries.
@@ -1089,6 +1208,11 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, 
 #'   Particularly useful with `tidy_format = TRUE` to partition by SAMPLE_ID for
 #'   efficient per-sample queries. DuckDB auto-generates Bloom filters for VARCHAR
 #'   columns like SAMPLE_ID, enabling fast row group pruning.
+#' @param include_metadata Logical, if TRUE embeds the full VCF header as Parquet
+#'   key-value metadata. Default TRUE. This preserves all VCF schema information
+#'   (INFO, FORMAT, FILTER definitions, contigs, samples) enabling round-trip back
+#'   to VCF format. Use \code{\link{parquet_kv_metadata}} to read the header back.
+#'   Note: Not supported with `partition_by` (Parquet limitation for partitioned writes).
 #' @param con Optional existing DuckDB connection (with extension loaded).
 #'
 #' @return Invisible path to output file/directory
@@ -1097,8 +1221,11 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, 
 #' \dontrun{
 #' ext_path <- bcf_reader_build(tempdir())
 #'
-#' # Export entire file
+#' # Export entire file with metadata
 #' vcf_to_parquet_duckdb("variants.vcf.gz", "variants.parquet", ext_path)
+#'
+#' # Read back the embedded metadata
+#' parquet_kv_metadata("variants.parquet")
 #'
 #' # Export specific columns
 #' vcf_to_parquet_duckdb("variants.vcf.gz", "variants_slim.parquet", ext_path,
@@ -1141,6 +1268,7 @@ vcf_to_parquet_duckdb <- function(
   threads = 1L,
   tidy_format = FALSE,
   partition_by = NULL,
+  include_metadata = TRUE,
   con = NULL
 ) {
   # Check if file is a remote URL
@@ -1221,6 +1349,32 @@ vcf_to_parquet_duckdb <- function(
     if (!grepl("/$", output_file)) {
       output_file <- paste0(output_file, "/")
     }
+    # KV_METADATA not supported with partitioned writes
+    if (isTRUE(include_metadata)) {
+      message("Note: KV_METADATA not supported with partition_by, skipping metadata embedding")
+      include_metadata <- FALSE
+    }
+  }
+
+  # Add VCF header metadata as Parquet key-value pairs
+  kv_metadata_sql <- ""
+  if (isTRUE(include_metadata) && !is_remote) {
+    tryCatch(
+      {
+        metadata <- vcf_header_metadata(input_file)
+        kv_metadata_sql <- format_kv_metadata_sql(metadata)
+        if (nzchar(kv_metadata_sql)) {
+          copy_options <- paste(copy_options, kv_metadata_sql, sep = ", ")
+        }
+      },
+      error = function(e) {
+        warning(
+          "Could not extract VCF metadata: ", conditionMessage(e),
+          ". Continuing without metadata.",
+          call. = FALSE
+        )
+      }
+    )
   }
 
   # Build COPY statement
