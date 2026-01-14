@@ -95,7 +95,7 @@ alias_res <- processx::run(
   ),
   error_on_status = FALSE
 )
-if (alias_res$status != 0) {
+if (alias_res$exit_code != 0) {
   exit_file("failed to configure mc alias")
 }
 
