@@ -340,6 +340,28 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 This format is ideal for combining single-sample VCFs into cohort tables or appending to DuckLake tables with MERGE operations.
 
+### VCF Header Metadata in Parquet
+
+When exporting VCF to Parquet, the full VCF header is embedded as Parquet key-value metadata by default. This preserves all schema information (INFO, FORMAT, FILTER definitions, contigs, samples) enabling round-trip back to VCF format.
+
+```{r parquet-metadata, eval=TRUE}
+# Build extension
+ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
+vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+
+# Export with embedded VCF header (default)
+parquet_out <- tempfile(fileext = ".parquet")
+vcf_to_parquet_duckdb(vcf_file, parquet_out, ext_path)
+
+# Read back the metadata
+meta <- parquet_kv_metadata(parquet_out)
+print(meta)
+
+# Extract the VCF header (stored with escaped newlines)
+vcf_header <- meta[meta$key == "vcf_header", "value"]
+cat(substr(vcf_header, 1, 200), "...\n")
+```
+
 
 ### Stream Remote VCF using Arrow or DuckDB Extension
 

@@ -47,6 +47,20 @@
   - Supports multi-column partitioning, e.g. `partition_by = c("CHROM", "SAMPLE_ID")`
   - Ideal for large cohort VCFs exported in tidy format
 
+## VCF header metadata in Parquet files
+
+- `vcf_to_parquet_duckdb()` now embeds the full VCF header as Parquet key-value metadata by default:
+  - `include_metadata = TRUE` (default) stores the complete VCF header in the Parquet file
+  - Preserves all INFO, FORMAT, FILTER definitions, contigs, and sample names
+  - Enables round-trip back to VCF format by retaining full schema information
+  - Also stores RBCFTools version for provenance tracking
+  - Use `parquet_kv_metadata(file)` to read the header back from Parquet
+  - Not supported with `partition_by` (Parquet limitation for partitioned writes)
+
+- New helper functions:
+  - `vcf_header_metadata(file)` - Extract full VCF header and package version
+  - `parquet_kv_metadata(file)` - Read key-value metadata from Parquet files
+
 ## DuckLake utilities
 
 - `allow_evolution` parameter for `ducklake_load_vcf()` and `ducklake_register_parquet()` to auto-add new columns via ALTER TABLE

@@ -1362,6 +1362,8 @@ vcf_to_parquet_duckdb <- function(
     tryCatch(
       {
         metadata <- vcf_header_metadata(input_file)
+        # Add tidy_format flag so readers know the data layout
+        metadata$tidy_format <- if (isTRUE(tidy_format)) "true" else "false"
         kv_metadata_sql <- format_kv_metadata_sql(metadata)
         if (nzchar(kv_metadata_sql)) {
           copy_options <- paste(copy_options, kv_metadata_sql, sep = ", ")
