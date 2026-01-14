@@ -120,32 +120,19 @@ try(DBI::dbExecute(con, "LOAD httpfs"), silent = TRUE)
 
 # Try local build first, then official install; skip if unavailable
 loaded_ducklake <- FALSE
-local_ducklake <- file.path(
-  normalizePath(file.path("ducklake"), mustWork = FALSE),
-  "build/release/extension/ducklake/ducklake.duckdb_extension"
+
+res <- try(
+  DBI::dbExecute(
+    con,
+    sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
+  ),
+  silent = TRUE
 )
-if (file.exists(local_ducklake)) {
-  res <- try(
-    DBI::dbExecute(
-      con,
-      sprintf("LOAD %s", DBI::dbQuoteString(con, local_ducklake))
-    ),
-    silent = TRUE
-  )
-  loaded_ducklake <- !inherits(res, "try-error")
-}
-if (!loaded_ducklake) {
-  res <- try(
-    DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly"),
-    silent = TRUE
-  )
-  res_load <- try(DBI::dbExecute(con, "LOAD ducklake"), silent = TRUE)
-  loaded_ducklake <- !inherits(res_load, "try-error")
-}
-if (!loaded_ducklake) {
-  exit_file("ducklake extension not available; install or provide local build")
+if (inherits(res, "try-error")) {
+  DBI::dbExecute(con, "INSTALL ducklake")
 }
 
+message("Creating secret for MinIO access")
 ducklake_create_s3_secret(
   con = con,
   name = "ducklake_minio",
@@ -166,16 +153,16 @@ ducklake_connect_catalog(
   backend = "duckdb",
   connection_string = meta_path,
   data_path = data_path,
-  alias = "lake",
-  extra_options = list(SECRET = "ducklake_minio")
+  alias = "lake"
 )
 
 # Test 2: Create and use a secret
+meta_path2 <- file.path(tempfile("ducklake_meta2_"))
 ducklake_create_catalog_secret(
   con,
   name = "test_ducklake_secret",
   backend = "duckdb",
-  connection_string = meta_path,
+  connection_string = meta_path2,
   data_path = data_path,
   metadata_parameters = list()
 )

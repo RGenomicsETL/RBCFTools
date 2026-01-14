@@ -36,7 +36,7 @@ ducklake_load <- function(con, install = TRUE) {
 #' @param connection_string DuckLake connection string (e.g., "ducklake:path/to/catalog.ducklake").
 #'
 #' @return Named list with components: backend, metadata_path, data_path (if specified).
-#' @keywords internal
+#' @export
 ducklake_parse_connection_string <- function(connection_string) {
   if (!grepl("^ducklake:", connection_string)) {
     stop("Connection string must start with 'ducklake:'", call. = FALSE)
@@ -219,6 +219,9 @@ ducklake_download_minio <- function(
     )
   }
   dest <- file.path(dest_dir, filename)
+  old_timeout <- getOption("timeout")
+  on.exit(options(timeout = old_timeout), add = TRUE)
+  options(timeout = 3000)
   utils::download.file(url, dest, mode = "wb", quiet = TRUE)
   Sys.chmod(dest, mode = "0755")
   dest
@@ -258,6 +261,10 @@ ducklake_download_mc <- function(
     }
   }
   dest <- file.path(dest_dir, filename)
+  message("Downloading mc from ", url, " to ", dest)
+  old_timeout <- getOption("timeout")
+  on.exit(options(timeout = old_timeout), add = TRUE)
+  options(timeout = 3000)
   utils::download.file(url, dest, mode = "wb", quiet = TRUE)
   Sys.chmod(dest, mode = "0755")
   dest
@@ -384,31 +391,58 @@ ducklake_list_secrets <- function(con) {
   # Query DuckDB's internal secrets table
   tryCatch(
     {
-      secrets <- DBI::dbGetQuery(
+      secrets_raw <- DBI::dbGetQuery(
         con,
         "
-      SELECT 
-        name,
-        type,
-        CASE 
-          WHEN key = 'METADATA_PATH' THEN value
-          ELSE NULL
-        END as metadata_path,
-        CASE 
-          WHEN key = 'DATA_PATH' THEN value
-          ELSE NULL
-        END as data_path
+      SELECT name, type, secret_string
       FROM duckdb_secrets()
       WHERE type = 'ducklake'
     "
       )
 
-      # Pivot to get one row per secret
-      if (nrow(secrets) > 0) {
-        secrets <- stats::aggregate(
-          cbind(metadata_path, data_path) ~ name + type,
-          data = secrets,
-          FUN = function(x) max(x, na.rm = TRUE)
+      # Parse secret_string to extract metadata_path and data_path
+      if (nrow(secrets_raw) > 0) {
+        parse_secret_field <- function(secret_str, field_name) {
+          pattern <- sprintf("%s=([^;]*)", field_name)
+          match <- regexpr(pattern, secret_str, perl = TRUE)
+          if (match > 0) {
+            start <- attr(match, "capture.start")[1]
+            length <- attr(match, "capture.length")[1]
+            if (start > 0 && length > 0) {
+              return(substr(secret_str, start, start + length - 1))
+            }
+          }
+          return(NA_character_)
+        }
+
+        metadata_path <- character(nrow(secrets_raw))
+        data_path <- character(nrow(secrets_raw))
+
+        for (i in seq_len(nrow(secrets_raw))) {
+          metadata_path[i] <- parse_secret_field(
+            secrets_raw$secret_string[i],
+            "metadata_path"
+          )
+          data_path[i] <- parse_secret_field(
+            secrets_raw$secret_string[i],
+            "data_path"
+          )
+        }
+
+        secrets <- data.frame(
+          name = secrets_raw$name,
+          type = secrets_raw$type,
+          metadata_path = metadata_path,
+          data_path = data_path,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        secrets <- data.frame(
+          name = character(0),
+          type = character(0),
+          metadata_path = character(0),
+          data_path = character(0),
+          stringsAsFactors = FALSE
         )
       }
 
@@ -537,10 +571,9 @@ ducklake_connect_catalog <- function(
     }
 
     # Format connection string based on backend
-    metadata_path <- switch(
-      backend,
+    metadata_path <- switch(backend,
       "duckdb" = connection_string,
-      "sqlite" = paste0("sqlite://", connection_string),
+      "sqlite" = paste0("sqlite:", connection_string),
       "postgresql" = paste0("postgresql://", connection_string),
       "mysql" = paste0("mysql://", connection_string)
     )
@@ -560,14 +593,18 @@ ducklake_connect_catalog <- function(
     CREATE_IF_NOT_EXISTS = if (isTRUE(create_if_missing)) "true" else "false"
   )
 
-  # Add data path if provided
-  if (!is.null(data_path) && nzchar(data_path)) {
+  # Add data path if provided (only for non-secret connections)
+  if (!is.null(data_path) && nzchar(data_path) && is.null(secret_name)) {
     opts$DATA_PATH <- data_path
   }
 
-  # Add extra options
+  # Add extra options (filter out unsupported options when using secrets)
   if (length(extra_options) > 0) {
     for (nm in names(extra_options)) {
+      # Skip SECRET option when using secret_name as it's not supported in ATTACH
+      if (!is.null(secret_name) && nm == "SECRET") {
+        next
+      }
       opts[[nm]] <- extra_options[[nm]]
     }
   }

@@ -15,4 +15,3 @@ Named list with components: backend, metadata_path, data_path (if specified).
 \description{
 Parse DuckLake connection string into components
 }
-\keyword{internal}
