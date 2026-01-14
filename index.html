@@ -82,11 +82,11 @@
 <p>RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"</span></span>
 <span><span class="fu"><a href="reference/bgzip_path.html">bgzip_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"</span></span>
 <span><span class="fu"><a href="reference/tabix_path.html">tabix_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"</span></span>
 <span><span class="co"># List all available tools</span></span>
 <span><span class="fu"><a href="reference/bcftools_tools.html">bcftools_tools</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     </span></span>
@@ -131,7 +131,7 @@
 <span></span>
 <span><span class="co"># Human-readable feature string</span></span>
 <span><span class="fu"><a href="reference/htslib_feature_string.html">htslib_feature_string</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="feature-constants">Feature Constants<a class="anchor" aria-label="anchor" href="#feature-constants"></a>
 </h3>
@@ -167,17 +167,17 @@
 <span><span class="va">s3_vcf_file</span> <span class="op">&lt;-</span> <span class="st">"3202_samples_cohort_gg_chr22.vcf.gz"</span></span>
 <span><span class="va">s3_vcf_uri</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">s3_base</span>, <span class="va">s3_path</span>, <span class="va">s3_vcf_file</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="co"># Query a small region (chr22:20000000-20100000) and count variants</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Use processx instead of system2</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"processx"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"processx required"</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"view"</span>, <span class="st">"-H"</span>, <span class="st">"-r"</span>, <span class="st">"chr22:20000000-20100000"</span>, <span class="va">s3_vcf_uri</span><span class="op">)</span>,</span>
-<span>  stdout <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  stderr <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"index"</span>, <span class="st">"-n"</span>, <span class="va">s3_vcf_uri</span><span class="op">)</span>,</span>
+<span>  error_on_status <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  echo <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4622</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">stdout</span>, <span class="st">"\n"</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span><span class="va">result</span> <span class="op">!=</span> <span class="st">""</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="vcf-to-arrow-streams-and-duckdb-bcf_reader-extension">VCF to Arrow Streams and Duckdb <code>bcf_reader</code> extension<a class="anchor" aria-label="anchor" href="#vcf-to-arrow-streams-and-duckdb-bcf_reader-extension"></a>
@@ -339,8 +339,8 @@
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
-<span><span class="fu">vcf_to_parquet</span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet</span></span>
+<span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -358,13 +358,13 @@
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span>
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                   file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpLwxOvf/file2fa984ebbca57.parquet            0                 11</span></span>
+<span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmpv5bLcA/file3d49b37180b2c8.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -432,7 +432,7 @@
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bcf_larger</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"1000G.ALL.2of4intersection.20100804.genotypes.bcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">outfile</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
-<span><span class="fu">vcf_to_parquet</span><span class="op">(</span></span>
+<span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span></span>
 <span>    <span class="va">bcf_larger</span>,</span>
 <span>    <span class="va">outfile</span>,</span>
 <span>    streaming <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -440,7 +440,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpLwxOvf/file2fa9846ab4ce77.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv5bLcA/file3d49b358b0916f.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -448,12 +448,12 @@
 </h3>
 <p>SQL queries on BCF using duckdb package. For now this is somehow limited due to convertion from arrow streams to data frame</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">vcf_query</span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vcf_query_arrow.html">vcf_query_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM  n</span></span>
 <span><span class="co">#&gt; 1     1 11</span></span>
 <span></span>
 <span><span class="co"># Filter variants by position</span></span>
-<span><span class="fu">vcf_query</span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vcf_query_arrow.html">vcf_query_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="st">"SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
 <span><span class="co">#&gt; 1     1 10583   G   A</span></span>
 <span><span class="co">#&gt; 2     1 11508   A   G</span></span>
@@ -507,7 +507,7 @@
 <span><span class="co">#&gt; 2     1      35846  536895 249211717</span></span>
 <span><span class="co">#&gt; 3    17      27325    6102  81052229</span></span>
 <span><span class="co">#&gt; 4    11      24472  180184 134257519</span></span>
-<span><span class="co">#&gt; 5     8      23676  156504 146291213</span></span>
+<span><span class="co">#&gt; 5     2      22032   42993 242836470</span></span>
 <span></span>
 <span><span class="co"># Export directly to Parquet</span></span>
 <span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
@@ -617,66 +617,48 @@
 </h4>
 <p>We start by seting up and configuring a <code>minio</code> server</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># DuckLake with S3-compatible storage using local MinIO</span></span>
+<span><span class="va">bin_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_bins"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">bin_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">minio_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"minio"</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">minio_bin</span><span class="op">)</span><span class="op">)</span> <span class="va">minio_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ducklake_download_minio.html">ducklake_download_minio</a></span><span class="op">(</span>dest_dir <span class="op">=</span> <span class="va">bin_dir</span><span class="op">)</span></span>
-<span><span class="va">mc_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"mc"</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">mc_bin</span><span class="op">)</span><span class="op">)</span> <span class="va">mc_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ducklake_download_mc.html">ducklake_download_mc</a></span><span class="op">(</span>dest_dir <span class="op">=</span> <span class="va">bin_dir</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">minio_bin</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">mc_bin</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Use installed MinIO and MC binaries</span></span>
+<span><span class="va">minio_bin</span> <span class="op">&lt;-</span> <span class="st">"/root/go/bin/minio"</span></span>
+<span><span class="va">mc_bin</span> <span class="op">&lt;-</span> <span class="st">"/root/go/bin/mc"</span></span>
+<span></span>
 <span><span class="co"># Start MinIO (ephemeral) and configure mc</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"ducklake_minio"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">data_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">port</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">19000</span><span class="op">:</span><span class="fl">19999</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">endpoint</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"127.0.0.1:%d"</span>, <span class="va">port</span><span class="op">)</span></span>
-<span><span class="va">log_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"ducklake_minio_"</span>, fileext <span class="op">=</span> <span class="st">".log"</span><span class="op">)</span></span>
-<span><span class="va">minio_env</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"MINIO_ROOT_USER=minioadmin"</span>, <span class="st">"MINIO_ROOT_PASSWORD=minioadmin"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">minio_pid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span></span>
-<span>  <span class="va">minio_bin</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"server"</span>, <span class="va">data_dir</span>, <span class="st">"--address"</span>, <span class="va">endpoint</span><span class="op">)</span>,</span>
-<span>  stdout <span class="op">=</span> <span class="va">log_file</span>,</span>
-<span>  stderr <span class="op">=</span> <span class="va">log_file</span>,</span>
-<span>  wait <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  env <span class="op">=</span> <span class="va">minio_env</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit</a></span><span class="op">(</span><span class="op">{</span> <span class="kw">if</span> <span class="op">(</span><span class="va">minio_pid</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"kill"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">minio_pid</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co"># Start MinIO server</span></span>
+<span><span class="va">cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">minio_bin</span>, <span class="st">"server"</span>, <span class="va">data_dir</span>, <span class="st">"--address"</span>, <span class="va">endpoint</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">cmd</span>, <span class="st">" &amp;"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"MinIO server started in background\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MinIO server started in background</span></span>
 <span></span>
+<span><span class="co"># Give MinIO time to start</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">alias_ok</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">status</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"alias"</span>, <span class="st">"set"</span>, <span class="st">"ducklake_local"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"http://"</span>, <span class="va">endpoint</span><span class="op">)</span>,</span>
-<span>                              <span class="st">"minioadmin"</span>, <span class="st">"minioadmin"</span><span class="op">)</span>, stdout <span class="op">=</span> <span class="cn">TRUE</span>, stderr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">status</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">status</span>, <span class="st">"status"</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">alias_ok</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
-<span>    <span class="kw">break</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">alias_ok</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Failed to configure mc alias after multiple retries; see "</span>, <span class="va">log_file</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">bucket</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"ducklake-demo-%d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">bucket_ok</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">status</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mb"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ducklake_local/"</span>, <span class="va">bucket</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>                    stdout <span class="op">=</span> <span class="cn">TRUE</span>, stderr <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">status</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">status</span>, <span class="st">"status"</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">bucket_ok</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
-<span>    <span class="kw">break</span></span>
-<span>  <span class="op">}</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">bucket_ok</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Failed to create bucket after multiple retries; see "</span>, <span class="va">log_file</span>, call. <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<span><span class="co"># Configure mc alias</span></span>
+<span><span class="va">mc_cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="st">" alias set ducklake_local http://"</span>, <span class="va">endpoint</span>, <span class="st">" minioadmin minioadmin"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="va">mc_cmd</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Configured mc alias\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Configured mc alias</span></span>
+<span></span>
+<span><span class="co"># Create bucket with unique name</span></span>
+<span><span class="va">bucket</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"readme-demo-%d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">bucket_cmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s mb ducklake_local/%s"</span>, <span class="va">mc_bin</span>, <span class="va">bucket</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="va">bucket_cmd</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Created bucket\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Created bucket</span></span>
+<span></span>
+<span><span class="co"># Store variables for later use</span></span>
+<span><span class="va">minio_endpoint</span> <span class="op">&lt;-</span> <span class="va">endpoint</span></span>
 <span><span class="va">bucket_name</span> <span class="op">&lt;-</span> <span class="va">bucket</span></span>
 <span><span class="va">data_root_s3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"s3://"</span>, <span class="va">bucket_name</span><span class="op">)</span></span>
 <span><span class="va">data_path_s3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_root_s3</span>, <span class="st">"/data/"</span><span class="op">)</span></span>
-<span><span class="va">mc_path</span> <span class="op">&lt;-</span> <span class="va">mc_bin</span></span>
-<span><span class="va">minio_endpoint</span> <span class="op">&lt;-</span> <span class="va">endpoint</span></span>
-<span><span class="va">minio_process</span> <span class="op">&lt;-</span> <span class="va">minio_pid</span></span></code></pre></div>
+<span><span class="va">mc_path</span> <span class="op">&lt;-</span> <span class="va">mc_bin</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="attach-a-ducklake">Attach a DuckLake<a class="anchor" aria-label="anchor" href="#attach-a-ducklake"></a>
@@ -744,10 +726,10 @@
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span><span class="co">#&gt;   Build directory: /tmp/RtmpLwxOvf</span></span>
-<span><span class="co">#&gt;   Using htslib from: /usr/lib64/R/library/RBCFTools/htslib/lib</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/Rtmpv5bLcA</span></span>
+<span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span><span class="co">#&gt; Extension built: /tmp/RtmpLwxOvf/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/Rtmpv5bLcA/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
@@ -755,7 +737,7 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpLwxOvf/variants_20260112_115213.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpv5bLcA/variants_20260114_172822.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
@@ -772,8 +754,8 @@
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for this table</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                                                                                data_file</span></span>
-<span><span class="co">#&gt; 1 s3://ducklake-demo-1768204331/data/main/variants/ducklake-019bb130-fb62-79af-ae49-c9a7e1936ef1.parquet</span></span>
+<span><span class="co">#&gt;                                                                                              data_file</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768408102/data/main/variants/ducklake-019bbd56-3aaf-718b-8545-45c23eec93fc.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
@@ -782,9 +764,11 @@
 <span><span class="co">#&gt; 1                       NULL</span></span></code></pre></div>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists</a></span><span class="op">(</span><span class="st">"minio_process"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">minio_process</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"kill"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">minio_process</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span></span>
+<span><span class="co"># Clean up MinIO server</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"pkill -f 'minio server %s'"</span>, <span class="va">endpoint</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"MinIO server stopped\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MinIO server stopped</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="supported-metadata-databases">Supported Metadata Databases<a class="anchor" aria-label="anchor" href="#supported-metadata-databases"></a>
@@ -879,110 +863,111 @@
 <span id="cb25-20"><a href="#cb25-20" tabindex="-1"></a></span>
 <span id="cb25-21"><a href="#cb25-21" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb25-22"><a href="#cb25-22" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet...</span></span>
-<span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
-<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.EwssbJb2Dp.parquet </span></span>
+<span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.bcf </span></span>
+<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.TJPOA9LgsX.parquet </span></span>
 <span id="cb25-25"><a href="#cb25-25" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt;   Batch size: 10000 </span></span>
 <span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt;   Threads: 1 </span></span>
 <span id="cb25-28"><a href="#cb25-28" tabindex="-1"></a><span class="co">#&gt;   Streaming: FALSE </span></span>
 <span id="cb25-29"><a href="#cb25-29" tabindex="-1"></a><span class="co">#&gt;   Include INFO: TRUE </span></span>
 <span id="cb25-30"><a href="#cb25-30" tabindex="-1"></a><span class="co">#&gt;   Include FORMAT: TRUE </span></span>
-<span id="cb25-31"><a href="#cb25-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
-<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
-<span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
-<span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.EwssbJb2Dp.parquet</span></span>
-<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt;   Time: 0.59 seconds</span></span>
-<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
-<span id="cb25-39"><a href="#cb25-39" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb25-40"><a href="#cb25-40" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
-<span id="cb25-41"><a href="#cb25-41" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
-<span id="cb25-42"><a href="#cb25-42" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
-<span id="cb25-43"><a href="#cb25-43" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
-<span id="cb25-44"><a href="#cb25-44" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
-<span id="cb25-45"><a href="#cb25-45" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
-<span id="cb25-46"><a href="#cb25-46" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
-<span id="cb25-47"><a href="#cb25-47" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
-<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
-<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
-<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
-<span id="cb25-51"><a href="#cb25-51" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
-<span id="cb25-52"><a href="#cb25-52" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
-<span id="cb25-53"><a href="#cb25-53" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
-<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
-<span id="cb25-55"><a href="#cb25-55" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
-<span id="cb25-56"><a href="#cb25-56" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
-<span id="cb25-57"><a href="#cb25-57" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
-<span id="cb25-58"><a href="#cb25-58" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
-<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
-<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
-<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
-<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
-<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
-<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
-<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.EwssbJb2Dp.parquet </span></span>
-<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
-<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
-<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
-<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
-<span id="cb25-86"><a href="#cb25-86" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
-<span id="cb25-87"><a href="#cb25-87" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
-<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
-<span id="cb25-89"><a href="#cb25-89" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
-<span id="cb25-90"><a href="#cb25-90" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
-<span id="cb25-91"><a href="#cb25-91" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
-<span id="cb25-92"><a href="#cb25-92" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
-<span id="cb25-93"><a href="#cb25-93" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
-<span id="cb25-94"><a href="#cb25-94" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb25-95"><a href="#cb25-95" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
-<span id="cb25-96"><a href="#cb25-96" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
-<span id="cb25-97"><a href="#cb25-97" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
-<span id="cb25-98"><a href="#cb25-98" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
-<span id="cb25-99"><a href="#cb25-99" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
-<span id="cb25-100"><a href="#cb25-100" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
-<span id="cb25-101"><a href="#cb25-101" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
-<span id="cb25-102"><a href="#cb25-102" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
-<span id="cb25-103"><a href="#cb25-103" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
-<span id="cb25-104"><a href="#cb25-104" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
-<span id="cb25-105"><a href="#cb25-105" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb25-106"><a href="#cb25-106" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
-<span id="cb25-107"><a href="#cb25-107" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb25-108"><a href="#cb25-108" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb25-109"><a href="#cb25-109" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb25-110"><a href="#cb25-110" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb25-111"><a href="#cb25-111" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
-<span id="cb25-112"><a href="#cb25-112" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb25-113"><a href="#cb25-113" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb25-114"><a href="#cb25-114" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb25-115"><a href="#cb25-115" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb25-116"><a href="#cb25-116" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb25-117"><a href="#cb25-117" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb25-118"><a href="#cb25-118" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
-<span id="cb25-119"><a href="#cb25-119" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
-<span id="cb25-120"><a href="#cb25-120" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
-<span id="cb25-121"><a href="#cb25-121" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
-<span id="cb25-122"><a href="#cb25-122" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
-<span id="cb25-123"><a href="#cb25-123" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
-<span id="cb25-124"><a href="#cb25-124" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
-<span id="cb25-125"><a href="#cb25-125" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
-<span id="cb25-126"><a href="#cb25-126" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
+<span id="cb25-31"><a href="#cb25-31" tabindex="-1"></a><span class="co">#&gt; [W::bcf_get_version] Couldn't get VCF version, considering as 4.2</span></span>
+<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] AD should be declared as Number=R</span></span>
+<span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GQ should be declared as Type=Integer</span></span>
+<span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt; [W::bcf_hdr_check_sanity] GT should be declared as Number=1</span></span>
+<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; Wrote 11 rows to /tmp/tmp.TJPOA9LgsX.parquet</span></span>
+<span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt;   Time: 0.13 seconds</span></span>
+<span id="cb25-39"><a href="#cb25-39" tabindex="-1"></a><span class="co">#&gt;   Output size: 0.01 MB</span></span>
+<span id="cb25-40"><a href="#cb25-40" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb25-41"><a href="#cb25-41" tabindex="-1"></a><span class="co">#&gt;   CHROM   POS REF ALT</span></span>
+<span id="cb25-42"><a href="#cb25-42" tabindex="-1"></a><span class="co">#&gt; 1     1 10583   G   A</span></span>
+<span id="cb25-43"><a href="#cb25-43" tabindex="-1"></a><span class="co">#&gt; 2     1 11508   A   G</span></span>
+<span id="cb25-44"><a href="#cb25-44" tabindex="-1"></a><span class="co">#&gt; 3     1 11565   G   T</span></span>
+<span id="cb25-45"><a href="#cb25-45" tabindex="-1"></a><span class="co">#&gt; 4     1 13116   T   G</span></span>
+<span id="cb25-46"><a href="#cb25-46" tabindex="-1"></a><span class="co">#&gt; 5     1 13327   G   C</span></span>
+<span id="cb25-47"><a href="#cb25-47" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file(s)...</span></span>
+<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt;   column_name</span></span>
+<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; 1       CHROM</span></span>
+<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; 2         POS</span></span>
+<span id="cb25-51"><a href="#cb25-51" tabindex="-1"></a><span class="co">#&gt; 3          ID</span></span>
+<span id="cb25-52"><a href="#cb25-52" tabindex="-1"></a><span class="co">#&gt; 4         REF</span></span>
+<span id="cb25-53"><a href="#cb25-53" tabindex="-1"></a><span class="co">#&gt; 5         ALT</span></span>
+<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt; 6        QUAL</span></span>
+<span id="cb25-55"><a href="#cb25-55" tabindex="-1"></a><span class="co">#&gt; 7      FILTER</span></span>
+<span id="cb25-56"><a href="#cb25-56" tabindex="-1"></a><span class="co">#&gt; 8        INFO</span></span>
+<span id="cb25-57"><a href="#cb25-57" tabindex="-1"></a><span class="co">#&gt; 9     samples</span></span>
+<span id="cb25-58"><a href="#cb25-58" tabindex="-1"></a><span class="co">#&gt;                                                                                                                                                                                                                                                                                                    column_type</span></span>
+<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                      VARCHAR</span></span>
+<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                       DOUBLE</span></span>
+<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                    VARCHAR[]</span></span>
+<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; 8                                                                                                                                                                                         STRUCT(DP INTEGER, AF DOUBLE[], CB VARCHAR[], EUR_R2 DOUBLE, AFR_R2 DOUBLE, ASN_R2 DOUBLE, AC INTEGER[], AN INTEGER)</span></span>
+<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt; 9 STRUCT(HG00098 STRUCT(AD BLOB, DP INTEGER, GL BLOB, GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00100 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR), HG00106 STRUCT(AD INTEGER[], DP INTEGER, GL DOUBLE[], GQ DOUBLE, GT VARCHAR, GD DOUBLE, OG VARCHAR))</span></span>
+<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt;   null  key default extra</span></span>
+<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; 1  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; 2  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; 3  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; 4  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; 5  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; 6  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; 7  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; 8  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; 9  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Unknown option: 0 </span></span>
+<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.TJPOA9LgsX.parquet </span></span>
+<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; File size: 0.01 MB </span></span>
+<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Total rows: 11 </span></span>
+<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; Number of columns: 60 </span></span>
+<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb25-86"><a href="#cb25-86" tabindex="-1"></a><span class="co">#&gt;     name       type</span></span>
+<span id="cb25-87"><a href="#cb25-87" tabindex="-1"></a><span class="co">#&gt;    CHROM BYTE_ARRAY</span></span>
+<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;      POS     DOUBLE</span></span>
+<span id="cb25-89"><a href="#cb25-89" tabindex="-1"></a><span class="co">#&gt;       ID BYTE_ARRAY</span></span>
+<span id="cb25-90"><a href="#cb25-90" tabindex="-1"></a><span class="co">#&gt;      REF BYTE_ARRAY</span></span>
+<span id="cb25-91"><a href="#cb25-91" tabindex="-1"></a><span class="co">#&gt;      ALT       &lt;NA&gt;</span></span>
+<span id="cb25-92"><a href="#cb25-92" tabindex="-1"></a><span class="co">#&gt;     QUAL     DOUBLE</span></span>
+<span id="cb25-93"><a href="#cb25-93" tabindex="-1"></a><span class="co">#&gt;   FILTER       &lt;NA&gt;</span></span>
+<span id="cb25-94"><a href="#cb25-94" tabindex="-1"></a><span class="co">#&gt;     INFO       &lt;NA&gt;</span></span>
+<span id="cb25-95"><a href="#cb25-95" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-96"><a href="#cb25-96" tabindex="-1"></a><span class="co">#&gt;       AF       &lt;NA&gt;</span></span>
+<span id="cb25-97"><a href="#cb25-97" tabindex="-1"></a><span class="co">#&gt;       CB       &lt;NA&gt;</span></span>
+<span id="cb25-98"><a href="#cb25-98" tabindex="-1"></a><span class="co">#&gt;   EUR_R2     DOUBLE</span></span>
+<span id="cb25-99"><a href="#cb25-99" tabindex="-1"></a><span class="co">#&gt;   AFR_R2     DOUBLE</span></span>
+<span id="cb25-100"><a href="#cb25-100" tabindex="-1"></a><span class="co">#&gt;   ASN_R2     DOUBLE</span></span>
+<span id="cb25-101"><a href="#cb25-101" tabindex="-1"></a><span class="co">#&gt;       AC       &lt;NA&gt;</span></span>
+<span id="cb25-102"><a href="#cb25-102" tabindex="-1"></a><span class="co">#&gt;       AN      INT32</span></span>
+<span id="cb25-103"><a href="#cb25-103" tabindex="-1"></a><span class="co">#&gt;  samples       &lt;NA&gt;</span></span>
+<span id="cb25-104"><a href="#cb25-104" tabindex="-1"></a><span class="co">#&gt;  HG00098       &lt;NA&gt;</span></span>
+<span id="cb25-105"><a href="#cb25-105" tabindex="-1"></a><span class="co">#&gt;       AD BYTE_ARRAY</span></span>
+<span id="cb25-106"><a href="#cb25-106" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-107"><a href="#cb25-107" tabindex="-1"></a><span class="co">#&gt;       GL BYTE_ARRAY</span></span>
+<span id="cb25-108"><a href="#cb25-108" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-109"><a href="#cb25-109" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-110"><a href="#cb25-110" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-111"><a href="#cb25-111" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb25-112"><a href="#cb25-112" tabindex="-1"></a><span class="co">#&gt;  HG00100       &lt;NA&gt;</span></span>
+<span id="cb25-113"><a href="#cb25-113" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb25-114"><a href="#cb25-114" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-115"><a href="#cb25-115" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb25-116"><a href="#cb25-116" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-117"><a href="#cb25-117" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-118"><a href="#cb25-118" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-119"><a href="#cb25-119" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span>
+<span id="cb25-120"><a href="#cb25-120" tabindex="-1"></a><span class="co">#&gt;  HG00106       &lt;NA&gt;</span></span>
+<span id="cb25-121"><a href="#cb25-121" tabindex="-1"></a><span class="co">#&gt;       AD       &lt;NA&gt;</span></span>
+<span id="cb25-122"><a href="#cb25-122" tabindex="-1"></a><span class="co">#&gt;       DP      INT32</span></span>
+<span id="cb25-123"><a href="#cb25-123" tabindex="-1"></a><span class="co">#&gt;       GL       &lt;NA&gt;</span></span>
+<span id="cb25-124"><a href="#cb25-124" tabindex="-1"></a><span class="co">#&gt;       GQ     DOUBLE</span></span>
+<span id="cb25-125"><a href="#cb25-125" tabindex="-1"></a><span class="co">#&gt;       GT BYTE_ARRAY</span></span>
+<span id="cb25-126"><a href="#cb25-126" tabindex="-1"></a><span class="co">#&gt;       GD     DOUBLE</span></span>
+<span id="cb25-127"><a href="#cb25-127" tabindex="-1"></a><span class="co">#&gt;       OG BYTE_ARRAY</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
