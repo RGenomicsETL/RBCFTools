@@ -34,10 +34,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
-<div class="section level3">
-<h3 id="new-vcf_open_duckdb-function-1-23-0-0-2-9000">New vcf_open_duckdb() function<a class="anchor" aria-label="anchor" href="#new-vcf_open_duckdb-function-1-23-0-0-2-9000"></a></h3>
 <ul><li>
-<strong><code><a href="../reference/vcf_open_duckdb.html">vcf_open_duckdb()</a></code></strong>: Open VCF/BCF files as DuckDB tables or views
+<code><a href="../reference/vcf_open_duckdb.html">vcf_open_duckdb()</a></code>**: Open VCF/BCF files as DuckDB tables or views
 <ul><li>In-memory or file-backed database support</li>
 <li>
 <strong>Lazy by default</strong>: <code>as_view = TRUE</code> (default) creates instant views that re-read VCF on each query</li>
@@ -48,7 +46,11 @@
 <li>
 <code>columns</code> parameter for selecting specific columns</li>
 <li>
-<code>threads</code> parameter for parallel loading by chromosome (requires <code>as_view = FALSE</code>)</li>
+<code>threads</code> parameter for parallel loading (requires indexed VCF):
+<ul><li>For views: Creates UNION ALL of per-contig bcf_read() calls (parallelized at query time)</li>
+<li>For tables: Loads each chromosome in parallel then unions</li>
+<li>Falls back to single-threaded with warning if VCF not indexed</li>
+</ul></li>
 <li>
 <code>partition_by</code> for creating partitioned tables</li>
 <li>Returns a <code>vcf_duckdb</code> object with connection, table name, and metadata</li>
@@ -56,17 +58,14 @@
 <code><a href="../reference/vcf_close_duckdb.html">vcf_close_duckdb()</a></code> for proper cleanup</li>
 <li>Print method shows connection details</li>
 </ul></li>
-</ul></div>
-<div class="section level3">
+</ul><div class="section level3">
 <h3 id="native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000">Native tidy_format in bcf_reader extension<a class="anchor" aria-label="anchor" href="#native-tidy_format-in-bcf_reader-extension-1-23-0-0-2-9000"></a></h3>
-<ul><li>
-<strong>C-level <code>tidy_format</code> parameter</strong>: The DuckDB bcf_reader extension now supports native tidy format output directly at the C level, emitting one row per variant-sample combination with a <code>SAMPLE_ID</code> column
+<ul><li>C-level <code>tidy_format</code> parameter The DuckDB bcf_reader extension now supports native tidy format output directly at the C level, emitting one row per variant-sample combination with a <code>SAMPLE_ID</code> column
 <ul><li>Much faster than SQL-level UNNEST approach (no intermediate data duplication)</li>
 <li>Works with projection pushdown - only reads requested columns</li>
 <li>Integrates with all vcf_*duckdb functions via <code>tidy_format = TRUE</code> parameter</li>
 </ul></li>
-<li>
-<strong>Updated R wrapper functions</strong> with <code>tidy_format</code> parameter:
+<li>Updated R wrapper functions with <code>tidy_format</code> parameter:
 <ul><li>
 <code>vcf_query_duckdb(..., tidy_format = TRUE)</code> - query in tidy format</li>
 <li>
@@ -80,8 +79,7 @@
 <li>
 <code>ducklake_load_vcf(..., tidy_format = TRUE)</code> - load VCF in tidy format to DuckLake</li>
 </ul></li>
-<li>
-<strong>Removed SQL-based tidy functions</strong> (replaced by native <code>tidy_format</code> parameter):
+<li>Removed SQL-based tidy functions (replaced by native <code>tidy_format</code> parameter):
 <ul><li>Removed <code>vcf_to_parquet_tidy()</code>
 </li>
 <li>Removed <code>vcf_to_parquet_tidy_parallel()</code>
@@ -92,7 +90,7 @@
 <div class="section level3">
 <h3 id="hive-style-partitioning-for-parquet-exports-1-23-0-0-2-9000">Hive-style partitioning for Parquet exports<a class="anchor" aria-label="anchor" href="#hive-style-partitioning-for-parquet-exports-1-23-0-0-2-9000"></a></h3>
 <ul><li>
-<strong>New <code>partition_by</code> parameter</strong> for efficient per-sample queries on large cohorts:
+<code>partition_by</code> parameter for efficient per-sample queries on large cohorts:
 <ul><li>
 <code>vcf_to_parquet_duckdb(..., partition_by = "SAMPLE_ID")</code> - create Hive-partitioned directory</li>
 <li>

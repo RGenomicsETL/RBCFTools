@@ -2,9 +2,7 @@
 
 ## RBCFTools 1.23-0.0.2.9000 (development version)
 
-### New vcf_open_duckdb() function
-
-- **[`vcf_open_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.md)**:
+- [`vcf_open_duckdb()`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_open_duckdb.md)\*\*:
   Open VCF/BCF files as DuckDB tables or views
   - In-memory or file-backed database support
   - **Lazy by default**: `as_view = TRUE` (default) creates instant
@@ -14,8 +12,11 @@
   - `tidy_format = TRUE` for one row per variant-sample with SAMPLE_ID
     column
   - `columns` parameter for selecting specific columns
-  - `threads` parameter for parallel loading by chromosome (requires
-    `as_view = FALSE`)
+  - `threads` parameter for parallel loading (requires indexed VCF):
+    - For views: Creates UNION ALL of per-contig bcf_read() calls
+      (parallelized at query time)
+    - For tables: Loads each chromosome in parallel then unions
+    - Falls back to single-threaded with warning if VCF not indexed
   - `partition_by` for creating partitioned tables
   - Returns a `vcf_duckdb` object with connection, table name, and
     metadata
@@ -25,16 +26,15 @@
 
 ### Native tidy_format in bcf_reader extension
 
-- **C-level `tidy_format` parameter**: The DuckDB bcf_reader extension
-  now supports native tidy format output directly at the C level,
-  emitting one row per variant-sample combination with a `SAMPLE_ID`
-  column
+- C-level `tidy_format` parameter The DuckDB bcf_reader extension now
+  supports native tidy format output directly at the C level, emitting
+  one row per variant-sample combination with a `SAMPLE_ID` column
   - Much faster than SQL-level UNNEST approach (no intermediate data
     duplication)
   - Works with projection pushdown - only reads requested columns
   - Integrates with all vcf\_\*duckdb functions via `tidy_format = TRUE`
     parameter
-- **Updated R wrapper functions** with `tidy_format` parameter:
+- Updated R wrapper functions with `tidy_format` parameter:
   - `vcf_query_duckdb(..., tidy_format = TRUE)` - query in tidy format
   - `vcf_count_duckdb(..., tidy_format = TRUE)` - count variant-sample
     rows
@@ -45,7 +45,7 @@
     tidy export
   - `ducklake_load_vcf(..., tidy_format = TRUE)` - load VCF in tidy
     format to DuckLake
-- **Removed SQL-based tidy functions** (replaced by native `tidy_format`
+- Removed SQL-based tidy functions (replaced by native `tidy_format`
   parameter):
   - Removed `vcf_to_parquet_tidy()`
   - Removed `vcf_to_parquet_tidy_parallel()`
@@ -53,8 +53,8 @@
 
 ### Hive-style partitioning for Parquet exports
 
-- **New `partition_by` parameter** for efficient per-sample queries on
-  large cohorts:
+- `partition_by` parameter for efficient per-sample queries on large
+  cohorts:
   - `vcf_to_parquet_duckdb(..., partition_by = "SAMPLE_ID")` - create
     Hive-partitioned directory
   - `vcf_to_parquet_duckdb_parallel(..., partition_by = "SAMPLE_ID")` -
