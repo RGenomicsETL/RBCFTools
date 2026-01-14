@@ -440,15 +440,52 @@ ducklake_load_vcf(
 )
 ```
 
+### Add another VCF file with different schema
+```{r ducklake-add-second, eval=TRUE}
+# Ensure we are operating inside the DuckLake catalog
+DBI::dbExecute(con, "USE lake")
+
+# Load a second VCF file with potentially different schema (VEP annotations)
+vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
+ducklake_load_vcf(
+  con,
+  table = "variants_vep",
+  vcf_path = vcf_file2,
+  extension_path = ext_path,
+  threads = 1
+)
+```
+
 ### List lake content
 ```{r check-lake, eval=TRUE}
 DBI::dbExecute(con, "USE lake")
-DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
+
+# Query both tables to show different schemas
+variant_counts <- DBI::dbGetQuery(con, "
+  SELECT 'variants' as table_name, COUNT(*) as n FROM variants
+  UNION ALL
+  SELECT 'variants_vep' as table_name, COUNT(*) as n FROM variants_vep
+")
+print(variant_counts)
+
+# Show schema differences between the two tables
+variants_schema <- DBI::dbGetQuery(con, "DESCRIBE variants")
+variants_vep_schema <- DBI::dbGetQuery(con, "DESCRIBE variants_vep")
+
+cat("Variants table columns:\n")
+print(variants_schema$column_name)
+cat("\nVEP Variants table columns:\n")
+print(variants_vep_schema$column_name)
 ```
 
 ```{r ducklake-files, eval=TRUE}
-# List physical files managed by DuckLake for this table
-DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
+# List physical files managed by DuckLake for both tables
+cat("Files for 'variants' table:\n")
+print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')"))
+
+cat("\nFiles for 'variants_vep' table:\n")
+print(DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants_vep')"))
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 tools::pskill(pid)
 ```
