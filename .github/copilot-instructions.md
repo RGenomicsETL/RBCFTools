@@ -428,6 +428,10 @@ vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path)
 DBI::dbGetQuery(vcf$con, "SELECT * FROM variants WHERE CHROM = '22'")
 vcf_close_duckdb(vcf)
 
+# Parallel view (UNION ALL of per-contig reads, parallelized at query time)
+# Requires indexed VCF - falls back to simple view with warning if not indexed
+vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, threads = 8)
+
 # Materialize to table for fast repeated queries
 vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path, as_view = FALSE)
 
@@ -437,7 +441,7 @@ vcf <- vcf_open_duckdb("cohort.vcf.gz", ext_path,
   columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT")
 )
 
-# Parallel loading by chromosome (requires indexed VCF, as_view = FALSE)
+# Parallel table loading for large files (requires indexed VCF)
 vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, as_view = FALSE, threads = 8)
 
 # Persistent file-backed database

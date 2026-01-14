@@ -294,8 +294,11 @@ vcf_duckdb_connect <- function(
 #' @param tidy_format Logical, if TRUE loads data in tidy (long) format with one
 #'   row per variant-sample combination and a SAMPLE_ID column. Default FALSE.
 #' @param threads Number of threads for parallel loading (default: 1).
-#'   When > 1 and VCF is indexed, loads each chromosome in parallel then unions.
-#'   Only applies when as_view = FALSE.
+#'   When > 1 and VCF is indexed:
+#'   - For views (as_view = TRUE): Creates a UNION ALL view of per-contig bcf_read()
+#'     calls. DuckDB parallelizes execution at query time.
+#'   - For tables (as_view = FALSE): Loads each chromosome in parallel then unions
+#'     into a single table.
 #' @param partition_by Optional character vector of columns to partition by when
 #'   creating a table (ignored for views). Creates a partitioned table for efficient
 #'   filtering. Only supported for file-backed databases.
@@ -321,6 +324,9 @@ vcf_duckdb_connect <- function(
 #' DBI::dbGetQuery(vcf$con, "SELECT * FROM variants WHERE CHROM = '22'")
 #' vcf_close_duckdb(vcf)
 #'
+#' # Parallel view (UNION ALL of per-contig reads, parallelized at query time)
+#' vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, threads = 8)
+#'
 #' # Open as materialized table (slower to create, fast repeated queries)
 #' vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path, as_view = FALSE)
 #' DBI::dbGetQuery(vcf$con, "SELECT COUNT(*) FROM variants")
@@ -331,7 +337,7 @@ vcf_duckdb_connect <- function(
 #'   columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT")
 #' )
 #'
-#' # Parallel loading for large files (requires as_view = FALSE)
+#' # Parallel table loading for large files
 #' vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, as_view = FALSE, threads = 8)
 #'
 #' # Persistent file-backed database
@@ -459,26 +465,83 @@ vcf_open_duckdb <- function(
   row_count <- NULL
 
   if (isTRUE(as_view)) {
-    # Create a VIEW - instant but re-reads VCF each query
-    view_sql <- sprintf(
-      "CREATE VIEW %s AS SELECT %s FROM %s",
-      quoted_table,
-      select_clause,
-      bcf_read_call
-    )
-    DBI::dbExecute(con, view_sql)
-    message(sprintf("Created view '%s' from %s", table_name, basename(file)))
-  } else if (threads > 1 && is.null(region) && vcf_has_index(file)) {
-    # Parallel loading by chromosome
-    row_count <- vcf_open_duckdb_parallel(
-      con = con,
-      file = file,
-      table_name = table_name,
-      columns = columns,
-      tidy_format = tidy_format,
-      threads = threads,
-      partition_by = partition_by
-    )
+    if (threads > 1 && is.null(region)) {
+      if (vcf_has_index(file)) {
+        # Parallel VIEW using UNION ALL of per-contig bcf_read calls
+        # DuckDB will parallelize execution at query time
+        row_count <- vcf_open_duckdb_parallel_view(
+          con = con,
+          file = file,
+          table_name = table_name,
+          columns = columns,
+          tidy_format = tidy_format,
+          threads = threads
+        )
+      } else {
+        # Fallback to simple view with warning
+        warning(
+          "threads > 1 requires an indexed VCF (.tbi or .csi). ",
+          "Falling back to single-threaded view.",
+          call. = FALSE
+        )
+        view_sql <- sprintf(
+          "CREATE VIEW %s AS SELECT %s FROM %s",
+          quoted_table,
+          select_clause,
+          bcf_read_call
+        )
+        DBI::dbExecute(con, view_sql)
+        message(sprintf("Created view '%s' from %s", table_name, basename(file)))
+      }
+    } else {
+      # Simple VIEW - instant but re-reads VCF each query
+      view_sql <- sprintf(
+        "CREATE VIEW %s AS SELECT %s FROM %s",
+        quoted_table,
+        select_clause,
+        bcf_read_call
+      )
+      DBI::dbExecute(con, view_sql)
+      message(sprintf("Created view '%s' from %s", table_name, basename(file)))
+    }
+  } else if (threads > 1 && is.null(region)) {
+    if (vcf_has_index(file)) {
+      # Parallel loading by chromosome
+      row_count <- vcf_open_duckdb_parallel(
+        con = con,
+        file = file,
+        table_name = table_name,
+        columns = columns,
+        tidy_format = tidy_format,
+        threads = threads,
+        partition_by = partition_by
+      )
+    } else {
+      # Fallback to single-threaded with warning
+      warning(
+        "threads > 1 requires an indexed VCF (.tbi or .csi). ",
+        "Falling back to single-threaded table creation.",
+        call. = FALSE
+      )
+      create_sql <- sprintf(
+        "CREATE TABLE %s AS SELECT %s FROM %s",
+        quoted_table,
+        select_clause,
+        bcf_read_call
+      )
+      DBI::dbExecute(con, create_sql)
+      count_result <- DBI::dbGetQuery(
+        con,
+        sprintf("SELECT COUNT(*) as n FROM %s", quoted_table)
+      )
+      row_count <- count_result$n[1]
+      message(sprintf(
+        "Created table '%s' with %s rows from %s",
+        table_name,
+        format(row_count, big.mark = ","),
+        basename(file)
+      ))
+    }
   } else {
     # Single-threaded table creation
     if (!is.null(partition_by)) {
@@ -668,6 +731,75 @@ vcf_open_duckdb_parallel <- function(
   ))
 
   row_count
+}
+
+#' Internal: Create parallel VIEW using UNION ALL of per-contig bcf_read calls
+#'
+#' Creates a VIEW that unions bcf_read() calls for each contig. DuckDB can
+#' parallelize execution at query time.
+#'
+#' @param con DuckDB connection
+#' @param file VCF file path
+#' @param table_name Target view name
+#' @param columns Columns to select
+#' @param tidy_format Whether to use tidy format
+#' @param threads Number of threads (used to limit contigs)
+#' @return NULL (views don't have row counts)
+#' @keywords internal
+vcf_open_duckdb_parallel_view <- function(
+  con,
+  file,
+  table_name,
+  columns,
+  tidy_format,
+  threads
+) {
+  # Get contigs from header
+  all_contigs <- vcf_get_contigs(file)
+  if (length(all_contigs) == 0) {
+    stop("No contigs found in VCF header", call. = FALSE)
+  }
+
+  # Filter to contigs with data
+  contig_counts <- vcf_count_per_contig(file)
+  contigs <- names(contig_counts)[contig_counts > 0]
+
+  if (length(contigs) == 0) {
+    stop("No variants found in file", call. = FALSE)
+  }
+
+  # Build select clause
+  select_clause <- if (is.null(columns)) "*" else paste(columns, collapse = ", ")
+
+  # Quote table name
+  quoted_table <- DBI::dbQuoteIdentifier(con, table_name)
+
+  # Build UNION ALL of bcf_read calls for each contig
+  build_contig_select <- function(contig) {
+    bcf_params <- sprintf("region := '%s'", contig)
+    if (isTRUE(tidy_format)) {
+      bcf_params <- paste(bcf_params, "tidy_format := true", sep = ", ")
+    }
+    bcf_read_call <- sprintf("bcf_read('%s', %s)", file, bcf_params)
+    sprintf("SELECT %s FROM %s", select_clause, bcf_read_call)
+  }
+
+  union_parts <- vapply(contigs, build_contig_select, character(1))
+  union_sql <- paste(union_parts, collapse = " UNION ALL ")
+
+  # Create the view
+  view_sql <- sprintf("CREATE VIEW %s AS %s", quoted_table, union_sql)
+  DBI::dbExecute(con, view_sql)
+
+  message(sprintf(
+    "Created parallel view '%s' with %d contig regions from %s",
+    table_name,
+    length(contigs),
+    basename(file)
+  ))
+
+  # Views don't have row counts (lazy evaluation)
+  NULL
 }
 
 #' Close a VCF DuckDB connection

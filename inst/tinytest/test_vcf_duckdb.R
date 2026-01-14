@@ -1119,6 +1119,117 @@ expect_silent(
 vcf_close_duckdb(vcf_print)
 
 # =============================================================================
+# Test parallel view (UNION ALL) with test_deep_variant.vcf.gz
+# =============================================================================
+
+deep_variant_vcf <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+
+# Parallel view should work when threads > 1 with indexed VCF
+vcf_parallel_view <- vcf_open_duckdb(
+  deep_variant_vcf,
+  ext_path,
+  table_name = "parallel_view_test",
+  threads = 4L
+)
+
+expect_true(
+  vcf_parallel_view$is_view,
+  info = "Parallel view should still be a view"
+)
+expect_null(
+  vcf_parallel_view$row_count,
+  info = "Parallel view should have NULL row_count (lazy)"
+)
+
+# Query the parallel view - should return correct data
+parallel_count <- DBI::dbGetQuery(
+  vcf_parallel_view$con,
+  "SELECT COUNT(*) as n FROM parallel_view_test"
+)
+expect_true(
+  parallel_count$n[1] > 350000,
+  info = "Parallel view should have > 350k variants (test_deep_variant has ~368k)"
+)
+
+# Test that per-chromosome queries work
+chr22_count <- DBI::dbGetQuery(
+  vcf_parallel_view$con,
+  "SELECT COUNT(*) as n FROM parallel_view_test WHERE CHROM = '22'"
+)
+expect_equal(
+  chr22_count$n[1],
+  11462L,
+  info = "Chr22 should have 11462 variants"
+)
+
+vcf_close_duckdb(vcf_parallel_view)
+
+# Test parallel view with tidy format
+vcf_parallel_tidy <- vcf_open_duckdb(
+  deep_variant_vcf,
+  ext_path,
+  table_name = "parallel_tidy_test",
+  threads = 4L,
+  tidy_format = TRUE,
+  columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT")
+)
+
+expect_true(
+  vcf_parallel_tidy$is_view,
+  info = "Parallel tidy view should be a view"
+)
+expect_true(
+  vcf_parallel_tidy$tidy_format,
+  info = "Parallel tidy view should have tidy_format = TRUE"
+)
+
+# Verify SAMPLE_ID is present (tidy format)
+tidy_sample <- DBI::dbGetQuery(
+  vcf_parallel_tidy$con,
+  "SELECT DISTINCT SAMPLE_ID FROM parallel_tidy_test LIMIT 1"
+)
+expect_true(
+  nrow(tidy_sample) > 0,
+  info = "Tidy parallel view should have SAMPLE_ID column"
+)
+
+vcf_close_duckdb(vcf_parallel_tidy)
+
+# Compare parallel view vs simple view (should return same data)
+# Create fresh connections to ensure no cross-contamination
+vcf_parallel_fresh <- vcf_open_duckdb(
+  deep_variant_vcf,
+  ext_path,
+  table_name = "parallel_fresh",
+  threads = 4L
+)
+parallel_fresh_count <- DBI::dbGetQuery(
+  vcf_parallel_fresh$con,
+  "SELECT COUNT(*) as n FROM parallel_fresh"
+)
+vcf_close_duckdb(vcf_parallel_fresh)
+
+vcf_simple <- vcf_open_duckdb(
+  deep_variant_vcf,
+  ext_path,
+  table_name = "simple_view_test",
+  threads = 1L
+)
+
+simple_count <- DBI::dbGetQuery(
+  vcf_simple$con,
+  "SELECT COUNT(*) as n FROM simple_view_test"
+)
+
+expect_equal(
+  simple_count$n[1],
+  parallel_fresh_count$n[1],
+  info = "Simple and parallel views should return same row count"
+)
+
+vcf_close_duckdb(vcf_simple)
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
