@@ -107,7 +107,7 @@ s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
 res <- processx::run(
   bcftools_path(),
-  c("view", "-H", "-r", "chr22:20000000-20100000", s3_vcf_uri),
+  c("index", "-n", s3_vcf_uri),
   error_on_status = FALSE,
   echo = FALSE
 )
@@ -175,7 +175,7 @@ Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet fi
 ```{r parquet, eval=TRUE}
 
 parquet_file <- tempfile(fileext = ".parquet")
-vcf_to_parquet(bcf_file, parquet_file, compression = "snappy")
+vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -193,7 +193,7 @@ Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This strea
 ```{r streaming, eval = TRUE}
 bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
 outfile <-  tempfile(fileext = ".parquet")
-vcf_to_parquet(
+vcf_to_parquet_arrow(
     bcf_larger,
     outfile,
     streaming = TRUE,
@@ -210,10 +210,10 @@ vcf_to_parquet(
 SQL queries on BCF using duckdb package. For now this is somehow limited due to convertion from arrow streams to data frame
 
 ```{r duckdb, eval=TRUE}
-vcf_query(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
+vcf_query_arrow(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 
 # Filter variants by position
-vcf_query(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
+vcf_query_arrow(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 ```
 
 ###  Query VCF with  DuckDB Extension
