@@ -452,9 +452,7 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 DBI::dbDisconnect(con, shutdown = TRUE)
-if (exists("pid") && is.numeric(pid)) {
-  tools::pskill(pid)
-}
+tools::pskill(pid)
 ```
 
 ### Supported Metadata Databases
@@ -517,12 +515,15 @@ CLI tools are provided for VCF to Parquet conversion and querying, including thr
 
 ```{bash cli-tool, eval=TRUE}
 # Get paths using system.file
-SCRIPT=$(Rscript -e "cat(system.file('scripts', 'vcf2parquet.R', package='RBCFTools'))")
-BCF=$(Rscript -e "cat(system.file('extdata', '1000G_3samples.bcf', package='RBCFTools'))")
+SCRIPT=$(Rscript -e "cat(system.file('scripts', 'vcf2parquet_duckdb.R', package='RBCFTools'))")
+BCF=$(Rscript -e "cat(system.file('extdata', 'test_deep_variant.vcf.gz', package='RBCFTools'))")
 OUT_PQ=$(mktemp --suffix=.parquet)
+Log=$(mktemp --suffix=.log)
 
 # Convert BCF to Parquet
-$SCRIPT convert --quiet -i $BCF -o $OUT_PQ
+time $SCRIPT convert --quiet -i $BCF -o $OUT_PQ -t 4  > $Log 2>&1
+
+cat $Log
 
 # Query with DuckDB SQL
 $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
@@ -531,10 +532,10 @@ $SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
 
 # Show schema
-$SCRIPT schema 0 --quiet -i $BCF
+$SCRIPT schema  --quiet -i $BCF 
 
 # File info
-$SCRIPT info -i $OUT_PQ
+$SCRIPT info -i $OUT_PQ 
 
 rm -f $OUT_PQ
 ```
@@ -550,3 +551,5 @@ rm -f $OUT_PQ
 - [htslib GitHub](https://github.com/samtools/htslib)
 
 - [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
+
+- [Ducklake minio Example](https://github.com/duckdb/ducklake/blob/main/examples/minio-demo-server/README.md)
