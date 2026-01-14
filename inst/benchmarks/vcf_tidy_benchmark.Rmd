@@ -1,0 +1,305 @@
+---
+title: "VCF to Parquet Tidy Format Benchmark"
+output: github_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  cache = TRUE
+)
+```
+
+## Overview
+  
+This benchmark compares the performance of VCF to Parquet conversion in:
+
+1. **Wide format** (`vcf_to_parquet_duckdb`): One row per variant, FORMAT columns as `FORMAT_<field>_<sample>`
+2. **Tidy format** (`vcf_to_parquet_tidy`): One row per variant-sample, with `SAMPLE_ID` column
+
+## Setup
+
+```{r libraries}
+library(RBCFTools)
+library(DBI)
+library(duckdb)
+
+# Build extension once
+ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
+
+# Helper function to format file sizes (vectorized)
+format_size <- function(bytes) {
+  sapply(bytes, function(b) {
+    if (is.na(b)) return(NA_character_)
+    if (b < 1024) return(paste(b, "B"))
+    if (b < 1024^2) return(sprintf("%.1f KB", b / 1024))
+    if (b < 1024^3) return(sprintf("%.1f MB", b / 1024^2))
+    sprintf("%.2f GB", b / 1024^3)
+  })
+}
+
+# Benchmark function
+benchmark_conversion <- function(input_file, name, threads = 1, n_runs = 3) {
+  wide_out <- tempfile(fileext = ".parquet")
+  tidy_out <- tempfile(fileext = ".parquet")
+  
+  # Get input info
+  con <- vcf_duckdb_connect(ext_path)
+  n_variants <- vcf_count_duckdb(input_file, con = con)
+  samples <- vcf_samples_duckdb(input_file, con = con)
+  n_samples <- length(samples)
+  DBI::dbDisconnect(con, shutdown = TRUE)
+  
+  # Benchmark wide format
+  wide_times <- sapply(seq_len(n_runs), function(i) {
+    unlink(wide_out)
+    system.time({
+      suppressMessages(vcf_to_parquet_duckdb(
+        input_file, wide_out, 
+        extension_path = ext_path, 
+        threads = threads
+      ))
+    })["elapsed"]
+  })
+  
+  # Benchmark tidy format
+  tidy_times <- sapply(seq_len(n_runs), function(i) {
+    unlink(tidy_out)
+    system.time({
+      suppressMessages(vcf_to_parquet_tidy(
+        input_file, tidy_out, 
+        extension_path = ext_path, 
+        threads = threads
+      ))
+    })["elapsed"]
+  })
+  
+  # Get output sizes
+  wide_size <- file.info(wide_out)$size
+  tidy_size <- file.info(tidy_out)$size
+  
+  # Get row counts
+  con <- duckdb::dbConnect(duckdb::duckdb())
+  wide_rows <- DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) FROM '%s'", wide_out))[[1]]
+  tidy_rows <- DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) FROM '%s'", tidy_out))[[1]]
+  DBI::dbDisconnect(con, shutdown = TRUE)
+  
+  # Cleanup
+  unlink(c(wide_out, tidy_out))
+  
+  data.frame(
+    name = name,
+    n_variants = n_variants,
+    n_samples = n_samples,
+    threads = threads,
+    wide_time_mean = mean(wide_times),
+    wide_time_sd = sd(wide_times),
+    tidy_time_mean = mean(tidy_times),
+    tidy_time_sd = sd(tidy_times),
+    wide_size = wide_size,
+    tidy_size = tidy_size,
+    wide_rows = wide_rows,
+    tidy_rows = tidy_rows,
+    tidy_overhead = tidy_times / wide_times
+  )
+}
+```
+
+## Test Files
+
+```{r test-files}
+# Package test files
+vcf_3samples <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+vcf_deepvar <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+
+# List available test files
+test_files <- data.frame(
+  name = c("1000G_3samples", "DeepVariant"),
+  path = c(vcf_3samples, vcf_deepvar),
+  stringsAsFactors = FALSE
+)
+
+# Add file sizes
+test_files$size <- sapply(test_files$path, function(p) format_size(file.info(p)$size))
+
+knitr::kable(test_files, caption = "Test VCF Files")
+```
+
+## Benchmark: Small Multi-Sample VCF (1000G 3 samples)
+
+```{r bench-3samples}
+results_3s <- benchmark_conversion(vcf_3samples, "1000G_3samples", threads = 1)
+knitr::kable(results_3s[, c("name", "n_variants", "n_samples", 
+                             "wide_time_mean", "tidy_time_mean",
+                             "wide_rows", "tidy_rows")],
+             digits = 3,
+             caption = "3-sample VCF Benchmark")
+```
+
+### Output Size Comparison
+
+```{r size-comparison-3s}
+cat("Wide format:\n")
+cat("  Rows:", results_3s$wide_rows, "\n")
+cat("  Size:", format_size(results_3s$wide_size), "\n")
+
+cat("\nTidy format:\n")
+cat("  Rows:", results_3s$tidy_rows, "(", results_3s$n_samples, "x expansion)\n")
+cat("  Size:", format_size(results_3s$tidy_size), "\n")
+
+cat("\nSize ratio (tidy/wide):", sprintf("%.2fx", results_3s$tidy_size / results_3s$wide_size), "\n")
+```
+
+## Benchmark: Single-Sample VCF (DeepVariant)
+
+```{r bench-deepvar}
+results_dv <- benchmark_conversion(vcf_deepvar, "DeepVariant", threads = 1)
+knitr::kable(results_dv[, c("name", "n_variants", "n_samples", 
+                             "wide_time_mean", "tidy_time_mean",
+                             "wide_rows", "tidy_rows")],
+             digits = 3,
+             caption = "Single-sample VCF Benchmark")
+```
+
+### Output Size Comparison
+
+```{r size-comparison-dv}
+cat("Wide format:\n")
+cat("  Rows:", results_dv$wide_rows, "\n")
+cat("  Size:", format_size(results_dv$wide_size), "\n")
+
+cat("\nTidy format:\n")
+cat("  Rows:", results_dv$tidy_rows, "(single sample - no expansion)\n")
+cat("  Size:", format_size(results_dv$tidy_size), "\n")
+
+cat("\nSize ratio (tidy/wide):", sprintf("%.2fx", results_dv$tidy_size / results_dv$wide_size), "\n")
+```
+
+## Summary Results
+
+```{r summary}
+all_results <- rbind(results_3s, results_dv)
+
+summary_df <- data.frame(
+  File = all_results$name,
+  Variants = all_results$n_variants,
+  Samples = all_results$n_samples,
+  `Wide Time (s)` = sprintf("%.3f", all_results$wide_time_mean),
+  `Tidy Time (s)` = sprintf("%.3f", all_results$tidy_time_mean),
+  `Time Overhead` = sprintf("%.2fx", all_results$tidy_time_mean / all_results$wide_time_mean),
+  `Wide Size` = sapply(all_results$wide_size, format_size),
+  `Tidy Size` = sapply(all_results$tidy_size, format_size),
+  `Size Ratio` = sprintf("%.2fx", all_results$tidy_size / all_results$wide_size),
+  check.names = FALSE
+)
+
+knitr::kable(summary_df, caption = "Conversion Benchmark Summary")
+```
+
+## Query Performance Comparison
+
+Compare query performance on wide vs tidy format for common operations.
+
+```{r query-benchmark}
+# Create test files
+wide_file <- tempfile(fileext = ".parquet")
+tidy_file <- tempfile(fileext = ".parquet")
+
+suppressMessages({
+  vcf_to_parquet_duckdb(vcf_3samples, wide_file, extension_path = ext_path)
+  vcf_to_parquet_tidy(vcf_3samples, tidy_file, extension_path = ext_path)
+})
+
+con <- duckdb::dbConnect(duckdb::duckdb())
+
+# Query 1: Count variants per chromosome
+query_count <- function(file) {
+  system.time({
+    DBI::dbGetQuery(con, sprintf(
+      "SELECT CHROM, COUNT(*) as n FROM '%s' GROUP BY CHROM", file
+    ))
+  })["elapsed"]
+}
+
+# Query 2: Filter by genotype (different for wide vs tidy)
+query_gt_wide <- function() {
+  system.time({
+    DBI::dbGetQuery(con, sprintf(
+      "SELECT CHROM, POS FROM '%s' WHERE FORMAT_GT_HG00098 = '1|1'", wide_file
+    ))
+  })["elapsed"]
+}
+
+query_gt_tidy <- function() {
+  system.time({
+    DBI::dbGetQuery(con, sprintf(
+      "SELECT CHROM, POS FROM '%s' WHERE SAMPLE_ID = 'HG00098' AND FORMAT_GT = '1|1'", tidy_file
+    ))
+  })["elapsed"]
+}
+
+# Query 3: Aggregate across samples (tidy is more natural)
+query_sample_agg_tidy <- function() {
+  system.time({
+    DBI::dbGetQuery(con, sprintf(
+      "SELECT SAMPLE_ID, COUNT(*) as het_count 
+       FROM '%s' 
+       WHERE FORMAT_GT LIKE '%%|1' OR FORMAT_GT LIKE '1|%%'
+       GROUP BY SAMPLE_ID", tidy_file
+    ))
+  })["elapsed"]
+}
+
+# Run benchmarks
+query_results <- data.frame(
+  Query = c("Count by CHROM (wide)", "Count by CHROM (tidy)",
+            "Filter GT (wide)", "Filter GT (tidy)",
+            "Sample aggregation (tidy)"),
+  Time_ms = c(
+    query_count(wide_file) * 1000,
+    query_count(tidy_file) * 1000,
+    query_gt_wide() * 1000,
+    query_gt_tidy() * 1000,
+    query_sample_agg_tidy() * 1000
+  )
+)
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+unlink(c(wide_file, tidy_file))
+
+knitr::kable(query_results, digits = 2, caption = "Query Performance (ms)")
+```
+
+## Conclusions
+
+### When to use Tidy Format
+
+**Advantages:**
+- Natural for sample-level analysis and aggregation
+- Easier to join/merge samples from different VCFs
+- Compatible with DuckLake MERGE/UPSERT operations
+- Better for cohort building from single-sample VCFs
+
+**Disadvantages:**
+- Row expansion (N samples × M variants rows)
+- Larger file size for multi-sample VCFs
+- Slightly slower conversion
+
+### Recommendations
+
+| Use Case | Recommended Format |
+|----------|-------------------|
+| Archive/storage | Wide |
+| Single-sample VCFs for cohort | Tidy |
+| Sample-level QC/analysis | Tidy |
+| Variant-centric analysis | Wide |
+| DuckLake incremental loading | Tidy |
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
+```
