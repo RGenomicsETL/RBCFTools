@@ -1058,6 +1058,8 @@ rm -f $OUT_PQ
   : Load the DuckLake extension
 - [`ducklake_load_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load_vcf.md)
   : Load VCF into DuckLake (ETL + Registration)
+- [`ducklake_parse_connection_string()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_parse_connection_string.md)
+  : Parse DuckLake connection string into components
 - [`ducklake_register_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_register_parquet.md)
   : Register existing Parquet files in a DuckLake table
 - [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md)
