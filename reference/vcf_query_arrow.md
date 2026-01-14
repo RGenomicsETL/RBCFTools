@@ -33,20 +33,20 @@ Query result as a data frame
 if (FALSE) { # \dontrun{
 # Count variants per chromosome
 vcf_query_arrow(
-    "variants.vcf.gz",
-    "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
+  "variants.vcf.gz",
+  "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
 )
 
 # Filter high-quality variants
 vcf_query_arrow(
-    "variants.vcf.gz",
-    "SELECT * FROM vcf WHERE QUAL > 30"
+  "variants.vcf.gz",
+  "SELECT * FROM vcf WHERE QUAL > 30"
 )
 
 # Join multiple VCF files
 vcf_query_arrow(
-    c("sample1.vcf.gz", "sample2.vcf.gz"),
-    "SELECT * FROM vcf WHERE POS BETWEEN 1000 AND 2000"
+  c("sample1.vcf.gz", "sample2.vcf.gz"),
+  "SELECT * FROM vcf WHERE POS BETWEEN 1000 AND 2000"
 )
 } # }
 ```

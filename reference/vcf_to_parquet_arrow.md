@@ -48,7 +48,8 @@ vcf_to_parquet_arrow(
   Number of parallel threads for processing (default: 1). When threads
   \> 1 and file is indexed, uses parallel processing by splitting work
   across chromosomes/contigs. Each thread processes different regions
-  simultaneously. Requires indexed file. See `vcf_to_parquet_parallel`
+  simultaneously. Requires indexed file. See
+  [`vcf_to_parquet_parallel_arrow`](https://rgenomicsetl.github.io/RBCFTools/reference/vcf_to_parquet_parallel_arrow.md)
   for details.
 
 - index:

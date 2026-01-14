@@ -96,8 +96,8 @@ stream <- vcf_open_arrow("variants.vcf.gz")
 
 # Read batches
 while (!is.null(batch <- stream$get_next())) {
-    # Process batch...
-    print(nanoarrow::convert_array(batch))
+  # Process batch...
+  print(nanoarrow::convert_array(batch))
 }
 
 # With region filter

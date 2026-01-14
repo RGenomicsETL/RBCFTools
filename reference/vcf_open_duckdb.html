@@ -49,7 +49,7 @@ parallel loading by chromosome, column selection, and optional Hive partitioning
 <span>  <span class="va">file</span>,</span>
 <span>  <span class="va">extension_path</span>,</span>
 <span>  table_name <span class="op">=</span> <span class="st">"variants"</span>,</span>
-<span>  as_view <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  as_view <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dbdir <span class="op">=</span> <span class="st">":memory:"</span>,</span>
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -78,7 +78,7 @@ parallel loading by chromosome, column selection, and optional Hive partitioning
 
 
 <dt id="arg-as-view">as_view<a class="anchor" aria-label="anchor" href="#arg-as-view"></a></dt>
-<dd><p>Logical, create a VIEW instead of materializing a TABLE (default: FALSE).
+<dd><p>Logical, create a VIEW instead of materializing a TABLE (default: TRUE).
 Views are instant to create but queries re-read the VCF each time.
 Tables are slower to create but subsequent queries are fast.</p></dd>
 
@@ -104,8 +104,11 @@ row per variant-sample combination and a SAMPLE_ID column. Default FALSE.</p></d
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
 <dd><p>Number of threads for parallel loading (default: 1).
-When &gt; 1 and VCF is indexed, loads each chromosome in parallel then unions.
-Only applies when as_view = FALSE.</p></dd>
+When &gt; 1 and VCF is indexed:</p><ul><li><p>For views (as_view = TRUE): Creates a UNION ALL view of per-contig bcf_read()
+calls. DuckDB parallelizes execution at query time.</p></li>
+<li><p>For tables (as_view = FALSE): Loads each chromosome in parallel then unions
+into a single table.</p></li>
+</ul></dd>
 
 
 <dt id="arg-partition-by">partition_by<a class="anchor" aria-label="anchor" href="#arg-partition-by"></a></dt>
@@ -153,14 +156,17 @@ filtering. Only supported for file-backed databases.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Open as in-memory table (materializes data)</span></span></span>
+<span class="r-in"><span><span class="co"># Open as lazy view (default - instant creation, re-reads VCF each query)</span></span></span>
 <span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">vcf</span><span class="op">$</span><span class="va">con</span>, <span class="st">"SELECT COUNT(*) FROM variants"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">vcf</span><span class="op">$</span><span class="va">con</span>, <span class="st">"SELECT * FROM variants WHERE CHROM = '22'"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="vcf_close_duckdb.html">vcf_close_duckdb</a></span><span class="op">(</span><span class="va">vcf</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Open as view (lazy, re-reads VCF each query)</span></span></span>
-<span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>, as_view <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">vcf</span><span class="op">$</span><span class="va">con</span>, <span class="st">"SELECT * FROM variants WHERE CHROM = '22'"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Parallel view (UNION ALL of per-contig reads, parallelized at query time)</span></span></span>
+<span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="va">ext_path</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Open as materialized table (slower to create, fast repeated queries)</span></span></span>
+<span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>, as_view <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">vcf</span><span class="op">$</span><span class="va">con</span>, <span class="st">"SELECT COUNT(*) FROM variants"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Tidy format with specific columns</span></span></span>
 <span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"cohort.vcf.gz"</span>, <span class="va">ext_path</span>,</span></span>
@@ -168,8 +174,8 @@ filtering. Only supported for file-backed databases.</p></dd>
 <span class="r-in"><span>  columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CHROM"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>, <span class="st">"SAMPLE_ID"</span>, <span class="st">"FORMAT_GT"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Parallel loading for large files</span></span></span>
-<span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="va">ext_path</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Parallel table loading for large files</span></span></span>
+<span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"wgs.vcf.gz"</span>, <span class="va">ext_path</span>, as_view <span class="op">=</span> <span class="cn">FALSE</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Persistent file-backed database</span></span></span>
 <span class="r-in"><span><span class="va">vcf</span> <span class="op">&lt;-</span> <span class="fu">vcf_open_duckdb</span><span class="op">(</span><span class="st">"variants.vcf.gz"</span>, <span class="va">ext_path</span>,</span></span>

@@ -12,7 +12,7 @@ vcf_open_duckdb(
   file,
   extension_path,
   table_name = "variants",
-  as_view = FALSE,
+  as_view = TRUE,
   dbdir = ":memory:",
   columns = NULL,
   region = NULL,
@@ -41,7 +41,7 @@ vcf_open_duckdb(
 - as_view:
 
   Logical, create a VIEW instead of materializing a TABLE (default:
-  FALSE). Views are instant to create but queries re-read the VCF each
+  TRUE). Views are instant to create but queries re-read the VCF each
   time. Tables are slower to create but subsequent queries are fast.
 
 - dbdir:
@@ -66,8 +66,13 @@ vcf_open_duckdb(
 - threads:
 
   Number of threads for parallel loading (default: 1). When \> 1 and VCF
-  is indexed, loads each chromosome in parallel then unions. Only
-  applies when as_view = FALSE.
+  is indexed:
+
+  - For views (as_view = TRUE): Creates a UNION ALL view of per-contig
+    bcf_read() calls. DuckDB parallelizes execution at query time.
+
+  - For tables (as_view = FALSE): Loads each chromosome in parallel then
+    unions into a single table.
 
 - partition_by:
 
@@ -121,14 +126,17 @@ A list with:
 if (FALSE) { # \dontrun{
 ext_path <- bcf_reader_build(tempdir())
 
-# Open as in-memory table (materializes data)
+# Open as lazy view (default - instant creation, re-reads VCF each query)
 vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path)
-DBI::dbGetQuery(vcf$con, "SELECT COUNT(*) FROM variants")
+DBI::dbGetQuery(vcf$con, "SELECT * FROM variants WHERE CHROM = '22'")
 vcf_close_duckdb(vcf)
 
-# Open as view (lazy, re-reads VCF each query)
-vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path, as_view = TRUE)
-DBI::dbGetQuery(vcf$con, "SELECT * FROM variants WHERE CHROM = '22'")
+# Parallel view (UNION ALL of per-contig reads, parallelized at query time)
+vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, threads = 8)
+
+# Open as materialized table (slower to create, fast repeated queries)
+vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path, as_view = FALSE)
+DBI::dbGetQuery(vcf$con, "SELECT COUNT(*) FROM variants")
 
 # Tidy format with specific columns
 vcf <- vcf_open_duckdb("cohort.vcf.gz", ext_path,
@@ -136,8 +144,8 @@ vcf <- vcf_open_duckdb("cohort.vcf.gz", ext_path,
   columns = c("CHROM", "POS", "REF", "ALT", "SAMPLE_ID", "FORMAT_GT")
 )
 
-# Parallel loading for large files
-vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, threads = 8)
+# Parallel table loading for large files
+vcf <- vcf_open_duckdb("wgs.vcf.gz", ext_path, as_view = FALSE, threads = 8)
 
 # Persistent file-backed database
 vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path,
