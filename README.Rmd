@@ -515,7 +515,8 @@ ducklake_load_vcf(
   table = "variants",
   vcf_path = vcf_file,
   extension_path = ext_path,
-  threads = 1
+  threads = 1,
+  tidy_format = TRUE
 )
 ```
 

@@ -32,7 +32,7 @@ the DuckDB nanoarrow community extension. Default is FALSE.}
 \item{threads}{Number of parallel threads for processing (default: 1).
 When threads > 1 and file is indexed, uses parallel processing by splitting
 work across chromosomes/contigs. Each thread processes different regions
-simultaneously. Requires indexed file. See \code{\link{vcf_to_parquet_parallel}}
+simultaneously. Requires indexed file. See \code{\link{vcf_to_parquet_parallel_arrow}}
 for details.}
 
 \item{index}{Optional explicit index file path}

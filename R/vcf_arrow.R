@@ -44,8 +44,8 @@
 #'
 #' # Read batches
 #' while (!is.null(batch <- stream$get_next())) {
-#'     # Process batch...
-#'     print(nanoarrow::convert_array(batch))
+#'   # Process batch...
+#'   print(nanoarrow::convert_array(batch))
 #' }
 #'
 #' # With region filter
@@ -191,7 +191,7 @@ vcf_to_arrow <- function(
 #' @param threads Number of parallel threads for processing (default: 1).
 #'   When threads > 1 and file is indexed, uses parallel processing by splitting
 #'   work across chromosomes/contigs. Each thread processes different regions
-#'   simultaneously. Requires indexed file. See \code{\link{vcf_to_parquet_parallel}}
+#'   simultaneously. Requires indexed file. See \code{\link{vcf_to_parquet_parallel_arrow}}
 #'   for details.
 #' @param index Optional explicit index file path
 #' @param ... Additional arguments passed to vcf_open_arrow
@@ -420,20 +420,20 @@ vcf_to_parquet_streaming <- function(
 #' \dontrun{
 #' # Count variants per chromosome
 #' vcf_query_arrow(
-#'     "variants.vcf.gz",
-#'     "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
+#'   "variants.vcf.gz",
+#'   "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
 #' )
 #'
 #' # Filter high-quality variants
 #' vcf_query_arrow(
-#'     "variants.vcf.gz",
-#'     "SELECT * FROM vcf WHERE QUAL > 30"
+#'   "variants.vcf.gz",
+#'   "SELECT * FROM vcf WHERE QUAL > 30"
 #' )
 #'
 #' # Join multiple VCF files
 #' vcf_query_arrow(
-#'     c("sample1.vcf.gz", "sample2.vcf.gz"),
-#'     "SELECT * FROM vcf WHERE POS BETWEEN 1000 AND 2000"
+#'   c("sample1.vcf.gz", "sample2.vcf.gz"),
+#'   "SELECT * FROM vcf WHERE POS BETWEEN 1000 AND 2000"
 #' )
 #' }
 #'
