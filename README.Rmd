@@ -259,6 +259,37 @@ DBI::dbGetQuery(con, sprintf("
 DBI::dbDisconnect(con)
 ```
 
+### Tidy (Long) Format Export
+
+Export VCF/BCF to a "tidy" format where each row is one variant-sample combination. This transforms wide `FORMAT_<field>_<sample>` columns into a single `SAMPLE_ID` column plus `FORMAT_<field>` columns.
+
+```{r tidy-format, eval=TRUE}
+# Build extension
+ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
+
+# Multi-sample VCF: 3 samples x 11 variants = 33 rows
+vcf_3samples <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+tidy_out <- tempfile(fileext = ".parquet")
+
+vcf_to_parquet_tidy(vcf_3samples, tidy_out, extension_path = ext_path)
+
+# Query the tidy output
+con <- duckdb::dbConnect(duckdb::duckdb())
+DBI::dbGetQuery(con, sprintf("
+  SELECT CHROM, POS, REF, SAMPLE_ID, FORMAT_GT 
+  FROM '%s' 
+  LIMIT 9", tidy_out))
+
+# Verify row expansion: variants * samples
+DBI::dbGetQuery(con, sprintf("
+  SELECT COUNT(*) as total_rows, 
+         COUNT(DISTINCT SAMPLE_ID) as n_samples
+  FROM '%s'", tidy_out))
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+This format is ideal for combining single-sample VCFs into cohort tables or appending to DuckLake tables with MERGE operations.
 
 
 ### Stream Remote VCF using Arrow or DuckDB Extension

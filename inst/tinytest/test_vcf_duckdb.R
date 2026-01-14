@@ -671,6 +671,179 @@ DBI::dbDisconnect(verify_con3, shutdown = TRUE)
 unlink(parquet_full)
 
 # =============================================================================
+# Test vcf_to_parquet_tidy - Tidy (long) format export
+# =============================================================================
+
+# Test multi-sample VCF tidy export
+tidy_out <- tempfile(fileext = ".parquet")
+
+expect_message(
+  vcf_to_parquet_tidy(
+    test_vcf,
+    tidy_out,
+    extension_path = ext_path
+  ),
+  pattern = "Wrote tidy format",
+  info = "vcf_to_parquet_tidy should write output with message"
+)
+
+expect_true(
+  file.exists(tidy_out),
+  info = "Tidy parquet file should exist"
+)
+
+# Verify tidy structure: SAMPLE_ID column and renamed FORMAT columns
+verify_tidy_con <- DBI::dbConnect(duckdb::duckdb())
+tidy_data <- DBI::dbGetQuery(
+  verify_tidy_con,
+  sprintf("SELECT * FROM '%s' LIMIT 10", tidy_out)
+)
+
+expect_true(
+  "SAMPLE_ID" %in% names(tidy_data),
+  info = "Tidy output should have SAMPLE_ID column"
+)
+expect_true(
+  "FORMAT_GT" %in% names(tidy_data),
+  info = "Tidy output should have FORMAT_GT (not FORMAT_GT_<sample>)"
+)
+expect_false(
+  any(grepl("^FORMAT_GT_", names(tidy_data))),
+  info = "Tidy output should NOT have sample-suffixed FORMAT columns"
+)
+
+# Verify row count is multiplied by number of samples
+# Original: 11 variants x 3 samples = 33 rows
+orig_count <- vcf_count_duckdb(test_vcf, extension_path = ext_path)
+tidy_count <- DBI::dbGetQuery(
+  verify_tidy_con,
+  sprintf("SELECT COUNT(*) as n FROM '%s'", tidy_out)
+)$n[1]
+
+expected_samples <- 3L
+expect_equal(
+  tidy_count,
+  orig_count * expected_samples,
+  info = "Tidy row count should be variants * samples"
+)
+
+DBI::dbDisconnect(verify_tidy_con, shutdown = TRUE)
+unlink(tidy_out)
+
+# Test single-sample VCF with underscored sample name
+single_sample_vcf <- system.file(
+  "extdata",
+  "test_deep_variant.vcf.gz",
+  package = "RBCFTools"
+)
+
+if (file.exists(single_sample_vcf) && nzchar(single_sample_vcf)) {
+  tidy_single_out <- tempfile(fileext = ".parquet")
+
+  expect_message(
+    vcf_to_parquet_tidy(
+      single_sample_vcf,
+      tidy_single_out,
+      extension_path = ext_path,
+      region = "1:536000-600000"
+    ),
+    pattern = "Wrote tidy format",
+    info = "Should work with single-sample VCF"
+  )
+
+  verify_single_con <- DBI::dbConnect(duckdb::duckdb())
+  single_data <- DBI::dbGetQuery(
+    verify_single_con,
+    sprintf("SELECT * FROM '%s' LIMIT 5", tidy_single_out)
+  )
+
+  expect_true(
+    "SAMPLE_ID" %in% names(single_data),
+    info = "Single-sample tidy should have SAMPLE_ID"
+  )
+  expect_true(
+    "FORMAT_MIN_DP" %in% names(single_data) || "FORMAT_DP" %in% names(single_data),
+    info = "Single-sample should handle underscored FORMAT fields"
+  )
+  expect_equal(
+    unique(single_data$SAMPLE_ID),
+    "test_deep_variant",
+    info = "SAMPLE_ID should be the sample name"
+  )
+
+  DBI::dbDisconnect(verify_single_con, shutdown = TRUE)
+  unlink(tidy_single_out)
+}
+
+# Test tidy with columns parameter
+tidy_cols_out <- tempfile(fileext = ".parquet")
+
+expect_message(
+  vcf_to_parquet_tidy(
+    test_vcf,
+    tidy_cols_out,
+    extension_path = ext_path,
+    columns = c("CHROM", "POS", "REF", "ALT")
+  ),
+  pattern = "Wrote tidy format",
+  info = "vcf_to_parquet_tidy should work with columns parameter"
+)
+
+verify_cols_con <- DBI::dbConnect(duckdb::duckdb())
+cols_data <- DBI::dbGetQuery(
+  verify_cols_con,
+  sprintf("SELECT * FROM '%s' LIMIT 5", tidy_cols_out)
+)
+
+expect_true(
+  all(c("CHROM", "POS", "REF", "ALT") %in% names(cols_data)),
+  info = "Should have requested columns"
+)
+expect_false(
+  "INFO_DP" %in% names(cols_data),
+  info = "Should NOT have unrequested INFO columns"
+)
+expect_true(
+  "SAMPLE_ID" %in% names(cols_data),
+  info = "SAMPLE_ID should always be included"
+)
+expect_true(
+  "FORMAT_GT" %in% names(cols_data),
+  info = "FORMAT columns should always be included"
+)
+
+DBI::dbDisconnect(verify_cols_con, shutdown = TRUE)
+unlink(tidy_cols_out)
+
+# Test sites-only VCF (no samples) - should fall back to standard export
+sites_only_vcf <- system.file(
+  "extdata",
+  "gnomad.exomes.r2.0.1.sites.bcf",
+  package = "RBCFTools"
+)
+
+if (file.exists(sites_only_vcf) && nzchar(sites_only_vcf)) {
+  sites_tidy_out <- tempfile(fileext = ".parquet")
+
+  expect_message(
+    vcf_to_parquet_tidy(
+      sites_only_vcf,
+      sites_tidy_out,
+      extension_path = ext_path
+    ),
+    pattern = "sites-only|standard export",
+    info = "Sites-only VCF should fall back to standard export"
+  )
+
+  expect_true(
+    file.exists(sites_tidy_out),
+    info = "Sites-only output should exist"
+  )
+
+  unlink(sites_tidy_out)
+}
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 

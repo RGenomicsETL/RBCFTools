@@ -1,5 +1,13 @@
 # RBCFTools 1.23-0.0.2.9000 (development version)
 
+## Tidy VCF export
+
+- `vcf_to_parquet_tidy()`: Export VCF/BCF to tidy (long) format Parquet where each row is one variant-sample combination
+  - Adds `SAMPLE_ID` column and transforms `FORMAT_<field>_<sample>` to `FORMAT_<field>`
+  - Supports single-sample (simple rename) and multi-sample (unnest-based unpivot) VCFs
+  - Compatible with `threads` parameter for parallel processing
+  - Ideal for combining multiple single-sample VCFs or appending to DuckLake tables
+
 ## DuckLake utilities
 
 - `allow_evolution` parameter for `ducklake_load_vcf()` and `ducklake_register_parquet()` to auto-add new columns via ALTER TABLE
