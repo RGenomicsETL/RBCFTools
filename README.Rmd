@@ -134,7 +134,7 @@ stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
 
 batch <- stream$get_next()
 
-str(nanoarrow::convert_array(batch))
+head(nanoarrow::convert_array(batch))
 stream$release()
 ```
 
@@ -302,13 +302,11 @@ csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFToo
 stream <- vcf_open_arrow(bcf_file, index = csi_index)
 batch <- stream$get_next()
 nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
-str(nanoarrow::convert_array(batch))
 # Alternative: htslib ##idx## syntax in filename
 filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
 stream2 <- vcf_open_arrow(filename_with_idx)
 batch2 <- stream2$get_next()
 nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
-str(nanoarrow::convert_array(batch2))
 ```
 
 ## Example Application: DuckLake ETL
