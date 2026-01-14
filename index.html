@@ -303,7 +303,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -321,13 +321,13 @@
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span>
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                   file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/Rtmpv5D3hF/file3e93626f76d48.parquet            0                 11</span></span>
+<span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -403,7 +403,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpv5D3hF/file3e936217c6b4a5.parquet (streaming mode)</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpeOs9iQ/file3e9be56d695909.parquet (streaming mode)</span></span>
 <span><span class="co"># describe using duckdb</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -465,12 +465,12 @@
 <span><span class="st">  GROUP BY CHROM </span></span>
 <span><span class="st">  ORDER BY n_variants DESC </span></span>
 <span><span class="st">  LIMIT 5"</span>, <span class="va">vcf_file</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   CHROM n_variants min_pos   max_pos</span></span>
-<span><span class="co">#&gt; 1    19      35918  111129  59084689</span></span>
-<span><span class="co">#&gt; 2     1      35846  536895 249211717</span></span>
-<span><span class="co">#&gt; 3    17      27325    6102  81052229</span></span>
-<span><span class="co">#&gt; 4    11      24472  180184 134257519</span></span>
-<span><span class="co">#&gt; 5     2      22032   42993 242836470</span></span>
+<span><span class="co">#&gt;   CHROM n_variants  min_pos   max_pos</span></span>
+<span><span class="co">#&gt; 1    19      35918   111129  59084689</span></span>
+<span><span class="co">#&gt; 2     1      35846   536895 249211717</span></span>
+<span><span class="co">#&gt; 3    17      27325     6102  81052229</span></span>
+<span><span class="co">#&gt; 4    11      24472   180184 134257519</span></span>
+<span><span class="co">#&gt; 5    14      22466 19377907 107210906</span></span>
 <span></span>
 <span><span class="co"># Export directly to Parquet</span></span>
 <span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
@@ -604,7 +604,7 @@
 <span><span class="va">pid_output</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="st">"sh"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-c"</span>, <span class="va">cmd</span><span class="op">)</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">stdout</span></span>
 <span><span class="va">pid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pid_output</span><span class="op">)</span></span>
 <span><span class="va">pid</span></span>
-<span><span class="co">#&gt; [1] 4101230</span></span>
+<span><span class="co">#&gt; [1] 4103404</span></span>
 <span><span class="co"># Give MinIO time to start</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span></span>
@@ -650,7 +650,7 @@
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stdout</span></span>
-<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768416636`.\n"</span></span>
+<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768417008`.\n"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stderr</span></span>
 <span><span class="co">#&gt; [1] ""</span></span>
@@ -731,10 +731,10 @@
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span><span class="co">#&gt;   Build directory: /tmp/Rtmpv5D3hF</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/RtmpeOs9iQ</span></span>
 <span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span><span class="co">#&gt; Extension built: /tmp/Rtmpv5D3hF/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/RtmpeOs9iQ/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
@@ -742,7 +742,7 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/Rtmpv5D3hF/variants_20260114_195036.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/RtmpeOs9iQ/variants_20260114_195649.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
@@ -764,7 +764,7 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/Rtmpv5D3hF/variants_vep_20260114_195037.parquet</span></span></code></pre></div>
+<span><span class="co">#&gt; Wrote: /tmp/RtmpeOs9iQ/variants_vep_20260114_195650.parquet</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="list-lake-content">List lake content<a class="anchor" aria-label="anchor" href="#list-lake-content"></a>
@@ -788,9 +788,7 @@
 <span><span class="va">variants_schema</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"DESCRIBE variants"</span><span class="op">)</span></span>
 <span><span class="va">variants_vep_schema</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"DESCRIBE variants_vep"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Variants table columns:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Variants table columns:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">variants_schema</span><span class="op">$</span><span class="va">column_name</span><span class="op">)</span></span>
+<span><span class="va">variants_schema</span><span class="op">$</span><span class="va">column_name</span></span>
 <span><span class="co">#&gt;  [1] "CHROM"                           "POS"                            </span></span>
 <span><span class="co">#&gt;  [3] "ID"                              "REF"                            </span></span>
 <span><span class="co">#&gt;  [5] "ALT"                             "QUAL"                           </span></span>
@@ -799,10 +797,8 @@
 <span><span class="co">#&gt; [11] "FORMAT_DP_test_deep_variant"     "FORMAT_MIN_DP_test_deep_variant"</span></span>
 <span><span class="co">#&gt; [13] "FORMAT_AD_test_deep_variant"     "FORMAT_VAF_test_deep_variant"   </span></span>
 <span><span class="co">#&gt; [15] "FORMAT_PL_test_deep_variant"     "FORMAT_MED_DP_test_deep_variant"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nVEP Variants table columns:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; VEP Variants table columns:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">variants_vep_schema</span><span class="op">$</span><span class="va">column_name</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">variants_vep_schema</span><span class="op">$</span><span class="va">column_name</span></span>
 <span><span class="co">#&gt;  [1] "CHROM"                   "POS"                    </span></span>
 <span><span class="co">#&gt;  [3] "ID"                      "REF"                    </span></span>
 <span><span class="co">#&gt;  [5] "ALT"                     "QUAL"                   </span></span>
@@ -852,11 +848,10 @@
 <span><span class="co">#&gt; [93] "INFO_AF"</span></span></code></pre></div>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for both tables</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Files for 'variants' table:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Files for 'variants' table:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                              data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768416636/data/main/variants/ducklake-019bbdd8-716d-7c9a-88c4-420d4fd18f0f.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768417008/data/main/variants/ducklake-019bbdde-2176-7e41-99c3-7ff4105c57e8.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
@@ -864,12 +859,9 @@
 <span><span class="co">#&gt;   delete_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1                       NULL</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nFiles for 'variants_vep' table:\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Files for 'variants_vep' table:</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants_vep')"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants_vep')"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                                  data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768416636/data/main/variants_vep/ducklake-019bbdd8-722b-7c69-bc4b-e2297a900fff.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768417008/data/main/variants_vep/ducklake-019bbdde-2232-7d67-8ec7-4416af0d854b.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1               183084                 15439                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
@@ -976,19 +968,19 @@
 <span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a></span>
 <span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb25-25"><a href="#cb25-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt; real 0m1.558s</span></span>
-<span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt; user 0m3.462s</span></span>
-<span id="cb25-28"><a href="#cb25-28" tabindex="-1"></a><span class="co">#&gt; sys  0m1.949s</span></span>
+<span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt; real 0m1.598s</span></span>
+<span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt; user 0m3.613s</span></span>
+<span id="cb25-28"><a href="#cb25-28" tabindex="-1"></a><span class="co">#&gt; sys  0m1.983s</span></span>
 <span id="cb25-29"><a href="#cb25-29" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-30"><a href="#cb25-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpjd6igN </span></span>
+<span id="cb25-30"><a href="#cb25-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpySx9w1 </span></span>
 <span id="cb25-31"><a href="#cb25-31" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpjd6igN</span></span>
+<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpySx9w1</span></span>
 <span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpjd6igN'</span></span>
+<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpySx9w1'</span></span>
 <span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpjd6igN'</span></span>
-<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpjd6igN'</span></span>
+<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpySx9w1'</span></span>
+<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpySx9w1'</span></span>
 <span id="cb25-39"><a href="#cb25-39" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
 <span id="cb25-40"><a href="#cb25-40" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
 <span id="cb25-41"><a href="#cb25-41" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
@@ -998,47 +990,47 @@
 <span id="cb25-45"><a href="#cb25-45" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
 <span id="cb25-46"><a href="#cb25-46" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
 <span id="cb25-47"><a href="#cb25-47" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpjd6igN'</span></span>
-<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/Rtmpjd6igN/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/Rtmpjd6igN/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpySx9w1'</span></span>
+<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpySx9w1/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpySx9w1/build/bcf_reader.duckdb_extension </span></span>
 <span id="cb25-51"><a href="#cb25-51" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-52"><a href="#cb25-52" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet (DuckDB mode)...</span></span>
 <span id="cb25-53"><a href="#cb25-53" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
-<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.vxEA9eNwli.parquet </span></span>
+<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.rVbj080oZ9.parquet </span></span>
 <span id="cb25-55"><a href="#cb25-55" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
 <span id="cb25-56"><a href="#cb25-56" tabindex="-1"></a><span class="co">#&gt;   Row group size: 100000 </span></span>
 <span id="cb25-57"><a href="#cb25-57" tabindex="-1"></a><span class="co">#&gt;   Threads: 4 </span></span>
 <span id="cb25-58"><a href="#cb25-58" tabindex="-1"></a><span class="co">#&gt; Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)</span></span>
-<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0004.parquet</span></span>
-<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0003.parquet</span></span>
-<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0002.parquet</span></span>
-<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0001.parquet</span></span>
-<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0008.parquet</span></span>
-<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0007.parquet</span></span>
-<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0006.parquet</span></span>
-<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0005.parquet</span></span>
-<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0012.parquet</span></span>
-<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0010.parquet</span></span>
-<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0011.parquet</span></span>
-<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0009.parquet</span></span>
-<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0016.parquet</span></span>
-<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0015.parquet</span></span>
-<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0014.parquet</span></span>
-<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0013.parquet</span></span>
-<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0018.parquet</span></span>
-<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0020.parquet</span></span>
-<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0024.parquet</span></span>
-<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0017.parquet</span></span>
-<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0019.parquet</span></span>
-<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0022.parquet</span></span>
-<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0021.parquet</span></span>
-<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0023.parquet</span></span>
-<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/Rtmpjd6igN/vcf_duckdb_parallel_3e957671e74e8e/contig_0025.parquet</span></span>
-<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.vxEA9eNwli.parquet</span></span>
-<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.vxEA9eNwli.parquet (368319 rows)</span></span>
+<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0004.parquet</span></span>
+<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0003.parquet</span></span>
+<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0002.parquet</span></span>
+<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0001.parquet</span></span>
+<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0008.parquet</span></span>
+<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0007.parquet</span></span>
+<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0006.parquet</span></span>
+<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0005.parquet</span></span>
+<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0012.parquet</span></span>
+<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0010.parquet</span></span>
+<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0011.parquet</span></span>
+<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0009.parquet</span></span>
+<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0014.parquet</span></span>
+<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0016.parquet</span></span>
+<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0015.parquet</span></span>
+<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0013.parquet</span></span>
+<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0018.parquet</span></span>
+<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0020.parquet</span></span>
+<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0017.parquet</span></span>
+<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0022.parquet</span></span>
+<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0024.parquet</span></span>
+<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0019.parquet</span></span>
+<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0021.parquet</span></span>
+<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0023.parquet</span></span>
+<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0025.parquet</span></span>
+<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.rVbj080oZ9.parquet</span></span>
+<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.rVbj080oZ9.parquet (368319 rows)</span></span>
 <span id="cb25-86"><a href="#cb25-86" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-87"><a href="#cb25-87" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;   Time: 0.90 seconds</span></span>
+<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;   Time: 0.91 seconds</span></span>
 <span id="cb25-89"><a href="#cb25-89" tabindex="-1"></a><span class="co">#&gt;   Output size: 3.77 MB</span></span>
 <span id="cb25-90"><a href="#cb25-90" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
 <span id="cb25-91"><a href="#cb25-91" tabindex="-1"></a><span class="co">#&gt;   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END FORMAT_GT_test_deep_variant</span></span>
@@ -1090,15 +1082,15 @@
 <span id="cb25-137"><a href="#cb25-137" tabindex="-1"></a><span class="co">#&gt; 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb25-138"><a href="#cb25-138" tabindex="-1"></a><span class="co">#&gt; 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
 <span id="cb25-139"><a href="#cb25-139" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-140"><a href="#cb25-140" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpzpCiOY </span></span>
+<span id="cb25-140"><a href="#cb25-140" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpwo6U0O </span></span>
 <span id="cb25-141"><a href="#cb25-141" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-142"><a href="#cb25-142" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpzpCiOY</span></span>
+<span id="cb25-142"><a href="#cb25-142" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpwo6U0O</span></span>
 <span id="cb25-143"><a href="#cb25-143" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span id="cb25-144"><a href="#cb25-144" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb25-145"><a href="#cb25-145" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpzpCiOY'</span></span>
+<span id="cb25-145"><a href="#cb25-145" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpwo6U0O'</span></span>
 <span id="cb25-146"><a href="#cb25-146" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb25-147"><a href="#cb25-147" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpzpCiOY'</span></span>
-<span id="cb25-148"><a href="#cb25-148" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpzpCiOY'</span></span>
+<span id="cb25-147"><a href="#cb25-147" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpwo6U0O'</span></span>
+<span id="cb25-148"><a href="#cb25-148" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpwo6U0O'</span></span>
 <span id="cb25-149"><a href="#cb25-149" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
 <span id="cb25-150"><a href="#cb25-150" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
 <span id="cb25-151"><a href="#cb25-151" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
@@ -1108,9 +1100,9 @@
 <span id="cb25-155"><a href="#cb25-155" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
 <span id="cb25-156"><a href="#cb25-156" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
 <span id="cb25-157"><a href="#cb25-157" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb25-158"><a href="#cb25-158" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpzpCiOY'</span></span>
-<span id="cb25-159"><a href="#cb25-159" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpzpCiOY/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-160"><a href="#cb25-160" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpzpCiOY/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb25-158"><a href="#cb25-158" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpwo6U0O'</span></span>
+<span id="cb25-159"><a href="#cb25-159" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/Rtmpwo6U0O/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb25-160"><a href="#cb25-160" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/Rtmpwo6U0O/build/bcf_reader.duckdb_extension </span></span>
 <span id="cb25-161"><a href="#cb25-161" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-162"><a href="#cb25-162" tabindex="-1"></a><span class="co">#&gt; VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
 <span id="cb25-163"><a href="#cb25-163" tabindex="-1"></a><span class="co">#&gt; </span></span>
@@ -1131,7 +1123,7 @@
 <span id="cb25-178"><a href="#cb25-178" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant        list</span></span>
 <span id="cb25-179"><a href="#cb25-179" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant        list</span></span>
 <span id="cb25-180"><a href="#cb25-180" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant     integer</span></span>
-<span id="cb25-181"><a href="#cb25-181" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.vxEA9eNwli.parquet </span></span>
+<span id="cb25-181"><a href="#cb25-181" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.rVbj080oZ9.parquet </span></span>
 <span id="cb25-182"><a href="#cb25-182" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb25-183"><a href="#cb25-183" tabindex="-1"></a><span class="co">#&gt; File size: 3.77 MB </span></span>
 <span id="cb25-184"><a href="#cb25-184" tabindex="-1"></a><span class="co">#&gt; Total rows: 368319 </span></span>
