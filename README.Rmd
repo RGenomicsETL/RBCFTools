@@ -103,20 +103,21 @@ s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 ```
 
 ```{r s3-example, eval=TRUE}
-
-
-# Query a small region (chr22:20000000-20100000) and count variants
-result <- system2(
+# Use processx instead of system2
+if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
+res <- processx::run(
   bcftools_path(),
-  args = c("view", "-H", "-r", "chr22:20000000-20100000", s3_vcf_uri),
-  stdout = TRUE,
-  stderr = FALSE
+  c("view", "-H", "-r", "chr22:20000000-20100000", s3_vcf_uri),
+  error_on_status = FALSE,
+  echo = FALSE
 )
-length(result)
+result <- strsplit(res$stdout, "\n")[[1]]
+length(result[result != ""])
 ```
 
-
 ##  VCF to Arrow Streams and Duckdb `bcf_reader` extension
+
+
 
 RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r) and Parquet format convertion when serializing to Arrow IPC. We also support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) duckdb extension to read directly into duckb.
 
@@ -339,22 +340,29 @@ endpoint <- sprintf("127.0.0.1:%d", port)
 log_file <- tempfile("ducklake_minio_", fileext = ".log")
 minio_env <- c("MINIO_ROOT_USER=minioadmin", "MINIO_ROOT_PASSWORD=minioadmin")
 
-minio_pid <- system2(
+# Use processx instead of system2 for MinIO server
+if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
+minio_proc <- processx::process$new(
   minio_bin,
   c("server", data_dir, "--address", endpoint),
   stdout = log_file,
   stderr = log_file,
-  wait = FALSE,
-  env = minio_env
+  env = minio_env,
+  supervise = TRUE
 )
-on.exit({ if (minio_pid > 0) system2("kill", as.character(minio_pid)) }, add = TRUE)
+minio_pid <- minio_proc$get_pid()
+on.exit({ if (!is.null(minio_proc) && minio_proc$is_alive()) minio_proc$kill() }, add = TRUE)
 
 Sys.sleep(5)
 alias_ok <- FALSE
 for (i in 1:30) {
-  status <- system2(mc_bin, c("alias", "set", "ducklake_local", paste0("http://", endpoint),
-                              "minioadmin", "minioadmin"), stdout = TRUE, stderr = TRUE)
-  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+  res <- processx::run(
+    mc_bin,
+    c("alias", "set", "ducklake_local", paste0("http://", endpoint),
+      "minioadmin", "minioadmin"),
+    error_on_status = FALSE
+  )
+  if (res$status == 0) {
     alias_ok <- TRUE
     break
   }
@@ -367,9 +375,12 @@ if (!alias_ok) {
 bucket <- sprintf("ducklake-demo-%d", as.integer(Sys.time()))
 bucket_ok <- FALSE
 for (i in 1:30) {
-  status <- system2(mc_bin, c("mb", paste0("ducklake_local/", bucket)),
-                    stdout = TRUE, stderr = TRUE)
-  if (is.null(attr(status, "status")) || attr(status, "status") == 0) {
+  res <- processx::run(
+    mc_bin,
+    c("mb", paste0("ducklake_local/", bucket)),
+    error_on_status = FALSE
+  )
+  if (res$status == 0) {
     bucket_ok <- TRUE
     break
   }
@@ -464,8 +475,8 @@ DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 
 ```{r ducklake-cleanup, eval=TRUE}
 DBI::dbDisconnect(con, shutdown = TRUE)
-if (exists("minio_process") && minio_process > 0) {
-  system2("kill", as.character(minio_process))
+if (exists("minio_proc") && !is.null(minio_proc) && minio_proc$is_alive()) {
+  minio_proc$kill()
 }
 ```
 

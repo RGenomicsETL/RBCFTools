@@ -118,7 +118,7 @@ if (
     output_single <- tempfile(fileext = ".parquet")
     result_single <- tryCatch(
       {
-        vcf_to_parquet(test_bcf, output_single, threads = 1)
+        vcf_to_parquet_arrow(test_bcf, output_single, threads = 1)
         TRUE
       },
       error = function(e) {
@@ -150,7 +150,7 @@ if (
       output_parallel <- tempfile(fileext = ".parquet")
       result_parallel <- tryCatch(
         {
-          vcf_to_parquet(test_bcf, output_parallel, threads = 2)
+          vcf_to_parquet_arrow(test_bcf, output_parallel, threads = 2)
           TRUE
         },
         error = function(e) {
@@ -222,7 +222,7 @@ if (nchar(test_vcf) > 0 && file.exists(test_vcf)) {
     result <- tryCatch(
       {
         suppressWarnings(
-          vcf_to_parquet(test_vcf, output_no_idx, threads = 4)
+          vcf_to_parquet_arrow(test_vcf, output_no_idx, threads = 4)
         )
         TRUE
       },
@@ -307,7 +307,7 @@ if (
 
     result <- tryCatch(
       {
-        vcf_to_parquet_parallel(
+        vcf_to_parquet_parallel_arrow(
           test_bcf,
           output_par,
           threads = 2,
@@ -347,7 +347,7 @@ if (
     output_stream <- tempfile(fileext = ".parquet")
     result_stream <- tryCatch(
       {
-        vcf_to_parquet_parallel(
+        vcf_to_parquet_parallel_arrow(
           test_bcf,
           output_stream,
           threads = 2,
@@ -374,7 +374,7 @@ if (
     result_single <- tryCatch(
       {
         suppressMessages(
-          vcf_to_parquet_parallel(test_bcf, output_single, threads = 1)
+          vcf_to_parquet_parallel_arrow(test_bcf, output_single, threads = 1)
         )
         TRUE
       },
@@ -399,7 +399,7 @@ if (
     result_fallback <- tryCatch(
       {
         suppressWarnings(
-          vcf_to_parquet_parallel(test_vcf, output_fallback, threads = 4)
+          vcf_to_parquet_parallel_arrow(test_vcf, output_fallback, threads = 4)
         )
         TRUE
       },

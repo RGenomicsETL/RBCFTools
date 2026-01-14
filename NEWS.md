@@ -1,5 +1,12 @@
+# RBCFTools 1.23-0.0.2.9000 (development version)
+
+
+- added processx to suggests and use it instead of system2 in docs and tests
+- renamed `vcf_query` to `vcf_query_arrow` and vcf_to_parquet to vcf_to_parquet
+
 # RBCFTools 1.23-0.0.2
 
+- renamed `vcf_query` to `vcf_query_arrow` and vcf_to_parquet to vcf_to_parquet
 - Version pining release for production testing
 
 # RBCFTools 1.23-0.0.1.9000  (development version)

@@ -240,7 +240,7 @@ skip_if_no_duckdb()
 parquet_file <- tempfile(fileext = ".parquet")
 
 # Create parquet file
-vcf_to_parquet(test_vcf, parquet_file)
+vcf_to_parquet_arrow(test_vcf, parquet_file)
 
 expect_true(
   file.exists(parquet_file),
@@ -270,21 +270,21 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 # Test with compression options
 parquet_zstd <- tempfile(fileext = ".parquet")
-vcf_to_parquet(test_vcf, parquet_zstd, compression = "zstd")
+vcf_to_parquet_arrow(test_vcf, parquet_zstd, compression = "zstd")
 expect_true(
   file.exists(parquet_zstd),
   info = "Should create parquet with zstd compression"
 )
 
 parquet_snappy <- tempfile(fileext = ".parquet")
-vcf_to_parquet(test_vcf, parquet_snappy, compression = "snappy")
+vcf_to_parquet_arrow(test_vcf, parquet_snappy, compression = "snappy")
 expect_true(
   file.exists(parquet_snappy),
   info = "Should create parquet with snappy compression"
 )
 
 parquet_gzip <- tempfile(fileext = ".parquet")
-vcf_to_parquet(test_vcf, parquet_gzip, compression = "gzip")
+vcf_to_parquet_arrow(test_vcf, parquet_gzip, compression = "gzip")
 expect_true(
   file.exists(parquet_gzip),
   info = "Should create parquet with gzip compression"
@@ -292,7 +292,7 @@ expect_true(
 
 # Test with row_group_size
 parquet_custom_rows <- tempfile(fileext = ".parquet")
-vcf_to_parquet(test_vcf, parquet_custom_rows, row_group_size = 5000L)
+vcf_to_parquet_arrow(test_vcf, parquet_custom_rows, row_group_size = 5000L)
 expect_true(
   file.exists(parquet_custom_rows),
   info = "Should work with custom row_group_size"
@@ -300,7 +300,7 @@ expect_true(
 
 # Test streaming mode
 parquet_streaming <- tempfile(fileext = ".parquet")
-vcf_to_parquet(test_vcf, parquet_streaming, streaming = TRUE)
+vcf_to_parquet_arrow(test_vcf, parquet_streaming, streaming = TRUE)
 expect_true(
   file.exists(parquet_streaming),
   info = "Should work with streaming=TRUE"
@@ -321,7 +321,7 @@ unlink(c(
 # =============================================================================
 
 # Basic query
-query_result <- vcf_query(
+query_result <- vcf_query_arrow(
   test_vcf,
   "SELECT CHROM, POS, REF, ALT FROM vcf LIMIT 5"
 )
@@ -339,7 +339,7 @@ expect_true(
 )
 
 # Aggregation query
-count_result <- vcf_query(
+count_result <- vcf_query_arrow(
   test_vcf,
   "SELECT COUNT(*) as n FROM vcf"
 )
@@ -353,7 +353,7 @@ expect_true(
 )
 
 # Group by query
-group_result <- vcf_query(
+group_result <- vcf_query_arrow(
   test_vcf,
   "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
 )

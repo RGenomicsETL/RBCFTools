@@ -257,17 +257,17 @@ merge_parquet_files <- function(
 #' @examples
 #' \dontrun{
 #' # Use 8 threads
-#' vcf_to_parquet_parallel("wgs.vcf.gz", "wgs.parquet", threads = 8)
+#' vcf_to_parquet_parallel_arrow("wgs.vcf.gz", "wgs.parquet", threads = 8)
 #'
 #' # With streaming mode for large files
-#' vcf_to_parquet_parallel(
+#' vcf_to_parquet_parallel_arrow(
 #'     "huge.vcf.gz", "huge.parquet",
 #'     threads = 16, streaming = TRUE
 #' )
 #' }
 #'
 #' @export
-vcf_to_parquet_parallel <- function(
+vcf_to_parquet_parallel_arrow <- function(
   input_vcf,
   output_parquet,
   threads = parallel::detectCores(),
@@ -285,7 +285,7 @@ vcf_to_parquet_parallel <- function(
   has_idx <- vcf_has_index(input_vcf, index)
   if (!has_idx) {
     warning("No index found. Falling back to single-threaded mode.")
-    return(vcf_to_parquet(
+    return(vcf_to_parquet_arrow(
       input_vcf,
       output_parquet,
       compression = compression,
@@ -312,7 +312,7 @@ vcf_to_parquet_parallel <- function(
 
   # If only 1 contig or 1 thread, use single-threaded mode
   if (length(contigs) == 1 || threads == 1) {
-    return(vcf_to_parquet(
+    return(vcf_to_parquet_arrow(
       input_vcf,
       output_parquet,
       compression = compression,

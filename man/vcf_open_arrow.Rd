@@ -80,7 +80,7 @@ stream <- vcf_open_arrow("variants.vcf.gz", index = "custom_path.tbi", region = 
 df <- vcf_to_arrow("variants.vcf.gz", as = "data.frame")
 
 # Write to parquet (uses DuckDB, no arrow package needed)
-vcf_to_parquet("variants.vcf.gz", "variants.parquet")
+vcf_to_parquet_arrow("variants.vcf.gz", "variants.parquet")
 }
 
 }

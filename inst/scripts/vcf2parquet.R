@@ -253,7 +253,7 @@ cmd_convert <- function(opts) {
 
   tryCatch(
     {
-      vcf_to_parquet(
+      vcf_to_parquet_arrow(
         input_vcf = opts$input,
         output_parquet = opts$output,
         compression = opts$compression,

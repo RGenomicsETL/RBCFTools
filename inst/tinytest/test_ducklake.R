@@ -11,6 +11,9 @@ if (!requireNamespace("duckdb", quietly = TRUE)) {
 if (!requireNamespace("DBI", quietly = TRUE)) {
   exit_file("DBI package not available")
 }
+if (!requireNamespace("processx", quietly = TRUE)) {
+  exit_file("processx package not available")
+}
 
 # ensure download helpers set exec bit using dummy file
 tmp_dir_dl <- tempfile("ducklake_dl_")
@@ -61,28 +64,28 @@ port <- sample(19000:19999, 1)
 endpoint <- sprintf("127.0.0.1:%d", port)
 log_file <- tempfile("ducklake_minio_log_", fileext = ".log")
 
-minio_pid <- system2(
+minio_proc <- processx::process$new(
   minio_bin,
-  args = c("server", data_dir, "--address", endpoint),
+  c("server", data_dir, "--address", endpoint),
   stdout = log_file,
   stderr = log_file,
-  wait = FALSE
+  supervise = TRUE
 )
+minio_pid <- minio_proc$get_pid()
 on.exit(
   {
-    if (!is.null(minio_pid) && minio_pid > 0) {
-      try(system2("kill", as.character(minio_pid)))
+    if (!is.null(minio_proc) && minio_proc$is_alive()) {
+      minio_proc$kill()
     }
   },
   add = TRUE
 )
 
-# give server time to start
 Sys.sleep(3)
 
-alias_status <- system2(
+alias_res <- processx::run(
   mc_bin,
-  args = c(
+  c(
     "alias",
     "set",
     "ducklake_local",
@@ -90,24 +93,18 @@ alias_status <- system2(
     "minioadmin",
     "minioadmin"
   ),
-  stdout = TRUE,
-  stderr = TRUE
+  error_on_status = FALSE
 )
-if (
-  !is.null(attr(alias_status, "status")) && attr(alias_status, "status") != 0
-) {
+if (alias_res$status != 0) {
   exit_file("failed to configure mc alias")
 }
 
-bucket_status <- system2(
+bucket_res <- processx::run(
   mc_bin,
-  args = c("mb", "ducklake_local/ducklake-test"),
-  stdout = TRUE,
-  stderr = TRUE
+  c("mb", "ducklake_local/ducklake-test"),
+  error_on_status = FALSE
 )
-if (
-  !is.null(attr(bucket_status, "status")) && attr(bucket_status, "status") != 0
-) {
+if (bucket_res$status != 0) {
   exit_file("failed to create minio bucket")
 }
 

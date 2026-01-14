@@ -58,7 +58,7 @@
 #' df <- vcf_to_arrow("variants.vcf.gz", as = "data.frame")
 #'
 #' # Write to parquet (uses DuckDB, no arrow package needed)
-#' vcf_to_parquet("variants.vcf.gz", "variants.parquet")
+#' vcf_to_parquet_arrow("variants.vcf.gz", "variants.parquet")
 #' }
 #'
 #' @export
@@ -214,19 +214,19 @@ vcf_to_arrow <- function(
 #' @examples
 #' \dontrun{
 #' # Standard mode (fast, loads into memory)
-#' vcf_to_parquet("variants.vcf.gz", "variants.parquet")
+#' vcf_to_parquet_arrow("variants.vcf.gz", "variants.parquet")
 #'
 #' # Streaming mode for large files (low memory)
-#' vcf_to_parquet("huge.vcf.gz", "huge.parquet", streaming = TRUE)
+#' vcf_to_parquet_arrow("huge.vcf.gz", "huge.parquet", streaming = TRUE)
 #'
 #' # Parallel mode for whole-genome VCF (requires index)
-#' vcf_to_parquet("wgs.vcf.gz", "wgs.parquet", threads = 8)
+#' vcf_to_parquet_arrow("wgs.vcf.gz", "wgs.parquet", threads = 8)
 #'
 #' # Parallel + streaming for massive files
-#' vcf_to_parquet("wgs.vcf.gz", "wgs.parquet", threads = 16, streaming = TRUE)
+#' vcf_to_parquet_arrow("wgs.vcf.gz", "wgs.parquet", threads = 16, streaming = TRUE)
 #'
 #' # With zstd compression
-#' vcf_to_parquet("variants.vcf.gz", "variants.parquet", compression = "zstd")
+#' vcf_to_parquet_arrow("variants.vcf.gz", "variants.parquet", compression = "zstd")
 #'
 #' # Query with DuckDB
 #' library(duckdb)
@@ -235,7 +235,7 @@ vcf_to_arrow <- function(
 #' }
 #'
 #' @export
-vcf_to_parquet <- function(
+vcf_to_parquet_arrow <- function(
   input_vcf,
   output_parquet,
   compression = "zstd",
@@ -264,7 +264,7 @@ vcf_to_parquet <- function(
 
   # Use parallel processing if threads > 1
   if (threads > 1) {
-    return(vcf_to_parquet_parallel(
+    return(vcf_to_parquet_parallel_arrow(
       input_vcf,
       output_parquet,
       threads = threads,
@@ -419,26 +419,26 @@ vcf_to_parquet_streaming <- function(
 #' @examples
 #' \dontrun{
 #' # Count variants per chromosome
-#' vcf_query(
+#' vcf_query_arrow(
 #'     "variants.vcf.gz",
 #'     "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM"
 #' )
 #'
 #' # Filter high-quality variants
-#' vcf_query(
+#' vcf_query_arrow(
 #'     "variants.vcf.gz",
 #'     "SELECT * FROM vcf WHERE QUAL > 30"
 #' )
 #'
 #' # Join multiple VCF files
-#' vcf_query(
+#' vcf_query_arrow(
 #'     c("sample1.vcf.gz", "sample2.vcf.gz"),
 #'     "SELECT * FROM vcf WHERE POS BETWEEN 1000 AND 2000"
 #' )
 #' }
 #'
 #' @export
-vcf_query <- function(vcf_files, query, ...) {
+vcf_query_arrow <- function(vcf_files, query, ...) {
   if (!requireNamespace("duckdb", quietly = TRUE)) {
     stop("Package 'duckdb' is required for SQL query support")
   }
