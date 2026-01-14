@@ -191,91 +191,181 @@ batch <- stream$get_next()
 #> Warning in x$get_schema(): FORMAT/GT should be declared as Number=1 per VCF
 #> spec; correcting schema
 
-nanoarrow::convert_array(batch)
-#>    CHROM   POS         ID REF ALT QUAL FILTER INFO.DP INFO.AF       INFO.CB
-#> 1      1 10583 rs58108140   G   A   NA   PASS    1557   0.162 UM,BI,BC,NCBI
-#> 2      1 11508       <NA>   A   G   NA   PASS      23    0.72         BI,BC
-#> 3      1 11565       <NA>   G   T   NA   PASS      45       0         BI,BC
-#> 4      1 13116       <NA>   T   G   NA   PASS    2400   0.016         UM,BI
-#> 5      1 13327       <NA>   G   C   NA   PASS    2798    0.01         BI,BC
-#> 6      1 14699       <NA>   C   G   NA   PASS     408    0.02         BI,BC
-#> 7      1 15274       <NA>   A   T   NA   PASS    1739    0.91         UM,BI
-#> 8      1 15820       <NA>   G   T   NA   PASS    1643   0.114      UM,BI,BC
-#> 9      1 16257       <NA>   G   C   NA   PASS    5301    0.12    BI,BC,NCBI
-#> 10     1 16378       <NA>   T   C   NA   PASS     820    0.51    BI,BC,NCBI
-#> 11     1 28376       <NA>   G   A   NA   PASS    2943   0.026         UM,BI
-#>    INFO.EUR_R2 INFO.AFR_R2 INFO.ASN_R2 INFO.AC INFO.AN samples.HG00098.AD
-#> 1        0.248          NA          NA       0       6               NULL
-#> 2        0.001          NA          NA       6       6               NULL
-#> 3           NA       0.003          NA       0       6               NULL
-#> 4        0.106       0.286          NA       0       6               NULL
-#> 5        0.396       0.481          NA       0       6               NULL
-#> 6        0.061       0.184          NA       0       6               NULL
-#> 7        0.063       0.194          NA       6       6               NULL
-#> 8        0.147       0.209          NA       0       6               NULL
-#> 9        0.627       0.719          NA       1       6               NULL
-#> 10       0.107       0.174          NA       3       6               NULL
-#> 11       0.004       0.020          NA       6       6               NULL
-#>    samples.HG00098.DP samples.HG00098.GL samples.HG00098.GQ samples.HG00098.GT
-#> 1                  NA               NULL               3.28                0|0
-#> 2                  NA               NULL               2.22                1|1
-#> 3                  NA               NULL               1.48                0|0
-#> 4                  NA               NULL               9.17                0|0
-#> 5                  NA               NULL              15.80                0|0
-#> 6                  NA               NULL               6.29                0|0
-#> 7                  NA               NULL               5.08                1|1
-#> 8                  NA               NULL               7.01                0|0
-#> 9                  NA               NULL               5.61                0|0
-#> 10                 NA               NULL               1.29                1|1
-#> 11                 NA               NULL               2.68                1|1
-#>    samples.HG00098.GD samples.HG00098.OG samples.HG00100.AD samples.HG00100.DP
-#> 1                  NA                ./.               NULL                 NA
-#> 2                  NA                ./.               NULL                 NA
-#> 3                  NA                ./.               NULL                 NA
-#> 4                  NA                ./.               NULL                 NA
-#> 5                  NA                ./.               NULL                 NA
-#> 6                  NA                ./.               NULL                 NA
-#> 7                  NA                ./.               NULL                 NA
-#> 8                  NA                ./.               NULL                 NA
-#> 9                  NA                ./.               3, 0                  3
-#> 10                 NA                ./.               3, 1                  1
-#> 11                 NA                ./.               NULL                 NA
-#>     samples.HG00100.GL samples.HG00100.GQ samples.HG00100.GT samples.HG00100.GD
-#> 1                 NULL               3.28                0|0                 NA
-#> 2                 NULL               2.22                1|1                 NA
-#> 3                 NULL               1.48                0|0                 NA
-#> 4                 NULL               9.17                0|0                 NA
-#> 5                 NULL              15.80                0|0                 NA
-#> 6                 NULL               6.29                0|0                 NA
-#> 7                 NULL               5.08                1|1                 NA
-#> 8                 NULL               7.01                0|0                 NA
-#> 9  0.00, -0.90, -12.68              13.77                0|0                 NA
-#> 10  0.00, -0.30, -3.86               2.95                0|0                 NA
-#> 11                NULL               2.68                1|1                 NA
-#>    samples.HG00100.OG samples.HG00106.AD samples.HG00106.DP  samples.HG00106.GL
-#> 1                 ./.               NULL                 NA                NULL
-#> 2                 ./.               NULL                 NA                NULL
-#> 3                 ./.               NULL                 NA                NULL
-#> 4                 ./.               NULL                 NA                NULL
-#> 5                 ./.               2, 0                  2  0.00, -0.60, -8.78
-#> 6                 ./.               NULL                 NA                NULL
-#> 7                 ./.               NULL                 NA                NULL
-#> 8                 ./.               NULL                 NA                NULL
-#> 9                 ./.               1, 1                  2 -3.65, -0.60, -4.09
-#> 10                ./.               4, 5                  2 -2.70, -0.60, -3.86
-#> 11                ./.               NULL                 NA                NULL
-#>    samples.HG00106.GQ samples.HG00106.GT samples.HG00106.GD samples.HG00106.OG
-#> 1                3.28                0|0                 NA                ./.
-#> 2                2.22                1|1                 NA                ./.
-#> 3                1.48                0|0                 NA                ./.
-#> 4                9.17                0|0                 NA                ./.
-#> 5               21.74                0|0                 NA                ./.
-#> 6                6.29                0|0                 NA                ./.
-#> 7                5.08                1|1                 NA                ./.
-#> 8                7.01                0|0                 NA                ./.
-#> 9               25.82                0|1                 NA                ./.
-#> 10              23.85                1|0                 NA                ./.
-#> 11               2.68                1|1                 NA                ./.
+str(nanoarrow::convert_array(batch))
+#> 'data.frame':    11 obs. of  9 variables:
+#>  $ CHROM  : chr  "1" "1" "1" "1" ...
+#>  $ POS    : num  10583 11508 11565 13116 13327 ...
+#>  $ ID     : chr  "rs58108140" NA NA NA ...
+#>  $ REF    : chr  "G" "A" "G" "T" ...
+#>  $ ALT    : list<chr> [1:11] 
+#>   ..$ : chr "A"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "G"
+#>   ..$ : chr "C"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "T"
+#>   ..$ : chr "C"
+#>   ..$ : chr "C"
+#>   ..$ : chr "A"
+#>   ..@ ptype: chr 
+#>  $ QUAL   : num  NA NA NA NA NA NA NA NA NA NA ...
+#>  $ FILTER : list<chr> [1:11] 
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..@ ptype: chr 
+#>  $ INFO   :'data.frame': 11 obs. of  8 variables:
+#>   ..$ DP    : int  1557 23 45 2400 2798 408 1739 1643 5301 820 ...
+#>   ..$ AF    : list<dbl> [1:11] 
+#>   .. ..$ : num 0.162
+#>   .. ..$ : num 0.72
+#>   .. ..$ : num 0
+#>   .. ..$ : num 0.016
+#>   .. ..$ : num 0.01
+#>   .. ..$ : num 0.02
+#>   .. ..$ : num 0.91
+#>   .. ..$ : num 0.114
+#>   .. ..$ : num 0.12
+#>   .. ..$ : num 0.51
+#>   .. ..$ : num 0.026
+#>   .. ..@ ptype: num 
+#>   ..$ CB    : list<chr> [1:11] 
+#>   .. ..$ : chr "UM,BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "UM,BI,BC"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..@ ptype: chr 
+#>   ..$ EUR_R2: num  0.248 0.001 NA 0.106 0.396 ...
+#>   ..$ AFR_R2: num  NA NA 0.003 0.286 0.481 ...
+#>   ..$ ASN_R2: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   ..$ AC    : list<int> [1:11] 
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 1
+#>   .. ..$ : int 3
+#>   .. ..$ : int 6
+#>   .. ..@ ptype: int 
+#>   ..$ AN    : int  6 6 6 6 6 6 6 6 6 6 ...
+#>  $ samples:'data.frame': 11 obs. of  3 variables:
+#>   ..$ HG00098:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00100:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  3 0
+#>   .. .. ..$ : int  3 1
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA 3 1 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.9 -12.7
+#>   .. .. ..$ : num  0 -0.3 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00106:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  2 0
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  1 1
+#>   .. .. ..$ : int  4 5
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA 2 NA NA NA 2 2 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.6 -8.78
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  -3.65 -0.6 -4.09
+#>   .. .. ..$ : num  -2.7 -0.6 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 21.74 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
 stream$release()
 ```
 
@@ -330,7 +420,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet
+#> Wrote 11 rows to /tmp/RtmpwT13JH/file3df39014d96758.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -349,12 +439,12 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 6     1 14699   C   G
 pq_me |> head()
 #>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
-#> 2 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
-#> 3 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
-#> 4 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
-#> 5 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
-#> 6 /tmp/Rtmppfdg5z/file3de0e4365bbf5b.parquet            0                 11
+#> 1 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
+#> 2 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
+#> 3 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
+#> 4 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
+#> 5 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
+#> 6 /tmp/RtmpwT13JH/file3df39014d96758.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -437,7 +527,7 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/Rtmppfdg5z/file3de0e47e5db50.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpwT13JH/file3df390770ce648.parquet (streaming mode)
 # describe using duckdb
 ```
 
@@ -507,9 +597,9 @@ DBI::dbGetQuery(con, sprintf("
 #>   CHROM n_variants min_pos   max_pos
 #> 1    19      35918  111129  59084689
 #> 2     1      35846  536895 249211717
-#> 3     7      33682   20820 158937499
-#> 4    17      27325    6102  81052229
-#> 5    11      24472  180184 134257519
+#> 3    17      27325    6102  81052229
+#> 4    11      24472  180184 134257519
+#> 5     2      22032   42993 242836470
 
 # Export directly to Parquet
 parquet_out <- tempfile(fileext = ".parquet")
@@ -603,7 +693,181 @@ nanoarrow::convert_array(batch)[, c("CHROM", "POS", "REF")] |> head(3)
 #> 1     1 10583   G
 #> 2     1 11508   A
 #> 3     1 11565   G
-
+str(nanoarrow::convert_array(batch))
+#> 'data.frame':    11 obs. of  9 variables:
+#>  $ CHROM  : chr  "1" "1" "1" "1" ...
+#>  $ POS    : num  10583 11508 11565 13116 13327 ...
+#>  $ ID     : chr  "rs58108140" NA NA NA ...
+#>  $ REF    : chr  "G" "A" "G" "T" ...
+#>  $ ALT    : list<chr> [1:11] 
+#>   ..$ : chr "A"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "G"
+#>   ..$ : chr "C"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "T"
+#>   ..$ : chr "C"
+#>   ..$ : chr "C"
+#>   ..$ : chr "A"
+#>   ..@ ptype: chr 
+#>  $ QUAL   : num  NA NA NA NA NA NA NA NA NA NA ...
+#>  $ FILTER : list<chr> [1:11] 
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..@ ptype: chr 
+#>  $ INFO   :'data.frame': 11 obs. of  8 variables:
+#>   ..$ DP    : int  1557 23 45 2400 2798 408 1739 1643 5301 820 ...
+#>   ..$ AF    : list<dbl> [1:11] 
+#>   .. ..$ : num 0.162
+#>   .. ..$ : num 0.72
+#>   .. ..$ : num 0
+#>   .. ..$ : num 0.016
+#>   .. ..$ : num 0.01
+#>   .. ..$ : num 0.02
+#>   .. ..$ : num 0.91
+#>   .. ..$ : num 0.114
+#>   .. ..$ : num 0.12
+#>   .. ..$ : num 0.51
+#>   .. ..$ : num 0.026
+#>   .. ..@ ptype: num 
+#>   ..$ CB    : list<chr> [1:11] 
+#>   .. ..$ : chr "UM,BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "UM,BI,BC"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..@ ptype: chr 
+#>   ..$ EUR_R2: num  0.248 0.001 NA 0.106 0.396 ...
+#>   ..$ AFR_R2: num  NA NA 0.003 0.286 0.481 ...
+#>   ..$ ASN_R2: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   ..$ AC    : list<int> [1:11] 
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 1
+#>   .. ..$ : int 3
+#>   .. ..$ : int 6
+#>   .. ..@ ptype: int 
+#>   ..$ AN    : int  6 6 6 6 6 6 6 6 6 6 ...
+#>  $ samples:'data.frame': 11 obs. of  3 variables:
+#>   ..$ HG00098:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00100:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  3 0
+#>   .. .. ..$ : int  3 1
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA 3 1 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.9 -12.7
+#>   .. .. ..$ : num  0 -0.3 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00106:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  2 0
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  1 1
+#>   .. .. ..$ : int  4 5
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA 2 NA NA NA 2 2 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.6 -8.78
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  -3.65 -0.6 -4.09
+#>   .. .. ..$ : num  -2.7 -0.6 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 21.74 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
 # Alternative: htslib ##idx## syntax in filename
 filename_with_idx <- paste0(bcf_file, "##idx##", csi_index)
 stream2 <- vcf_open_arrow(filename_with_idx)
@@ -613,6 +877,181 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 #> 1     1 10583   G
 #> 2     1 11508   A
 #> 3     1 11565   G
+str(nanoarrow::convert_array(batch2))
+#> 'data.frame':    11 obs. of  9 variables:
+#>  $ CHROM  : chr  "1" "1" "1" "1" ...
+#>  $ POS    : num  10583 11508 11565 13116 13327 ...
+#>  $ ID     : chr  "rs58108140" NA NA NA ...
+#>  $ REF    : chr  "G" "A" "G" "T" ...
+#>  $ ALT    : list<chr> [1:11] 
+#>   ..$ : chr "A"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "G"
+#>   ..$ : chr "C"
+#>   ..$ : chr "G"
+#>   ..$ : chr "T"
+#>   ..$ : chr "T"
+#>   ..$ : chr "C"
+#>   ..$ : chr "C"
+#>   ..$ : chr "A"
+#>   ..@ ptype: chr 
+#>  $ QUAL   : num  NA NA NA NA NA NA NA NA NA NA ...
+#>  $ FILTER : list<chr> [1:11] 
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..$ : chr "PASS"
+#>   ..@ ptype: chr 
+#>  $ INFO   :'data.frame': 11 obs. of  8 variables:
+#>   ..$ DP    : int  1557 23 45 2400 2798 408 1739 1643 5301 820 ...
+#>   ..$ AF    : list<dbl> [1:11] 
+#>   .. ..$ : num 0.162
+#>   .. ..$ : num 0.72
+#>   .. ..$ : num 0
+#>   .. ..$ : num 0.016
+#>   .. ..$ : num 0.01
+#>   .. ..$ : num 0.02
+#>   .. ..$ : num 0.91
+#>   .. ..$ : num 0.114
+#>   .. ..$ : num 0.12
+#>   .. ..$ : num 0.51
+#>   .. ..$ : num 0.026
+#>   .. ..@ ptype: num 
+#>   ..$ CB    : list<chr> [1:11] 
+#>   .. ..$ : chr "UM,BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "BI,BC"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..$ : chr "UM,BI,BC"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "BI,BC,NCBI"
+#>   .. ..$ : chr "UM,BI"
+#>   .. ..@ ptype: chr 
+#>   ..$ EUR_R2: num  0.248 0.001 NA 0.106 0.396 ...
+#>   ..$ AFR_R2: num  NA NA 0.003 0.286 0.481 ...
+#>   ..$ ASN_R2: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   ..$ AC    : list<int> [1:11] 
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 0
+#>   .. ..$ : int 6
+#>   .. ..$ : int 0
+#>   .. ..$ : int 1
+#>   .. ..$ : int 3
+#>   .. ..$ : int 6
+#>   .. ..@ ptype: int 
+#>   ..$ AN    : int  6 6 6 6 6 6 6 6 6 6 ...
+#>  $ samples:'data.frame': 11 obs. of  3 variables:
+#>   ..$ HG00098:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00100:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  3 0
+#>   .. .. ..$ : int  3 1
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA NA NA NA NA 3 1 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.9 -12.7
+#>   .. .. ..$ : num  0 -0.3 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 15.8 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
+#>   ..$ HG00106:'data.frame':  11 obs. of  7 variables:
+#>   .. ..$ AD: list<int> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  2 0
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : int  1 1
+#>   .. .. ..$ : int  4 5
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: int 
+#>   .. ..$ DP: int  NA NA NA NA 2 NA NA NA 2 2 ...
+#>   .. ..$ GL: list<dbl> [1:11] 
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  0 -0.6 -8.78
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : NULL
+#>   .. .. ..$ : num  -3.65 -0.6 -4.09
+#>   .. .. ..$ : num  -2.7 -0.6 -3.86
+#>   .. .. ..$ : NULL
+#>   .. .. ..@ ptype: num 
+#>   .. ..$ GQ: num  3.28 2.22 1.48 9.17 21.74 ...
+#>   .. ..$ GT: chr  "0|0" "1|1" "0|0" "0|0" ...
+#>   .. ..$ GD: num  NA NA NA NA NA NA NA NA NA NA ...
+#>   .. ..$ OG: chr  "./." "./." "./." "./." ...
 ```
 
 ## Example Application: DuckLake ETL
@@ -659,7 +1098,7 @@ cmd <- sprintf(
 pid_output <- processx::run("sh", c("-c", cmd), echo = FALSE)$stdout
 pid <- as.integer(pid_output)
 pid
-#> [1] 4055534
+#> [1] 4060316
 # Give MinIO time to start
 Sys.sleep(10)
 
@@ -705,7 +1144,7 @@ processx::run(mc_bin, bucket_cmd_args, echo = FALSE)
 #> [1] 0
 #> 
 #> $stdout
-#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768412765`.\n"
+#> [1] "Bucket created successfully `ducklake_local/readme-demo-1768413209`.\n"
 #> 
 #> $stderr
 #> [1] ""
@@ -785,10 +1224,10 @@ DBI::dbExecute(con, "USE lake")
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/Rtmppfdg5z
+#>   Build directory: /tmp/RtmpwT13JH
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> Extension built: /tmp/Rtmppfdg5z/build/bcf_reader.duckdb_extension
+#> Extension built: /tmp/RtmpwT13JH/build/bcf_reader.duckdb_extension
 ducklake_load_vcf(
   con,
   table = "variants",
@@ -796,7 +1235,7 @@ ducklake_load_vcf(
   extension_path = ext_path,
   threads = 1
 )
-#> Wrote: /tmp/Rtmppfdg5z/variants_20260114_184605.parquet
+#> Wrote: /tmp/RtmpwT13JH/variants_20260114_185330.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
@@ -816,7 +1255,7 @@ DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM lake.variants")
 # List physical files managed by DuckLake for this table
 DBI::dbGetQuery(con, "FROM ducklake_list_files('lake', 'variants')")
 #>                                                                                              data_file
-#> 1 s3://readme-demo-1768412765/data/main/variants/ducklake-019bbd9d-607d-7e62-99c7-c11de1055846.parquet
+#> 1 s3://readme-demo-1768413209/data/main/variants/ducklake-019bbda4-285b-7989-8ff3-865470a5359b.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
 #> 1              5751658                  6275                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
@@ -903,7 +1342,7 @@ time $SCRIPT convert --quiet -i $BCF -o $OUT_PQ -t 4  > $Log 2>&1
 cat $Log
 
 # Query with DuckDB SQL
-$SCRIPT query -i $OUT_PQ -q "SELECT CHROM, POS, REF, ALT FROM parquet_scan('$OUT_PQ') LIMIT 5"
+$SCRIPT query -i $OUT_PQ -q "SELECT * FROM parquet_scan('$OUT_PQ') LIMIT 5"
 
 # Describe table structure
 $SCRIPT query -i $OUT_PQ -q "DESCRIBE SELECT * FROM parquet_scan('$OUT_PQ')"
@@ -916,19 +1355,19 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #> 
-#> real 0m1.604s
-#> user 0m3.513s
-#> sys  0m1.978s
+#> real 0m1.565s
+#> user 0m3.661s
+#> sys  0m1.924s
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpvBxZh5 
+#>   Build directory: /tmp/RtmpmV1zEh 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpvBxZh5
+#>   Build directory: /tmp/RtmpmV1zEh
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpvBxZh5'
+#> make[1]: Entering directory '/tmp/RtmpmV1zEh'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpvBxZh5'
-#> make[1]: Entering directory '/tmp/RtmpvBxZh5'
+#> make[1]: Leaving directory '/tmp/RtmpmV1zEh'
+#> make[1]: Entering directory '/tmp/RtmpmV1zEh'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -938,55 +1377,79 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpvBxZh5'
-#> Extension built: /tmp/RtmpvBxZh5/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpvBxZh5/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/RtmpmV1zEh'
+#> Extension built: /tmp/RtmpmV1zEh/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/RtmpmV1zEh/build/bcf_reader.duckdb_extension 
 #> 
 #> Converting VCF to Parquet (DuckDB mode)...
 #>   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
-#>   Output: /tmp/tmp.l5mLEzeSh9.parquet 
+#>   Output: /tmp/tmp.h6eoBIhYaM.parquet 
 #>   Compression: zstd 
 #>   Row group size: 100000 
 #>   Threads: 4 
 #> Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0004.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0003.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0002.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0001.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0008.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0007.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0006.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0005.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0012.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0010.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0011.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0009.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0016.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0014.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0013.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0015.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0018.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0020.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0024.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0022.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0017.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0019.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0021.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0023.parquet
-#> Wrote: /tmp/RtmpvBxZh5/vcf_duckdb_parallel_3de2e2ff70e13/contig_0025.parquet
-#> Merging temporary Parquet files... to /tmp/tmp.l5mLEzeSh9.parquet
-#> Merged 25 parquet files -> tmp.l5mLEzeSh9.parquet (368319 rows)
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0004.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0003.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0002.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0001.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0008.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0007.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0006.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0005.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0012.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0010.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0009.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0011.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0016.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0014.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0013.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0015.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0020.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0018.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0024.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0017.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0022.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0019.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0021.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0023.parquet
+#> Wrote: /tmp/RtmpmV1zEh/vcf_duckdb_parallel_3df58e5ed0ca37/contig_0025.parquet
+#> Merging temporary Parquet files... to /tmp/tmp.h6eoBIhYaM.parquet
+#> Merged 25 parquet files -> tmp.h6eoBIhYaM.parquet (368319 rows)
 #> 
 #> ✓ Conversion complete!
-#>   Time: 0.91 seconds
+#>   Time: 0.90 seconds
 #>   Output size: 3.77 MB
 #> Running query on Parquet file...
-#>   CHROM    POS REF ALT
-#> 1     1 536895   T   C
-#> 2     1 536924   G   A
-#> 3     1 536948   A   G
-#> 4     1 536986   G   T
-#> 5     1 544490   A   G
+#>   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END FORMAT_GT_test_deep_variant
+#> 1     1 536895 <NA>   T   C  0.1 RefCall       NA                         ./.
+#> 2     1 536924 <NA>   G   A  0.1 RefCall       NA                         ./.
+#> 3     1 536948 <NA>   A   G  0.0 RefCall       NA                         0/0
+#> 4     1 536986 <NA>   G   T  0.0 RefCall       NA                         0/0
+#> 5     1 544490 <NA>   A   G  0.8 RefCall       NA                         ./.
+#>   FORMAT_GQ_test_deep_variant FORMAT_DP_test_deep_variant
+#> 1                          18                         106
+#> 2                          18                         118
+#> 3                          31                         104
+#> 4                          23                         115
+#> 5                           8                          10
+#>   FORMAT_MIN_DP_test_deep_variant FORMAT_AD_test_deep_variant
+#> 1                              NA                      46, 52
+#> 2                              NA                      55, 60
+#> 3                              NA                      91, 13
+#> 4                              NA                      55, 60
+#> 5                              NA                        6, 4
+#>   FORMAT_VAF_test_deep_variant FORMAT_PL_test_deep_variant
+#> 1                     0.490566                   0, 19, 25
+#> 2                     0.508475                   0, 21, 20
+#> 3                        0.125                   0, 31, 38
+#> 4                     0.521739                   0, 23, 29
+#> 5                          0.4                    0, 7, 15
+#>   FORMAT_MED_DP_test_deep_variant
+#> 1                              NA
+#> 2                              NA
+#> 3                              NA
+#> 4                              NA
+#> 5                              NA
 #> Running query on Parquet file...
 #>                        column_name column_type null  key default extra
 #> 1                            CHROM     VARCHAR  YES <NA>    <NA>  <NA>
@@ -1006,15 +1469,15 @@ rm -f $OUT_PQ
 #> 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES <NA>    <NA>  <NA>
 #> 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES <NA>    <NA>  <NA>
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpnfigcW 
+#>   Build directory: /tmp/Rtmp2S2mvl 
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpnfigcW
+#>   Build directory: /tmp/Rtmp2S2mvl
 #>   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make[1]: Entering directory '/tmp/RtmpnfigcW'
+#> make[1]: Entering directory '/tmp/Rtmp2S2mvl'
 #> rm -rf build
-#> make[1]: Leaving directory '/tmp/RtmpnfigcW'
-#> make[1]: Entering directory '/tmp/RtmpnfigcW'
+#> make[1]: Leaving directory '/tmp/Rtmp2S2mvl'
+#> make[1]: Entering directory '/tmp/Rtmp2S2mvl'
 #> mkdir -p build
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
 #> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
@@ -1024,9 +1487,9 @@ rm -f $OUT_PQ
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make[1]: Leaving directory '/tmp/RtmpnfigcW'
-#> Extension built: /tmp/RtmpnfigcW/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpnfigcW/build/bcf_reader.duckdb_extension 
+#> make[1]: Leaving directory '/tmp/Rtmp2S2mvl'
+#> Extension built: /tmp/Rtmp2S2mvl/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmp2S2mvl/build/bcf_reader.duckdb_extension 
 #> 
 #> VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz 
 #> 
@@ -1047,7 +1510,7 @@ rm -f $OUT_PQ
 #>     FORMAT_VAF_test_deep_variant        list
 #>      FORMAT_PL_test_deep_variant        list
 #>  FORMAT_MED_DP_test_deep_variant     integer
-#> Parquet File Information: /tmp/tmp.l5mLEzeSh9.parquet 
+#> Parquet File Information: /tmp/tmp.h6eoBIhYaM.parquet 
 #> 
 #> File size: 3.77 MB 
 #> Total rows: 368319 
