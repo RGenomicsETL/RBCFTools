@@ -42,7 +42,15 @@ This is a catalog-only operation; data files are not copied or moved.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ducklake_register_parquet</span><span class="op">(</span><span class="va">con</span>, <span class="va">table</span>, <span class="va">parquet_files</span>, create_table <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ducklake_register_parquet</span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  <span class="va">table</span>,</span>
+<span>  <span class="va">parquet_files</span>,</span>
+<span>  create_table <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  allow_missing <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  ignore_extra_columns <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  allow_evolution <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -65,6 +73,20 @@ This is a catalog-only operation; data files are not copied or moved.</p>
 <dd><p>Logical, create the table if it doesn't exist. Default: TRUE.
 When TRUE, schema is inferred from the first Parquet file.</p></dd>
 
+
+<dt id="arg-allow-missing">allow_missing<a class="anchor" aria-label="anchor" href="#arg-allow-missing"></a></dt>
+<dd><p>Logical, allow missing columns (filled with defaults). Default: FALSE.</p></dd>
+
+
+<dt id="arg-ignore-extra-columns">ignore_extra_columns<a class="anchor" aria-label="anchor" href="#arg-ignore-extra-columns"></a></dt>
+<dd><p>Logical, ignore extra columns in files. Default: FALSE.</p></dd>
+
+
+<dt id="arg-allow-evolution">allow_evolution<a class="anchor" aria-label="anchor" href="#arg-allow-evolution"></a></dt>
+<dd><p>Logical, evolve table schema by adding new columns from files.
+Default: FALSE. When TRUE, new columns found in files are added via ALTER TABLE
+before registration, making all columns queryable.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -75,6 +97,11 @@ When TRUE, schema is inferred from the first Parquet file.</p></dd>
     <p>This function uses DuckLake's <code>ducklake_add_data_files()</code> to register
 external Parquet files in the catalog. The files must already exist and
 have a schema compatible with the target table.</p>
+<p><strong>Schema Evolution (<code>allow_evolution = TRUE</code>):</strong>
+When enabled, the function compares each file's schema against the table schema
+and adds any missing columns via <code>ALTER TABLE ADD COLUMN</code> before registration.
+This allows combining VCF files with different annotations (e.g., VEP columns)
+into a single table where all columns are queryable.</p>
     </div>
 
     <div class="section level2">
@@ -82,6 +109,11 @@ have a schema compatible with the target table.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># Register a Parquet file created by vcf_to_parquet_duckdb()</span></span></span>
 <span class="r-in"><span><span class="fu">ducklake_register_parquet</span><span class="op">(</span><span class="va">con</span>, <span class="st">"variants"</span>, <span class="st">"s3://bucket/variants.parquet"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Register with schema evolution (add new columns from file)</span></span></span>
+<span class="r-in"><span><span class="fu">ducklake_register_parquet</span><span class="op">(</span><span class="va">con</span>, <span class="st">"variants"</span>, <span class="st">"s3://bucket/vep_variants.parquet"</span>,</span></span>
+<span class="r-in"><span>  allow_evolution <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

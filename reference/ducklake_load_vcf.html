@@ -53,7 +53,8 @@ registers the Parquet file in a DuckLake catalog table.</p>
 <span>  row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>  region <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  allow_evolution <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,6 +105,13 @@ registers the Parquet file in a DuckLake catalog table.</p>
 <dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
 <dd><p>Logical, drop existing table first.</p></dd>
 
+
+<dt id="arg-allow-evolution">allow_evolution<a class="anchor" aria-label="anchor" href="#arg-allow-evolution"></a></dt>
+<dd><p>Logical, evolve table schema by adding new columns from VCF.
+Default: FALSE. When TRUE, new columns found in the VCF are added via ALTER TABLE
+before insertion, making all columns queryable. Useful for combining VCFs with
+different annotations (e.g., VEP columns) or different samples (FORMAT_*_SampleName).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -116,7 +124,12 @@ It uses the <code>bcf_reader</code> DuckDB extension for fast VCF→Parquet conv
 which is significantly faster than the nanoarrow streaming path.</p>
 <p><strong>Workflow:</strong></p><ol><li><p>VCF → Parquet via <code><a href="vcf_to_parquet_duckdb.html">vcf_to_parquet_duckdb()</a></code> (bcf_reader)</p></li>
 <li><p>Register Parquet in DuckLake catalog</p></li>
-</ol></div>
+</ol><p><strong>Schema Evolution (<code>allow_evolution = TRUE</code>):</strong>
+When loading multiple VCFs with different schemas (e.g., different samples
+or different annotation fields), enable <code>allow_evolution</code> to automatically
+add new columns to the table schema. This uses DuckLake's <code>ALTER TABLE ADD COLUMN</code>
+which preserves existing data files without rewriting.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -130,10 +143,15 @@ which is significantly faster than the nanoarrow streaming path.</p>
 <span class="r-in"><span><span class="fu"><a href="ducklake_attach.html">ducklake_attach</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"catalog.ducklake"</span>, <span class="st">"/data/parquet/"</span>, alias <span class="op">=</span> <span class="st">"lake"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Load VCF</span></span></span>
-<span class="r-in"><span><span class="fu">ducklake_load_vcf</span><span class="op">(</span><span class="va">con</span>, <span class="st">"variants"</span>, <span class="st">"sample.vcf.gz"</span>, <span class="va">ext_path</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Load first VCF</span></span></span>
+<span class="r-in"><span><span class="fu">ducklake_load_vcf</span><span class="op">(</span><span class="va">con</span>, <span class="st">"variants"</span>, <span class="st">"sample1.vcf.gz"</span>, <span class="va">ext_path</span>, threads <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Query</span></span></span>
+<span class="r-in"><span><span class="co"># Load second VCF with different annotations, evolving schema</span></span></span>
+<span class="r-in"><span><span class="fu">ducklake_load_vcf</span><span class="op">(</span><span class="va">con</span>, <span class="st">"variants"</span>, <span class="st">"sample2_vep.vcf.gz"</span>, <span class="va">ext_path</span>,</span></span>
+<span class="r-in"><span>  allow_evolution <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Query - all columns from both VCFs are available</span></span></span>
 <span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"SELECT CHROM, COUNT(*) FROM variants GROUP BY CHROM"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>

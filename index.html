@@ -303,7 +303,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpFaEDrR/file3f95694b2c098.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -321,13 +321,13 @@
 <span><span class="co">#&gt; 5     1 13327   G   C</span></span>
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                    file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpeOs9iQ/file3e9be57c7fb48e.parquet            0                 11</span></span>
+<span><span class="co">#&gt;                                   file_name row_group_id row_group_num_rows</span></span>
+<span><span class="co">#&gt; 1 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/RtmpFaEDrR/file3f95694b2c098.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -403,8 +403,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpeOs9iQ/file3e9be56d695909.parquet (streaming mode)</span></span>
-<span><span class="co"># describe using duckdb</span></span></code></pre></div>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpFaEDrR/file3f95692dd400c9.parquet (streaming mode)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="query-vcf-with-duckdb-after-converting-the-stream">Query VCF with duckdb after converting the Stream<a class="anchor" aria-label="anchor" href="#query-vcf-with-duckdb-after-converting-the-stream"></a>
@@ -465,12 +464,12 @@
 <span><span class="st">  GROUP BY CHROM </span></span>
 <span><span class="st">  ORDER BY n_variants DESC </span></span>
 <span><span class="st">  LIMIT 5"</span>, <span class="va">vcf_file</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   CHROM n_variants  min_pos   max_pos</span></span>
-<span><span class="co">#&gt; 1    19      35918   111129  59084689</span></span>
-<span><span class="co">#&gt; 2     1      35846   536895 249211717</span></span>
-<span><span class="co">#&gt; 3    17      27325     6102  81052229</span></span>
-<span><span class="co">#&gt; 4    11      24472   180184 134257519</span></span>
-<span><span class="co">#&gt; 5    14      22466 19377907 107210906</span></span>
+<span><span class="co">#&gt;   CHROM n_variants min_pos   max_pos</span></span>
+<span><span class="co">#&gt; 1    19      35918  111129  59084689</span></span>
+<span><span class="co">#&gt; 2     1      35846  536895 249211717</span></span>
+<span><span class="co">#&gt; 3    17      27325    6102  81052229</span></span>
+<span><span class="co">#&gt; 4    11      24472  180184 134257519</span></span>
+<span><span class="co">#&gt; 5     2      22032   42993 242836470</span></span>
 <span></span>
 <span><span class="co"># Export directly to Parquet</span></span>
 <span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
@@ -604,7 +603,7 @@
 <span><span class="va">pid_output</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="st">"sh"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-c"</span>, <span class="va">cmd</span><span class="op">)</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">stdout</span></span>
 <span><span class="va">pid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pid_output</span><span class="op">)</span></span>
 <span><span class="va">pid</span></span>
-<span><span class="co">#&gt; [1] 4103404</span></span>
+<span><span class="co">#&gt; [1] 4167280</span></span>
 <span><span class="co"># Give MinIO time to start</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span></span>
@@ -650,7 +649,7 @@
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stdout</span></span>
-<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768417008`.\n"</span></span>
+<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768421669`.\n"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stderr</span></span>
 <span><span class="co">#&gt; [1] ""</span></span>
@@ -731,10 +730,10 @@
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span><span class="co">#&gt;   Build directory: /tmp/RtmpeOs9iQ</span></span>
+<span><span class="co">#&gt;   Build directory: /tmp/RtmpFaEDrR</span></span>
 <span><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span><span class="co">#&gt; Extension built: /tmp/RtmpeOs9iQ/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; Extension built: /tmp/RtmpFaEDrR/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  table <span class="op">=</span> <span class="st">"variants"</span>,</span>
@@ -742,7 +741,7 @@
 <span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpeOs9iQ/variants_20260114_195649.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/RtmpFaEDrR/variants_20260114_211429.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
@@ -750,21 +749,53 @@
 <div class="section level3">
 <h3 id="add-another-vcf-file-with-different-schema">Add another VCF file with different schema<a class="anchor" aria-label="anchor" href="#add-another-vcf-file-with-different-schema"></a>
 </h3>
+<p>DuckLake supports schema evolution via <code>ALTER TABLE</code>. Use <code>allow_evolution = TRUE</code> to automatically add new columns from incoming files.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Ensure we are operating inside the DuckLake catalog</span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="va">variants_count</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"SELECT COUNT(*) as n FROM variants"</span><span class="op">)</span><span class="op">$</span><span class="va">n</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">variants_count</span></span>
+<span><span class="co">#&gt; [1] 368319</span></span>
 <span></span>
-<span><span class="co"># Load a second VCF file with potentially different schema (VEP annotations)</span></span>
 <span><span class="va">vcf_file2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_vep.vcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
+<span><span class="va">local_parquet2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vcf_to_parquet_duckdb.html">vcf_to_parquet_duckdb</a></span><span class="op">(</span><span class="va">vcf_file2</span>, <span class="va">local_parquet2</span>, extension_path <span class="op">=</span> <span class="va">ext_path</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/RtmpFaEDrR/file3f956928d39ea9.parquet</span></span>
+<span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT COUNT(*) as n FROM read_parquet('%s')"</span>, <span class="va">local_parquet2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     n</span></span>
+<span><span class="co">#&gt; 1 802</span></span>
+<span></span>
+<span><span class="va">s3_parquet2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">data_path_s3</span>, <span class="st">"variants/variants_vep.parquet"</span><span class="op">)</span></span>
+<span><span class="va">mc_cmd_args</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cp"</span>, <span class="va">local_parquet2</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"ducklake_local/"</span>, <span class="va">bucket_name</span>, <span class="st">"/data/variants/variants_vep.parquet"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="va">mc_bin</span>, <span class="va">mc_cmd_args</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $status</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stdout</span></span>
+<span><span class="co">#&gt; [1] "`/tmp/RtmpFaEDrR/file3f956928d39ea9.parquet` -&gt; `ducklake_local/readme-demo-1768421669/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬─────────────┐\n│ Total      │ Transferred │ Duration │ Speed       │\n│ 120.96 KiB │ 120.96 KiB  │ 00m00s   │ 11.04 MiB/s │\n└────────────┴─────────────┴──────────┴─────────────┘\n"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $stderr</span></span>
+<span><span class="co">#&gt; [1] ""</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $timeout</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span>
+<span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT COUNT(*) as n FROM read_parquet('%s')"</span>, <span class="va">s3_parquet2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     n</span></span>
+<span><span class="co">#&gt; 1 802</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/ducklake_register_parquet.html">ducklake_register_parquet</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
-<span>  table <span class="op">=</span> <span class="st">"variants_vep"</span>,</span>
-<span>  vcf_path <span class="op">=</span> <span class="va">vcf_file2</span>,</span>
-<span>  extension_path <span class="op">=</span> <span class="va">ext_path</span>,</span>
-<span>  threads <span class="op">=</span> <span class="fl">1</span></span>
+<span>  table <span class="op">=</span> <span class="st">"lake.variants"</span>,</span>
+<span>  parquet_files <span class="op">=</span> <span class="va">s3_parquet2</span>,</span>
+<span>  create_table <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  allow_evolution <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpeOs9iQ/variants_vep_20260114_195650.parquet</span></span></code></pre></div>
+<span></span>
+<span><span class="va">variants_count_after</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"SELECT COUNT(*) as n FROM variants"</span><span class="op">)</span><span class="op">$</span><span class="va">n</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">variants_count_after</span></span>
+<span><span class="co">#&gt; [1] 369121</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="list-lake-content">List lake content<a class="anchor" aria-label="anchor" href="#list-lake-content"></a>
@@ -773,103 +804,451 @@
 <code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"USE lake"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
 <span></span>
-<span><span class="co"># Query both tables to show different schemas</span></span>
-<span><span class="va">variant_counts</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"</span></span>
-<span><span class="st">  SELECT 'variants' as table_name, COUNT(*) as n FROM variants</span></span>
-<span><span class="st">  UNION ALL</span></span>
-<span><span class="st">  SELECT 'variants_vep' as table_name, COUNT(*) as n FROM variants_vep</span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"</span></span>
+<span><span class="st">  SELECT </span></span>
+<span><span class="st">    COUNT(*) as total_variants,</span></span>
+<span><span class="st">    COUNT(DISTINCT CHROM) as n_chromosomes,</span></span>
+<span><span class="st">    MIN(POS) as min_position,</span></span>
+<span><span class="st">    MAX(POS) as max_position</span></span>
+<span><span class="st">  FROM variants</span></span>
 <span><span class="st">"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">variant_counts</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     table_name      n</span></span>
-<span><span class="co">#&gt; 1     variants 368319</span></span>
-<span><span class="co">#&gt; 2 variants_vep    802</span></span>
+<span><span class="co">#&gt;   total_variants n_chromosomes min_position max_position</span></span>
+<span><span class="co">#&gt; 1         369121            25          152    249211717</span></span>
 <span></span>
-<span><span class="co"># Show schema differences between the two tables</span></span>
-<span><span class="va">variants_schema</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"DESCRIBE variants"</span><span class="op">)</span></span>
-<span><span class="va">variants_vep_schema</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"DESCRIBE variants_vep"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">variants_schema</span><span class="op">$</span><span class="va">column_name</span></span>
-<span><span class="co">#&gt;  [1] "CHROM"                           "POS"                            </span></span>
-<span><span class="co">#&gt;  [3] "ID"                              "REF"                            </span></span>
-<span><span class="co">#&gt;  [5] "ALT"                             "QUAL"                           </span></span>
-<span><span class="co">#&gt;  [7] "FILTER"                          "INFO_END"                       </span></span>
-<span><span class="co">#&gt;  [9] "FORMAT_GT_test_deep_variant"     "FORMAT_GQ_test_deep_variant"    </span></span>
-<span><span class="co">#&gt; [11] "FORMAT_DP_test_deep_variant"     "FORMAT_MIN_DP_test_deep_variant"</span></span>
-<span><span class="co">#&gt; [13] "FORMAT_AD_test_deep_variant"     "FORMAT_VAF_test_deep_variant"   </span></span>
-<span><span class="co">#&gt; [15] "FORMAT_PL_test_deep_variant"     "FORMAT_MED_DP_test_deep_variant"</span></span>
-<span></span>
-<span><span class="va">variants_vep_schema</span><span class="op">$</span><span class="va">column_name</span></span>
-<span><span class="co">#&gt;  [1] "CHROM"                   "POS"                    </span></span>
-<span><span class="co">#&gt;  [3] "ID"                      "REF"                    </span></span>
-<span><span class="co">#&gt;  [5] "ALT"                     "QUAL"                   </span></span>
-<span><span class="co">#&gt;  [7] "FILTER"                  "VEP_Allele"             </span></span>
-<span><span class="co">#&gt;  [9] "VEP_Consequence"         "VEP_IMPACT"             </span></span>
-<span><span class="co">#&gt; [11] "VEP_SYMBOL"              "VEP_Gene"               </span></span>
-<span><span class="co">#&gt; [13] "VEP_Feature_type"        "VEP_Feature"            </span></span>
-<span><span class="co">#&gt; [15] "VEP_BIOTYPE"             "VEP_EXON"               </span></span>
-<span><span class="co">#&gt; [17] "VEP_INTRON"              "VEP_HGVSc"              </span></span>
-<span><span class="co">#&gt; [19] "VEP_HGVSp"               "VEP_cDNA_position"      </span></span>
-<span><span class="co">#&gt; [21] "VEP_CDS_position"        "VEP_Protein_position"   </span></span>
-<span><span class="co">#&gt; [23] "VEP_Amino_acids"         "VEP_Codons"             </span></span>
-<span><span class="co">#&gt; [25] "VEP_Existing_variation"  "VEP_ALLELE_NUM"         </span></span>
-<span><span class="co">#&gt; [27] "VEP_DISTANCE"            "VEP_STRAND"             </span></span>
-<span><span class="co">#&gt; [29] "VEP_FLAGS"               "VEP_VARIANT_CLASS"      </span></span>
-<span><span class="co">#&gt; [31] "VEP_SYMBOL_SOURCE"       "VEP_HGNC_ID"            </span></span>
-<span><span class="co">#&gt; [33] "VEP_CANONICAL"           "VEP_TSL"                </span></span>
-<span><span class="co">#&gt; [35] "VEP_APPRIS"              "VEP_CCDS"               </span></span>
-<span><span class="co">#&gt; [37] "VEP_ENSP"                "VEP_SWISSPROT"          </span></span>
-<span><span class="co">#&gt; [39] "VEP_TREMBL"              "VEP_UNIPARC"            </span></span>
-<span><span class="co">#&gt; [41] "VEP_SOURCE"              "VEP_GENE_PHENO"         </span></span>
-<span><span class="co">#&gt; [43] "VEP_SIFT"                "VEP_PolyPhen"           </span></span>
-<span><span class="co">#&gt; [45] "VEP_DOMAINS"             "VEP_miRNA"              </span></span>
-<span><span class="co">#&gt; [47] "VEP_HGVS_OFFSET"         "VEP_AF"                 </span></span>
-<span><span class="co">#&gt; [49] "VEP_AFR_AF"              "VEP_AMR_AF"             </span></span>
-<span><span class="co">#&gt; [51] "VEP_EAS_AF"              "VEP_EUR_AF"             </span></span>
-<span><span class="co">#&gt; [53] "VEP_SAS_AF"              "VEP_AA_AF"              </span></span>
-<span><span class="co">#&gt; [55] "VEP_EA_AF"               "VEP_gnomAD_AF"          </span></span>
-<span><span class="co">#&gt; [57] "VEP_gnomAD_AFR_AF"       "VEP_gnomAD_AMR_AF"      </span></span>
-<span><span class="co">#&gt; [59] "VEP_gnomAD_ASJ_AF"       "VEP_gnomAD_EAS_AF"      </span></span>
-<span><span class="co">#&gt; [61] "VEP_gnomAD_FIN_AF"       "VEP_gnomAD_NFE_AF"      </span></span>
-<span><span class="co">#&gt; [63] "VEP_gnomAD_OTH_AF"       "VEP_gnomAD_SAS_AF"      </span></span>
-<span><span class="co">#&gt; [65] "VEP_MAX_AF"              "VEP_MAX_AF_POPS"        </span></span>
-<span><span class="co">#&gt; [67] "VEP_CLIN_SIG"            "VEP_SOMATIC"            </span></span>
-<span><span class="co">#&gt; [69] "VEP_PHENO"               "VEP_PUBMED"             </span></span>
-<span><span class="co">#&gt; [71] "VEP_MOTIF_NAME"          "VEP_MOTIF_POS"          </span></span>
-<span><span class="co">#&gt; [73] "VEP_HIGH_INF_POS"        "VEP_MOTIF_SCORE_CHANGE" </span></span>
-<span><span class="co">#&gt; [75] "VEP_LoF"                 "VEP_LoF_filter"         </span></span>
-<span><span class="co">#&gt; [77] "VEP_LoF_flags"           "VEP_LoF_info"           </span></span>
-<span><span class="co">#&gt; [79] "VEP_CADD_PHRED"          "VEP_CADD_RAW"           </span></span>
-<span><span class="co">#&gt; [81] "VEP_gnomAD2.1"           "VEP_gnomAD2.1_AF_raw"   </span></span>
-<span><span class="co">#&gt; [83] "VEP_gnomAD2.1_AF_popmax" "VEP_gnomAD2.1_AF_afr"   </span></span>
-<span><span class="co">#&gt; [85] "VEP_gnomAD2.1_AF_amr"    "VEP_gnomAD2.1_AF_asj"   </span></span>
-<span><span class="co">#&gt; [87] "VEP_gnomAD2.1_AF_eas"    "VEP_gnomAD2.1_AF_fin"   </span></span>
-<span><span class="co">#&gt; [89] "VEP_gnomAD2.1_AF_nfe"    "VEP_gnomAD2.1_AF_oth"   </span></span>
-<span><span class="co">#&gt; [91] "VEP_gnomAD2.1_AF_sas"    "INFO_CSQ"               </span></span>
-<span><span class="co">#&gt; [93] "INFO_AF"</span></span></code></pre></div>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"DESCRIBE variants"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                         column_name column_type null  key default extra</span></span>
+<span><span class="co">#&gt; 1                             CHROM     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2                               POS      BIGINT  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3                                ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4                               REF     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5                               ALT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 6                              QUAL      DOUBLE  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 7                            FILTER   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 8                          INFO_END     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 9       FORMAT_GT_test_deep_variant     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 10      FORMAT_GQ_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 11      FORMAT_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 12  FORMAT_MIN_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 13      FORMAT_AD_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 14     FORMAT_VAF_test_deep_variant     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 15      FORMAT_PL_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 16  FORMAT_MED_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 17                       VEP_Allele   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 18                  VEP_Consequence   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 19                       VEP_IMPACT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 20                       VEP_SYMBOL   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 21                         VEP_Gene   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 22                 VEP_Feature_type   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 23                      VEP_Feature   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 24                      VEP_BIOTYPE   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 25                         VEP_EXON   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 26                       VEP_INTRON   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 27                        VEP_HGVSc   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 28                        VEP_HGVSp   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 29                VEP_cDNA_position   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 30                 VEP_CDS_position   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 31             VEP_Protein_position   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 32                  VEP_Amino_acids   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 33                       VEP_Codons   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 34           VEP_Existing_variation   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 35                   VEP_ALLELE_NUM   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 36                     VEP_DISTANCE   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 37                       VEP_STRAND   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 38                        VEP_FLAGS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 39                VEP_VARIANT_CLASS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 40                VEP_SYMBOL_SOURCE   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 41                      VEP_HGNC_ID   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 42                    VEP_CANONICAL   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 43                          VEP_TSL   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 44                       VEP_APPRIS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 45                         VEP_CCDS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 46                         VEP_ENSP   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 47                    VEP_SWISSPROT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 48                       VEP_TREMBL   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 49                      VEP_UNIPARC   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 50                       VEP_SOURCE   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 51                   VEP_GENE_PHENO   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 52                         VEP_SIFT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 53                     VEP_PolyPhen   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 54                      VEP_DOMAINS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 55                        VEP_miRNA   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 56                  VEP_HGVS_OFFSET   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 57                           VEP_AF   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 58                       VEP_AFR_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 59                       VEP_AMR_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 60                       VEP_EAS_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 61                       VEP_EUR_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 62                       VEP_SAS_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 63                        VEP_AA_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 64                        VEP_EA_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 65                    VEP_gnomAD_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 66                VEP_gnomAD_AFR_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 67                VEP_gnomAD_AMR_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 68                VEP_gnomAD_ASJ_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 69                VEP_gnomAD_EAS_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 70                VEP_gnomAD_FIN_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 71                VEP_gnomAD_NFE_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 72                VEP_gnomAD_OTH_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 73                VEP_gnomAD_SAS_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 74                       VEP_MAX_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 75                  VEP_MAX_AF_POPS     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 76                     VEP_CLIN_SIG   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 77                      VEP_SOMATIC   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 78                        VEP_PHENO   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 79                       VEP_PUBMED   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 80                   VEP_MOTIF_NAME   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 81                    VEP_MOTIF_POS   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 82                 VEP_HIGH_INF_POS   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 83           VEP_MOTIF_SCORE_CHANGE     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 84                          VEP_LoF   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 85                   VEP_LoF_filter   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 86                    VEP_LoF_flags   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 87                     VEP_LoF_info   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 88                   VEP_CADD_PHRED   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 89                     VEP_CADD_RAW   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 90                    VEP_gnomAD2.1   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 91             VEP_gnomAD2.1_AF_raw     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 92          VEP_gnomAD2.1_AF_popmax     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 93             VEP_gnomAD2.1_AF_afr     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 94             VEP_gnomAD2.1_AF_amr     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 95             VEP_gnomAD2.1_AF_asj     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 96             VEP_gnomAD2.1_AF_eas     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 97             VEP_gnomAD2.1_AF_fin     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 98             VEP_gnomAD2.1_AF_nfe     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 99             VEP_gnomAD2.1_AF_oth     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 100            VEP_gnomAD2.1_AF_sas     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 101                        INFO_CSQ   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 102                         INFO_AF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># List physical files managed by DuckLake for both tables</span></span>
-<span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants')"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/ducklake_list_files.html">ducklake_list_files</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span>, <span class="st">"variants"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                              data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768417008/data/main/variants/ducklake-019bbdde-2176-7e41-99c3-7ff4105c57e8.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768421669/data/main/variants/ducklake-019bbe25-3ea7-7c17-a59f-9677afe3fed0.parquet</span></span>
+<span><span class="co">#&gt; 2                                       s3://readme-demo-1768421669/data/variants/variants_vep.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751658                  6275                     NULL</span></span>
+<span><span class="co">#&gt; 2               123858                 14951                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
 <span><span class="co">#&gt; 1        &lt;NA&gt;                     NA                      NA</span></span>
+<span><span class="co">#&gt; 2        &lt;NA&gt;                     NA                      NA</span></span>
 <span><span class="co">#&gt;   delete_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1                       NULL</span></span>
-<span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"FROM ducklake_list_files('lake', 'variants_vep')"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                                                                                  data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768417008/data/main/variants_vep/ducklake-019bbdde-2232-7d67-8ec7-4416af0d854b.parquet</span></span>
-<span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
-<span><span class="co">#&gt; 1               183084                 15439                     NULL</span></span>
-<span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
-<span><span class="co">#&gt; 1        &lt;NA&gt;                     NA                      NA</span></span>
-<span><span class="co">#&gt;   delete_file_encryption_key</span></span>
-<span><span class="co">#&gt; 1                       NULL</span></span>
-<span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; 2                       NULL</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="snapshots-and-time-travel">Snapshots and time travel<a class="anchor" aria-label="anchor" href="#snapshots-and-time-travel"></a>
+</h3>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/ducklake_snapshots.html">ducklake_snapshots</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    snapshot_id       snapshot_time schema_version</span></span>
+<span><span class="co">#&gt; 1            0 2026-01-14 20:14:29              0</span></span>
+<span><span class="co">#&gt; 2            1 2026-01-14 20:14:30              1</span></span>
+<span><span class="co">#&gt; 3            2 2026-01-14 20:14:30              2</span></span>
+<span><span class="co">#&gt; 4            3 2026-01-14 20:14:30              3</span></span>
+<span><span class="co">#&gt; 5            4 2026-01-14 20:14:30              4</span></span>
+<span><span class="co">#&gt; 6            5 2026-01-14 20:14:30              5</span></span>
+<span><span class="co">#&gt; 7            6 2026-01-14 20:14:30              6</span></span>
+<span><span class="co">#&gt; 8            7 2026-01-14 20:14:30              7</span></span>
+<span><span class="co">#&gt; 9            8 2026-01-14 20:14:30              8</span></span>
+<span><span class="co">#&gt; 10           9 2026-01-14 20:14:30              9</span></span>
+<span><span class="co">#&gt; 11          10 2026-01-14 20:14:30             10</span></span>
+<span><span class="co">#&gt; 12          11 2026-01-14 20:14:30             11</span></span>
+<span><span class="co">#&gt; 13          12 2026-01-14 20:14:30             12</span></span>
+<span><span class="co">#&gt; 14          13 2026-01-14 20:14:30             13</span></span>
+<span><span class="co">#&gt; 15          14 2026-01-14 20:14:30             14</span></span>
+<span><span class="co">#&gt; 16          15 2026-01-14 20:14:30             15</span></span>
+<span><span class="co">#&gt; 17          16 2026-01-14 20:14:30             16</span></span>
+<span><span class="co">#&gt; 18          17 2026-01-14 20:14:31             17</span></span>
+<span><span class="co">#&gt; 19          18 2026-01-14 20:14:31             18</span></span>
+<span><span class="co">#&gt; 20          19 2026-01-14 20:14:31             19</span></span>
+<span><span class="co">#&gt; 21          20 2026-01-14 20:14:31             20</span></span>
+<span><span class="co">#&gt; 22          21 2026-01-14 20:14:31             21</span></span>
+<span><span class="co">#&gt; 23          22 2026-01-14 20:14:31             22</span></span>
+<span><span class="co">#&gt; 24          23 2026-01-14 20:14:31             23</span></span>
+<span><span class="co">#&gt; 25          24 2026-01-14 20:14:31             24</span></span>
+<span><span class="co">#&gt; 26          25 2026-01-14 20:14:31             25</span></span>
+<span><span class="co">#&gt; 27          26 2026-01-14 20:14:31             26</span></span>
+<span><span class="co">#&gt; 28          27 2026-01-14 20:14:31             27</span></span>
+<span><span class="co">#&gt; 29          28 2026-01-14 20:14:31             28</span></span>
+<span><span class="co">#&gt; 30          29 2026-01-14 20:14:31             29</span></span>
+<span><span class="co">#&gt; 31          30 2026-01-14 20:14:31             30</span></span>
+<span><span class="co">#&gt; 32          31 2026-01-14 20:14:31             31</span></span>
+<span><span class="co">#&gt; 33          32 2026-01-14 20:14:31             32</span></span>
+<span><span class="co">#&gt; 34          33 2026-01-14 20:14:31             33</span></span>
+<span><span class="co">#&gt; 35          34 2026-01-14 20:14:31             34</span></span>
+<span><span class="co">#&gt; 36          35 2026-01-14 20:14:31             35</span></span>
+<span><span class="co">#&gt; 37          36 2026-01-14 20:14:31             36</span></span>
+<span><span class="co">#&gt; 38          37 2026-01-14 20:14:31             37</span></span>
+<span><span class="co">#&gt; 39          38 2026-01-14 20:14:31             38</span></span>
+<span><span class="co">#&gt; 40          39 2026-01-14 20:14:31             39</span></span>
+<span><span class="co">#&gt; 41          40 2026-01-14 20:14:31             40</span></span>
+<span><span class="co">#&gt; 42          41 2026-01-14 20:14:31             41</span></span>
+<span><span class="co">#&gt; 43          42 2026-01-14 20:14:31             42</span></span>
+<span><span class="co">#&gt; 44          43 2026-01-14 20:14:31             43</span></span>
+<span><span class="co">#&gt; 45          44 2026-01-14 20:14:31             44</span></span>
+<span><span class="co">#&gt; 46          45 2026-01-14 20:14:31             45</span></span>
+<span><span class="co">#&gt; 47          46 2026-01-14 20:14:31             46</span></span>
+<span><span class="co">#&gt; 48          47 2026-01-14 20:14:31             47</span></span>
+<span><span class="co">#&gt; 49          48 2026-01-14 20:14:31             48</span></span>
+<span><span class="co">#&gt; 50          49 2026-01-14 20:14:31             49</span></span>
+<span><span class="co">#&gt; 51          50 2026-01-14 20:14:31             50</span></span>
+<span><span class="co">#&gt; 52          51 2026-01-14 20:14:31             51</span></span>
+<span><span class="co">#&gt; 53          52 2026-01-14 20:14:31             52</span></span>
+<span><span class="co">#&gt; 54          53 2026-01-14 20:14:31             53</span></span>
+<span><span class="co">#&gt; 55          54 2026-01-14 20:14:31             54</span></span>
+<span><span class="co">#&gt; 56          55 2026-01-14 20:14:31             55</span></span>
+<span><span class="co">#&gt; 57          56 2026-01-14 20:14:31             56</span></span>
+<span><span class="co">#&gt; 58          57 2026-01-14 20:14:31             57</span></span>
+<span><span class="co">#&gt; 59          58 2026-01-14 20:14:31             58</span></span>
+<span><span class="co">#&gt; 60          59 2026-01-14 20:14:31             59</span></span>
+<span><span class="co">#&gt; 61          60 2026-01-14 20:14:31             60</span></span>
+<span><span class="co">#&gt; 62          61 2026-01-14 20:14:31             61</span></span>
+<span><span class="co">#&gt; 63          62 2026-01-14 20:14:31             62</span></span>
+<span><span class="co">#&gt; 64          63 2026-01-14 20:14:31             63</span></span>
+<span><span class="co">#&gt; 65          64 2026-01-14 20:14:31             64</span></span>
+<span><span class="co">#&gt; 66          65 2026-01-14 20:14:31             65</span></span>
+<span><span class="co">#&gt; 67          66 2026-01-14 20:14:31             66</span></span>
+<span><span class="co">#&gt; 68          67 2026-01-14 20:14:31             67</span></span>
+<span><span class="co">#&gt; 69          68 2026-01-14 20:14:31             68</span></span>
+<span><span class="co">#&gt; 70          69 2026-01-14 20:14:31             69</span></span>
+<span><span class="co">#&gt; 71          70 2026-01-14 20:14:31             70</span></span>
+<span><span class="co">#&gt; 72          71 2026-01-14 20:14:31             71</span></span>
+<span><span class="co">#&gt; 73          72 2026-01-14 20:14:31             72</span></span>
+<span><span class="co">#&gt; 74          73 2026-01-14 20:14:31             73</span></span>
+<span><span class="co">#&gt; 75          74 2026-01-14 20:14:31             74</span></span>
+<span><span class="co">#&gt; 76          75 2026-01-14 20:14:31             75</span></span>
+<span><span class="co">#&gt; 77          76 2026-01-14 20:14:31             76</span></span>
+<span><span class="co">#&gt; 78          77 2026-01-14 20:14:31             77</span></span>
+<span><span class="co">#&gt; 79          78 2026-01-14 20:14:31             78</span></span>
+<span><span class="co">#&gt; 80          79 2026-01-14 20:14:31             79</span></span>
+<span><span class="co">#&gt; 81          80 2026-01-14 20:14:31             80</span></span>
+<span><span class="co">#&gt; 82          81 2026-01-14 20:14:31             81</span></span>
+<span><span class="co">#&gt; 83          82 2026-01-14 20:14:31             82</span></span>
+<span><span class="co">#&gt; 84          83 2026-01-14 20:14:31             83</span></span>
+<span><span class="co">#&gt; 85          84 2026-01-14 20:14:31             84</span></span>
+<span><span class="co">#&gt; 86          85 2026-01-14 20:14:31             85</span></span>
+<span><span class="co">#&gt; 87          86 2026-01-14 20:14:31             86</span></span>
+<span><span class="co">#&gt; 88          87 2026-01-14 20:14:31             87</span></span>
+<span><span class="co">#&gt; 89          88 2026-01-14 20:14:31             87</span></span>
+<span><span class="co">#&gt;                                                   changes author commit_message</span></span>
+<span><span class="co">#&gt; 1                                   schemas_created, main   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2  tables_created, tables_inserted_into, main.variants, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 6                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 7                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 8                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 9                                       tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 10                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 11                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 12                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 13                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 14                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 15                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 16                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 17                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 18                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 19                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 20                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 21                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 22                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 23                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 24                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 25                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 26                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 27                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 28                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 29                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 30                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 31                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 32                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 33                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 34                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 35                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 36                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 37                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 38                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 39                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 40                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 41                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 42                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 43                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 44                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 45                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 46                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 47                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 48                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 49                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 50                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 51                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 52                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 53                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 54                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 55                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 56                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 57                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 58                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 59                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 60                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 61                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 62                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 63                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 64                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 65                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 66                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 67                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 68                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 69                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 70                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 71                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 72                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 73                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 74                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 75                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 76                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 77                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 78                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 79                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 80                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 81                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 82                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 83                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 84                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 85                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 86                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 87                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 88                                      tables_altered, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 89                                tables_inserted_into, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
+<span><span class="co">#&gt;    commit_extra_info</span></span>
+<span><span class="co">#&gt; 1               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 6               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 7               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 8               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 9               &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 10              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 11              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 12              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 13              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 14              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 15              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 16              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 17              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 18              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 19              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 20              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 21              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 22              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 23              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 24              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 25              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 26              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 27              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 28              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 29              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 30              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 31              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 32              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 33              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 34              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 35              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 36              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 37              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 38              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 39              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 40              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 41              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 42              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 43              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 44              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 45              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 46              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 47              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 48              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 49              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 50              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 51              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 52              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 53              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 54              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 55              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 56              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 57              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 58              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 59              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 60              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 61              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 62              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 63              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 64              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 65              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 66              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 67              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 68              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 69              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 70              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 71              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 72              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 73              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 74              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 75              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 76              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 77              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 78              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 79              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 80              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 81              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 82              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 83              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 84              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 85              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 86              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 87              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 88              &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 89              &lt;NA&gt;</span></span>
+<span><span class="fu"><a href="reference/ducklake_current_snapshot.html">ducklake_current_snapshot</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 88</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="configuration">Configuration<a class="anchor" aria-label="anchor" href="#configuration"></a>
+</h3>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/ducklake_options.html">ducklake_options</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   option_name                                                      description</span></span>
+<span><span class="co">#&gt; 1  created_by                                  Tool used to write the DuckLake</span></span>
+<span><span class="co">#&gt; 2   data_path                                               Path to data files</span></span>
+<span><span class="co">#&gt; 3   encrypted Whether or not to encrypt Parquet files written to the data path</span></span>
+<span><span class="co">#&gt; 4     version                                          DuckLake format version</span></span>
+<span><span class="co">#&gt;                               value  scope scope_entry</span></span>
+<span><span class="co">#&gt; 1                 DuckDB d1dc88f950 GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2 s3://readme-demo-1768421669/data/ GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3                             false GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4                               0.3 GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="fu"><a href="reference/ducklake_set_option.html">ducklake_set_option</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span>, <span class="st">"parquet_compression"</span>, <span class="st">"zstd"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/ducklake_options.html">ducklake_options</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           option_name</span></span>
+<span><span class="co">#&gt; 1          created_by</span></span>
+<span><span class="co">#&gt; 2           data_path</span></span>
+<span><span class="co">#&gt; 3           encrypted</span></span>
+<span><span class="co">#&gt; 4 parquet_compression</span></span>
+<span><span class="co">#&gt; 5             version</span></span>
+<span><span class="co">#&gt;                                                                                        description</span></span>
+<span><span class="co">#&gt; 1                                                                  Tool used to write the DuckLake</span></span>
+<span><span class="co">#&gt; 2                                                                               Path to data files</span></span>
+<span><span class="co">#&gt; 3                                 Whether or not to encrypt Parquet files written to the data path</span></span>
+<span><span class="co">#&gt; 4 Compression algorithm for Parquet files (uncompressed, snappy, gzip, zstd, brotli, lz4, lz4_raw)</span></span>
+<span><span class="co">#&gt; 5                                                                          DuckLake format version</span></span>
+<span><span class="co">#&gt;                               value  scope scope_entry</span></span>
+<span><span class="co">#&gt; 1                 DuckDB d1dc88f950 GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2 s3://readme-demo-1768421669/data/ GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3                             false GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4                              zstd GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5                               0.3 GLOBAL        &lt;NA&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/pskill.html" class="external-link">pskill</a></span><span class="op">(</span><span class="va">pid</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -898,7 +1277,7 @@
 <div class="section level4">
 <h4 id="direct-connection">Direct Connection<a class="anchor" aria-label="anchor" href="#direct-connection"></a>
 </h4>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># DuckDB backend</span></span>
 <span><span class="fu"><a href="reference/ducklake_connect_catalog.html">ducklake_connect_catalog</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
@@ -919,7 +1298,7 @@
 <div class="section level5">
 <h5 id="secret-based-connection">Secret-based Connection:**<a class="anchor" aria-label="anchor" href="#secret-based-connection"></a>
 </h5>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create catalog secret</span></span>
 <span><span class="fu"><a href="reference/ducklake_create_catalog_secret.html">ducklake_create_catalog_secret</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
@@ -943,210 +1322,210 @@
 <h2 id="command-line-utilities">Command-Line utilities<a class="anchor" aria-label="anchor" href="#command-line-utilities"></a>
 </h2>
 <p>CLI tools are provided for VCF to Parquet conversion and querying, including threaded chunking based on contigs using either the <a href="./inst/scripts/vcf2parquet_duckdb.R"><code>bcf_reader</code></a> extension or via <a href="./inst/scripts/vcf2parquet.R">Arrow IPC</a></p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
-<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet_duckdb.R', package='RBCFTools'))"</span><span class="va">)</span></span>
-<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="va">BCF</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('extdata', 'test_deep_variant.vcf.gz', package='RBCFTools'))"</span><span class="va">)</span></span>
-<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
-<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="va">Log</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.log<span class="va">)</span></span>
-<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
-<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a><span class="bu">time</span> <span class="va">$SCRIPT</span> convert <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span> <span class="at">-t</span> 4  <span class="op">&gt;</span> <span class="va">$Log</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
-<span id="cb25-9"><a href="#cb25-9" tabindex="-1"></a></span>
-<span id="cb25-10"><a href="#cb25-10" tabindex="-1"></a><span class="fu">cat</span> <span class="va">$Log</span></span>
-<span id="cb25-11"><a href="#cb25-11" tabindex="-1"></a></span>
-<span id="cb25-12"><a href="#cb25-12" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
-<span id="cb25-13"><a href="#cb25-13" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
-<span id="cb25-14"><a href="#cb25-14" tabindex="-1"></a></span>
-<span id="cb25-15"><a href="#cb25-15" tabindex="-1"></a><span class="co"># Describe table structure</span></span>
-<span id="cb25-16"><a href="#cb25-16" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"DESCRIBE SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">')"</span></span>
-<span id="cb25-17"><a href="#cb25-17" tabindex="-1"></a></span>
-<span id="cb25-18"><a href="#cb25-18" tabindex="-1"></a><span class="co"># Show schema</span></span>
-<span id="cb25-19"><a href="#cb25-19" tabindex="-1"></a><span class="va">$SCRIPT</span> schema  <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> </span>
-<span id="cb25-20"><a href="#cb25-20" tabindex="-1"></a></span>
-<span id="cb25-21"><a href="#cb25-21" tabindex="-1"></a><span class="co"># File info</span></span>
-<span id="cb25-22"><a href="#cb25-22" tabindex="-1"></a><span class="va">$SCRIPT</span> info <span class="at">-i</span> <span class="va">$OUT_PQ</span> </span>
-<span id="cb25-23"><a href="#cb25-23" tabindex="-1"></a></span>
-<span id="cb25-24"><a href="#cb25-24" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
-<span id="cb25-25"><a href="#cb25-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-26"><a href="#cb25-26" tabindex="-1"></a><span class="co">#&gt; real 0m1.598s</span></span>
-<span id="cb25-27"><a href="#cb25-27" tabindex="-1"></a><span class="co">#&gt; user 0m3.613s</span></span>
-<span id="cb25-28"><a href="#cb25-28" tabindex="-1"></a><span class="co">#&gt; sys  0m1.983s</span></span>
-<span id="cb25-29"><a href="#cb25-29" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-30"><a href="#cb25-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpySx9w1 </span></span>
-<span id="cb25-31"><a href="#cb25-31" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-32"><a href="#cb25-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpySx9w1</span></span>
-<span id="cb25-33"><a href="#cb25-33" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
-<span id="cb25-34"><a href="#cb25-34" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb25-35"><a href="#cb25-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpySx9w1'</span></span>
-<span id="cb25-36"><a href="#cb25-36" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb25-37"><a href="#cb25-37" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpySx9w1'</span></span>
-<span id="cb25-38"><a href="#cb25-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpySx9w1'</span></span>
-<span id="cb25-39"><a href="#cb25-39" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
-<span id="cb25-40"><a href="#cb25-40" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
-<span id="cb25-41"><a href="#cb25-41" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
-<span id="cb25-42"><a href="#cb25-42" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
-<span id="cb25-43"><a href="#cb25-43" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
-<span id="cb25-44"><a href="#cb25-44" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-45"><a href="#cb25-45" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
-<span id="cb25-46"><a href="#cb25-46" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
-<span id="cb25-47"><a href="#cb25-47" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb25-48"><a href="#cb25-48" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpySx9w1'</span></span>
-<span id="cb25-49"><a href="#cb25-49" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpySx9w1/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-50"><a href="#cb25-50" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpySx9w1/build/bcf_reader.duckdb_extension </span></span>
-<span id="cb25-51"><a href="#cb25-51" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-52"><a href="#cb25-52" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet (DuckDB mode)...</span></span>
-<span id="cb25-53"><a href="#cb25-53" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
-<span id="cb25-54"><a href="#cb25-54" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.rVbj080oZ9.parquet </span></span>
-<span id="cb25-55"><a href="#cb25-55" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
-<span id="cb25-56"><a href="#cb25-56" tabindex="-1"></a><span class="co">#&gt;   Row group size: 100000 </span></span>
-<span id="cb25-57"><a href="#cb25-57" tabindex="-1"></a><span class="co">#&gt;   Threads: 4 </span></span>
-<span id="cb25-58"><a href="#cb25-58" tabindex="-1"></a><span class="co">#&gt; Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)</span></span>
-<span id="cb25-59"><a href="#cb25-59" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0004.parquet</span></span>
-<span id="cb25-60"><a href="#cb25-60" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0003.parquet</span></span>
-<span id="cb25-61"><a href="#cb25-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0002.parquet</span></span>
-<span id="cb25-62"><a href="#cb25-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0001.parquet</span></span>
-<span id="cb25-63"><a href="#cb25-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0008.parquet</span></span>
-<span id="cb25-64"><a href="#cb25-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0007.parquet</span></span>
-<span id="cb25-65"><a href="#cb25-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0006.parquet</span></span>
-<span id="cb25-66"><a href="#cb25-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0005.parquet</span></span>
-<span id="cb25-67"><a href="#cb25-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0012.parquet</span></span>
-<span id="cb25-68"><a href="#cb25-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0010.parquet</span></span>
-<span id="cb25-69"><a href="#cb25-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0011.parquet</span></span>
-<span id="cb25-70"><a href="#cb25-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0009.parquet</span></span>
-<span id="cb25-71"><a href="#cb25-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0014.parquet</span></span>
-<span id="cb25-72"><a href="#cb25-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0016.parquet</span></span>
-<span id="cb25-73"><a href="#cb25-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0015.parquet</span></span>
-<span id="cb25-74"><a href="#cb25-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0013.parquet</span></span>
-<span id="cb25-75"><a href="#cb25-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0018.parquet</span></span>
-<span id="cb25-76"><a href="#cb25-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0020.parquet</span></span>
-<span id="cb25-77"><a href="#cb25-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0017.parquet</span></span>
-<span id="cb25-78"><a href="#cb25-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0022.parquet</span></span>
-<span id="cb25-79"><a href="#cb25-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0024.parquet</span></span>
-<span id="cb25-80"><a href="#cb25-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0019.parquet</span></span>
-<span id="cb25-81"><a href="#cb25-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0021.parquet</span></span>
-<span id="cb25-82"><a href="#cb25-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0023.parquet</span></span>
-<span id="cb25-83"><a href="#cb25-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpySx9w1/vcf_duckdb_parallel_3e9dfb5b50ff65/contig_0025.parquet</span></span>
-<span id="cb25-84"><a href="#cb25-84" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.rVbj080oZ9.parquet</span></span>
-<span id="cb25-85"><a href="#cb25-85" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.rVbj080oZ9.parquet (368319 rows)</span></span>
-<span id="cb25-86"><a href="#cb25-86" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-87"><a href="#cb25-87" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb25-88"><a href="#cb25-88" tabindex="-1"></a><span class="co">#&gt;   Time: 0.91 seconds</span></span>
-<span id="cb25-89"><a href="#cb25-89" tabindex="-1"></a><span class="co">#&gt;   Output size: 3.77 MB</span></span>
-<span id="cb25-90"><a href="#cb25-90" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
-<span id="cb25-91"><a href="#cb25-91" tabindex="-1"></a><span class="co">#&gt;   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END FORMAT_GT_test_deep_variant</span></span>
-<span id="cb25-92"><a href="#cb25-92" tabindex="-1"></a><span class="co">#&gt; 1     1 536895 &lt;NA&gt;   T   C  0.1 RefCall       NA                         ./.</span></span>
-<span id="cb25-93"><a href="#cb25-93" tabindex="-1"></a><span class="co">#&gt; 2     1 536924 &lt;NA&gt;   G   A  0.1 RefCall       NA                         ./.</span></span>
-<span id="cb25-94"><a href="#cb25-94" tabindex="-1"></a><span class="co">#&gt; 3     1 536948 &lt;NA&gt;   A   G  0.0 RefCall       NA                         0/0</span></span>
-<span id="cb25-95"><a href="#cb25-95" tabindex="-1"></a><span class="co">#&gt; 4     1 536986 &lt;NA&gt;   G   T  0.0 RefCall       NA                         0/0</span></span>
-<span id="cb25-96"><a href="#cb25-96" tabindex="-1"></a><span class="co">#&gt; 5     1 544490 &lt;NA&gt;   A   G  0.8 RefCall       NA                         ./.</span></span>
-<span id="cb25-97"><a href="#cb25-97" tabindex="-1"></a><span class="co">#&gt;   FORMAT_GQ_test_deep_variant FORMAT_DP_test_deep_variant</span></span>
-<span id="cb25-98"><a href="#cb25-98" tabindex="-1"></a><span class="co">#&gt; 1                          18                         106</span></span>
-<span id="cb25-99"><a href="#cb25-99" tabindex="-1"></a><span class="co">#&gt; 2                          18                         118</span></span>
-<span id="cb25-100"><a href="#cb25-100" tabindex="-1"></a><span class="co">#&gt; 3                          31                         104</span></span>
-<span id="cb25-101"><a href="#cb25-101" tabindex="-1"></a><span class="co">#&gt; 4                          23                         115</span></span>
-<span id="cb25-102"><a href="#cb25-102" tabindex="-1"></a><span class="co">#&gt; 5                           8                          10</span></span>
-<span id="cb25-103"><a href="#cb25-103" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MIN_DP_test_deep_variant FORMAT_AD_test_deep_variant</span></span>
-<span id="cb25-104"><a href="#cb25-104" tabindex="-1"></a><span class="co">#&gt; 1                              NA                      46, 52</span></span>
-<span id="cb25-105"><a href="#cb25-105" tabindex="-1"></a><span class="co">#&gt; 2                              NA                      55, 60</span></span>
-<span id="cb25-106"><a href="#cb25-106" tabindex="-1"></a><span class="co">#&gt; 3                              NA                      91, 13</span></span>
-<span id="cb25-107"><a href="#cb25-107" tabindex="-1"></a><span class="co">#&gt; 4                              NA                      55, 60</span></span>
-<span id="cb25-108"><a href="#cb25-108" tabindex="-1"></a><span class="co">#&gt; 5                              NA                        6, 4</span></span>
-<span id="cb25-109"><a href="#cb25-109" tabindex="-1"></a><span class="co">#&gt;   FORMAT_VAF_test_deep_variant FORMAT_PL_test_deep_variant</span></span>
-<span id="cb25-110"><a href="#cb25-110" tabindex="-1"></a><span class="co">#&gt; 1                     0.490566                   0, 19, 25</span></span>
-<span id="cb25-111"><a href="#cb25-111" tabindex="-1"></a><span class="co">#&gt; 2                     0.508475                   0, 21, 20</span></span>
-<span id="cb25-112"><a href="#cb25-112" tabindex="-1"></a><span class="co">#&gt; 3                        0.125                   0, 31, 38</span></span>
-<span id="cb25-113"><a href="#cb25-113" tabindex="-1"></a><span class="co">#&gt; 4                     0.521739                   0, 23, 29</span></span>
-<span id="cb25-114"><a href="#cb25-114" tabindex="-1"></a><span class="co">#&gt; 5                          0.4                    0, 7, 15</span></span>
-<span id="cb25-115"><a href="#cb25-115" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MED_DP_test_deep_variant</span></span>
-<span id="cb25-116"><a href="#cb25-116" tabindex="-1"></a><span class="co">#&gt; 1                              NA</span></span>
-<span id="cb25-117"><a href="#cb25-117" tabindex="-1"></a><span class="co">#&gt; 2                              NA</span></span>
-<span id="cb25-118"><a href="#cb25-118" tabindex="-1"></a><span class="co">#&gt; 3                              NA</span></span>
-<span id="cb25-119"><a href="#cb25-119" tabindex="-1"></a><span class="co">#&gt; 4                              NA</span></span>
-<span id="cb25-120"><a href="#cb25-120" tabindex="-1"></a><span class="co">#&gt; 5                              NA</span></span>
-<span id="cb25-121"><a href="#cb25-121" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
-<span id="cb25-122"><a href="#cb25-122" tabindex="-1"></a><span class="co">#&gt;                        column_name column_type null  key default extra</span></span>
-<span id="cb25-123"><a href="#cb25-123" tabindex="-1"></a><span class="co">#&gt; 1                            CHROM     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-124"><a href="#cb25-124" tabindex="-1"></a><span class="co">#&gt; 2                              POS      BIGINT  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-125"><a href="#cb25-125" tabindex="-1"></a><span class="co">#&gt; 3                               ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-126"><a href="#cb25-126" tabindex="-1"></a><span class="co">#&gt; 4                              REF     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-127"><a href="#cb25-127" tabindex="-1"></a><span class="co">#&gt; 5                              ALT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-128"><a href="#cb25-128" tabindex="-1"></a><span class="co">#&gt; 6                             QUAL      DOUBLE  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-129"><a href="#cb25-129" tabindex="-1"></a><span class="co">#&gt; 7                           FILTER   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-130"><a href="#cb25-130" tabindex="-1"></a><span class="co">#&gt; 8                         INFO_END     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-131"><a href="#cb25-131" tabindex="-1"></a><span class="co">#&gt; 9      FORMAT_GT_test_deep_variant     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-132"><a href="#cb25-132" tabindex="-1"></a><span class="co">#&gt; 10     FORMAT_GQ_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-133"><a href="#cb25-133" tabindex="-1"></a><span class="co">#&gt; 11     FORMAT_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-134"><a href="#cb25-134" tabindex="-1"></a><span class="co">#&gt; 12 FORMAT_MIN_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-135"><a href="#cb25-135" tabindex="-1"></a><span class="co">#&gt; 13     FORMAT_AD_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-136"><a href="#cb25-136" tabindex="-1"></a><span class="co">#&gt; 14    FORMAT_VAF_test_deep_variant     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-137"><a href="#cb25-137" tabindex="-1"></a><span class="co">#&gt; 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-138"><a href="#cb25-138" tabindex="-1"></a><span class="co">#&gt; 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb25-139"><a href="#cb25-139" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-140"><a href="#cb25-140" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpwo6U0O </span></span>
-<span id="cb25-141"><a href="#cb25-141" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb25-142"><a href="#cb25-142" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmpwo6U0O</span></span>
-<span id="cb25-143"><a href="#cb25-143" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
-<span id="cb25-144"><a href="#cb25-144" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb25-145"><a href="#cb25-145" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpwo6U0O'</span></span>
-<span id="cb25-146"><a href="#cb25-146" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb25-147"><a href="#cb25-147" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpwo6U0O'</span></span>
-<span id="cb25-148"><a href="#cb25-148" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmpwo6U0O'</span></span>
-<span id="cb25-149"><a href="#cb25-149" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
-<span id="cb25-150"><a href="#cb25-150" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
-<span id="cb25-151"><a href="#cb25-151" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
-<span id="cb25-152"><a href="#cb25-152" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
-<span id="cb25-153"><a href="#cb25-153" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
-<span id="cb25-154"><a href="#cb25-154" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-155"><a href="#cb25-155" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
-<span id="cb25-156"><a href="#cb25-156" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
-<span id="cb25-157"><a href="#cb25-157" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb25-158"><a href="#cb25-158" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmpwo6U0O'</span></span>
-<span id="cb25-159"><a href="#cb25-159" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/Rtmpwo6U0O/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb25-160"><a href="#cb25-160" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/Rtmpwo6U0O/build/bcf_reader.duckdb_extension </span></span>
-<span id="cb25-161"><a href="#cb25-161" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-162"><a href="#cb25-162" tabindex="-1"></a><span class="co">#&gt; VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
-<span id="cb25-163"><a href="#cb25-163" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-164"><a href="#cb25-164" tabindex="-1"></a><span class="co">#&gt;                      column_name column_type</span></span>
-<span id="cb25-165"><a href="#cb25-165" tabindex="-1"></a><span class="co">#&gt;                            CHROM   character</span></span>
-<span id="cb25-166"><a href="#cb25-166" tabindex="-1"></a><span class="co">#&gt;                              POS     numeric</span></span>
-<span id="cb25-167"><a href="#cb25-167" tabindex="-1"></a><span class="co">#&gt;                               ID   character</span></span>
-<span id="cb25-168"><a href="#cb25-168" tabindex="-1"></a><span class="co">#&gt;                              REF   character</span></span>
-<span id="cb25-169"><a href="#cb25-169" tabindex="-1"></a><span class="co">#&gt;                              ALT        list</span></span>
-<span id="cb25-170"><a href="#cb25-170" tabindex="-1"></a><span class="co">#&gt;                             QUAL     numeric</span></span>
-<span id="cb25-171"><a href="#cb25-171" tabindex="-1"></a><span class="co">#&gt;                           FILTER        list</span></span>
-<span id="cb25-172"><a href="#cb25-172" tabindex="-1"></a><span class="co">#&gt;                         INFO_END     integer</span></span>
-<span id="cb25-173"><a href="#cb25-173" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant   character</span></span>
-<span id="cb25-174"><a href="#cb25-174" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant     integer</span></span>
-<span id="cb25-175"><a href="#cb25-175" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant     integer</span></span>
-<span id="cb25-176"><a href="#cb25-176" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant     integer</span></span>
-<span id="cb25-177"><a href="#cb25-177" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant        list</span></span>
-<span id="cb25-178"><a href="#cb25-178" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant        list</span></span>
-<span id="cb25-179"><a href="#cb25-179" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant        list</span></span>
-<span id="cb25-180"><a href="#cb25-180" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant     integer</span></span>
-<span id="cb25-181"><a href="#cb25-181" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.rVbj080oZ9.parquet </span></span>
-<span id="cb25-182"><a href="#cb25-182" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-183"><a href="#cb25-183" tabindex="-1"></a><span class="co">#&gt; File size: 3.77 MB </span></span>
-<span id="cb25-184"><a href="#cb25-184" tabindex="-1"></a><span class="co">#&gt; Total rows: 368319 </span></span>
-<span id="cb25-185"><a href="#cb25-185" tabindex="-1"></a><span class="co">#&gt; Number of columns: 27 </span></span>
-<span id="cb25-186"><a href="#cb25-186" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb25-187"><a href="#cb25-187" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb25-188"><a href="#cb25-188" tabindex="-1"></a><span class="co">#&gt;                             name       type</span></span>
-<span id="cb25-189"><a href="#cb25-189" tabindex="-1"></a><span class="co">#&gt;                            CHROM BYTE_ARRAY</span></span>
-<span id="cb25-190"><a href="#cb25-190" tabindex="-1"></a><span class="co">#&gt;                              POS      INT64</span></span>
-<span id="cb25-191"><a href="#cb25-191" tabindex="-1"></a><span class="co">#&gt;                               ID BYTE_ARRAY</span></span>
-<span id="cb25-192"><a href="#cb25-192" tabindex="-1"></a><span class="co">#&gt;                              REF BYTE_ARRAY</span></span>
-<span id="cb25-193"><a href="#cb25-193" tabindex="-1"></a><span class="co">#&gt;                              ALT       &lt;NA&gt;</span></span>
-<span id="cb25-194"><a href="#cb25-194" tabindex="-1"></a><span class="co">#&gt;                             QUAL     DOUBLE</span></span>
-<span id="cb25-195"><a href="#cb25-195" tabindex="-1"></a><span class="co">#&gt;                           FILTER       &lt;NA&gt;</span></span>
-<span id="cb25-196"><a href="#cb25-196" tabindex="-1"></a><span class="co">#&gt;                         INFO_END      INT32</span></span>
-<span id="cb25-197"><a href="#cb25-197" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant BYTE_ARRAY</span></span>
-<span id="cb25-198"><a href="#cb25-198" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant      INT32</span></span>
-<span id="cb25-199"><a href="#cb25-199" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant      INT32</span></span>
-<span id="cb25-200"><a href="#cb25-200" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant      INT32</span></span>
-<span id="cb25-201"><a href="#cb25-201" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant       &lt;NA&gt;</span></span>
-<span id="cb25-202"><a href="#cb25-202" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant       &lt;NA&gt;</span></span>
-<span id="cb25-203"><a href="#cb25-203" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant       &lt;NA&gt;</span></span>
-<span id="cb25-204"><a href="#cb25-204" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant      INT32</span></span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="co"># Get paths using system.file</span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="va">SCRIPT</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('scripts', 'vcf2parquet_duckdb.R', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a><span class="va">BCF</span><span class="op">=</span><span class="va">$(</span><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">"cat(system.file('extdata', 'test_deep_variant.vcf.gz', package='RBCFTools'))"</span><span class="va">)</span></span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a><span class="va">OUT_PQ</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.parquet<span class="va">)</span></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a><span class="va">Log</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">--suffix</span><span class="op">=</span>.log<span class="va">)</span></span>
+<span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a><span class="co"># Convert BCF to Parquet</span></span>
+<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a><span class="bu">time</span> <span class="va">$SCRIPT</span> convert <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> <span class="at">-o</span> <span class="va">$OUT_PQ</span> <span class="at">-t</span> 4  <span class="op">&gt;</span> <span class="va">$Log</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
+<span id="cb28-9"><a href="#cb28-9" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" tabindex="-1"></a><span class="fu">cat</span> <span class="va">$Log</span></span>
+<span id="cb28-11"><a href="#cb28-11" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" tabindex="-1"></a><span class="co"># Query with DuckDB SQL</span></span>
+<span id="cb28-13"><a href="#cb28-13" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">') LIMIT 5"</span></span>
+<span id="cb28-14"><a href="#cb28-14" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" tabindex="-1"></a><span class="co"># Describe table structure</span></span>
+<span id="cb28-16"><a href="#cb28-16" tabindex="-1"></a><span class="va">$SCRIPT</span> query <span class="at">-i</span> <span class="va">$OUT_PQ</span> <span class="at">-q</span> <span class="st">"DESCRIBE SELECT * FROM parquet_scan('</span><span class="va">$OUT_PQ</span><span class="st">')"</span></span>
+<span id="cb28-17"><a href="#cb28-17" tabindex="-1"></a></span>
+<span id="cb28-18"><a href="#cb28-18" tabindex="-1"></a><span class="co"># Show schema</span></span>
+<span id="cb28-19"><a href="#cb28-19" tabindex="-1"></a><span class="va">$SCRIPT</span> schema  <span class="at">--quiet</span> <span class="at">-i</span> <span class="va">$BCF</span> </span>
+<span id="cb28-20"><a href="#cb28-20" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" tabindex="-1"></a><span class="co"># File info</span></span>
+<span id="cb28-22"><a href="#cb28-22" tabindex="-1"></a><span class="va">$SCRIPT</span> info <span class="at">-i</span> <span class="va">$OUT_PQ</span> </span>
+<span id="cb28-23"><a href="#cb28-23" tabindex="-1"></a></span>
+<span id="cb28-24"><a href="#cb28-24" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
+<span id="cb28-25"><a href="#cb28-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-26"><a href="#cb28-26" tabindex="-1"></a><span class="co">#&gt; real 0m1.555s</span></span>
+<span id="cb28-27"><a href="#cb28-27" tabindex="-1"></a><span class="co">#&gt; user 0m3.550s</span></span>
+<span id="cb28-28"><a href="#cb28-28" tabindex="-1"></a><span class="co">#&gt; sys  0m1.929s</span></span>
+<span id="cb28-29"><a href="#cb28-29" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb28-30"><a href="#cb28-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpPzuTpv </span></span>
+<span id="cb28-31"><a href="#cb28-31" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb28-32"><a href="#cb28-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpPzuTpv</span></span>
+<span id="cb28-33"><a href="#cb28-33" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
+<span id="cb28-34"><a href="#cb28-34" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
+<span id="cb28-35"><a href="#cb28-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpPzuTpv'</span></span>
+<span id="cb28-36"><a href="#cb28-36" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
+<span id="cb28-37"><a href="#cb28-37" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpPzuTpv'</span></span>
+<span id="cb28-38"><a href="#cb28-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpPzuTpv'</span></span>
+<span id="cb28-39"><a href="#cb28-39" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
+<span id="cb28-40"><a href="#cb28-40" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
+<span id="cb28-41"><a href="#cb28-41" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
+<span id="cb28-42"><a href="#cb28-42" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
+<span id="cb28-43"><a href="#cb28-43" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
+<span id="cb28-44"><a href="#cb28-44" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
+<span id="cb28-45"><a href="#cb28-45" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
+<span id="cb28-46"><a href="#cb28-46" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
+<span id="cb28-47"><a href="#cb28-47" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
+<span id="cb28-48"><a href="#cb28-48" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpPzuTpv'</span></span>
+<span id="cb28-49"><a href="#cb28-49" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpPzuTpv/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb28-50"><a href="#cb28-50" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpPzuTpv/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb28-51"><a href="#cb28-51" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-52"><a href="#cb28-52" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet (DuckDB mode)...</span></span>
+<span id="cb28-53"><a href="#cb28-53" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
+<span id="cb28-54"><a href="#cb28-54" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.Yl25GYxrx7.parquet </span></span>
+<span id="cb28-55"><a href="#cb28-55" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
+<span id="cb28-56"><a href="#cb28-56" tabindex="-1"></a><span class="co">#&gt;   Row group size: 100000 </span></span>
+<span id="cb28-57"><a href="#cb28-57" tabindex="-1"></a><span class="co">#&gt;   Threads: 4 </span></span>
+<span id="cb28-58"><a href="#cb28-58" tabindex="-1"></a><span class="co">#&gt; Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)</span></span>
+<span id="cb28-59"><a href="#cb28-59" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0004.parquet</span></span>
+<span id="cb28-60"><a href="#cb28-60" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0003.parquet</span></span>
+<span id="cb28-61"><a href="#cb28-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0002.parquet</span></span>
+<span id="cb28-62"><a href="#cb28-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0001.parquet</span></span>
+<span id="cb28-63"><a href="#cb28-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0008.parquet</span></span>
+<span id="cb28-64"><a href="#cb28-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0007.parquet</span></span>
+<span id="cb28-65"><a href="#cb28-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0006.parquet</span></span>
+<span id="cb28-66"><a href="#cb28-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0005.parquet</span></span>
+<span id="cb28-67"><a href="#cb28-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0012.parquet</span></span>
+<span id="cb28-68"><a href="#cb28-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0010.parquet</span></span>
+<span id="cb28-69"><a href="#cb28-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0011.parquet</span></span>
+<span id="cb28-70"><a href="#cb28-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0009.parquet</span></span>
+<span id="cb28-71"><a href="#cb28-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0014.parquet</span></span>
+<span id="cb28-72"><a href="#cb28-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0016.parquet</span></span>
+<span id="cb28-73"><a href="#cb28-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0015.parquet</span></span>
+<span id="cb28-74"><a href="#cb28-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0013.parquet</span></span>
+<span id="cb28-75"><a href="#cb28-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0018.parquet</span></span>
+<span id="cb28-76"><a href="#cb28-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0020.parquet</span></span>
+<span id="cb28-77"><a href="#cb28-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0024.parquet</span></span>
+<span id="cb28-78"><a href="#cb28-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0022.parquet</span></span>
+<span id="cb28-79"><a href="#cb28-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0017.parquet</span></span>
+<span id="cb28-80"><a href="#cb28-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0019.parquet</span></span>
+<span id="cb28-81"><a href="#cb28-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0021.parquet</span></span>
+<span id="cb28-82"><a href="#cb28-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0023.parquet</span></span>
+<span id="cb28-83"><a href="#cb28-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpPzuTpv/vcf_duckdb_parallel_3f979b51a7b548/contig_0025.parquet</span></span>
+<span id="cb28-84"><a href="#cb28-84" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.Yl25GYxrx7.parquet</span></span>
+<span id="cb28-85"><a href="#cb28-85" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.Yl25GYxrx7.parquet (368319 rows)</span></span>
+<span id="cb28-86"><a href="#cb28-86" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-87"><a href="#cb28-87" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb28-88"><a href="#cb28-88" tabindex="-1"></a><span class="co">#&gt;   Time: 0.91 seconds</span></span>
+<span id="cb28-89"><a href="#cb28-89" tabindex="-1"></a><span class="co">#&gt;   Output size: 3.77 MB</span></span>
+<span id="cb28-90"><a href="#cb28-90" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
+<span id="cb28-91"><a href="#cb28-91" tabindex="-1"></a><span class="co">#&gt;   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END FORMAT_GT_test_deep_variant</span></span>
+<span id="cb28-92"><a href="#cb28-92" tabindex="-1"></a><span class="co">#&gt; 1     1 536895 &lt;NA&gt;   T   C  0.1 RefCall       NA                         ./.</span></span>
+<span id="cb28-93"><a href="#cb28-93" tabindex="-1"></a><span class="co">#&gt; 2     1 536924 &lt;NA&gt;   G   A  0.1 RefCall       NA                         ./.</span></span>
+<span id="cb28-94"><a href="#cb28-94" tabindex="-1"></a><span class="co">#&gt; 3     1 536948 &lt;NA&gt;   A   G  0.0 RefCall       NA                         0/0</span></span>
+<span id="cb28-95"><a href="#cb28-95" tabindex="-1"></a><span class="co">#&gt; 4     1 536986 &lt;NA&gt;   G   T  0.0 RefCall       NA                         0/0</span></span>
+<span id="cb28-96"><a href="#cb28-96" tabindex="-1"></a><span class="co">#&gt; 5     1 544490 &lt;NA&gt;   A   G  0.8 RefCall       NA                         ./.</span></span>
+<span id="cb28-97"><a href="#cb28-97" tabindex="-1"></a><span class="co">#&gt;   FORMAT_GQ_test_deep_variant FORMAT_DP_test_deep_variant</span></span>
+<span id="cb28-98"><a href="#cb28-98" tabindex="-1"></a><span class="co">#&gt; 1                          18                         106</span></span>
+<span id="cb28-99"><a href="#cb28-99" tabindex="-1"></a><span class="co">#&gt; 2                          18                         118</span></span>
+<span id="cb28-100"><a href="#cb28-100" tabindex="-1"></a><span class="co">#&gt; 3                          31                         104</span></span>
+<span id="cb28-101"><a href="#cb28-101" tabindex="-1"></a><span class="co">#&gt; 4                          23                         115</span></span>
+<span id="cb28-102"><a href="#cb28-102" tabindex="-1"></a><span class="co">#&gt; 5                           8                          10</span></span>
+<span id="cb28-103"><a href="#cb28-103" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MIN_DP_test_deep_variant FORMAT_AD_test_deep_variant</span></span>
+<span id="cb28-104"><a href="#cb28-104" tabindex="-1"></a><span class="co">#&gt; 1                              NA                      46, 52</span></span>
+<span id="cb28-105"><a href="#cb28-105" tabindex="-1"></a><span class="co">#&gt; 2                              NA                      55, 60</span></span>
+<span id="cb28-106"><a href="#cb28-106" tabindex="-1"></a><span class="co">#&gt; 3                              NA                      91, 13</span></span>
+<span id="cb28-107"><a href="#cb28-107" tabindex="-1"></a><span class="co">#&gt; 4                              NA                      55, 60</span></span>
+<span id="cb28-108"><a href="#cb28-108" tabindex="-1"></a><span class="co">#&gt; 5                              NA                        6, 4</span></span>
+<span id="cb28-109"><a href="#cb28-109" tabindex="-1"></a><span class="co">#&gt;   FORMAT_VAF_test_deep_variant FORMAT_PL_test_deep_variant</span></span>
+<span id="cb28-110"><a href="#cb28-110" tabindex="-1"></a><span class="co">#&gt; 1                     0.490566                   0, 19, 25</span></span>
+<span id="cb28-111"><a href="#cb28-111" tabindex="-1"></a><span class="co">#&gt; 2                     0.508475                   0, 21, 20</span></span>
+<span id="cb28-112"><a href="#cb28-112" tabindex="-1"></a><span class="co">#&gt; 3                        0.125                   0, 31, 38</span></span>
+<span id="cb28-113"><a href="#cb28-113" tabindex="-1"></a><span class="co">#&gt; 4                     0.521739                   0, 23, 29</span></span>
+<span id="cb28-114"><a href="#cb28-114" tabindex="-1"></a><span class="co">#&gt; 5                          0.4                    0, 7, 15</span></span>
+<span id="cb28-115"><a href="#cb28-115" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MED_DP_test_deep_variant</span></span>
+<span id="cb28-116"><a href="#cb28-116" tabindex="-1"></a><span class="co">#&gt; 1                              NA</span></span>
+<span id="cb28-117"><a href="#cb28-117" tabindex="-1"></a><span class="co">#&gt; 2                              NA</span></span>
+<span id="cb28-118"><a href="#cb28-118" tabindex="-1"></a><span class="co">#&gt; 3                              NA</span></span>
+<span id="cb28-119"><a href="#cb28-119" tabindex="-1"></a><span class="co">#&gt; 4                              NA</span></span>
+<span id="cb28-120"><a href="#cb28-120" tabindex="-1"></a><span class="co">#&gt; 5                              NA</span></span>
+<span id="cb28-121"><a href="#cb28-121" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
+<span id="cb28-122"><a href="#cb28-122" tabindex="-1"></a><span class="co">#&gt;                        column_name column_type null  key default extra</span></span>
+<span id="cb28-123"><a href="#cb28-123" tabindex="-1"></a><span class="co">#&gt; 1                            CHROM     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-124"><a href="#cb28-124" tabindex="-1"></a><span class="co">#&gt; 2                              POS      BIGINT  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-125"><a href="#cb28-125" tabindex="-1"></a><span class="co">#&gt; 3                               ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-126"><a href="#cb28-126" tabindex="-1"></a><span class="co">#&gt; 4                              REF     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-127"><a href="#cb28-127" tabindex="-1"></a><span class="co">#&gt; 5                              ALT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-128"><a href="#cb28-128" tabindex="-1"></a><span class="co">#&gt; 6                             QUAL      DOUBLE  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-129"><a href="#cb28-129" tabindex="-1"></a><span class="co">#&gt; 7                           FILTER   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-130"><a href="#cb28-130" tabindex="-1"></a><span class="co">#&gt; 8                         INFO_END     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-131"><a href="#cb28-131" tabindex="-1"></a><span class="co">#&gt; 9      FORMAT_GT_test_deep_variant     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-132"><a href="#cb28-132" tabindex="-1"></a><span class="co">#&gt; 10     FORMAT_GQ_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-133"><a href="#cb28-133" tabindex="-1"></a><span class="co">#&gt; 11     FORMAT_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-134"><a href="#cb28-134" tabindex="-1"></a><span class="co">#&gt; 12 FORMAT_MIN_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-135"><a href="#cb28-135" tabindex="-1"></a><span class="co">#&gt; 13     FORMAT_AD_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-136"><a href="#cb28-136" tabindex="-1"></a><span class="co">#&gt; 14    FORMAT_VAF_test_deep_variant     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-137"><a href="#cb28-137" tabindex="-1"></a><span class="co">#&gt; 15     FORMAT_PL_test_deep_variant   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-138"><a href="#cb28-138" tabindex="-1"></a><span class="co">#&gt; 16 FORMAT_MED_DP_test_deep_variant     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb28-139"><a href="#cb28-139" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb28-140"><a href="#cb28-140" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpQrLF9b </span></span>
+<span id="cb28-141"><a href="#cb28-141" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb28-142"><a href="#cb28-142" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpQrLF9b</span></span>
+<span id="cb28-143"><a href="#cb28-143" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
+<span id="cb28-144"><a href="#cb28-144" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
+<span id="cb28-145"><a href="#cb28-145" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpQrLF9b'</span></span>
+<span id="cb28-146"><a href="#cb28-146" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
+<span id="cb28-147"><a href="#cb28-147" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpQrLF9b'</span></span>
+<span id="cb28-148"><a href="#cb28-148" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpQrLF9b'</span></span>
+<span id="cb28-149"><a href="#cb28-149" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
+<span id="cb28-150"><a href="#cb28-150" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
+<span id="cb28-151"><a href="#cb28-151" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
+<span id="cb28-152"><a href="#cb28-152" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
+<span id="cb28-153"><a href="#cb28-153" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
+<span id="cb28-154"><a href="#cb28-154" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
+<span id="cb28-155"><a href="#cb28-155" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
+<span id="cb28-156"><a href="#cb28-156" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
+<span id="cb28-157"><a href="#cb28-157" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
+<span id="cb28-158"><a href="#cb28-158" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpQrLF9b'</span></span>
+<span id="cb28-159"><a href="#cb28-159" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpQrLF9b/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb28-160"><a href="#cb28-160" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpQrLF9b/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb28-161"><a href="#cb28-161" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-162"><a href="#cb28-162" tabindex="-1"></a><span class="co">#&gt; VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
+<span id="cb28-163"><a href="#cb28-163" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-164"><a href="#cb28-164" tabindex="-1"></a><span class="co">#&gt;                      column_name column_type</span></span>
+<span id="cb28-165"><a href="#cb28-165" tabindex="-1"></a><span class="co">#&gt;                            CHROM   character</span></span>
+<span id="cb28-166"><a href="#cb28-166" tabindex="-1"></a><span class="co">#&gt;                              POS     numeric</span></span>
+<span id="cb28-167"><a href="#cb28-167" tabindex="-1"></a><span class="co">#&gt;                               ID   character</span></span>
+<span id="cb28-168"><a href="#cb28-168" tabindex="-1"></a><span class="co">#&gt;                              REF   character</span></span>
+<span id="cb28-169"><a href="#cb28-169" tabindex="-1"></a><span class="co">#&gt;                              ALT        list</span></span>
+<span id="cb28-170"><a href="#cb28-170" tabindex="-1"></a><span class="co">#&gt;                             QUAL     numeric</span></span>
+<span id="cb28-171"><a href="#cb28-171" tabindex="-1"></a><span class="co">#&gt;                           FILTER        list</span></span>
+<span id="cb28-172"><a href="#cb28-172" tabindex="-1"></a><span class="co">#&gt;                         INFO_END     integer</span></span>
+<span id="cb28-173"><a href="#cb28-173" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant   character</span></span>
+<span id="cb28-174"><a href="#cb28-174" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant     integer</span></span>
+<span id="cb28-175"><a href="#cb28-175" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant     integer</span></span>
+<span id="cb28-176"><a href="#cb28-176" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant     integer</span></span>
+<span id="cb28-177"><a href="#cb28-177" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant        list</span></span>
+<span id="cb28-178"><a href="#cb28-178" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant        list</span></span>
+<span id="cb28-179"><a href="#cb28-179" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant        list</span></span>
+<span id="cb28-180"><a href="#cb28-180" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant     integer</span></span>
+<span id="cb28-181"><a href="#cb28-181" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.Yl25GYxrx7.parquet </span></span>
+<span id="cb28-182"><a href="#cb28-182" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-183"><a href="#cb28-183" tabindex="-1"></a><span class="co">#&gt; File size: 3.77 MB </span></span>
+<span id="cb28-184"><a href="#cb28-184" tabindex="-1"></a><span class="co">#&gt; Total rows: 368319 </span></span>
+<span id="cb28-185"><a href="#cb28-185" tabindex="-1"></a><span class="co">#&gt; Number of columns: 27 </span></span>
+<span id="cb28-186"><a href="#cb28-186" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb28-187"><a href="#cb28-187" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb28-188"><a href="#cb28-188" tabindex="-1"></a><span class="co">#&gt;                             name       type</span></span>
+<span id="cb28-189"><a href="#cb28-189" tabindex="-1"></a><span class="co">#&gt;                            CHROM BYTE_ARRAY</span></span>
+<span id="cb28-190"><a href="#cb28-190" tabindex="-1"></a><span class="co">#&gt;                              POS      INT64</span></span>
+<span id="cb28-191"><a href="#cb28-191" tabindex="-1"></a><span class="co">#&gt;                               ID BYTE_ARRAY</span></span>
+<span id="cb28-192"><a href="#cb28-192" tabindex="-1"></a><span class="co">#&gt;                              REF BYTE_ARRAY</span></span>
+<span id="cb28-193"><a href="#cb28-193" tabindex="-1"></a><span class="co">#&gt;                              ALT       &lt;NA&gt;</span></span>
+<span id="cb28-194"><a href="#cb28-194" tabindex="-1"></a><span class="co">#&gt;                             QUAL     DOUBLE</span></span>
+<span id="cb28-195"><a href="#cb28-195" tabindex="-1"></a><span class="co">#&gt;                           FILTER       &lt;NA&gt;</span></span>
+<span id="cb28-196"><a href="#cb28-196" tabindex="-1"></a><span class="co">#&gt;                         INFO_END      INT32</span></span>
+<span id="cb28-197"><a href="#cb28-197" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant BYTE_ARRAY</span></span>
+<span id="cb28-198"><a href="#cb28-198" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant      INT32</span></span>
+<span id="cb28-199"><a href="#cb28-199" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant      INT32</span></span>
+<span id="cb28-200"><a href="#cb28-200" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant      INT32</span></span>
+<span id="cb28-201"><a href="#cb28-201" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant       &lt;NA&gt;</span></span>
+<span id="cb28-202"><a href="#cb28-202" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant       &lt;NA&gt;</span></span>
+<span id="cb28-203"><a href="#cb28-203" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant       &lt;NA&gt;</span></span>
+<span id="cb28-204"><a href="#cb28-204" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant      INT32</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

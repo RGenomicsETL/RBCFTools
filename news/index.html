@@ -34,9 +34,33 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2.9000" id="rbcftools-123-0029000-development-version">RBCFTools 1.23-0.0.2.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-123-0029000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="ducklake-utilities-1-23-0-0-2-9000">DuckLake utilities<a class="anchor" aria-label="anchor" href="#ducklake-utilities-1-23-0-0-2-9000"></a></h3>
+<ul><li>
+<code>allow_evolution</code> parameter for <code><a href="../reference/ducklake_load_vcf.html">ducklake_load_vcf()</a></code> and <code><a href="../reference/ducklake_register_parquet.html">ducklake_register_parquet()</a></code> to auto-add new columns via ALTER TABLE</li>
+<li>
+<code><a href="../reference/ducklake_snapshots.html">ducklake_snapshots()</a></code>: list snapshot history</li>
+<li>
+<code><a href="../reference/ducklake_current_snapshot.html">ducklake_current_snapshot()</a></code>: get current snapshot ID</li>
+<li>
+<code><a href="../reference/ducklake_set_commit_message.html">ducklake_set_commit_message()</a></code>: set author/message for transactions</li>
+<li>
+<code><a href="../reference/ducklake_options.html">ducklake_options()</a></code>: get DuckLake configuration</li>
+<li>
+<code><a href="../reference/ducklake_set_option.html">ducklake_set_option()</a></code>: set compression, row group size, etc.</li>
+<li>
+<code><a href="../reference/ducklake_query_snapshot.html">ducklake_query_snapshot()</a></code>: time travel queries at specific versions</li>
+<li>
+<code><a href="../reference/ducklake_list_files.html">ducklake_list_files()</a></code>: list Parquet files managed by DuckLake</li>
+<li>
+<code><a href="../reference/ducklake_merge.html">ducklake_merge()</a></code>: upsert data using MERGE INTO syntax</li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-changes-1-23-0-0-2-9000">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-1-23-0-0-2-9000"></a></h3>
 <ul><li>added processx to suggests and use it instead of system2 in docs and tests</li>
 <li>renamed <code>vcf_query</code> to <code>vcf_query_arrow</code> and vcf_to_parquet to vcf_to_parquet</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.23-0.0.2" id="rbcftools-123-002">RBCFTools 1.23-0.0.2<a class="anchor" aria-label="anchor" href="#rbcftools-123-002"></a></h2>
 <ul><li>renamed <code>vcf_query</code> to <code>vcf_query_arrow</code> and vcf_to_parquet to vcf_to_parquet</li>

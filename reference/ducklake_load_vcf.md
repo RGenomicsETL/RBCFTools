@@ -17,7 +17,8 @@ ducklake_load_vcf(
   row_group_size = 100000L,
   region = NULL,
   columns = NULL,
-  overwrite = FALSE
+  overwrite = FALSE,
+  allow_evolution = FALSE
 )
 ```
 
@@ -67,6 +68,14 @@ ducklake_load_vcf(
 
   Logical, drop existing table first.
 
+- allow_evolution:
+
+  Logical, evolve table schema by adding new columns from VCF. Default:
+  FALSE. When TRUE, new columns found in the VCF are added via ALTER
+  TABLE before insertion, making all columns queryable. Useful for
+  combining VCFs with different annotations (e.g., VEP columns) or
+  different samples (FORMAT\_\*\_SampleName).
+
 ## Value
 
 Invisibly returns the path to the created Parquet file.
@@ -85,6 +94,13 @@ which is significantly faster than the nanoarrow streaming path.
 
 2.  Register Parquet in DuckLake catalog
 
+**Schema Evolution (`allow_evolution = TRUE`):** When loading multiple
+VCFs with different schemas (e.g., different samples or different
+annotation fields), enable `allow_evolution` to automatically add new
+columns to the table schema. This uses DuckLake's
+`ALTER TABLE ADD COLUMN` which preserves existing data files without
+rewriting.
+
 ## Examples
 
 ``` r
@@ -98,10 +114,15 @@ ducklake_load(con)
 ducklake_attach(con, "catalog.ducklake", "/data/parquet/", alias = "lake")
 DBI::dbExecute(con, "USE lake")
 
-# Load VCF
-ducklake_load_vcf(con, "variants", "sample.vcf.gz", ext_path, threads = 8)
+# Load first VCF
+ducklake_load_vcf(con, "variants", "sample1.vcf.gz", ext_path, threads = 8)
 
-# Query
+# Load second VCF with different annotations, evolving schema
+ducklake_load_vcf(con, "variants", "sample2_vep.vcf.gz", ext_path,
+  allow_evolution = TRUE
+)
+
+# Query - all columns from both VCFs are available
 DBI::dbGetQuery(con, "SELECT CHROM, COUNT(*) FROM variants GROUP BY CHROM")
 } # }
 ```

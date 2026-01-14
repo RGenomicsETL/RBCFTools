@@ -34,22 +34,38 @@
   : Create a DuckLake catalog secret for database credentials
 - [`ducklake_create_s3_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_create_s3_secret.md)
   : Create or replace an S3 secret for DuckLake
+- [`ducklake_current_snapshot()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_current_snapshot.md)
+  : Get current snapshot ID
 - [`ducklake_download_mc()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_mc.md)
   : Download a static MinIO client (mc) binary
 - [`ducklake_download_minio()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_download_minio.md)
   : Download a static MinIO server binary
 - [`ducklake_drop_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_drop_secret.md)
   : Drop a DuckLake catalog secret
+- [`ducklake_list_files()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_list_files.md)
+  : List files managed by DuckLake for a table
 - [`ducklake_list_secrets()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_list_secrets.md)
   : List existing DuckLake catalog secrets
 - [`ducklake_load()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load.md)
   : Load the DuckLake extension
 - [`ducklake_load_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_load_vcf.md)
   : Load VCF into DuckLake (ETL + Registration)
+- [`ducklake_merge()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_merge.md)
+  : Merge/upsert data into a DuckLake table
+- [`ducklake_options()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_options.md)
+  : Get DuckLake configuration options
 - [`ducklake_parse_connection_string()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_parse_connection_string.md)
   : Parse DuckLake connection string into components
+- [`ducklake_query_snapshot()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_query_snapshot.md)
+  : Query table at a specific snapshot (time travel)
 - [`ducklake_register_parquet()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_register_parquet.md)
   : Register existing Parquet files in a DuckLake table
+- [`ducklake_set_commit_message()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_set_commit_message.md)
+  : Set commit message for current transaction
+- [`ducklake_set_option()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_set_option.md)
+  : Set DuckLake configuration option
+- [`ducklake_snapshots()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_snapshots.md)
+  : List DuckLake snapshots
 - [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md)
   : Update an existing DuckLake catalog secret
 - [`htsfile_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.md)
