@@ -1854,5 +1854,428 @@ vcf_get_sample_names <- function(file, extension_path = NULL, con = NULL) {
     return(character(0))
   }
 
+
   sub("^FORMAT_GT_", "", gt_cols)
+}
+
+
+#' Convert Parquet back to VCF/BCF format
+#'
+#' Reconstruct a VCF file from Parquet data created by \code{\link{vcf_to_parquet_duckdb}}.
+#' Uses the VCF header stored in Parquet metadata for proper formatting.
+#'
+#' @param input_file Path to input Parquet file (must have VCF metadata)
+#' @param output_file Path to output VCF/VCF.GZ/BCF file. Format determined by extension.
+#' @param header Optional VCF header string. If NULL (default), reads from Parquet metadata.
+#' @param index Logical, if TRUE creates tabix/CSI index for output. Default TRUE.
+#' @param con Optional existing DuckDB connection
+#'
+#' @return Invisible path to output file
+#' @export
+#' @examples
+#' \dontrun{
+#' # Round-trip: VCF -> Parquet -> VCF
+#' vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
+#' ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
+#'
+#' # Convert to Parquet (with metadata)
+#' parquet_file <- tempfile(fileext = ".parquet")
+#' vcf_to_parquet_duckdb(vcf_file, parquet_file, ext_path)
+#'
+#' # Convert back to VCF
+#' vcf_out <- tempfile(fileext = ".vcf.gz")
+#' parquet_to_vcf(parquet_file, vcf_out)
+#' }
+parquet_to_vcf <- function(input_file, output_file, header = NULL, index = TRUE, con = NULL) {
+  if (!file.exists(input_file)) {
+    stop("File not found: ", input_file, call. = FALSE)
+  }
+
+  # Determine output format from extension
+  ext <- tolower(tools::file_ext(output_file))
+  if (ext == "gz") {
+    base_ext <- tools::file_ext(tools::file_path_sans_ext(output_file))
+    if (tolower(base_ext) == "vcf") {
+      output_mode <- "z" # VCF.GZ
+    } else {
+      stop("Unknown output format. Use .vcf, .vcf.gz, or .bcf", call. = FALSE)
+    }
+  } else if (ext == "vcf") {
+    output_mode <- "v" # Uncompressed VCF
+  } else if (ext == "bcf") {
+    output_mode <- "b" # BCF
+  } else {
+    stop("Unknown output format. Use .vcf, .vcf.gz, or .bcf", call. = FALSE)
+  }
+
+  # Set up DuckDB connection first (need for metadata query)
+  own_con <- is.null(con)
+  if (own_con) {
+    con <- DBI::dbConnect(duckdb::duckdb())
+    on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+  }
+
+  # Get VCF header from metadata if not provided
+  meta <- NULL
+  if (is.null(header)) {
+    meta <- parquet_kv_metadata(input_file, con = con)
+    header_row <- meta[meta$key == "vcf_header", "value"]
+    if (length(header_row) == 0 || is.na(header_row)) {
+      stop("No VCF header found in Parquet metadata. ",
+        "Provide header manually or ensure Parquet was created with include_metadata = TRUE",
+        call. = FALSE
+      )
+    }
+    # Unescape the header (stored with \x0A for newlines, etc.)
+    # DuckDB stores these as literal backslash-x sequences
+    header <- gsub("\\x0A", "\n", header_row, fixed = TRUE)
+    header <- gsub("\\x09", "\t", header, fixed = TRUE)
+    header <- gsub("\\x22", "\"", header, fixed = TRUE)
+  }
+
+  # Check if tidy format (need to pivot back to wide)
+  if (!is.null(meta)) {
+    tidy_row <- meta[meta$key == "tidy_format", "value"]
+    is_tidy <- !is.null(tidy_row) && length(tidy_row) > 0 && tidy_row == "true"
+
+    if (is_tidy) {
+      return(parquet_to_vcf_tidy(input_file, output_file, header, index, con, meta))
+    }
+  }
+
+  # Wide format conversion
+  parquet_to_vcf_wide(input_file, output_file, header, index, con)
+}
+
+#' Convert tidy format Parquet back to VCF
+#' @keywords internal
+parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, meta) {
+  # Get column info
+  schema <- DBI::dbGetQuery(con, sprintf(
+    "DESCRIBE SELECT * FROM '%s'", input_file
+  ))
+  col_names <- schema$column_name
+  col_types <- schema$column_type
+  type_lookup <- setNames(col_types, col_names)
+
+  # Tidy format has SAMPLE_ID column and FORMAT columns without sample suffix
+  if (!"SAMPLE_ID" %in% col_names) {
+    stop("Tidy format Parquet missing SAMPLE_ID column", call. = FALSE)
+  }
+
+  # Get unique sample names
+  sample_names <- DBI::dbGetQuery(con, sprintf(
+    "SELECT DISTINCT SAMPLE_ID FROM '%s' ORDER BY SAMPLE_ID", input_file
+  ))$SAMPLE_ID
+
+  if (length(sample_names) == 0) {
+    stop("No samples found in tidy format Parquet", call. = FALSE)
+  }
+
+  # Identify columns
+  info_cols <- grep("^INFO_", col_names, value = TRUE)
+  format_cols <- grep("^FORMAT_", col_names, value = TRUE)
+  format_fields <- sub("^FORMAT_", "", format_cols)
+
+  # Core columns for grouping
+  core_cols <- c("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER")
+  group_cols <- c(core_cols, info_cols)
+
+  # Helper to format array columns
+  format_col_sql <- function(col, default_val = ".") {
+    col_type <- type_lookup[[col]]
+    if (is.null(col_type)) {
+      return(sprintf("'%s'", default_val))
+    }
+    if (grepl("\\[\\]$", col_type)) {
+      sprintf("COALESCE(array_to_string(%s, ','), '%s')", col, default_val)
+    } else {
+      sprintf("COALESCE(CAST(%s AS VARCHAR), '%s')", col, default_val)
+    }
+  }
+
+  # Build pivot query to convert tidy to wide
+  # Use PIVOT or conditional aggregation
+  select_parts <- c(
+    "CHROM",
+    "CAST(POS AS VARCHAR) AS POS",
+    "COALESCE(ID, '.') AS ID",
+    "REF",
+    "COALESCE(array_to_string(ALT, ','), '.') AS ALT",
+    "COALESCE(CAST(ROUND(QUAL, 2) AS VARCHAR), '.') AS QUAL",
+    "COALESCE(array_to_string(FILTER, ';'), '.') AS FILTER_STR"
+  )
+
+  # INFO column
+  if (length(info_cols) > 0) {
+    info_parts <- vapply(info_cols, function(col) {
+      field_name <- sub("^INFO_", "", col)
+      col_type <- type_lookup[[col]]
+      if (grepl("\\[\\]$", col_type)) {
+        sprintf(
+          "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
+          col, col, field_name, col
+        )
+      } else {
+        sprintf(
+          "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
+          col, field_name, col
+        )
+      }
+    }, character(1))
+    info_expr <- sprintf(
+      "COALESCE(array_to_string(list_filter([%s], x -> x IS NOT NULL), ';'), '.')",
+      paste(info_parts, collapse = ", ")
+    )
+  } else {
+    info_expr <- "'.'"
+  }
+  select_parts <- c(select_parts, sprintf("%s AS INFO_STR", info_expr))
+
+  # FORMAT string
+  if (length(format_fields) > 0) {
+    format_str <- paste(format_fields, collapse = ":")
+    select_parts <- c(select_parts, sprintf("'%s' AS FORMAT_STR", format_str))
+
+    # Build per-sample columns using conditional aggregation
+    for (sample in sample_names) {
+      sample_parts <- vapply(format_cols, function(col) {
+        col_type <- type_lookup[[col]]
+        if (grepl("\\[\\]$", col_type)) {
+          # For arrays: use NULLIF to convert empty strings to NULL, then COALESCE to '.'
+          sprintf(
+            "COALESCE(NULLIF(MAX(CASE WHEN SAMPLE_ID = '%s' THEN array_to_string(%s, ',') END), ''), '.')",
+            sample, col
+          )
+        } else {
+          sprintf(
+            "COALESCE(MAX(CASE WHEN SAMPLE_ID = '%s' THEN CAST(%s AS VARCHAR) END), '.')",
+            sample, col
+          )
+        }
+      }, character(1))
+      sample_expr <- sprintf(
+        "concat_ws(':', %s) AS \"%s\"",
+        paste(sample_parts, collapse = ", "), sample
+      )
+      select_parts <- c(select_parts, sample_expr)
+    }
+  }
+
+  # Build GROUP BY clause
+  group_by_cols <- paste(group_cols[group_cols %in% col_names], collapse = ", ")
+
+  # Build final query
+  select_sql <- paste(select_parts, collapse = ", ")
+  query <- sprintf(
+    "SELECT %s FROM '%s' GROUP BY %s ORDER BY CHROM, POS",
+    select_sql, input_file, group_by_cols
+  )
+
+  # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
+  tmp_data <- tempfile(fileext = ".tsv")
+  tmp_vcf <- tempfile(fileext = ".vcf")
+
+  copy_sql <- sprintf(
+    "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
+    query, tmp_data
+  )
+  DBI::dbExecute(con, copy_sql)
+
+  # Write header and concatenate data
+  # Use file connections to avoid loading data into R
+  writeLines(header, tmp_vcf)
+  file.append(tmp_vcf, tmp_data)
+  unlink(tmp_data)
+
+  # Determine output mode
+  ext <- tolower(tools::file_ext(output_file))
+  if (ext == "gz") {
+    output_mode <- "z"
+  } else if (ext == "vcf") {
+    output_mode <- "v"
+  } else if (ext == "bcf") {
+    output_mode <- "b"
+  } else {
+    output_mode <- "z"
+  }
+
+  # Use bcftools to convert to desired format
+  bcf_args <- c("view", "-O", output_mode, "-o", output_file, tmp_vcf)
+  result <- system2(bcftools_path(), bcf_args, stdout = TRUE, stderr = TRUE)
+
+  if (!file.exists(output_file)) {
+    stop("Failed to create output file. bcftools error: ", paste(result, collapse = "\n"), call. = FALSE)
+  }
+
+  # Create index if requested
+  if (index && output_mode %in% c("z", "b")) {
+    idx_args <- c("index", output_file)
+    system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
+  }
+
+  unlink(tmp_vcf)
+
+  message(sprintf("Wrote: %s", output_file))
+  invisible(output_file)
+}
+
+#' Convert wide format Parquet back to VCF
+#' @keywords internal
+parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
+  # Determine output mode
+  ext <- tolower(tools::file_ext(output_file))
+  if (ext == "gz") {
+    output_mode <- "z"
+  } else if (ext == "vcf") {
+    output_mode <- "v"
+  } else if (ext == "bcf") {
+    output_mode <- "b"
+  } else {
+    output_mode <- "z"
+  }
+
+  # Get column info to build VCF data lines
+  schema <- DBI::dbGetQuery(con, sprintf(
+    "DESCRIBE SELECT * FROM '%s'", input_file
+  ))
+  col_names <- schema$column_name
+  col_types <- schema$column_type
+
+  # Create lookup for column types
+  type_lookup <- setNames(col_types, col_names)
+
+  # Helper to format a column for VCF (handles arrays properly)
+  format_col_sql <- function(col, default_val = ".") {
+    col_type <- type_lookup[[col]]
+    if (is.null(col_type)) {
+      return(sprintf("'%s'", default_val))
+    }
+    # Check if it's an array type
+    if (grepl("\\[\\]$", col_type)) {
+      # Array: use array_to_string with comma separator
+      sprintf("COALESCE(array_to_string(%s, ','), '%s')", col, default_val)
+    } else {
+      # Scalar: simple cast
+      sprintf("COALESCE(CAST(%s AS VARCHAR), '%s')", col, default_val)
+    }
+  }
+
+  # Identify column groups
+  info_cols <- grep("^INFO_", col_names, value = TRUE)
+  format_cols <- grep("^FORMAT_", col_names, value = TRUE)
+
+  # Parse sample names from FORMAT columns (e.g., FORMAT_GT_HG00098 -> HG00098)
+  sample_names <- unique(sub("^FORMAT_[^_]+_", "", format_cols))
+
+  # Get FORMAT field order from first sample
+  if (length(sample_names) > 0) {
+    first_sample <- sample_names[1]
+    first_sample_cols <- grep(paste0("_", first_sample, "$"), format_cols, value = TRUE)
+    format_fields <- sub(paste0("_", first_sample, "$"), "", sub("^FORMAT_", "", first_sample_cols))
+  } else {
+    format_fields <- character(0)
+  }
+
+  # Build SQL to generate VCF lines
+  # Core columns: CHROM, POS, ID, REF, ALT, QUAL, FILTER
+  select_parts <- c(
+    "CHROM",
+    "CAST(POS AS VARCHAR) AS POS",
+    "COALESCE(ID, '.') AS ID",
+    "REF",
+    "COALESCE(array_to_string(ALT, ','), '.') AS ALT",
+    "COALESCE(CAST(ROUND(QUAL, 2) AS VARCHAR), '.') AS QUAL",
+    "COALESCE(array_to_string(FILTER, ';'), '.') AS FILTER_STR"
+  )
+
+  # INFO column: concatenate INFO fields
+  if (length(info_cols) > 0) {
+    info_parts <- vapply(info_cols, function(col) {
+      field_name <- sub("^INFO_", "", col)
+      col_type <- type_lookup[[col]]
+      if (grepl("\\[\\]$", col_type)) {
+        # Array type - format without brackets
+        sprintf(
+          "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
+          col, col, field_name, col
+        )
+      } else {
+        # Scalar type
+        sprintf(
+          "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
+          col, field_name, col
+        )
+      }
+    }, character(1))
+    info_expr <- sprintf(
+      "COALESCE(array_to_string(list_filter([%s], x -> x IS NOT NULL), ';'), '.')",
+      paste(info_parts, collapse = ", ")
+    )
+  } else {
+    info_expr <- "'.'"
+  }
+  select_parts <- c(select_parts, sprintf("%s AS INFO_STR", info_expr))
+
+  # FORMAT column and sample data
+  if (length(format_fields) > 0 && length(sample_names) > 0) {
+    format_str <- paste(format_fields, collapse = ":")
+    select_parts <- c(select_parts, sprintf("'%s' AS FORMAT_STR", format_str))
+
+    # Build sample columns
+    for (sample in sample_names) {
+      sample_parts <- vapply(format_fields, function(field) {
+        col <- sprintf("FORMAT_%s_%s", field, sample)
+        if (col %in% col_names) {
+          format_col_sql(col, ".")
+        } else {
+          "'.'"
+        }
+      }, character(1))
+      sample_expr <- sprintf("concat_ws(':', %s) AS \"%s\"", paste(sample_parts, collapse = ", "), sample)
+      select_parts <- c(select_parts, sample_expr)
+    }
+  }
+
+  # Build final query
+  select_sql <- paste(select_parts, collapse = ", ")
+  query <- sprintf(
+    "SELECT %s FROM '%s' ORDER BY CHROM, POS",
+    select_sql, input_file
+  )
+
+  # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
+  tmp_data <- tempfile(fileext = ".tsv")
+  tmp_vcf <- tempfile(fileext = ".vcf")
+
+  copy_sql <- sprintf(
+    "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
+    query, tmp_data
+  )
+  DBI::dbExecute(con, copy_sql)
+
+  # Write header and concatenate data
+  # Use file connections to avoid loading data into R
+  writeLines(header, tmp_vcf)
+  file.append(tmp_vcf, tmp_data)
+  unlink(tmp_data)
+
+  # Use bcftools to convert to desired format
+  bcf_args <- c("view", "-O", output_mode, "-o", output_file, tmp_vcf)
+  result <- system2(bcftools_path(), bcf_args, stdout = TRUE, stderr = TRUE)
+
+  if (!file.exists(output_file)) {
+    stop("Failed to create output file. bcftools error: ", paste(result, collapse = "\n"), call. = FALSE)
+  }
+
+  # Create index if requested
+  if (index && output_mode %in% c("z", "b")) {
+    idx_args <- c("index", output_file)
+    system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
+  }
+
+  unlink(tmp_vcf)
+
+  message(sprintf("Wrote: %s", output_file))
+  invisible(output_file)
 }

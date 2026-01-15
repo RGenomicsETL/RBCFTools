@@ -359,7 +359,7 @@ print(meta)
 
 # Extract the VCF header (stored with escaped newlines)
 vcf_header <- meta[meta$key == "vcf_header", "value"]
-cat(substr(vcf_header, 1, 200), "...\n")
+substr(vcf_header, 1, 200)
 ```
 
 

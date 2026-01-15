@@ -2,6 +2,32 @@
 
 This document provides guidance for AI agents working on the RBCFTools codebase, incorporating lessons learned from DuckLake extension integration, bcf_reader development, and VCF data optimization patterns.
 
+## Documentation Conventions
+
+### NEWS.md Format (GNU Convention)
+
+The NEWS.md file follows GNU convention: **newest entries at the top**.
+
+- Each version section starts with `# RBCFTools X.Y.Z`
+- Development versions use suffix `.9000` (e.g., `1.23-0.0.2.9000`)
+- Within a version, feature sections are ordered **newest first**
+- When adding new features, add them at the TOP of the current development version section
+- Never add new entries at the bottom of a version section
+
+Example structure:
+```markdown
+# RBCFTools 1.23-0.0.2.9000 (development version)
+
+## Newest Feature (just added)
+- ...
+
+## Previous Feature
+- ...
+
+# RBCFTools 1.23-0.0.2 (previous release)
+- ...
+```
+
 ## bcf_reader DuckDB Extension
 
 ### Core Concepts

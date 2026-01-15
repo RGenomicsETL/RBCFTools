@@ -1,5 +1,32 @@
 # RBCFTools 1.23-0.0.2.9000 (development version)
 
+## Parquet to VCF conversion (bcf_writer)
+
+- `parquet_to_vcf()` - Convert Parquet files back to VCF/VCF.GZ/BCF format:
+  - Uses VCF header stored in Parquet metadata for proper formatting
+  - Supports both wide format (one row per variant) and tidy format (one row per variant-sample)
+  - Tidy format is automatically pivoted back to wide VCF format
+  - Proper handling of array columns (ALT, FILTER, multi-value INFO/FORMAT fields)
+  - Auto-indexes output with bcftools (configurable via `index` parameter)
+  - Output format determined by file extension (.vcf, .vcf.gz, .bcf)
+  - Leverages bundled bcftools for validation and compression
+
+## VCF header metadata in Parquet files
+
+- `vcf_to_parquet_duckdb()` now embeds the full VCF header as Parquet key-value metadata by default:
+  - `include_metadata = TRUE` (default) stores the complete VCF header in the Parquet file
+  - Preserves all INFO, FORMAT, FILTER definitions, contigs, and sample names
+  - Stores `tidy_format` flag indicating data layout ("true" or "false")
+  - Enables round-trip back to VCF format by retaining full schema information
+  - Also stores RBCFTools version for provenance tracking
+  - Use `parquet_kv_metadata(file)` to read the header back from Parquet
+  - Not supported with `partition_by` (Parquet limitation for partitioned writes)
+
+- New helper functions:
+  - `vcf_header_metadata(file)` - Extract full VCF header and package version
+  - `parquet_kv_metadata(file)` - Read key-value metadata from Parquet files
+
+## vcf_open_duckdb
 
 - `vcf_open_duckdb()`**: Open VCF/BCF files as DuckDB tables or views
   - In-memory or file-backed database support
@@ -46,20 +73,6 @@
   - DuckDB auto-generates Bloom filters for VARCHAR columns (SAMPLE_ID) for efficient row group pruning
   - Supports multi-column partitioning, e.g. `partition_by = c("CHROM", "SAMPLE_ID")`
   - Ideal for large cohort VCFs exported in tidy format
-
-## VCF header metadata in Parquet files
-
-- `vcf_to_parquet_duckdb()` now embeds the full VCF header as Parquet key-value metadata by default:
-  - `include_metadata = TRUE` (default) stores the complete VCF header in the Parquet file
-  - Preserves all INFO, FORMAT, FILTER definitions, contigs, and sample names
-  - Enables round-trip back to VCF format by retaining full schema information
-  - Also stores RBCFTools version for provenance tracking
-  - Use `parquet_kv_metadata(file)` to read the header back from Parquet
-  - Not supported with `partition_by` (Parquet limitation for partitioned writes)
-
-- New helper functions:
-  - `vcf_header_metadata(file)` - Extract full VCF header and package version
-  - `parquet_kv_metadata(file)` - Read key-value metadata from Parquet files
 
 ## DuckLake utilities
 
