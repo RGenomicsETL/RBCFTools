@@ -2074,7 +2074,9 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
 
   # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
   tmp_data <- tempfile(fileext = ".tsv")
+  on.exit(unlink(tmp_data), add = TRUE)
   tmp_vcf <- tempfile(fileext = ".vcf")
+  on.exit(unlink(tmp_vcf), add = TRUE)
 
   copy_sql <- sprintf(
     "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
@@ -2114,7 +2116,6 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
     system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
   }
 
-  unlink(tmp_vcf)
 
   message(sprintf("Wrote: %s", output_file))
   invisible(output_file)
@@ -2246,7 +2247,9 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
 
   # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
   tmp_data <- tempfile(fileext = ".tsv")
+  on.exit(unlink(tmp_data), add = TRUE)
   tmp_vcf <- tempfile(fileext = ".vcf")
+  on.exit(unlink(tmp_vcf), add = TRUE)
 
   copy_sql <- sprintf(
     "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
@@ -2258,8 +2261,6 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   # Use file connections to avoid loading data into R
   writeLines(header, tmp_vcf)
   file.append(tmp_vcf, tmp_data)
-  unlink(tmp_data)
-
   # Use bcftools to convert to desired format
   bcf_args <- c("view", "-O", output_mode, "-o", output_file, tmp_vcf)
   result <- system2(bcftools_path(), bcf_args, stdout = TRUE, stderr = TRUE)
@@ -2274,7 +2275,6 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
     system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
   }
 
-  unlink(tmp_vcf)
 
   message(sprintf("Wrote: %s", output_file))
   invisible(output_file)
