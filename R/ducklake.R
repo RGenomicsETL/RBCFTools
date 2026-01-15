@@ -571,7 +571,8 @@ ducklake_connect_catalog <- function(
     }
 
     # Format connection string based on backend
-    metadata_path <- switch(backend,
+    metadata_path <- switch(
+      backend,
       "duckdb" = connection_string,
       "sqlite" = paste0("sqlite:", connection_string),
       "postgresql" = paste0("postgresql://", connection_string),
@@ -845,15 +846,22 @@ ducklake_register_parquet <- function(
       )$column_name
       file_schema <- DBI::dbGetQuery(
         con,
-        sprintf("DESCRIBE SELECT * FROM read_parquet(%s)", DBI::dbQuoteString(con, pq_file))
+        sprintf(
+          "DESCRIBE SELECT * FROM read_parquet(%s)",
+          DBI::dbQuoteString(con, pq_file)
+        )
       )
       new_cols <- file_schema[!file_schema$column_name %in% existing_cols, ]
       if (nrow(new_cols) > 0) {
         alter_statements <- sprintf(
           'ALTER TABLE %s ADD COLUMN "%s" %s',
-          quoted_table, new_cols$column_name, new_cols$column_type
+          quoted_table,
+          new_cols$column_name,
+          new_cols$column_type
         )
-        invisible(lapply(alter_statements, function(sql) DBI::dbExecute(con, sql)))
+        invisible(lapply(alter_statements, function(sql) {
+          DBI::dbExecute(con, sql)
+        }))
       }
     }
 
@@ -1125,9 +1133,13 @@ ducklake_load_vcf <- function(
       if (nrow(new_cols) > 0) {
         alter_statements <- sprintf(
           'ALTER TABLE %s ADD COLUMN "%s" %s',
-          quoted_table, new_cols$column_name, new_cols$column_type
+          quoted_table,
+          new_cols$column_name,
+          new_cols$column_type
         )
-        invisible(lapply(alter_statements, function(sql) DBI::dbExecute(con, sql)))
+        invisible(lapply(alter_statements, function(sql) {
+          DBI::dbExecute(con, sql)
+        }))
       }
     }
 
@@ -1262,12 +1274,22 @@ ducklake_set_option <- function(
     DBI::dbQuoteString(con, as.character(value))
   )
   if (!is.null(schema)) {
-    params <- c(params, sprintf("schema => %s", DBI::dbQuoteString(con, schema)))
+    params <- c(
+      params,
+      sprintf("schema => %s", DBI::dbQuoteString(con, schema))
+    )
   }
   if (!is.null(table_name)) {
-    params <- c(params, sprintf("table_name => %s", DBI::dbQuoteString(con, table_name)))
+    params <- c(
+      params,
+      sprintf("table_name => %s", DBI::dbQuoteString(con, table_name))
+    )
   }
-  sql <- sprintf("CALL %s.set_option(%s)", catalog, paste(params, collapse = ", "))
+  sql <- sprintf(
+    "CALL %s.set_option(%s)",
+    catalog,
+    paste(params, collapse = ", ")
+  )
   DBI::dbExecute(con, sql)
   invisible(NULL)
 }
@@ -1281,10 +1303,17 @@ ducklake_set_option <- function(
 #'
 #' @return Query result as data frame.
 #' @export
-ducklake_query_snapshot <- function(con, table, snapshot_id, query = "SELECT * FROM tbl") {
+ducklake_query_snapshot <- function(
+  con,
+  table,
+  snapshot_id,
+  query = "SELECT * FROM tbl"
+) {
   sql <- sprintf(
     "WITH tbl AS (SELECT * FROM %s AT (VERSION => %d)) %s",
-    table, as.integer(snapshot_id), query
+    table,
+    as.integer(snapshot_id),
+    query
   )
   DBI::dbGetQuery(con, sql)
 }
@@ -1356,7 +1385,9 @@ ducklake_merge <- function(
     ""
   }
 
-  not_matched_clause <- if (!is.null(when_not_matched) && when_not_matched == "INSERT") {
+  not_matched_clause <- if (
+    !is.null(when_not_matched) && when_not_matched == "INSERT"
+  ) {
     "WHEN NOT MATCHED THEN INSERT"
   } else {
     ""
@@ -1364,7 +1395,11 @@ ducklake_merge <- function(
 
   sql <- sprintf(
     "MERGE INTO %s USING (%s) AS source ON (%s) %s %s",
-    target, source, on_clause, matched_clause, not_matched_clause
+    target,
+    source,
+    on_clause,
+    matched_clause,
+    not_matched_clause
   )
 
   DBI::dbExecute(con, sql)

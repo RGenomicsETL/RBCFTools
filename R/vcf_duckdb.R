@@ -491,7 +491,11 @@ vcf_open_duckdb <- function(
           bcf_read_call
         )
         DBI::dbExecute(con, view_sql)
-        message(sprintf("Created view '%s' from %s", table_name, basename(file)))
+        message(sprintf(
+          "Created view '%s' from %s",
+          table_name,
+          basename(file)
+        ))
       }
     } else {
       # Simple VIEW - instant but re-reads VCF each query
@@ -648,7 +652,11 @@ vcf_open_duckdb_parallel <- function(
   ))
 
   # Build select clause
-  select_clause <- if (is.null(columns)) "*" else paste(columns, collapse = ", ")
+  select_clause <- if (is.null(columns)) {
+    "*"
+  } else {
+    paste(columns, collapse = ", ")
+  }
 
   # Quote table name
   quoted_table <- DBI::dbQuoteIdentifier(con, table_name)
@@ -712,7 +720,10 @@ vcf_open_duckdb_parallel <- function(
   # Drop temp tables
   for (t in loaded_tables) {
     tryCatch(
-      DBI::dbExecute(con, sprintf("DROP TABLE IF EXISTS %s", DBI::dbQuoteIdentifier(con, t))),
+      DBI::dbExecute(
+        con,
+        sprintf("DROP TABLE IF EXISTS %s", DBI::dbQuoteIdentifier(con, t))
+      ),
       error = function(e) NULL
     )
   }
@@ -769,7 +780,11 @@ vcf_open_duckdb_parallel_view <- function(
   }
 
   # Build select clause
-  select_clause <- if (is.null(columns)) "*" else paste(columns, collapse = ", ")
+  select_clause <- if (is.null(columns)) {
+    "*"
+  } else {
+    paste(columns, collapse = ", ")
+  }
 
   # Quote table name
   quoted_table <- DBI::dbQuoteIdentifier(con, table_name)
@@ -819,7 +834,10 @@ vcf_open_duckdb_parallel_view <- function(
 #' }
 vcf_close_duckdb <- function(vcf, shutdown = TRUE) {
   if (!inherits(vcf, "vcf_duckdb")) {
-    stop("vcf must be a vcf_duckdb object from vcf_open_duckdb()", call. = FALSE)
+    stop(
+      "vcf must be a vcf_duckdb object from vcf_open_duckdb()",
+      call. = FALSE
+    )
   }
   if (!is.null(vcf$con)) {
     DBI::dbDisconnect(vcf$con, shutdown = shutdown)
@@ -837,7 +855,11 @@ print.vcf_duckdb <- function(x, ...) {
   cat("---------------------\n")
   cat("Source file:", basename(x$file), "\n")
   cat("Table name: ", x$table, "\n")
-  cat("Type:       ", if (x$is_view) "VIEW (lazy)" else "TABLE (materialized)", "\n")
+  cat(
+    "Type:       ",
+    if (x$is_view) "VIEW (lazy)" else "TABLE (materialized)",
+    "\n"
+  )
   cat("Database:   ", if (x$dbdir == ":memory:") "in-memory" else x$dbdir, "\n")
   cat("Tidy format:", x$tidy_format, "\n")
   if (!is.null(x$row_count)) {
@@ -929,7 +951,11 @@ vcf_query_duckdb <- function(
   }
 
   if (length(bcf_params) > 0) {
-    bcf_read_call <- sprintf("bcf_read('%s', %s)", file, paste(bcf_params, collapse = ", "))
+    bcf_read_call <- sprintf(
+      "bcf_read('%s', %s)",
+      file,
+      paste(bcf_params, collapse = ", ")
+    )
   } else {
     bcf_read_call <- sprintf("bcf_read('%s')", file)
   }
@@ -1032,7 +1058,12 @@ vcf_count_duckdb <- function(
 #' vcf_schema_duckdb("cohort.vcf.gz", ext_path) # FORMAT_GT_Sample1, FORMAT_GT_Sample2...
 #' vcf_schema_duckdb("cohort.vcf.gz", ext_path, tidy_format = TRUE) # SAMPLE_ID, FORMAT_GT
 #' }
-vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, con = NULL) {
+vcf_schema_duckdb <- function(
+  file,
+  extension_path = NULL,
+  tidy_format = FALSE,
+  con = NULL
+) {
   # Check if file is a remote URL
   is_remote <- grepl("^(s3|gs|http|https|ftp)://", file, ignore.case = TRUE)
 
@@ -1055,7 +1086,10 @@ vcf_schema_duckdb <- function(file, extension_path = NULL, tidy_format = FALSE, 
 
   # Build bcf_read call with tidy_format option
   if (isTRUE(tidy_format)) {
-    sql <- sprintf("SELECT * FROM bcf_read('%s', tidy_format := true) LIMIT 0", file)
+    sql <- sprintf(
+      "SELECT * FROM bcf_read('%s', tidy_format := true) LIMIT 0",
+      file
+    )
   } else {
     sql <- sprintf("SELECT * FROM bcf_read('%s') LIMIT 0", file)
   }
@@ -1134,12 +1168,16 @@ format_kv_metadata_sql <- function(metadata) {
   }
 
   # Build key-value pairs with proper SQL escaping
-  kv_pairs <- vapply(names(metadata), function(key) {
-    value <- as.character(metadata[[key]])
-    # Escape single quotes by doubling them
-    value <- gsub("'", "''", value, fixed = TRUE)
-    sprintf("'%s': '%s'", key, value)
-  }, character(1))
+  kv_pairs <- vapply(
+    names(metadata),
+    function(key) {
+      value <- as.character(metadata[[key]])
+      # Escape single quotes by doubling them
+      value <- gsub("'", "''", value, fixed = TRUE)
+      sprintf("'%s': '%s'", key, value)
+    },
+    character(1)
+  )
 
   sprintf("KV_METADATA {%s}", paste(kv_pairs, collapse = ", "))
 }
@@ -1182,7 +1220,11 @@ parquet_kv_metadata <- function(file, con = NULL) {
   tryCatch(
     DBI::dbGetQuery(con, sql),
     error = function(e) {
-      data.frame(key = character(0), value = character(0), stringsAsFactors = FALSE)
+      data.frame(
+        key = character(0),
+        value = character(0),
+        stringsAsFactors = FALSE
+      )
     }
   )
 }
@@ -1323,7 +1365,11 @@ vcf_to_parquet_duckdb <- function(
   }
 
   if (length(bcf_params) > 0) {
-    bcf_read_call <- sprintf("bcf_read('%s', %s)", input_file, paste(bcf_params, collapse = ", "))
+    bcf_read_call <- sprintf(
+      "bcf_read('%s', %s)",
+      input_file,
+      paste(bcf_params, collapse = ", ")
+    )
   } else {
     bcf_read_call <- sprintf("bcf_read('%s')", input_file)
   }
@@ -1341,17 +1387,26 @@ vcf_to_parquet_duckdb <- function(
   # Add partition_by if specified (Hive-style partitioning)
   if (!is.null(partition_by)) {
     if (!is.character(partition_by) || length(partition_by) == 0) {
-      stop("partition_by must be a character vector of column names", call. = FALSE)
+      stop(
+        "partition_by must be a character vector of column names",
+        call. = FALSE
+      )
     }
     partition_cols <- paste(partition_by, collapse = ", ")
-    copy_options <- sprintf("%s, PARTITION_BY (%s)", copy_options, partition_cols)
+    copy_options <- sprintf(
+      "%s, PARTITION_BY (%s)",
+      copy_options,
+      partition_cols
+    )
     # Ensure output path ends with / for directory output
     if (!grepl("/$", output_file)) {
       output_file <- paste0(output_file, "/")
     }
     # KV_METADATA not supported with partitioned writes
     if (isTRUE(include_metadata)) {
-      message("Note: KV_METADATA not supported with partition_by, skipping metadata embedding")
+      message(
+        "Note: KV_METADATA not supported with partition_by, skipping metadata embedding"
+      )
       include_metadata <- FALSE
     }
   }
@@ -1371,7 +1426,8 @@ vcf_to_parquet_duckdb <- function(
       },
       error = function(e) {
         warning(
-          "Could not extract VCF metadata: ", conditionMessage(e),
+          "Could not extract VCF metadata: ",
+          conditionMessage(e),
           ". Continuing without metadata.",
           call. = FALSE
         )
@@ -1824,7 +1880,11 @@ merge_parquet_files_partitioned <- function(
   })
 
   # Count files created
-  n_files <- length(list.files(output_dir, pattern = "\\.parquet$", recursive = TRUE))
+  n_files <- length(list.files(
+    output_dir,
+    pattern = "\\.parquet$",
+    recursive = TRUE
+  ))
 
   message(sprintf(
     "Merged %d temp files -> %s (%d partition files, partitioned by %s)",
@@ -1853,7 +1913,6 @@ vcf_get_sample_names <- function(file, extension_path = NULL, con = NULL) {
   if (length(gt_cols) == 0) {
     return(character(0))
   }
-
 
   sub("^FORMAT_GT_", "", gt_cols)
 }
@@ -1886,7 +1945,13 @@ vcf_get_sample_names <- function(file, extension_path = NULL, con = NULL) {
 #' vcf_out <- tempfile(fileext = ".vcf.gz")
 #' parquet_to_vcf(parquet_file, vcf_out)
 #' }
-parquet_to_vcf <- function(input_file, output_file, header = NULL, index = TRUE, con = NULL) {
+parquet_to_vcf <- function(
+  input_file,
+  output_file,
+  header = NULL,
+  index = TRUE,
+  con = NULL
+) {
   if (!file.exists(input_file)) {
     stop("File not found: ", input_file, call. = FALSE)
   }
@@ -1921,7 +1986,8 @@ parquet_to_vcf <- function(input_file, output_file, header = NULL, index = TRUE,
     meta <- parquet_kv_metadata(input_file, con = con)
     header_row <- meta[meta$key == "vcf_header", "value"]
     if (length(header_row) == 0 || is.na(header_row)) {
-      stop("No VCF header found in Parquet metadata. ",
+      stop(
+        "No VCF header found in Parquet metadata. ",
         "Provide header manually or ensure Parquet was created with include_metadata = TRUE",
         call. = FALSE
       )
@@ -1939,7 +2005,14 @@ parquet_to_vcf <- function(input_file, output_file, header = NULL, index = TRUE,
     is_tidy <- !is.null(tidy_row) && length(tidy_row) > 0 && tidy_row == "true"
 
     if (is_tidy) {
-      return(parquet_to_vcf_tidy(input_file, output_file, header, index, con, meta))
+      return(parquet_to_vcf_tidy(
+        input_file,
+        output_file,
+        header,
+        index,
+        con,
+        meta
+      ))
     }
   }
 
@@ -1949,11 +2022,22 @@ parquet_to_vcf <- function(input_file, output_file, header = NULL, index = TRUE,
 
 #' Convert tidy format Parquet back to VCF
 #' @keywords internal
-parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, meta) {
+parquet_to_vcf_tidy <- function(
+  input_file,
+  output_file,
+  header,
+  index,
+  con,
+  meta
+) {
   # Get column info
-  schema <- DBI::dbGetQuery(con, sprintf(
-    "DESCRIBE SELECT * FROM '%s'", input_file
-  ))
+  schema <- DBI::dbGetQuery(
+    con,
+    sprintf(
+      "DESCRIBE SELECT * FROM '%s'",
+      input_file
+    )
+  )
   col_names <- schema$column_name
   col_types <- schema$column_type
   type_lookup <- setNames(col_types, col_names)
@@ -1964,9 +2048,13 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
   }
 
   # Get unique sample names
-  sample_names <- DBI::dbGetQuery(con, sprintf(
-    "SELECT DISTINCT SAMPLE_ID FROM '%s' ORDER BY SAMPLE_ID", input_file
-  ))$SAMPLE_ID
+  sample_names <- DBI::dbGetQuery(
+    con,
+    sprintf(
+      "SELECT DISTINCT SAMPLE_ID FROM '%s' ORDER BY SAMPLE_ID",
+      input_file
+    )
+  )$SAMPLE_ID
 
   if (length(sample_names) == 0) {
     stop("No samples found in tidy format Parquet", call. = FALSE)
@@ -2008,21 +2096,30 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
 
   # INFO column
   if (length(info_cols) > 0) {
-    info_parts <- vapply(info_cols, function(col) {
-      field_name <- sub("^INFO_", "", col)
-      col_type <- type_lookup[[col]]
-      if (grepl("\\[\\]$", col_type)) {
-        sprintf(
-          "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
-          col, col, field_name, col
-        )
-      } else {
-        sprintf(
-          "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
-          col, field_name, col
-        )
-      }
-    }, character(1))
+    info_parts <- vapply(
+      info_cols,
+      function(col) {
+        field_name <- sub("^INFO_", "", col)
+        col_type <- type_lookup[[col]]
+        if (grepl("\\[\\]$", col_type)) {
+          sprintf(
+            "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
+            col,
+            col,
+            field_name,
+            col
+          )
+        } else {
+          sprintf(
+            "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
+            col,
+            field_name,
+            col
+          )
+        }
+      },
+      character(1)
+    )
     info_expr <- sprintf(
       "COALESCE(array_to_string(list_filter([%s], x -> x IS NOT NULL), ';'), '.')",
       paste(info_parts, collapse = ", ")
@@ -2039,24 +2136,31 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
 
     # Build per-sample columns using conditional aggregation
     for (sample in sample_names) {
-      sample_parts <- vapply(format_cols, function(col) {
-        col_type <- type_lookup[[col]]
-        if (grepl("\\[\\]$", col_type)) {
-          # For arrays: use NULLIF to convert empty strings to NULL, then COALESCE to '.'
-          sprintf(
-            "COALESCE(NULLIF(MAX(CASE WHEN SAMPLE_ID = '%s' THEN array_to_string(%s, ',') END), ''), '.')",
-            sample, col
-          )
-        } else {
-          sprintf(
-            "COALESCE(MAX(CASE WHEN SAMPLE_ID = '%s' THEN CAST(%s AS VARCHAR) END), '.')",
-            sample, col
-          )
-        }
-      }, character(1))
+      sample_parts <- vapply(
+        format_cols,
+        function(col) {
+          col_type <- type_lookup[[col]]
+          if (grepl("\\[\\]$", col_type)) {
+            # For arrays: use NULLIF to convert empty strings to NULL, then COALESCE to '.'
+            sprintf(
+              "COALESCE(NULLIF(MAX(CASE WHEN SAMPLE_ID = '%s' THEN array_to_string(%s, ',') END), ''), '.')",
+              sample,
+              col
+            )
+          } else {
+            sprintf(
+              "COALESCE(MAX(CASE WHEN SAMPLE_ID = '%s' THEN CAST(%s AS VARCHAR) END), '.')",
+              sample,
+              col
+            )
+          }
+        },
+        character(1)
+      )
       sample_expr <- sprintf(
         "concat_ws(':', %s) AS \"%s\"",
-        paste(sample_parts, collapse = ", "), sample
+        paste(sample_parts, collapse = ", "),
+        sample
       )
       select_parts <- c(select_parts, sample_expr)
     }
@@ -2069,7 +2173,9 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
   select_sql <- paste(select_parts, collapse = ", ")
   query <- sprintf(
     "SELECT %s FROM '%s' GROUP BY %s ORDER BY CHROM, POS",
-    select_sql, input_file, group_by_cols
+    select_sql,
+    input_file,
+    group_by_cols
   )
 
   # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
@@ -2080,7 +2186,8 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
 
   copy_sql <- sprintf(
     "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
-    query, tmp_data
+    query,
+    tmp_data
   )
   DBI::dbExecute(con, copy_sql)
 
@@ -2107,7 +2214,11 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
   result <- system2(bcftools_path(), bcf_args, stdout = TRUE, stderr = TRUE)
 
   if (!file.exists(output_file)) {
-    stop("Failed to create output file. bcftools error: ", paste(result, collapse = "\n"), call. = FALSE)
+    stop(
+      "Failed to create output file. bcftools error: ",
+      paste(result, collapse = "\n"),
+      call. = FALSE
+    )
   }
 
   # Create index if requested
@@ -2115,7 +2226,6 @@ parquet_to_vcf_tidy <- function(input_file, output_file, header, index, con, met
     idx_args <- c("index", output_file)
     system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
   }
-
 
   message(sprintf("Wrote: %s", output_file))
   invisible(output_file)
@@ -2137,9 +2247,13 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   }
 
   # Get column info to build VCF data lines
-  schema <- DBI::dbGetQuery(con, sprintf(
-    "DESCRIBE SELECT * FROM '%s'", input_file
-  ))
+  schema <- DBI::dbGetQuery(
+    con,
+    sprintf(
+      "DESCRIBE SELECT * FROM '%s'",
+      input_file
+    )
+  )
   col_names <- schema$column_name
   col_types <- schema$column_type
 
@@ -2172,8 +2286,16 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   # Get FORMAT field order from first sample
   if (length(sample_names) > 0) {
     first_sample <- sample_names[1]
-    first_sample_cols <- grep(paste0("_", first_sample, "$"), format_cols, value = TRUE)
-    format_fields <- sub(paste0("_", first_sample, "$"), "", sub("^FORMAT_", "", first_sample_cols))
+    first_sample_cols <- grep(
+      paste0("_", first_sample, "$"),
+      format_cols,
+      value = TRUE
+    )
+    format_fields <- sub(
+      paste0("_", first_sample, "$"),
+      "",
+      sub("^FORMAT_", "", first_sample_cols)
+    )
   } else {
     format_fields <- character(0)
   }
@@ -2192,23 +2314,32 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
 
   # INFO column: concatenate INFO fields
   if (length(info_cols) > 0) {
-    info_parts <- vapply(info_cols, function(col) {
-      field_name <- sub("^INFO_", "", col)
-      col_type <- type_lookup[[col]]
-      if (grepl("\\[\\]$", col_type)) {
-        # Array type - format without brackets
-        sprintf(
-          "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
-          col, col, field_name, col
-        )
-      } else {
-        # Scalar type
-        sprintf(
-          "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
-          col, field_name, col
-        )
-      }
-    }, character(1))
+    info_parts <- vapply(
+      info_cols,
+      function(col) {
+        field_name <- sub("^INFO_", "", col)
+        col_type <- type_lookup[[col]]
+        if (grepl("\\[\\]$", col_type)) {
+          # Array type - format without brackets
+          sprintf(
+            "CASE WHEN %s IS NOT NULL AND len(%s) > 0 THEN '%s=' || array_to_string(%s, ',') ELSE NULL END",
+            col,
+            col,
+            field_name,
+            col
+          )
+        } else {
+          # Scalar type
+          sprintf(
+            "CASE WHEN %s IS NOT NULL THEN '%s=' || CAST(%s AS VARCHAR) ELSE NULL END",
+            col,
+            field_name,
+            col
+          )
+        }
+      },
+      character(1)
+    )
     info_expr <- sprintf(
       "COALESCE(array_to_string(list_filter([%s], x -> x IS NOT NULL), ';'), '.')",
       paste(info_parts, collapse = ", ")
@@ -2225,15 +2356,23 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
 
     # Build sample columns
     for (sample in sample_names) {
-      sample_parts <- vapply(format_fields, function(field) {
-        col <- sprintf("FORMAT_%s_%s", field, sample)
-        if (col %in% col_names) {
-          format_col_sql(col, ".")
-        } else {
-          "'.'"
-        }
-      }, character(1))
-      sample_expr <- sprintf("concat_ws(':', %s) AS \"%s\"", paste(sample_parts, collapse = ", "), sample)
+      sample_parts <- vapply(
+        format_fields,
+        function(field) {
+          col <- sprintf("FORMAT_%s_%s", field, sample)
+          if (col %in% col_names) {
+            format_col_sql(col, ".")
+          } else {
+            "'.'"
+          }
+        },
+        character(1)
+      )
+      sample_expr <- sprintf(
+        "concat_ws(':', %s) AS \"%s\"",
+        paste(sample_parts, collapse = ", "),
+        sample
+      )
       select_parts <- c(select_parts, sample_expr)
     }
   }
@@ -2242,7 +2381,8 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   select_sql <- paste(select_parts, collapse = ", ")
   query <- sprintf(
     "SELECT %s FROM '%s' ORDER BY CHROM, POS",
-    select_sql, input_file
+    select_sql,
+    input_file
   )
 
   # Use DuckDB COPY TO write directly to temp file (streaming, no R memory)
@@ -2253,7 +2393,8 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
 
   copy_sql <- sprintf(
     "COPY (%s) TO '%s' (HEADER false, DELIMITER '\t')",
-    query, tmp_data
+    query,
+    tmp_data
   )
   DBI::dbExecute(con, copy_sql)
 
@@ -2266,7 +2407,11 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   result <- system2(bcftools_path(), bcf_args, stdout = TRUE, stderr = TRUE)
 
   if (!file.exists(output_file)) {
-    stop("Failed to create output file. bcftools error: ", paste(result, collapse = "\n"), call. = FALSE)
+    stop(
+      "Failed to create output file. bcftools error: ",
+      paste(result, collapse = "\n"),
+      call. = FALSE
+    )
   }
 
   # Create index if requested
@@ -2274,7 +2419,6 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
     idx_args <- c("index", output_file)
     system2(bcftools_path(), idx_args, stdout = FALSE, stderr = FALSE)
   }
-
 
   message(sprintf("Wrote: %s", output_file))
   invisible(output_file)

@@ -227,7 +227,9 @@ cmd_convert <- function(opts) {
   ext_path <- get_extension_path(opts)
   threads <- opts$threads
   if (!is.null(opts$region) && threads > 1) {
-    cat("  Region requested; using single-threaded mode to honor region filter.\n")
+    cat(
+      "  Region requested; using single-threaded mode to honor region filter.\n"
+    )
     threads <- 1L
   }
 

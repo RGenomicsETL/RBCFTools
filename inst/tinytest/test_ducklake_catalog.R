@@ -16,7 +16,8 @@ if (!requireNamespace("DBI", quietly = TRUE)) {
 # make temporary DuckDB file
 tmp_duckdb_file <- tempfile(fileext = ".duckdb")
 drv <- duckdb::duckdb(tmp_duckdb_file)
-con <- DBI::dbConnect(drv,
+con <- DBI::dbConnect(
+  drv,
   allow_unsigned_extensions = "true",
   enable_external_access = "true"
 )

@@ -764,7 +764,9 @@ if (file.exists(single_sample_vcf) && nzchar(single_sample_vcf)) {
     info = "Single-sample tidy should have SAMPLE_ID"
   )
   expect_true(
-    "FORMAT_MIN_DP" %in% names(single_data) || "FORMAT_DP" %in% names(single_data),
+    "FORMAT_MIN_DP" %in%
+      names(single_data) ||
+      "FORMAT_DP" %in% names(single_data),
     info = "Single-sample should handle underscored FORMAT fields"
   )
   expect_equal(
@@ -970,7 +972,10 @@ expect_null(
 )
 
 # Query the view
-query_result <- DBI::dbGetQuery(vcf_obj$con, "SELECT COUNT(*) as n FROM test_variants")
+query_result <- DBI::dbGetQuery(
+  vcf_obj$con,
+  "SELECT COUNT(*) as n FROM test_variants"
+)
 expect_equal(
   query_result$n[1],
   11L,
@@ -980,7 +985,12 @@ expect_equal(
 vcf_close_duckdb(vcf_obj)
 
 # Test table creation (as_view = FALSE)
-vcf_table <- vcf_open_duckdb(test_vcf, ext_path, as_view = FALSE, table_name = "table_variants")
+vcf_table <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
+  as_view = FALSE,
+  table_name = "table_variants"
+)
 
 expect_false(
   vcf_table$is_view,
@@ -993,7 +1003,10 @@ expect_equal(
 )
 
 # Query the table
-table_result <- DBI::dbGetQuery(vcf_table$con, "SELECT CHROM, POS FROM table_variants LIMIT 3")
+table_result <- DBI::dbGetQuery(
+  vcf_table$con,
+  "SELECT CHROM, POS FROM table_variants LIMIT 3"
+)
 expect_equal(
   nrow(table_result),
   3L,
@@ -1003,7 +1016,12 @@ expect_equal(
 vcf_close_duckdb(vcf_table)
 
 # Test tidy format as view (default)
-vcf_tidy <- vcf_open_duckdb(test_vcf, ext_path, tidy_format = TRUE, table_name = "tidy_variants")
+vcf_tidy <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
+  tidy_format = TRUE,
+  table_name = "tidy_variants"
+)
 
 expect_true(
   vcf_tidy$tidy_format,
@@ -1019,14 +1037,20 @@ expect_null(
 )
 
 # Verify tidy format works via query
-tidy_count <- DBI::dbGetQuery(vcf_tidy$con, "SELECT COUNT(*) as n FROM tidy_variants")
+tidy_count <- DBI::dbGetQuery(
+  vcf_tidy$con,
+  "SELECT COUNT(*) as n FROM tidy_variants"
+)
 expect_equal(
   tidy_count$n[1],
   33L, # 11 variants * 3 samples
   info = "Tidy format should have variants * samples rows"
 )
 
-tidy_result <- DBI::dbGetQuery(vcf_tidy$con, "SELECT DISTINCT SAMPLE_ID FROM tidy_variants")
+tidy_result <- DBI::dbGetQuery(
+  vcf_tidy$con,
+  "SELECT DISTINCT SAMPLE_ID FROM tidy_variants"
+)
 expect_equal(
   nrow(tidy_result),
   3L,
@@ -1043,7 +1067,10 @@ vcf_cols <- vcf_open_duckdb(
   table_name = "slim_variants"
 )
 
-cols_result <- DBI::dbGetQuery(vcf_cols$con, "SELECT * FROM slim_variants LIMIT 1")
+cols_result <- DBI::dbGetQuery(
+  vcf_cols$con,
+  "SELECT * FROM slim_variants LIMIT 1"
+)
 expect_true(
   all(c("CHROM", "POS", "REF", "ALT") %in% names(cols_result)),
   info = "Selected columns should be present"
@@ -1057,7 +1084,12 @@ vcf_close_duckdb(vcf_cols)
 
 # Test file-backed database
 db_path <- tempfile(fileext = ".duckdb")
-vcf_file_db <- vcf_open_duckdb(test_vcf, ext_path, dbdir = db_path, table_name = "persisted")
+vcf_file_db <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
+  dbdir = db_path,
+  table_name = "persisted"
+)
 
 expect_equal(
   vcf_file_db$dbdir,
@@ -1073,7 +1105,10 @@ expect_true(
 
 # Reopen and verify data persisted
 reopen_con <- vcf_duckdb_connect(ext_path, dbdir = db_path, read_only = TRUE)
-reopen_result <- DBI::dbGetQuery(reopen_con, "SELECT COUNT(*) as n FROM persisted")
+reopen_result <- DBI::dbGetQuery(
+  reopen_con,
+  "SELECT COUNT(*) as n FROM persisted"
+)
 expect_equal(
   reopen_result$n[1],
   11L,
@@ -1084,7 +1119,13 @@ unlink(db_path)
 
 # Test overwrite functionality with file-backed database (requires as_view = FALSE to persist)
 overwrite_db <- tempfile(fileext = ".duckdb")
-vcf_first <- vcf_open_duckdb(test_vcf, ext_path, table_name = "overwrite_test", dbdir = overwrite_db, as_view = FALSE)
+vcf_first <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
+  table_name = "overwrite_test",
+  dbdir = overwrite_db,
+  as_view = FALSE
+)
 vcf_close_duckdb(vcf_first)
 
 # Reopen same database - table should exist, can't create again without overwrite
@@ -1097,7 +1138,9 @@ expect_true(
 DBI::dbDisconnect(vcf_reopen, shutdown = TRUE)
 
 # Test that overwrite = TRUE works
-vcf_overwritten <- vcf_open_duckdb(test_vcf, ext_path,
+vcf_overwritten <- vcf_open_duckdb(
+  test_vcf,
+  ext_path,
   table_name = "overwrite_test",
   dbdir = overwrite_db,
   as_view = FALSE,
@@ -1122,7 +1165,11 @@ vcf_close_duckdb(vcf_print)
 # Test parallel view (UNION ALL) with test_deep_variant.vcf.gz
 # =============================================================================
 
-deep_variant_vcf <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
+deep_variant_vcf <- system.file(
+  "extdata",
+  "test_deep_variant.vcf.gz",
+  package = "RBCFTools"
+)
 
 # Parallel view should work when threads > 1 with indexed VCF
 vcf_parallel_view <- vcf_open_duckdb(
