@@ -28,11 +28,18 @@ cache timing (adjust `n_runs` below).
 
 ``` r
 bcf_path <- params$bcf_path
+bcf_path
+#> [1] "../../test_very_large.bcf"
 region <- params$region
 duckdb_ext <- params$duckdb_ext
 
 has_bcf <- file.exists(bcf_path)
 has_ext <- file.exists(duckdb_ext)
+if(!has_ext)  {
+  build_dir <- file.path(tempdir(), "bcf_reader")
+  duckdb_ext <- RBCFTools::bcf_reader_build(build_dir, verbose = FALSE)
+  has_ext <- TRUE
+}
 can_run <- has_bcf && has_ext
 
 if (!has_bcf) message("BCF not found: ", bcf_path, ". Benchmarks will be skipped.")
@@ -43,9 +50,12 @@ data.frame(
   path = c(bcf_path, duckdb_ext),
   exists = c(has_bcf, has_ext)
 )
-#>     resource                              path exists
-#> 1   bcf_path         ../../test_very_large.bcf   TRUE
-#> 2 duckdb_ext build/bcf_reader.duckdb_extension   TRUE
+#>     resource                                                         path
+#> 1   bcf_path                                    ../../test_very_large.bcf
+#> 2 duckdb_ext /tmp/RtmpmxFfvP/bcf_reader/build/bcf_reader.duckdb_extension
+#>   exists
+#> 1   TRUE
+#> 2   TRUE
 ```
 
 ## Benchmarks
@@ -103,8 +113,8 @@ cmd_bcftools_full_text <- sprintf("bcftools view -Ov %s > /dev/null", shQuote(bc
 res_bcftools_full_text <- time_runs(cmd_bcftools_full_text)
 res_bcftools_full_text
 #>   run elapsed  user system cache_state
-#> 1   1  71.123 0.001  0.008    cold-ish
-#> 2   2  68.847 0.002  0.007    warm-ish
+#> 1   1   66.54 0.003  0.006    cold-ish
+#> 2   2   67.34 0.000  0.008    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (full file, fairer)
@@ -114,8 +124,8 @@ cmd_bcftools_full_bin <- sprintf("bcftools view -Ou %s > /dev/null", shQuote(bcf
 res_bcftools_full_bin <- time_runs(cmd_bcftools_full_bin)
 res_bcftools_full_bin
 #>   run elapsed  user system cache_state
-#> 1   1  35.707 0.002  0.004    cold-ish
-#> 2   2  35.953 0.002  0.004    warm-ish
+#> 1   1  35.390 0.001  0.006    cold-ish
+#> 2   2  35.183 0.003  0.004    warm-ish
 ```
 
 ### bcftools view — text VCF emit (region)
@@ -124,9 +134,9 @@ res_bcftools_full_bin
 cmd_bcftools_region_text <- sprintf("bcftools view -Ov -r %s %s > /dev/null", shQuote(region), shQuote(bcf_path))
 res_bcftools_region_text <- time_runs(cmd_bcftools_region_text)
 res_bcftools_region_text
-#>   run elapsed user system cache_state
-#> 1   1   0.076    0  0.003    cold-ish
-#> 2   2   0.079    0  0.003    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.082 0.000  0.004    cold-ish
+#> 2   2   0.078 0.001  0.003    warm-ish
 ```
 
 ### bcftools view — binary BCF emit (region, fairer)
@@ -136,7 +146,7 @@ cmd_bcftools_region_bin <- sprintf("bcftools view -Ou -r %s %s > /dev/null", shQ
 res_bcftools_region_bin <- time_runs(cmd_bcftools_region_bin)
 res_bcftools_region_bin
 #>   run elapsed user system cache_state
-#> 1   1   0.068    0  0.003    cold-ish
+#> 1   1   0.077    0  0.004    cold-ish
 #> 2   2   0.070    0  0.003    warm-ish
 ```
 
@@ -151,8 +161,8 @@ cmd_duckdb_full <- sprintf(
 res_duckdb_full <- time_runs(cmd_duckdb_full)
 res_duckdb_full
 #>   run elapsed user system cache_state
-#> 1   1   4.409    0  0.003    cold-ish
-#> 2   2   4.134    0  0.004    warm-ish
+#> 1   1   4.057    0  0.004    cold-ish
+#> 2   2   3.723    0  0.004    warm-ish
 ```
 
 ### DuckDB bcf\_read (region)
@@ -166,9 +176,9 @@ cmd_duckdb_region <- sprintf(
 )
 res_duckdb_region <- time_runs(cmd_duckdb_region)
 res_duckdb_region
-#>   run elapsed user system cache_state
-#> 1   1   0.095    0  0.003    cold-ish
-#> 2   2   0.100    0  0.003    warm-ish
+#>   run elapsed  user system cache_state
+#> 1   1   0.109 0.001  0.004    cold-ish
+#> 2   2   0.100 0.000  0.004    warm-ish
 ```
 
 ### Parquet conversion: 4 threads vs 10 threads (DuckDB extension)
@@ -202,8 +212,8 @@ res_parquet_10threads <- if (RBCFTools::vcf_has_index(bcf_path)) {
   NULL
 }
 #> Processing 23 contigs (out of 23 in header) using 10 threads (DuckDB mode)
-#> Merging temporary Parquet files... to /tmp/RtmpF6le58/file2fa43059d206ca.parquet
-#> Merged 23 parquet files -> file2fa43059d206ca.parquet (81554892 rows)
+#> Merging temporary Parquet files... to /tmp/RtmpmxFfvP/fileb7dc9b5e1940.parquet
+#> Merged 23 parquet files -> fileb7dc9b5e1940.parquet (81554892 rows)
 ```
 
 ``` r
@@ -219,15 +229,15 @@ res_parquet_4threads <- time_expr({
   )
 }, enabled = parquet_can_run)
 #> Processing 23 contigs (out of 23 in header) using 4 threads (DuckDB mode)
-#> Merging temporary Parquet files... to /tmp/RtmpF6le58/file2fa43022a6ef11.parquet
-#> Merged 23 parquet files -> file2fa43022a6ef11.parquet (81554892 rows)
+#> Merging temporary Parquet files... to /tmp/RtmpmxFfvP/fileb7dc93c1e5a88.parquet
+#> Merged 23 parquet files -> fileb7dc93c1e5a88.parquet (81554892 rows)
 
 res_parquet_4threads
 #>         run elapsed    user system cache_state
-#> elapsed   1 132.719 262.919 37.861    cold-ish
+#> elapsed   1 115.298 270.619 39.857    cold-ish
 res_parquet_10threads
 #>         run elapsed    user system cache_state
-#> elapsed   1 110.269 264.568 36.844    cold-ish
+#> elapsed   1  88.869 266.728 40.815    cold-ish
 
 unlink(c(parquet_4threads, parquet_10threads))
 ```

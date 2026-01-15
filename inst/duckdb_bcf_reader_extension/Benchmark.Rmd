@@ -29,13 +29,19 @@ The large input (`test_very_large.bcf`) is expected to live locally (never commi
 - Built extension at `params$duckdb_ext` (`make` in this folder)
 - Large BCF at `params$bcf_path` (defaults to `test_very_large.bcf` in this directory)
 
-```{r paths}
+```{r paths, eval=TRUE}
 bcf_path <- params$bcf_path
+bcf_path
 region <- params$region
 duckdb_ext <- params$duckdb_ext
 
 has_bcf <- file.exists(bcf_path)
 has_ext <- file.exists(duckdb_ext)
+ build_dir <- file.path(tempdir(), "bcf_reader")
+if(!has_ext)  {
+  duckdb_ext <- RBCFTools::bcf_reader_build(build_dir, verbose = FALSE)
+  has_ext <- TRUE
+}
 can_run <- has_bcf && has_ext
 
 if (!has_bcf) message("BCF not found: ", bcf_path, ". Benchmarks will be skipped.")
@@ -52,7 +58,7 @@ data.frame(
 
 Timings are single runs using `system.time()` for wall-clock comparisons; adjust or repeat as needed. Region queries mirror full-file timings but with `-r` / `region :=`.
 
-```{r helpers}
+```{r helpers, eval=TRUE}
 run_cmd <- function(cmd) {
   t <- system.time({
     system(cmd, intern = TRUE, ignore.stdout = TRUE, ignore.stderr = FALSE)

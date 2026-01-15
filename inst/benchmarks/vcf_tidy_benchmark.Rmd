@@ -1,7 +1,8 @@
 ---
 title: "VCF to Parquet Tidy Format Benchmark"
 output: github_document
-date: "`r Sys.Date()`"
+params:
+  bcf_path: "../../test_very_large.bcf"
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +19,7 @@ knitr::opts_chunk$set(
 This benchmark compares the performance of VCF to Parquet conversion in:
 
 1. **Wide format** (`vcf_to_parquet_duckdb`): One row per variant, FORMAT columns as `FORMAT_<field>_<sample>`
-2. **Tidy format** (`vcf_to_parquet_tidy`): One row per variant-sample, with `SAMPLE_ID` column
+2. **Tidy format** (`vcf_to_parquet_duckdb`): One row per variant-sample, with `SAMPLE_ID` column
 
 ## Setup
 
@@ -29,7 +30,7 @@ library(duckdb)
 
 # Build extension once
 ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
-
+bcf_path <-  params$bcf_path
 # Helper function to format file sizes (vectorized)
 format_size <- function(bytes) {
   sapply(bytes, function(b) {
@@ -69,7 +70,7 @@ benchmark_conversion <- function(input_file, name, threads = 1, n_runs = 3) {
   tidy_times <- sapply(seq_len(n_runs), function(i) {
     unlink(tidy_out)
     system.time({
-      suppressMessages(vcf_to_parquet_tidy(
+      suppressMessages(vcf_to_parquet_duckdb(
         input_file, tidy_out, 
         extension_path = ext_path, 
         threads = threads
@@ -139,6 +140,16 @@ knitr::kable(results_3s[, c("name", "n_variants", "n_samples",
              caption = "3-sample VCF Benchmark")
 ```
 
+### Benchmark : test_large
+
+```{r bench-1-Large-BCF}
+results_4s <- benchmark_conversion(bcf_path, "test_large", threads = 1)
+knitr::kable(results_4s[, c("name", "n_variants", "n_samples", 
+                             "wide_time_mean", "tidy_time_mean",
+                             "wide_rows", "tidy_rows")],
+             digits = 3,
+             caption = "1-Larges ample BCF Benchmark")
+```
 ### Output Size Comparison
 
 ```{r size-comparison-3s}
@@ -210,7 +221,7 @@ tidy_file <- tempfile(fileext = ".parquet")
 
 suppressMessages({
   vcf_to_parquet_duckdb(vcf_3samples, wide_file, extension_path = ext_path)
-  vcf_to_parquet_tidy(vcf_3samples, tidy_file, extension_path = ext_path)
+  vcf_to_parquet_duckdb(vcf_3samples, tidy_file, extension_path = ext_path, tidy_format = TRUE)
 })
 
 con <- duckdb::dbConnect(duckdb::duckdb())

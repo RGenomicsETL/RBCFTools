@@ -2040,7 +2040,7 @@ parquet_to_vcf_tidy <- function(
   )
   col_names <- schema$column_name
   col_types <- schema$column_type
-  type_lookup <- setNames(col_types, col_names)
+  type_lookup <- stats::setNames(col_types, col_names)
 
   # Tidy format has SAMPLE_ID column and FORMAT columns without sample suffix
   if (!"SAMPLE_ID" %in% col_names) {
@@ -2258,7 +2258,7 @@ parquet_to_vcf_wide <- function(input_file, output_file, header, index, con) {
   col_types <- schema$column_type
 
   # Create lookup for column types
-  type_lookup <- setNames(col_types, col_names)
+  type_lookup <- stats::setNames(col_types, col_names)
 
   # Helper to format a column for VCF (handles arrays properly)
   format_col_sql <- function(col, default_val = ".") {
