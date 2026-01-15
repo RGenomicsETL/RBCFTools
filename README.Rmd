@@ -553,7 +553,7 @@ variants_count
 
 vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
 local_parquet2 <- tempfile(fileext = ".parquet")
-vcf_to_parquet_duckdb(vcf_file2, local_parquet2, extension_path = ext_path)
+vcf_to_parquet_duckdb(vcf_file2, local_parquet2, extension_path = ext_path, tidy_format = TRUE)
 
 DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM read_parquet('%s')", local_parquet2))
 
@@ -684,7 +684,7 @@ OUT_PQ=$(mktemp --suffix=.parquet)
 Log=$(mktemp --suffix=.log)
 
 # Convert BCF to Parquet
-time $SCRIPT convert --quiet -i $BCF -o $OUT_PQ -t 4  > $Log 2>&1
+time $SCRIPT convert --quiet --tidy -i $BCF -o $OUT_PQ -t 4  > $Log 2>&1
 
 cat $Log
 
