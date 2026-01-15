@@ -15,11 +15,13 @@ if (!requireNamespace("DBI", quietly = TRUE)) {
 # Setup test connection
 # make temporary DuckDB file
 tmp_duckdb_file <- tempfile(fileext = ".duckdb")
-con <- DBI::dbConnect(duckdb::duckdb(tmp_duckdb_file),
+drv <- duckdb::duckdb(tmp_duckdb_file)
+con <- DBI::dbConnect(drv,
   allow_unsigned_extensions = "true",
   enable_external_access = "true"
 )
-on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+# NOTE: Don't use on.exit() in tinytest files - it fires immediately due to
+# how tinytest sources test files line-by-line. Clean up at end of file instead.
 
 # Verify connection is valid
 if (!DBI::dbIsValid(con)) {
@@ -170,5 +172,10 @@ expect_equal(parsed_secret$metadata_path, "my_secret")
 
 # Clean up temporary files
 unlink(c(cat_meta, cat_data, sqlite_meta), recursive = TRUE)
+
+# Clean up DuckDB connection
+try(DBI::dbDisconnect(con, shutdown = TRUE), silent = TRUE)
+try(duckdb::duckdb_shutdown(drv), silent = TRUE)
+unlink(tmp_duckdb_file, recursive = TRUE)
 
 message("All DuckLake catalog connection and secret management tests passed!")

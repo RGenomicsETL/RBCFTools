@@ -164,11 +164,13 @@ if (
 # temporary duckdb file
 tmp_duckdb_file <- tempfile(fileext = ".duckdb")
 
-con <- DBI::dbConnect(duckdb::duckdb(tmp_duckdb_file),
+drv <- duckdb::duckdb(tmp_duckdb_file)
+con <- DBI::dbConnect(drv,
   allow_unsigned_extensions = "true",
   enable_external_access = "true"
 )
-on.exit(duckdb::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+# NOTE: Don't use on.exit() in tinytest files - it fires immediately due to
+# how tinytest sources test files line-by-line. Clean up at end of file instead.
 try(DBI::dbExecute(con, "INSTALL httpfs"), silent = TRUE)
 try(DBI::dbExecute(con, "LOAD httpfs"), silent = TRUE)
 
@@ -251,3 +253,8 @@ expect_true(is.numeric(variant_count) && variant_count > 0)
 ducklake_drop_secret(con, "test_ducklake_secret")
 secrets_after <- ducklake_list_secrets(con)
 expect_true(!"test_ducklake_secret" %in% secrets_after$name)
+
+# Clean up DuckDB connection
+try(DBI::dbDisconnect(con, shutdown = TRUE), silent = TRUE)
+try(duckdb::duckdb_shutdown(drv), silent = TRUE)
+unlink(tmp_duckdb_file, recursive = TRUE)
