@@ -41,7 +41,7 @@ Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
 
     - bcftools/htslib Authors
 
-    see files bu mostly Copyright (C) 2018 Genome Research Ltd but file dependent licences including GPL
+    see  bcftools-1.23/AUTHORS
 
 
     - duckdb C API and C Extension API headers Authors
