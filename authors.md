@@ -5,8 +5,8 @@
 - **Sounkou Mahamane Toure**. Author, maintainer.
 
 - **Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng
-  and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas and Davies,
-  Robert M**. Copyright holder.  
+  and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas Davies,
+  Robert M, Pierre Lindenbaum**. Copyright holder.  
   Authors of included htslib library and bcftools command line tools
 
 - **Zilong Li**. Copyright holder.  
@@ -32,3 +32,17 @@ Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
       note = {R package version 1.23-0.0.2.9000},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }
+
+## Additional details
+
+    Sounkou Mahamane Toure <sounkoutoure@gmail.com> (aut, cre)
+
+    Vendored components / Copyright holders
+
+    - bcftools/htslib Authors
+
+    see files bu mostly Copyright (C) 2018 Genome Research Ltd but file dependent licences including GPL
+
+
+    - duckdb C API and C Extension API headers Authors
+       MIT Licence
