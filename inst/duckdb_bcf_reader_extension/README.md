@@ -11,7 +11,7 @@ A high-performance DuckDB extension for reading BCF/VCF genomic variant files di
 - **Parallel scanning**: Automatic parallel scan by contig when an index is available
 - **Genotype support**: Proper GT field decoding (e.g., "0/1", "1|1", "./.")
 - **Type validation**: Warns when header types don't match VCF spec and corrects schema accordingly
-- **Structured annotations**: Auto-detects INFO/CSQ, INFO/BCSQ, or INFO/ANN in the header and emits one typed column per subfield (prefixed `VEP_`), using bcftools split-vep inference. First transcript is exposed (scalar); list mode can be added later if needed.
+- **Structured annotations**: Auto-detects INFO/CSQ, INFO/BCSQ, or INFO/ANN in the header and emits one typed LIST column per subfield (prefixed `VEP_`), preserving all transcripts. Uses bcftools split-vep inference for field names and types.
 - **Tidy format output**: Native `tidy_format` parameter emits one row per variant-sample combination with a `SAMPLE_ID` column, ideal for cohort analysis and downstream tools expecting long-format data.
 
 ## Requirements
