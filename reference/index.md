@@ -107,6 +107,8 @@
   : Get All Linking Information for RBCFTools
 - [`parquet_kv_metadata()`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_kv_metadata.md)
   : Read Parquet key-value metadata
+- [`parquet_to_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf.md)
+  : Convert Parquet back to VCF/BCF format
 - [`print(`*`<vcf_duckdb>`*`)`](https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.md)
   : Print method for vcf_duckdb objects
 - [`print_makevars_config()`](https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.md)

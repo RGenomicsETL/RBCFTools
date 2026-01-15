@@ -57,6 +57,9 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/index.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/linking_info.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_kv_metadata.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf_tidy.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf_wide.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.html</loc></url>
