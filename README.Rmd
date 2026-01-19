@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![R-universe version](https://RGenomicsETL.r-universe.dev/RBCFTools/badges/version)](https://RGenomicsETL.r-universe.dev/RBCFTools)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the  [duckdb nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
+RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
 
 ## Installation
 
@@ -117,9 +117,9 @@ res$stdou
 
 
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [duckdb](https://github.com/duckdb/duckdb-r) and Parquet format convertion when serializing to Arrow IPC. We also support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) duckdb extension to read directly into duckb.
+RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [DuckDB](https://github.com/duckdb/duckdb-r) and Parquet format conversion when serializing to Arrow IPC. We also support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) DuckDB extension to read directly into DuckDB.
 
-The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emits R warning or duckdb logs when correcting non-conformant fields
+The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emit R warnings or DuckDB logs when correcting non-conformant fields
 
 
 ### Read VCF as Arrow Stream
@@ -168,7 +168,7 @@ ipc_data[, c("CHROM", "POS", "REF", "ALT")] |> head()
 
 ### Write VCF Streams to Parquet
 
-Using [duckdb](https://github.com/duckdb/duckdb-r)  to convert BCF to parquet file and perform queries on the parquet file. This involve vcf stream conversion to data.frame
+Using [DuckDB](https://github.com/duckdb/duckdb-r) to convert BCF to Parquet file and perform queries on the Parquet file. This involves VCF stream conversion to data.frame
 
 ```{r parquet, eval=TRUE}
 
@@ -186,7 +186,7 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 pq_me |> head()
 ```
 
-Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via duckdb, trading memory with serialization overhead using the [duckdb nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
+Use `streaming = TRUE` to avoid loading the entire VCF into R memory. This streams VCF to Arrow IPC (nanoarrow) and then to Parquet via DuckDB, trading memory for serialization overhead using the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
 ```{r streaming, eval = TRUE}
 bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
@@ -204,7 +204,7 @@ vcf_to_parquet_arrow(
 
 ### Query VCF with duckdb after converting the Stream
 
-SQL queries on BCF using duckdb package. For now this is somehow limited due to convertion from arrow streams to data frame
+SQL queries on BCF using DuckDB package. For now this is somewhat limited due to conversion from Arrow streams to data frame
 
 ```{r duckdb, eval=TRUE}
 vcf_query_arrow(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
@@ -215,7 +215,7 @@ vcf_query_arrow(bcf_file, "SELECT CHROM, POS, REF, ALT FROM vcf  LIMIT 5")
 
 ###  Query VCF with  DuckDB Extension
 
-A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead. The extension uses the Duckb C API and should be compatible with duckb v1.2.0+
+A native DuckDB extension (`bcf_reader`) for direct SQL queries on VCF/BCF files without Arrow conversion overhead. The extension uses the DuckDB C API and should be compatible with DuckDB v1.2.0+
 
 ```{r duckdb-ext, eval=TRUE}
 # Build extension (uses package's bundled htslib)
@@ -412,11 +412,11 @@ nanoarrow::convert_array(batch2)[, c("CHROM", "POS", "REF")] |> head(3)
 
 ## Example Application: DuckLake ETL
 
-[`DuckLake`](https://ducklake.select/) is an integrated data lake and catalog format. It has two components, a parquet files storage and a metadata dababase layer.
+[`DuckLake`](https://ducklake.select/) is an integrated data lake and catalog format. It has two components: a Parquet file storage and a metadata database layer.
 
 ### DuckLake ETL to MinIO Storage backend
 
-To mimick a S3 backend for [`DuckLake`](https://ducklake.select/) storage we use [minio](github.com/minio/minio), we convert VCF files to parquet and insert then into DuckLake and query the lake. The lake as a local duckdb metadata database in this example
+To mimic an S3 backend for [`DuckLake`](https://ducklake.select/) storage we use [MinIO](https://github.com/minio/minio), we convert VCF files to Parquet and insert them into DuckLake and query the lake. The lake has a local DuckDB metadata database in this example
 
 
 #### Setup up `minio` storage backend
@@ -424,7 +424,6 @@ We start by seting up and configuring a `minio` server
 
 ```{r ducklake-minio, eval=TRUE}
 # DuckLake with S3-compatible storage using local MinIO
-if (!requireNamespace("processx", quietly = TRUE)) stop("processx required")
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -623,7 +622,7 @@ tools::pskill(pid)
 DuckLake supports multiple catalog backends
 
 - `DuckDB` : `ducklake:path/to/catalog.ducklake`
-- `SQLite`: `ducklake:sqlite://path/to/catalog.db`  
+- `SQLite`: `ducklake:sqlite:path/to/catalog.db`  
 - `PostgreSQL` : `ducklake:postgresql://user:pass@host:5432/db`
 - `MySQL`: `ducklake:mysql://user:pass@host:3306/db`
 
