@@ -38,6 +38,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <time.h>
+#include <inttypes.h>
 
 // htslib headers
 #include <htslib/vcf.h>
@@ -964,7 +965,7 @@ static void print_progress(bcf_init_data_t* init, const char* context) {
             }
         }
         
-        fprintf(stderr, "[bcf_reader] %s: Processed %ld records (%.0f rec/s)\n", 
+        fprintf(stderr, "[bcf_reader] %s: Processed %" PRId64 " records (%.0f rec/s)\n", 
                 context, init->total_records_processed, records_per_sec);
     }
 }

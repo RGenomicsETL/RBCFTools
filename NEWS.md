@@ -1,3 +1,8 @@
+# RBCFTools 1.23-0.0.3.1
+
+- Fixed `int64_t` format specifier in bcf_reader extension for macOS arm64 compatibility (use `PRId64` from `<inttypes.h>` instead of `%ld`)
+- Skip dynamic linking test on macOS due to System Integrity Protection (SIP) stripping `DYLD_LIBRARY_PATH` in subprocesses
+
 # RBCFTools 1.23-0.0.3
 
 - API hardening release, from now on, only bug fixes and performance improvement

@@ -1,6 +1,6 @@
 Package: RBCFTools
 Title: 'BCFTools', 'libbcftools' and 'htslib' Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors
-Version: 1.23-0.0.3
+Version: 1.23-0.0.3.1
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
     email = "sounkoutoure@gmail.com", role = c("aut", "cre")),

@@ -581,10 +581,14 @@ int main(void) {
   return(grepl("^[0-9]+\\.[0-9]+", run_output[1]))
 }
 
-expect_true(
-  test_dynamic_linking_with_ldpath(),
-  info = "Should be able to dynamically link and run with LD_LIBRARY_PATH"
-)
+# Skip on macOS: DYLD_LIBRARY_PATH is often stripped by System Integrity Protection (SIP)
+# when running subprocesses, making this test unreliable on CRAN mac-builder
+if (Sys.info()["sysname"] != "Darwin") {
+  expect_true(
+    test_dynamic_linking_with_ldpath(),
+    info = "Should be able to dynamically link and run with LD_LIBRARY_PATH"
+  )
+}
 
 # =============================================================================
 # Compilation Test: hts_version() execution (static linking)
