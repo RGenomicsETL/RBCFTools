@@ -19,7 +19,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/v1.23-0.0.3/DESCRIPTION)
 
 Toure S (2026). *RBCFTools: 'BCFTools', 'libbcftools' and 'htslib'
 Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
