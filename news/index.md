@@ -1,5 +1,10 @@
 # Changelog
 
+## RBCFTools 1.23-0.0.3
+
+- API hardening release, from now on, only bug fixes and performance
+  improvement
+
 ## RBCFTools 1.23-0.0.2.9000 (development version)
 
 ### Parquet to VCF conversion (bcf_writer)

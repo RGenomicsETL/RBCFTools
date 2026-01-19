@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">RBCFTools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23-0.0.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.23-0.0.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,11 +82,11 @@
 <p>RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bcftools_path.html">bcftools_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/bcftools/bin/bcftools"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"</span></span>
 <span><span class="fu"><a href="reference/bgzip_path.html">bgzip_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/bgzip"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/bgzip"</span></span>
 <span><span class="fu"><a href="reference/tabix_path.html">tabix_path</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/usr/lib64/R/library/RBCFTools/htslib/bin/tabix"</span></span>
+<span><span class="co">#&gt; [1] "/usr/local/lib/R/site-library/RBCFTools/htslib/bin/tabix"</span></span>
 <span><span class="co"># List all available tools</span></span>
 <span><span class="fu"><a href="reference/bcftools_tools.html">bcftools_tools</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "bcftools"        "color-chrs.pl"   "gff2gff"         "gff2gff.py"     </span></span>
@@ -131,7 +131,7 @@
 <span></span>
 <span><span class="co"># Human-readable feature string</span></span>
 <span><span class="fu"><a href="reference/htslib_feature_string.html">htslib_feature_string</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/lib64/R/library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/usr/local/lib/R/site-library/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.5"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="feature-constants">Feature Constants<a class="anchor" aria-label="anchor" href="#feature-constants"></a>
 </h3>
@@ -303,7 +303,7 @@
 <code class="sourceCode R"><span></span>
 <span><span class="va">parquet_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_arrow.html">vcf_to_parquet_arrow</a></span><span class="op">(</span><span class="va">bcf_file</span>, <span class="va">parquet_file</span>, compression <span class="op">=</span> <span class="st">"snappy"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet</span></span>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpb3dlTC/file5040d66355049.parquet</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_bcf</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT * FROM '%s' LIMIT 100"</span>, <span class="va">parquet_file</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pq_me</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
@@ -322,12 +322,12 @@
 <span><span class="co">#&gt; 6     1 14699   C   G</span></span>
 <span><span class="va">pq_me</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                   file_name row_group_id row_group_num_rows</span></span>
-<span><span class="co">#&gt; 1 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 2 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 3 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 4 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 5 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
-<span><span class="co">#&gt; 6 /tmp/RtmpMFsfkd/fileb791a46a6207d.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 1 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 2 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 3 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 4 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 5 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
+<span><span class="co">#&gt; 6 /tmp/Rtmpb3dlTC/file5040d66355049.parquet            0                 11</span></span>
 <span><span class="co">#&gt;   row_group_num_columns row_group_bytes column_id file_offset num_values</span></span>
 <span><span class="co">#&gt; 1                    36            3135         0           0         11</span></span>
 <span><span class="co">#&gt; 2                    36            3135         1           0         11</span></span>
@@ -403,7 +403,7 @@
 <span>    row_group_size <span class="op">=</span> <span class="fl">100000L</span>,</span>
 <span>    compression <span class="op">=</span> <span class="st">"zstd"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote 11 rows to /tmp/RtmpMFsfkd/fileb791a11910589.parquet (streaming mode)</span></span></code></pre></div>
+<span><span class="co">#&gt; Wrote 11 rows to /tmp/Rtmpb3dlTC/file5040d4dce9566.parquet (streaming mode)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="query-vcf-with-duckdb-after-converting-the-stream">Query VCF with duckdb after converting the Stream<a class="anchor" aria-label="anchor" href="#query-vcf-with-duckdb-after-converting-the-stream"></a>
@@ -595,7 +595,7 @@
 <span></span>
 <span><span class="co"># Use tidy_format parameter directly</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_duckdb.html">vcf_to_parquet_duckdb</a></span><span class="op">(</span><span class="va">vcf_3samples</span>, <span class="va">tidy_out</span>, extension_path <span class="op">=</span> <span class="va">ext_path</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpMFsfkd/fileb791a5d4280d4.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpb3dlTC/file5040dfa9e9a9.parquet</span></span>
 <span></span>
 <span><span class="co"># Query the tidy output</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">duckdb</span><span class="fu">::</span><span class="fu">dbConnect</span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -637,7 +637,7 @@
 <span><span class="co"># Export with embedded VCF header (default)</span></span>
 <span><span class="va">parquet_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_duckdb.html">vcf_to_parquet_duckdb</a></span><span class="op">(</span><span class="va">vcf_file</span>, <span class="va">parquet_out</span>, <span class="va">ext_path</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpMFsfkd/fileb791a4bd24f43.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpb3dlTC/file5040d3fadfd42.parquet</span></span>
 <span></span>
 <span><span class="co"># Read back the metadata</span></span>
 <span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/parquet_kv_metadata.html">parquet_kv_metadata</a></span><span class="op">(</span><span class="va">parquet_out</span><span class="op">)</span></span>
@@ -646,10 +646,10 @@
 <span><span class="co">#&gt; 1        vcf_header</span></span>
 <span><span class="co">#&gt; 2 RBCFTools_version</span></span>
 <span><span class="co">#&gt; 3       tidy_format</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              value</span></span>
-<span><span class="co">#&gt; 1 ##fileformat=VCFv4.0\\x0A##FILTER=&lt;ID=PASS,Description=\\x22All filters passed\\x22&gt;\\x0A##filedat=20101112\\x0A##datarelease=20100804\\x0A##samples=629\\x0A##contig=&lt;ID=1,length=249250621&gt;\\x0A##description=\\x22Where BI calls are present, genotypes and alleles are from BI.  In there absence, UM genotypes are used.  If neither are available, no genotype information is present and the alleles are from the NCBI calls.\\x22\\x0A##FORMAT=&lt;ID=AD,Number=A,Type=Integer,Description=\\x22Allelic depths for the ref and alt alleles in the order listed\\x22&gt;\\x0A##FORMAT=&lt;ID=DP,Number=1,Type=Integer,Description=\\x22Read Depth (only filtered reads used for calling)\\x22&gt;\\x0A##FORMAT=&lt;ID=GL,Number=G,Type=Float,Description=\\x22Log-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\\x22&gt;\\x0A##FORMAT=&lt;ID=GQ,Number=1,Type=Float,Description=\\x22Genotype Quality\\x22&gt;\\x0A##FORMAT=&lt;ID=GT,Number=A,Type=String,Description=\\x22Genotype\\x22&gt;\\x0A##FORMAT=&lt;ID=GD,Number=1,Type=Float,Description=\\x22Genotype dosage.  Expected count of non-ref alleles [0,2]\\x22&gt;\\x0A##FORMAT=&lt;ID=OG,Number=1,Type=String,Description=\\x22Original Genotype input to Beagle\\x22&gt;\\x0A##INFO=&lt;ID=AF,Number=.,Type=Float,Description=\\x22Allele Frequency, for each ALT allele, in the same order as listed\\x22&gt;\\x0A##INFO=&lt;ID=DP,Number=1,Type=Integer,Description=\\x22Total Depth\\x22&gt;\\x0A##INFO=&lt;ID=CB,Number=.,Type=String,Description=\\x22List of centres that called, UM (University of Michigan), BI (Broad Institute), BC (Boston College), NCBI\\x22&gt;\\x0A##INFO=&lt;ID=EUR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on European Samples\\x22&gt;\\x0A##INFO=&lt;ID=AFR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on AFRICAN Samples\\x22&gt;\\x0A##INFO=&lt;ID=ASN_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on Asian Samples\\x22&gt;\\x0A##bcftools_viewVersion=1.9-321-g5774f32+htslib-1.10.2-22-gbfc9f0d\\x0A##bcftools_viewCommand=view -O b -o 1000G.ALL.2of4intersection.20100804.genotypes.bcf 1000G.ALL.2of4intersection.20100804.genotypes.vcf; Date=Fri Apr 24 20:53:38 2020\\x0A##INFO=&lt;ID=AC,Number=A,Type=Integer,Description=\\x22Allele count in genotypes\\x22&gt;\\x0A##INFO=&lt;ID=AN,Number=1,Type=Integer,Description=\\x22Total number of alleles in called genotypes\\x22&gt;\\x0A##bcftools_viewVersion=1.23+htslib-1.23\\x0A##bcftools_viewCommand=view -s HG00098,HG00100,HG00106 -O b -o inst/extdata/1000G_3samples.bcf inst/extdata/1000G.ALL.2of4intersection.20100804.genotypes.bcf; Date=Sat Jan  3 14:41:16 2026\\x0A##bcftools_viewCommand=view -O z -o 1000G_3samples.vcf.gz 1000G_3samples.bcf; Date=Wed Jan  7 14:39:56 2026\\x0A##bcftools_viewCommand=view -h /usr/lib64/R/library/RBCFTools/extdata/1000G_3samples.vcf.gz; Date=Thu Jan 15 10:04:20 2026\\x0A#CHROM\\x09POS\\x09ID\\x09REF\\x09ALT\\x09QUAL\\x09FILTER\\x09INFO\\x09FORMAT\\x09HG00098\\x09HG00100\\x09HG00106</span></span>
-<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  1.23.0.0.2.9000</span></span>
-<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            false</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       value</span></span>
+<span><span class="co">#&gt; 1 ##fileformat=VCFv4.0\\x0A##FILTER=&lt;ID=PASS,Description=\\x22All filters passed\\x22&gt;\\x0A##filedat=20101112\\x0A##datarelease=20100804\\x0A##samples=629\\x0A##contig=&lt;ID=1,length=249250621&gt;\\x0A##description=\\x22Where BI calls are present, genotypes and alleles are from BI.  In there absence, UM genotypes are used.  If neither are available, no genotype information is present and the alleles are from the NCBI calls.\\x22\\x0A##FORMAT=&lt;ID=AD,Number=A,Type=Integer,Description=\\x22Allelic depths for the ref and alt alleles in the order listed\\x22&gt;\\x0A##FORMAT=&lt;ID=DP,Number=1,Type=Integer,Description=\\x22Read Depth (only filtered reads used for calling)\\x22&gt;\\x0A##FORMAT=&lt;ID=GL,Number=G,Type=Float,Description=\\x22Log-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\\x22&gt;\\x0A##FORMAT=&lt;ID=GQ,Number=1,Type=Float,Description=\\x22Genotype Quality\\x22&gt;\\x0A##FORMAT=&lt;ID=GT,Number=A,Type=String,Description=\\x22Genotype\\x22&gt;\\x0A##FORMAT=&lt;ID=GD,Number=1,Type=Float,Description=\\x22Genotype dosage.  Expected count of non-ref alleles [0,2]\\x22&gt;\\x0A##FORMAT=&lt;ID=OG,Number=1,Type=String,Description=\\x22Original Genotype input to Beagle\\x22&gt;\\x0A##INFO=&lt;ID=AF,Number=.,Type=Float,Description=\\x22Allele Frequency, for each ALT allele, in the same order as listed\\x22&gt;\\x0A##INFO=&lt;ID=DP,Number=1,Type=Integer,Description=\\x22Total Depth\\x22&gt;\\x0A##INFO=&lt;ID=CB,Number=.,Type=String,Description=\\x22List of centres that called, UM (University of Michigan), BI (Broad Institute), BC (Boston College), NCBI\\x22&gt;\\x0A##INFO=&lt;ID=EUR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on European Samples\\x22&gt;\\x0A##INFO=&lt;ID=AFR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on AFRICAN Samples\\x22&gt;\\x0A##INFO=&lt;ID=ASN_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on Asian Samples\\x22&gt;\\x0A##bcftools_viewVersion=1.9-321-g5774f32+htslib-1.10.2-22-gbfc9f0d\\x0A##bcftools_viewCommand=view -O b -o 1000G.ALL.2of4intersection.20100804.genotypes.bcf 1000G.ALL.2of4intersection.20100804.genotypes.vcf; Date=Fri Apr 24 20:53:38 2020\\x0A##INFO=&lt;ID=AC,Number=A,Type=Integer,Description=\\x22Allele count in genotypes\\x22&gt;\\x0A##INFO=&lt;ID=AN,Number=1,Type=Integer,Description=\\x22Total number of alleles in called genotypes\\x22&gt;\\x0A##bcftools_viewVersion=1.23+htslib-1.23\\x0A##bcftools_viewCommand=view -s HG00098,HG00100,HG00106 -O b -o inst/extdata/1000G_3samples.bcf inst/extdata/1000G.ALL.2of4intersection.20100804.genotypes.bcf; Date=Sat Jan  3 14:41:16 2026\\x0A##bcftools_viewCommand=view -O z -o 1000G_3samples.vcf.gz 1000G_3samples.bcf; Date=Wed Jan  7 14:39:56 2026\\x0A##bcftools_viewCommand=view -h /usr/local/lib/R/site-library/RBCFTools/extdata/1000G_3samples.vcf.gz; Date=Mon Jan 19 21:10:58 2026\\x0A#CHROM\\x09POS\\x09ID\\x09REF\\x09ALT\\x09QUAL\\x09FILTER\\x09INFO\\x09FORMAT\\x09HG00098\\x09HG00100\\x09HG00106</span></span>
+<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                1.23.0.0.3</span></span>
+<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     false</span></span>
 <span></span>
 <span><span class="co"># Extract the VCF header (stored with escaped newlines)</span></span>
 <span><span class="va">vcf_header</span> <span class="op">&lt;-</span> <span class="va">meta</span><span class="op">[</span><span class="va">meta</span><span class="op">$</span><span class="va">key</span> <span class="op">==</span> <span class="st">"vcf_header"</span>, <span class="st">"value"</span><span class="op">]</span></span>
@@ -760,7 +760,7 @@
 <span><span class="va">pid_output</span> <span class="op">&lt;-</span> <span class="fu">processx</span><span class="fu">::</span><span class="fu"><a href="http://processx.r-lib.org/reference/run.html" class="external-link">run</a></span><span class="op">(</span><span class="st">"sh"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-c"</span>, <span class="va">cmd</span><span class="op">)</span>, echo <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">stdout</span></span>
 <span><span class="va">pid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pid_output</span><span class="op">)</span></span>
 <span><span class="va">pid</span></span>
-<span><span class="co">#&gt; [1] 752740</span></span>
+<span><span class="co">#&gt; [1] 329148</span></span>
 <span><span class="co"># Give MinIO time to start</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
 <span></span>
@@ -806,7 +806,7 @@
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stdout</span></span>
-<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768457079`.\n"</span></span>
+<span><span class="co">#&gt; [1] "Bucket created successfully `ducklake_local/readme-demo-1768853472`.\n"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stderr</span></span>
 <span><span class="co">#&gt; [1] ""</span></span>
@@ -886,7 +886,7 @@
 <span><span class="co"># Load variants via fast VCF to Parquet conversion</span></span>
 <span><span class="va">vcf_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_deep_variant.vcf.gz"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">ext_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bcf_reader_build.html">bcf_reader_build</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; bcf_reader extension already exists at: /tmp/RtmpMFsfkd/build/bcf_reader.duckdb_extension</span></span>
+<span><span class="co">#&gt; bcf_reader extension already exists at: /tmp/Rtmpb3dlTC/build/bcf_reader.duckdb_extension</span></span>
 <span><span class="co">#&gt; Use force=TRUE to rebuild.</span></span>
 <span><span class="fu"><a href="reference/ducklake_load_vcf.html">ducklake_load_vcf</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
@@ -896,7 +896,7 @@
 <span>  threads <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  tidy_format <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpMFsfkd/variants_20260115_100440.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpb3dlTC/variants_20260119_211112.parquet</span></span>
 <span><span class="co">#&gt; Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',</span></span>
 <span><span class="co">#&gt;  target signature 'duckdb_connection#Id'.</span></span>
 <span><span class="co">#&gt;  "duckdb_connection#ANY" would also be valid</span></span></code></pre></div>
@@ -915,7 +915,7 @@
 <span><span class="va">vcf_file2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"test_vep.vcf"</span>, package <span class="op">=</span> <span class="st">"RBCFTools"</span><span class="op">)</span></span>
 <span><span class="va">local_parquet2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".parquet"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vcf_to_parquet_duckdb.html">vcf_to_parquet_duckdb</a></span><span class="op">(</span><span class="va">vcf_file2</span>, <span class="va">local_parquet2</span>, extension_path <span class="op">=</span> <span class="va">ext_path</span>, tidy_format <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Wrote: /tmp/RtmpMFsfkd/fileb791a5a89b905.parquet</span></span>
+<span><span class="co">#&gt; Wrote: /tmp/Rtmpb3dlTC/file5040d24f2153a.parquet</span></span>
 <span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"SELECT COUNT(*) as n FROM read_parquet('%s')"</span>, <span class="va">local_parquet2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     n</span></span>
@@ -928,7 +928,7 @@
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stdout</span></span>
-<span><span class="co">#&gt; [1] "`/tmp/RtmpMFsfkd/fileb791a5a89b905.parquet` -&gt; `ducklake_local/readme-demo-1768457079/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬────────────┐\n│ Total      │ Transferred │ Duration │ Speed      │\n│ 122.33 KiB │ 122.33 KiB  │ 00m00s   │ 3.96 MiB/s │\n└────────────┴─────────────┴──────────┴────────────┘\n"</span></span>
+<span><span class="co">#&gt; [1] "`/tmp/Rtmpb3dlTC/file5040d24f2153a.parquet` -&gt; `ducklake_local/readme-demo-1768853472/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬────────────┐\n│ Total      │ Transferred │ Duration │ Speed      │\n│ 122.33 KiB │ 122.33 KiB  │ 00m00s   │ 7.47 MiB/s │\n└────────────┴─────────────┴──────────┴────────────┘\n"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $stderr</span></span>
 <span><span class="co">#&gt; [1] ""</span></span>
@@ -996,11 +996,11 @@
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/ducklake_list_files.html">ducklake_list_files</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span>, <span class="st">"variants"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                                                                              data_file</span></span>
-<span><span class="co">#&gt; 1 s3://readme-demo-1768457079/data/main/variants/ducklake-019bc041-9bc4-7032-9a23-da26ee113d4b.parquet</span></span>
-<span><span class="co">#&gt; 2                                       s3://readme-demo-1768457079/data/variants/variants_vep.parquet</span></span>
+<span><span class="co">#&gt; 1 s3://readme-demo-1768853472/data/main/variants/ducklake-019bd7e2-0744-77ae-a713-ed2462ad3c0b.parquet</span></span>
+<span><span class="co">#&gt; 2                                       s3://readme-demo-1768853472/data/variants/variants_vep.parquet</span></span>
 <span><span class="co">#&gt;   data_file_size_bytes data_file_footer_size data_file_encryption_key</span></span>
 <span><span class="co">#&gt; 1              5751964                  6113                     NULL</span></span>
-<span><span class="co">#&gt; 2               125265                 16358                     NULL</span></span>
+<span><span class="co">#&gt; 2               125269                 16362                     NULL</span></span>
 <span><span class="co">#&gt;   delete_file delete_file_size_bytes delete_file_footer_size</span></span>
 <span><span class="co">#&gt; 1        &lt;NA&gt;                     NA                      NA</span></span>
 <span><span class="co">#&gt; 2        &lt;NA&gt;                     NA                      NA</span></span>
@@ -1014,12 +1014,12 @@
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/ducklake_snapshots.html">ducklake_snapshots</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   snapshot_id       snapshot_time schema_version</span></span>
-<span><span class="co">#&gt; 1           0 2026-01-15 06:04:40              0</span></span>
-<span><span class="co">#&gt; 2           1 2026-01-15 06:04:43              1</span></span>
-<span><span class="co">#&gt; 3           2 2026-01-15 06:04:44              2</span></span>
-<span><span class="co">#&gt; 4           3 2026-01-15 06:04:44              3</span></span>
-<span><span class="co">#&gt; 5           4 2026-01-15 06:04:44              4</span></span>
-<span><span class="co">#&gt; 6           5 2026-01-15 06:04:44              5</span></span>
+<span><span class="co">#&gt; 1           0 2026-01-19 20:11:12              0</span></span>
+<span><span class="co">#&gt; 2           1 2026-01-19 20:11:13              1</span></span>
+<span><span class="co">#&gt; 3           2 2026-01-19 20:11:13              2</span></span>
+<span><span class="co">#&gt; 4           3 2026-01-19 20:11:13              3</span></span>
+<span><span class="co">#&gt; 5           4 2026-01-19 20:11:13              4</span></span>
+<span><span class="co">#&gt; 6           5 2026-01-19 20:11:13              5</span></span>
 <span><span class="co">#&gt;                                                  changes author commit_message</span></span>
 <span><span class="co">#&gt; 1                                  schemas_created, main   &lt;NA&gt;           &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 2 tables_created, tables_inserted_into, main.variants, 1   &lt;NA&gt;           &lt;NA&gt;</span></span>
@@ -1036,12 +1036,12 @@
 <span><span class="co">#&gt; 6              &lt;NA&gt;</span></span>
 <span><span class="fu"><a href="reference/ducklake_snapshots.html">ducklake_snapshots</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    snapshot_id       snapshot_time schema_version                 changes</span></span>
-<span><span class="co">#&gt; 84          83 2026-01-15 06:04:50             83       tables_altered, 1</span></span>
-<span><span class="co">#&gt; 85          84 2026-01-15 06:04:50             84       tables_altered, 1</span></span>
-<span><span class="co">#&gt; 86          85 2026-01-15 06:04:50             85       tables_altered, 1</span></span>
-<span><span class="co">#&gt; 87          86 2026-01-15 06:04:51             86       tables_altered, 1</span></span>
-<span><span class="co">#&gt; 88          87 2026-01-15 06:04:51             87       tables_altered, 1</span></span>
-<span><span class="co">#&gt; 89          88 2026-01-15 06:04:51             87 tables_inserted_into, 1</span></span>
+<span><span class="co">#&gt; 84          83 2026-01-19 20:11:14             83       tables_altered, 1</span></span>
+<span><span class="co">#&gt; 85          84 2026-01-19 20:11:14             84       tables_altered, 1</span></span>
+<span><span class="co">#&gt; 86          85 2026-01-19 20:11:14             85       tables_altered, 1</span></span>
+<span><span class="co">#&gt; 87          86 2026-01-19 20:11:14             86       tables_altered, 1</span></span>
+<span><span class="co">#&gt; 88          87 2026-01-19 20:11:14             87       tables_altered, 1</span></span>
+<span><span class="co">#&gt; 89          88 2026-01-19 20:11:14             87 tables_inserted_into, 1</span></span>
 <span><span class="co">#&gt;    author commit_message commit_extra_info</span></span>
 <span><span class="co">#&gt; 84   &lt;NA&gt;           &lt;NA&gt;              &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 85   &lt;NA&gt;           &lt;NA&gt;              &lt;NA&gt;</span></span>
@@ -1065,7 +1065,7 @@
 <span><span class="co">#&gt; 4     version                                          DuckLake format version</span></span>
 <span><span class="co">#&gt;                               value  scope scope_entry</span></span>
 <span><span class="co">#&gt; 1                 DuckDB d1dc88f950 GLOBAL        &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 2 s3://readme-demo-1768457079/data/ GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2 s3://readme-demo-1768853472/data/ GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 3                             false GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 4                               0.3 GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="fu"><a href="reference/ducklake_set_option.html">ducklake_set_option</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"lake"</span>, <span class="st">"parquet_compression"</span>, <span class="st">"zstd"</span><span class="op">)</span></span>
@@ -1084,7 +1084,7 @@
 <span><span class="co">#&gt; 5                                                                          DuckLake format version</span></span>
 <span><span class="co">#&gt;                               value  scope scope_entry</span></span>
 <span><span class="co">#&gt; 1                 DuckDB d1dc88f950 GLOBAL        &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 2 s3://readme-demo-1768457079/data/ GLOBAL        &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2 s3://readme-demo-1768853472/data/ GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 3                             false GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 4                              zstd GLOBAL        &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 5                               0.3 GLOBAL        &lt;NA&gt;</span></span></code></pre></div>
@@ -1188,178 +1188,176 @@
 <span id="cb33-23"><a href="#cb33-23" tabindex="-1"></a></span>
 <span id="cb33-24"><a href="#cb33-24" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> <span class="va">$OUT_PQ</span></span>
 <span id="cb33-25"><a href="#cb33-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-26"><a href="#cb33-26" tabindex="-1"></a><span class="co">#&gt; real 0m5.033s</span></span>
-<span id="cb33-27"><a href="#cb33-27" tabindex="-1"></a><span class="co">#&gt; user 0m10.528s</span></span>
-<span id="cb33-28"><a href="#cb33-28" tabindex="-1"></a><span class="co">#&gt; sys  0m2.028s</span></span>
+<span id="cb33-26"><a href="#cb33-26" tabindex="-1"></a><span class="co">#&gt; real 0m1.678s</span></span>
+<span id="cb33-27"><a href="#cb33-27" tabindex="-1"></a><span class="co">#&gt; user 0m3.808s</span></span>
+<span id="cb33-28"><a href="#cb33-28" tabindex="-1"></a><span class="co">#&gt; sys  0m2.088s</span></span>
 <span id="cb33-29"><a href="#cb33-29" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb33-30"><a href="#cb33-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpOGROJv </span></span>
+<span id="cb33-30"><a href="#cb33-30" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpB5hN0e </span></span>
 <span id="cb33-31"><a href="#cb33-31" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb33-32"><a href="#cb33-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpOGROJv</span></span>
-<span id="cb33-33"><a href="#cb33-33" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/lib64/R/library/RBCFTools/htslib/lib</span></span>
+<span id="cb33-32"><a href="#cb33-32" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpB5hN0e</span></span>
+<span id="cb33-33"><a href="#cb33-33" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
 <span id="cb33-34"><a href="#cb33-34" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb33-35"><a href="#cb33-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpOGROJv'</span></span>
-<span id="cb33-36"><a href="#cb33-36" tabindex="-1"></a><span class="co">#&gt; Makefile:151: Using system defaults for htslib</span></span>
-<span id="cb33-37"><a href="#cb33-37" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb33-38"><a href="#cb33-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpOGROJv'</span></span>
-<span id="cb33-39"><a href="#cb33-39" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpOGROJv'</span></span>
-<span id="cb33-40"><a href="#cb33-40" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
-<span id="cb33-41"><a href="#cb33-41" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/lib64/R/library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
-<span id="cb33-42"><a href="#cb33-42" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/lib64/R/library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
-<span id="cb33-43"><a href="#cb33-43" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/lib64/R/library/RBCFTools/htslib/lib -Wl,-rpath,/usr/lib64/R/library/RBCFTools/htslib/lib -lhts</span></span>
-<span id="cb33-44"><a href="#cb33-44" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
-<span id="cb33-45"><a href="#cb33-45" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
-<span id="cb33-46"><a href="#cb33-46" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
-<span id="cb33-47"><a href="#cb33-47" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
-<span id="cb33-48"><a href="#cb33-48" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb33-49"><a href="#cb33-49" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpOGROJv'</span></span>
-<span id="cb33-50"><a href="#cb33-50" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpOGROJv/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb33-51"><a href="#cb33-51" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpOGROJv/build/bcf_reader.duckdb_extension </span></span>
-<span id="cb33-52"><a href="#cb33-52" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-53"><a href="#cb33-53" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet (DuckDB mode)...</span></span>
-<span id="cb33-54"><a href="#cb33-54" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
-<span id="cb33-55"><a href="#cb33-55" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.8Rx5IPcFHc.parquet </span></span>
-<span id="cb33-56"><a href="#cb33-56" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
-<span id="cb33-57"><a href="#cb33-57" tabindex="-1"></a><span class="co">#&gt;   Row group size: 100000 </span></span>
-<span id="cb33-58"><a href="#cb33-58" tabindex="-1"></a><span class="co">#&gt;   Threads: 4 </span></span>
-<span id="cb33-59"><a href="#cb33-59" tabindex="-1"></a><span class="co">#&gt;   Format: tidy (one row per variant-sample)</span></span>
-<span id="cb33-60"><a href="#cb33-60" tabindex="-1"></a><span class="co">#&gt; Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)</span></span>
-<span id="cb33-61"><a href="#cb33-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0004.parquet</span></span>
-<span id="cb33-62"><a href="#cb33-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0002.parquet</span></span>
-<span id="cb33-63"><a href="#cb33-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0003.parquet</span></span>
-<span id="cb33-64"><a href="#cb33-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0001.parquet</span></span>
-<span id="cb33-65"><a href="#cb33-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0008.parquet</span></span>
-<span id="cb33-66"><a href="#cb33-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0006.parquet</span></span>
-<span id="cb33-67"><a href="#cb33-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0005.parquet</span></span>
-<span id="cb33-68"><a href="#cb33-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0007.parquet</span></span>
-<span id="cb33-69"><a href="#cb33-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0012.parquet</span></span>
-<span id="cb33-70"><a href="#cb33-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0010.parquet</span></span>
-<span id="cb33-71"><a href="#cb33-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0009.parquet</span></span>
-<span id="cb33-72"><a href="#cb33-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0011.parquet</span></span>
-<span id="cb33-73"><a href="#cb33-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0014.parquet</span></span>
-<span id="cb33-74"><a href="#cb33-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0016.parquet</span></span>
-<span id="cb33-75"><a href="#cb33-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0013.parquet</span></span>
-<span id="cb33-76"><a href="#cb33-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0018.parquet</span></span>
-<span id="cb33-77"><a href="#cb33-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0015.parquet</span></span>
-<span id="cb33-78"><a href="#cb33-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0020.parquet</span></span>
-<span id="cb33-79"><a href="#cb33-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0017.parquet</span></span>
-<span id="cb33-80"><a href="#cb33-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0022.parquet</span></span>
-<span id="cb33-81"><a href="#cb33-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0024.parquet</span></span>
-<span id="cb33-82"><a href="#cb33-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0021.parquet</span></span>
-<span id="cb33-83"><a href="#cb33-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0019.parquet</span></span>
-<span id="cb33-84"><a href="#cb33-84" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0025.parquet</span></span>
-<span id="cb33-85"><a href="#cb33-85" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpOGROJv/vcf_duckdb_parallel_b7fe373ad9497/contig_0023.parquet</span></span>
-<span id="cb33-86"><a href="#cb33-86" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.8Rx5IPcFHc.parquet</span></span>
-<span id="cb33-87"><a href="#cb33-87" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.8Rx5IPcFHc.parquet (368319 rows)</span></span>
-<span id="cb33-88"><a href="#cb33-88" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-89"><a href="#cb33-89" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
-<span id="cb33-90"><a href="#cb33-90" tabindex="-1"></a><span class="co">#&gt;   Time: 3.42 seconds</span></span>
-<span id="cb33-91"><a href="#cb33-91" tabindex="-1"></a><span class="co">#&gt;   Output size: 3.77 MB</span></span>
-<span id="cb33-92"><a href="#cb33-92" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
-<span id="cb33-93"><a href="#cb33-93" tabindex="-1"></a><span class="co">#&gt;   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END         SAMPLE_ID FORMAT_GT</span></span>
-<span id="cb33-94"><a href="#cb33-94" tabindex="-1"></a><span class="co">#&gt; 1     1 536895 &lt;NA&gt;   T   C  0.1 RefCall       NA test_deep_variant       ./.</span></span>
-<span id="cb33-95"><a href="#cb33-95" tabindex="-1"></a><span class="co">#&gt; 2     1 536924 &lt;NA&gt;   G   A  0.1 RefCall       NA test_deep_variant       ./.</span></span>
-<span id="cb33-96"><a href="#cb33-96" tabindex="-1"></a><span class="co">#&gt; 3     1 536948 &lt;NA&gt;   A   G  0.0 RefCall       NA test_deep_variant       0/0</span></span>
-<span id="cb33-97"><a href="#cb33-97" tabindex="-1"></a><span class="co">#&gt; 4     1 536986 &lt;NA&gt;   G   T  0.0 RefCall       NA test_deep_variant       0/0</span></span>
-<span id="cb33-98"><a href="#cb33-98" tabindex="-1"></a><span class="co">#&gt; 5     1 544490 &lt;NA&gt;   A   G  0.8 RefCall       NA test_deep_variant       ./.</span></span>
-<span id="cb33-99"><a href="#cb33-99" tabindex="-1"></a><span class="co">#&gt;   FORMAT_GQ FORMAT_DP FORMAT_MIN_DP FORMAT_AD FORMAT_VAF FORMAT_PL</span></span>
-<span id="cb33-100"><a href="#cb33-100" tabindex="-1"></a><span class="co">#&gt; 1        18       106            NA    46, 52   0.490566 0, 19, 25</span></span>
-<span id="cb33-101"><a href="#cb33-101" tabindex="-1"></a><span class="co">#&gt; 2        18       118            NA    55, 60   0.508475 0, 21, 20</span></span>
-<span id="cb33-102"><a href="#cb33-102" tabindex="-1"></a><span class="co">#&gt; 3        31       104            NA    91, 13      0.125 0, 31, 38</span></span>
-<span id="cb33-103"><a href="#cb33-103" tabindex="-1"></a><span class="co">#&gt; 4        23       115            NA    55, 60   0.521739 0, 23, 29</span></span>
-<span id="cb33-104"><a href="#cb33-104" tabindex="-1"></a><span class="co">#&gt; 5         8        10            NA      6, 4        0.4  0, 7, 15</span></span>
-<span id="cb33-105"><a href="#cb33-105" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MED_DP</span></span>
-<span id="cb33-106"><a href="#cb33-106" tabindex="-1"></a><span class="co">#&gt; 1            NA</span></span>
-<span id="cb33-107"><a href="#cb33-107" tabindex="-1"></a><span class="co">#&gt; 2            NA</span></span>
-<span id="cb33-108"><a href="#cb33-108" tabindex="-1"></a><span class="co">#&gt; 3            NA</span></span>
-<span id="cb33-109"><a href="#cb33-109" tabindex="-1"></a><span class="co">#&gt; 4            NA</span></span>
-<span id="cb33-110"><a href="#cb33-110" tabindex="-1"></a><span class="co">#&gt; 5            NA</span></span>
-<span id="cb33-111"><a href="#cb33-111" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
-<span id="cb33-112"><a href="#cb33-112" tabindex="-1"></a><span class="co">#&gt;      column_name column_type null  key default extra</span></span>
-<span id="cb33-113"><a href="#cb33-113" tabindex="-1"></a><span class="co">#&gt; 1          CHROM     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-114"><a href="#cb33-114" tabindex="-1"></a><span class="co">#&gt; 2            POS      BIGINT  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-115"><a href="#cb33-115" tabindex="-1"></a><span class="co">#&gt; 3             ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-116"><a href="#cb33-116" tabindex="-1"></a><span class="co">#&gt; 4            REF     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-117"><a href="#cb33-117" tabindex="-1"></a><span class="co">#&gt; 5            ALT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-118"><a href="#cb33-118" tabindex="-1"></a><span class="co">#&gt; 6           QUAL      DOUBLE  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-119"><a href="#cb33-119" tabindex="-1"></a><span class="co">#&gt; 7         FILTER   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-120"><a href="#cb33-120" tabindex="-1"></a><span class="co">#&gt; 8       INFO_END     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-121"><a href="#cb33-121" tabindex="-1"></a><span class="co">#&gt; 9      SAMPLE_ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-122"><a href="#cb33-122" tabindex="-1"></a><span class="co">#&gt; 10     FORMAT_GT     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-123"><a href="#cb33-123" tabindex="-1"></a><span class="co">#&gt; 11     FORMAT_GQ     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-124"><a href="#cb33-124" tabindex="-1"></a><span class="co">#&gt; 12     FORMAT_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-125"><a href="#cb33-125" tabindex="-1"></a><span class="co">#&gt; 13 FORMAT_MIN_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-126"><a href="#cb33-126" tabindex="-1"></a><span class="co">#&gt; 14     FORMAT_AD   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-127"><a href="#cb33-127" tabindex="-1"></a><span class="co">#&gt; 15    FORMAT_VAF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-128"><a href="#cb33-128" tabindex="-1"></a><span class="co">#&gt; 16     FORMAT_PL   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-129"><a href="#cb33-129" tabindex="-1"></a><span class="co">#&gt; 17 FORMAT_MED_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
-<span id="cb33-130"><a href="#cb33-130" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb33-131"><a href="#cb33-131" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpXi2xEN </span></span>
-<span id="cb33-132"><a href="#cb33-132" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
-<span id="cb33-133"><a href="#cb33-133" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/RtmpXi2xEN</span></span>
-<span id="cb33-134"><a href="#cb33-134" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/lib64/R/library/RBCFTools/htslib/lib</span></span>
-<span id="cb33-135"><a href="#cb33-135" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
-<span id="cb33-136"><a href="#cb33-136" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpXi2xEN'</span></span>
-<span id="cb33-137"><a href="#cb33-137" tabindex="-1"></a><span class="co">#&gt; Makefile:151: Using system defaults for htslib</span></span>
-<span id="cb33-138"><a href="#cb33-138" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
-<span id="cb33-139"><a href="#cb33-139" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpXi2xEN'</span></span>
-<span id="cb33-140"><a href="#cb33-140" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpXi2xEN'</span></span>
-<span id="cb33-141"><a href="#cb33-141" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
-<span id="cb33-142"><a href="#cb33-142" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/lib64/R/library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
-<span id="cb33-143"><a href="#cb33-143" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/lib64/R/library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
-<span id="cb33-144"><a href="#cb33-144" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/lib64/R/library/RBCFTools/htslib/lib -Wl,-rpath,/usr/lib64/R/library/RBCFTools/htslib/lib -lhts</span></span>
-<span id="cb33-145"><a href="#cb33-145" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
-<span id="cb33-146"><a href="#cb33-146" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
-<span id="cb33-147"><a href="#cb33-147" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
-<span id="cb33-148"><a href="#cb33-148" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
-<span id="cb33-149"><a href="#cb33-149" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
-<span id="cb33-150"><a href="#cb33-150" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpXi2xEN'</span></span>
-<span id="cb33-151"><a href="#cb33-151" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpXi2xEN/build/bcf_reader.duckdb_extension</span></span>
-<span id="cb33-152"><a href="#cb33-152" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpXi2xEN/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb33-35"><a href="#cb33-35" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpB5hN0e'</span></span>
+<span id="cb33-36"><a href="#cb33-36" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
+<span id="cb33-37"><a href="#cb33-37" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpB5hN0e'</span></span>
+<span id="cb33-38"><a href="#cb33-38" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/RtmpB5hN0e'</span></span>
+<span id="cb33-39"><a href="#cb33-39" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
+<span id="cb33-40"><a href="#cb33-40" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
+<span id="cb33-41"><a href="#cb33-41" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
+<span id="cb33-42"><a href="#cb33-42" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
+<span id="cb33-43"><a href="#cb33-43" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
+<span id="cb33-44"><a href="#cb33-44" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
+<span id="cb33-45"><a href="#cb33-45" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
+<span id="cb33-46"><a href="#cb33-46" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
+<span id="cb33-47"><a href="#cb33-47" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
+<span id="cb33-48"><a href="#cb33-48" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/RtmpB5hN0e'</span></span>
+<span id="cb33-49"><a href="#cb33-49" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/RtmpB5hN0e/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb33-50"><a href="#cb33-50" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/RtmpB5hN0e/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb33-51"><a href="#cb33-51" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-52"><a href="#cb33-52" tabindex="-1"></a><span class="co">#&gt; Converting VCF to Parquet (DuckDB mode)...</span></span>
+<span id="cb33-53"><a href="#cb33-53" tabindex="-1"></a><span class="co">#&gt;   Input: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
+<span id="cb33-54"><a href="#cb33-54" tabindex="-1"></a><span class="co">#&gt;   Output: /tmp/tmp.veq9wXvcX4.parquet </span></span>
+<span id="cb33-55"><a href="#cb33-55" tabindex="-1"></a><span class="co">#&gt;   Compression: zstd </span></span>
+<span id="cb33-56"><a href="#cb33-56" tabindex="-1"></a><span class="co">#&gt;   Row group size: 100000 </span></span>
+<span id="cb33-57"><a href="#cb33-57" tabindex="-1"></a><span class="co">#&gt;   Threads: 4 </span></span>
+<span id="cb33-58"><a href="#cb33-58" tabindex="-1"></a><span class="co">#&gt;   Format: tidy (one row per variant-sample)</span></span>
+<span id="cb33-59"><a href="#cb33-59" tabindex="-1"></a><span class="co">#&gt; Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)</span></span>
+<span id="cb33-60"><a href="#cb33-60" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0004.parquet</span></span>
+<span id="cb33-61"><a href="#cb33-61" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0003.parquet</span></span>
+<span id="cb33-62"><a href="#cb33-62" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0002.parquet</span></span>
+<span id="cb33-63"><a href="#cb33-63" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0001.parquet</span></span>
+<span id="cb33-64"><a href="#cb33-64" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0008.parquet</span></span>
+<span id="cb33-65"><a href="#cb33-65" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0007.parquet</span></span>
+<span id="cb33-66"><a href="#cb33-66" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0006.parquet</span></span>
+<span id="cb33-67"><a href="#cb33-67" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0005.parquet</span></span>
+<span id="cb33-68"><a href="#cb33-68" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0012.parquet</span></span>
+<span id="cb33-69"><a href="#cb33-69" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0010.parquet</span></span>
+<span id="cb33-70"><a href="#cb33-70" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0011.parquet</span></span>
+<span id="cb33-71"><a href="#cb33-71" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0009.parquet</span></span>
+<span id="cb33-72"><a href="#cb33-72" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0014.parquet</span></span>
+<span id="cb33-73"><a href="#cb33-73" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0016.parquet</span></span>
+<span id="cb33-74"><a href="#cb33-74" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0013.parquet</span></span>
+<span id="cb33-75"><a href="#cb33-75" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0015.parquet</span></span>
+<span id="cb33-76"><a href="#cb33-76" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0018.parquet</span></span>
+<span id="cb33-77"><a href="#cb33-77" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0020.parquet</span></span>
+<span id="cb33-78"><a href="#cb33-78" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0017.parquet</span></span>
+<span id="cb33-79"><a href="#cb33-79" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0019.parquet</span></span>
+<span id="cb33-80"><a href="#cb33-80" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0024.parquet</span></span>
+<span id="cb33-81"><a href="#cb33-81" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0022.parquet</span></span>
+<span id="cb33-82"><a href="#cb33-82" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0021.parquet</span></span>
+<span id="cb33-83"><a href="#cb33-83" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0023.parquet</span></span>
+<span id="cb33-84"><a href="#cb33-84" tabindex="-1"></a><span class="co">#&gt; Wrote: /tmp/RtmpB5hN0e/vcf_duckdb_parallel_506da1906322d/contig_0025.parquet</span></span>
+<span id="cb33-85"><a href="#cb33-85" tabindex="-1"></a><span class="co">#&gt; Merging temporary Parquet files... to /tmp/tmp.veq9wXvcX4.parquet</span></span>
+<span id="cb33-86"><a href="#cb33-86" tabindex="-1"></a><span class="co">#&gt; Merged 25 parquet files -&gt; tmp.veq9wXvcX4.parquet (368319 rows)</span></span>
+<span id="cb33-87"><a href="#cb33-87" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-88"><a href="#cb33-88" tabindex="-1"></a><span class="co">#&gt; ✓ Conversion complete!</span></span>
+<span id="cb33-89"><a href="#cb33-89" tabindex="-1"></a><span class="co">#&gt;   Time: 1.01 seconds</span></span>
+<span id="cb33-90"><a href="#cb33-90" tabindex="-1"></a><span class="co">#&gt;   Output size: 3.77 MB</span></span>
+<span id="cb33-91"><a href="#cb33-91" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
+<span id="cb33-92"><a href="#cb33-92" tabindex="-1"></a><span class="co">#&gt;   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END         SAMPLE_ID FORMAT_GT</span></span>
+<span id="cb33-93"><a href="#cb33-93" tabindex="-1"></a><span class="co">#&gt; 1     1 536895 &lt;NA&gt;   T   C  0.1 RefCall       NA test_deep_variant       ./.</span></span>
+<span id="cb33-94"><a href="#cb33-94" tabindex="-1"></a><span class="co">#&gt; 2     1 536924 &lt;NA&gt;   G   A  0.1 RefCall       NA test_deep_variant       ./.</span></span>
+<span id="cb33-95"><a href="#cb33-95" tabindex="-1"></a><span class="co">#&gt; 3     1 536948 &lt;NA&gt;   A   G  0.0 RefCall       NA test_deep_variant       0/0</span></span>
+<span id="cb33-96"><a href="#cb33-96" tabindex="-1"></a><span class="co">#&gt; 4     1 536986 &lt;NA&gt;   G   T  0.0 RefCall       NA test_deep_variant       0/0</span></span>
+<span id="cb33-97"><a href="#cb33-97" tabindex="-1"></a><span class="co">#&gt; 5     1 544490 &lt;NA&gt;   A   G  0.8 RefCall       NA test_deep_variant       ./.</span></span>
+<span id="cb33-98"><a href="#cb33-98" tabindex="-1"></a><span class="co">#&gt;   FORMAT_GQ FORMAT_DP FORMAT_MIN_DP FORMAT_AD FORMAT_VAF FORMAT_PL</span></span>
+<span id="cb33-99"><a href="#cb33-99" tabindex="-1"></a><span class="co">#&gt; 1        18       106            NA    46, 52   0.490566 0, 19, 25</span></span>
+<span id="cb33-100"><a href="#cb33-100" tabindex="-1"></a><span class="co">#&gt; 2        18       118            NA    55, 60   0.508475 0, 21, 20</span></span>
+<span id="cb33-101"><a href="#cb33-101" tabindex="-1"></a><span class="co">#&gt; 3        31       104            NA    91, 13      0.125 0, 31, 38</span></span>
+<span id="cb33-102"><a href="#cb33-102" tabindex="-1"></a><span class="co">#&gt; 4        23       115            NA    55, 60   0.521739 0, 23, 29</span></span>
+<span id="cb33-103"><a href="#cb33-103" tabindex="-1"></a><span class="co">#&gt; 5         8        10            NA      6, 4        0.4  0, 7, 15</span></span>
+<span id="cb33-104"><a href="#cb33-104" tabindex="-1"></a><span class="co">#&gt;   FORMAT_MED_DP</span></span>
+<span id="cb33-105"><a href="#cb33-105" tabindex="-1"></a><span class="co">#&gt; 1            NA</span></span>
+<span id="cb33-106"><a href="#cb33-106" tabindex="-1"></a><span class="co">#&gt; 2            NA</span></span>
+<span id="cb33-107"><a href="#cb33-107" tabindex="-1"></a><span class="co">#&gt; 3            NA</span></span>
+<span id="cb33-108"><a href="#cb33-108" tabindex="-1"></a><span class="co">#&gt; 4            NA</span></span>
+<span id="cb33-109"><a href="#cb33-109" tabindex="-1"></a><span class="co">#&gt; 5            NA</span></span>
+<span id="cb33-110"><a href="#cb33-110" tabindex="-1"></a><span class="co">#&gt; Running query on Parquet file...</span></span>
+<span id="cb33-111"><a href="#cb33-111" tabindex="-1"></a><span class="co">#&gt;      column_name column_type null  key default extra</span></span>
+<span id="cb33-112"><a href="#cb33-112" tabindex="-1"></a><span class="co">#&gt; 1          CHROM     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-113"><a href="#cb33-113" tabindex="-1"></a><span class="co">#&gt; 2            POS      BIGINT  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-114"><a href="#cb33-114" tabindex="-1"></a><span class="co">#&gt; 3             ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-115"><a href="#cb33-115" tabindex="-1"></a><span class="co">#&gt; 4            REF     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-116"><a href="#cb33-116" tabindex="-1"></a><span class="co">#&gt; 5            ALT   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-117"><a href="#cb33-117" tabindex="-1"></a><span class="co">#&gt; 6           QUAL      DOUBLE  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-118"><a href="#cb33-118" tabindex="-1"></a><span class="co">#&gt; 7         FILTER   VARCHAR[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-119"><a href="#cb33-119" tabindex="-1"></a><span class="co">#&gt; 8       INFO_END     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-120"><a href="#cb33-120" tabindex="-1"></a><span class="co">#&gt; 9      SAMPLE_ID     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-121"><a href="#cb33-121" tabindex="-1"></a><span class="co">#&gt; 10     FORMAT_GT     VARCHAR  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-122"><a href="#cb33-122" tabindex="-1"></a><span class="co">#&gt; 11     FORMAT_GQ     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-123"><a href="#cb33-123" tabindex="-1"></a><span class="co">#&gt; 12     FORMAT_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-124"><a href="#cb33-124" tabindex="-1"></a><span class="co">#&gt; 13 FORMAT_MIN_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-125"><a href="#cb33-125" tabindex="-1"></a><span class="co">#&gt; 14     FORMAT_AD   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-126"><a href="#cb33-126" tabindex="-1"></a><span class="co">#&gt; 15    FORMAT_VAF     FLOAT[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-127"><a href="#cb33-127" tabindex="-1"></a><span class="co">#&gt; 16     FORMAT_PL   INTEGER[]  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-128"><a href="#cb33-128" tabindex="-1"></a><span class="co">#&gt; 17 FORMAT_MED_DP     INTEGER  YES &lt;NA&gt;    &lt;NA&gt;  &lt;NA&gt;</span></span>
+<span id="cb33-129"><a href="#cb33-129" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb33-130"><a href="#cb33-130" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmp2BzpAc </span></span>
+<span id="cb33-131"><a href="#cb33-131" tabindex="-1"></a><span class="co">#&gt; Building bcf_reader extension...</span></span>
+<span id="cb33-132"><a href="#cb33-132" tabindex="-1"></a><span class="co">#&gt;   Build directory: /tmp/Rtmp2BzpAc</span></span>
+<span id="cb33-133"><a href="#cb33-133" tabindex="-1"></a><span class="co">#&gt;   Using htslib from: /usr/local/lib/R/site-library/RBCFTools/htslib/lib</span></span>
+<span id="cb33-134"><a href="#cb33-134" tabindex="-1"></a><span class="co">#&gt;   Running: make with explicit htslib paths</span></span>
+<span id="cb33-135"><a href="#cb33-135" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmp2BzpAc'</span></span>
+<span id="cb33-136"><a href="#cb33-136" tabindex="-1"></a><span class="co">#&gt; rm -rf build</span></span>
+<span id="cb33-137"><a href="#cb33-137" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmp2BzpAc'</span></span>
+<span id="cb33-138"><a href="#cb33-138" tabindex="-1"></a><span class="co">#&gt; make[1]: Entering directory '/tmp/Rtmp2BzpAc'</span></span>
+<span id="cb33-139"><a href="#cb33-139" tabindex="-1"></a><span class="co">#&gt; mkdir -p build</span></span>
+<span id="cb33-140"><a href="#cb33-140" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o</span></span>
+<span id="cb33-141"><a href="#cb33-141" tabindex="-1"></a><span class="co">#&gt; gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/usr/local/lib/R/site-library/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o</span></span>
+<span id="cb33-142"><a href="#cb33-142" tabindex="-1"></a><span class="co">#&gt; gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/usr/local/lib/R/site-library/RBCFTools/htslib/lib -Wl,-rpath,/usr/local/lib/R/site-library/RBCFTools/htslib/lib -lhts</span></span>
+<span id="cb33-143"><a href="#cb33-143" tabindex="-1"></a><span class="co">#&gt; Creating DuckDB extension with metadata...</span></span>
+<span id="cb33-144"><a href="#cb33-144" tabindex="-1"></a><span class="co">#&gt; Created: build/bcf_reader.duckdb_extension</span></span>
+<span id="cb33-145"><a href="#cb33-145" tabindex="-1"></a><span class="co">#&gt;   Platform: linux_amd64</span></span>
+<span id="cb33-146"><a href="#cb33-146" tabindex="-1"></a><span class="co">#&gt;   DuckDB Version: v1.2.0</span></span>
+<span id="cb33-147"><a href="#cb33-147" tabindex="-1"></a><span class="co">#&gt;   Extension Version: 1.0.0</span></span>
+<span id="cb33-148"><a href="#cb33-148" tabindex="-1"></a><span class="co">#&gt; make[1]: Leaving directory '/tmp/Rtmp2BzpAc'</span></span>
+<span id="cb33-149"><a href="#cb33-149" tabindex="-1"></a><span class="co">#&gt; Extension built: /tmp/Rtmp2BzpAc/build/bcf_reader.duckdb_extension</span></span>
+<span id="cb33-150"><a href="#cb33-150" tabindex="-1"></a><span class="co">#&gt; ✓ Extension ready: /tmp/Rtmp2BzpAc/build/bcf_reader.duckdb_extension </span></span>
+<span id="cb33-151"><a href="#cb33-151" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-152"><a href="#cb33-152" tabindex="-1"></a><span class="co">#&gt; VCF DuckDB Schema for: /usr/local/lib/R/site-library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
 <span id="cb33-153"><a href="#cb33-153" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-154"><a href="#cb33-154" tabindex="-1"></a><span class="co">#&gt; VCF DuckDB Schema for: /usr/lib64/R/library/RBCFTools/extdata/test_deep_variant.vcf.gz </span></span>
-<span id="cb33-155"><a href="#cb33-155" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-156"><a href="#cb33-156" tabindex="-1"></a><span class="co">#&gt;                      column_name column_type</span></span>
-<span id="cb33-157"><a href="#cb33-157" tabindex="-1"></a><span class="co">#&gt;                            CHROM   character</span></span>
-<span id="cb33-158"><a href="#cb33-158" tabindex="-1"></a><span class="co">#&gt;                              POS     numeric</span></span>
-<span id="cb33-159"><a href="#cb33-159" tabindex="-1"></a><span class="co">#&gt;                               ID   character</span></span>
-<span id="cb33-160"><a href="#cb33-160" tabindex="-1"></a><span class="co">#&gt;                              REF   character</span></span>
-<span id="cb33-161"><a href="#cb33-161" tabindex="-1"></a><span class="co">#&gt;                              ALT        list</span></span>
-<span id="cb33-162"><a href="#cb33-162" tabindex="-1"></a><span class="co">#&gt;                             QUAL     numeric</span></span>
-<span id="cb33-163"><a href="#cb33-163" tabindex="-1"></a><span class="co">#&gt;                           FILTER        list</span></span>
-<span id="cb33-164"><a href="#cb33-164" tabindex="-1"></a><span class="co">#&gt;                         INFO_END     integer</span></span>
-<span id="cb33-165"><a href="#cb33-165" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant   character</span></span>
-<span id="cb33-166"><a href="#cb33-166" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant     integer</span></span>
-<span id="cb33-167"><a href="#cb33-167" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant     integer</span></span>
-<span id="cb33-168"><a href="#cb33-168" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant     integer</span></span>
-<span id="cb33-169"><a href="#cb33-169" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant        list</span></span>
-<span id="cb33-170"><a href="#cb33-170" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant        list</span></span>
-<span id="cb33-171"><a href="#cb33-171" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant        list</span></span>
-<span id="cb33-172"><a href="#cb33-172" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant     integer</span></span>
-<span id="cb33-173"><a href="#cb33-173" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.8Rx5IPcFHc.parquet </span></span>
-<span id="cb33-174"><a href="#cb33-174" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-175"><a href="#cb33-175" tabindex="-1"></a><span class="co">#&gt; File size: 3.77 MB </span></span>
-<span id="cb33-176"><a href="#cb33-176" tabindex="-1"></a><span class="co">#&gt; Total rows: 368319 </span></span>
-<span id="cb33-177"><a href="#cb33-177" tabindex="-1"></a><span class="co">#&gt; Number of columns: 28 </span></span>
-<span id="cb33-178"><a href="#cb33-178" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb33-179"><a href="#cb33-179" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
-<span id="cb33-180"><a href="#cb33-180" tabindex="-1"></a><span class="co">#&gt;           name       type</span></span>
-<span id="cb33-181"><a href="#cb33-181" tabindex="-1"></a><span class="co">#&gt;          CHROM BYTE_ARRAY</span></span>
-<span id="cb33-182"><a href="#cb33-182" tabindex="-1"></a><span class="co">#&gt;            POS      INT64</span></span>
-<span id="cb33-183"><a href="#cb33-183" tabindex="-1"></a><span class="co">#&gt;             ID BYTE_ARRAY</span></span>
-<span id="cb33-184"><a href="#cb33-184" tabindex="-1"></a><span class="co">#&gt;            REF BYTE_ARRAY</span></span>
-<span id="cb33-185"><a href="#cb33-185" tabindex="-1"></a><span class="co">#&gt;            ALT       &lt;NA&gt;</span></span>
-<span id="cb33-186"><a href="#cb33-186" tabindex="-1"></a><span class="co">#&gt;           QUAL     DOUBLE</span></span>
-<span id="cb33-187"><a href="#cb33-187" tabindex="-1"></a><span class="co">#&gt;         FILTER       &lt;NA&gt;</span></span>
-<span id="cb33-188"><a href="#cb33-188" tabindex="-1"></a><span class="co">#&gt;       INFO_END      INT32</span></span>
-<span id="cb33-189"><a href="#cb33-189" tabindex="-1"></a><span class="co">#&gt;      SAMPLE_ID BYTE_ARRAY</span></span>
-<span id="cb33-190"><a href="#cb33-190" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT BYTE_ARRAY</span></span>
-<span id="cb33-191"><a href="#cb33-191" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ      INT32</span></span>
-<span id="cb33-192"><a href="#cb33-192" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP      INT32</span></span>
-<span id="cb33-193"><a href="#cb33-193" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP      INT32</span></span>
-<span id="cb33-194"><a href="#cb33-194" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD       &lt;NA&gt;</span></span>
-<span id="cb33-195"><a href="#cb33-195" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF       &lt;NA&gt;</span></span>
-<span id="cb33-196"><a href="#cb33-196" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL       &lt;NA&gt;</span></span>
-<span id="cb33-197"><a href="#cb33-197" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP      INT32</span></span></code></pre></div>
+<span id="cb33-154"><a href="#cb33-154" tabindex="-1"></a><span class="co">#&gt;                      column_name column_type</span></span>
+<span id="cb33-155"><a href="#cb33-155" tabindex="-1"></a><span class="co">#&gt;                            CHROM   character</span></span>
+<span id="cb33-156"><a href="#cb33-156" tabindex="-1"></a><span class="co">#&gt;                              POS     numeric</span></span>
+<span id="cb33-157"><a href="#cb33-157" tabindex="-1"></a><span class="co">#&gt;                               ID   character</span></span>
+<span id="cb33-158"><a href="#cb33-158" tabindex="-1"></a><span class="co">#&gt;                              REF   character</span></span>
+<span id="cb33-159"><a href="#cb33-159" tabindex="-1"></a><span class="co">#&gt;                              ALT        list</span></span>
+<span id="cb33-160"><a href="#cb33-160" tabindex="-1"></a><span class="co">#&gt;                             QUAL     numeric</span></span>
+<span id="cb33-161"><a href="#cb33-161" tabindex="-1"></a><span class="co">#&gt;                           FILTER        list</span></span>
+<span id="cb33-162"><a href="#cb33-162" tabindex="-1"></a><span class="co">#&gt;                         INFO_END     integer</span></span>
+<span id="cb33-163"><a href="#cb33-163" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT_test_deep_variant   character</span></span>
+<span id="cb33-164"><a href="#cb33-164" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ_test_deep_variant     integer</span></span>
+<span id="cb33-165"><a href="#cb33-165" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP_test_deep_variant     integer</span></span>
+<span id="cb33-166"><a href="#cb33-166" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP_test_deep_variant     integer</span></span>
+<span id="cb33-167"><a href="#cb33-167" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD_test_deep_variant        list</span></span>
+<span id="cb33-168"><a href="#cb33-168" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF_test_deep_variant        list</span></span>
+<span id="cb33-169"><a href="#cb33-169" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL_test_deep_variant        list</span></span>
+<span id="cb33-170"><a href="#cb33-170" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP_test_deep_variant     integer</span></span>
+<span id="cb33-171"><a href="#cb33-171" tabindex="-1"></a><span class="co">#&gt; Parquet File Information: /tmp/tmp.veq9wXvcX4.parquet </span></span>
+<span id="cb33-172"><a href="#cb33-172" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-173"><a href="#cb33-173" tabindex="-1"></a><span class="co">#&gt; File size: 3.77 MB </span></span>
+<span id="cb33-174"><a href="#cb33-174" tabindex="-1"></a><span class="co">#&gt; Total rows: 368319 </span></span>
+<span id="cb33-175"><a href="#cb33-175" tabindex="-1"></a><span class="co">#&gt; Number of columns: 28 </span></span>
+<span id="cb33-176"><a href="#cb33-176" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb33-177"><a href="#cb33-177" tabindex="-1"></a><span class="co">#&gt; Schema (top-level columns):</span></span>
+<span id="cb33-178"><a href="#cb33-178" tabindex="-1"></a><span class="co">#&gt;           name       type</span></span>
+<span id="cb33-179"><a href="#cb33-179" tabindex="-1"></a><span class="co">#&gt;          CHROM BYTE_ARRAY</span></span>
+<span id="cb33-180"><a href="#cb33-180" tabindex="-1"></a><span class="co">#&gt;            POS      INT64</span></span>
+<span id="cb33-181"><a href="#cb33-181" tabindex="-1"></a><span class="co">#&gt;             ID BYTE_ARRAY</span></span>
+<span id="cb33-182"><a href="#cb33-182" tabindex="-1"></a><span class="co">#&gt;            REF BYTE_ARRAY</span></span>
+<span id="cb33-183"><a href="#cb33-183" tabindex="-1"></a><span class="co">#&gt;            ALT       &lt;NA&gt;</span></span>
+<span id="cb33-184"><a href="#cb33-184" tabindex="-1"></a><span class="co">#&gt;           QUAL     DOUBLE</span></span>
+<span id="cb33-185"><a href="#cb33-185" tabindex="-1"></a><span class="co">#&gt;         FILTER       &lt;NA&gt;</span></span>
+<span id="cb33-186"><a href="#cb33-186" tabindex="-1"></a><span class="co">#&gt;       INFO_END      INT32</span></span>
+<span id="cb33-187"><a href="#cb33-187" tabindex="-1"></a><span class="co">#&gt;      SAMPLE_ID BYTE_ARRAY</span></span>
+<span id="cb33-188"><a href="#cb33-188" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GT BYTE_ARRAY</span></span>
+<span id="cb33-189"><a href="#cb33-189" tabindex="-1"></a><span class="co">#&gt;      FORMAT_GQ      INT32</span></span>
+<span id="cb33-190"><a href="#cb33-190" tabindex="-1"></a><span class="co">#&gt;      FORMAT_DP      INT32</span></span>
+<span id="cb33-191"><a href="#cb33-191" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MIN_DP      INT32</span></span>
+<span id="cb33-192"><a href="#cb33-192" tabindex="-1"></a><span class="co">#&gt;      FORMAT_AD       &lt;NA&gt;</span></span>
+<span id="cb33-193"><a href="#cb33-193" tabindex="-1"></a><span class="co">#&gt;     FORMAT_VAF       &lt;NA&gt;</span></span>
+<span id="cb33-194"><a href="#cb33-194" tabindex="-1"></a><span class="co">#&gt;      FORMAT_PL       &lt;NA&gt;</span></span>
+<span id="cb33-195"><a href="#cb33-195" tabindex="-1"></a><span class="co">#&gt;  FORMAT_MED_DP      INT32</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
