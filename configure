@@ -83,7 +83,10 @@ HTSLIB_GCS="--enable-gcs"
 if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
     echo "Detected WebAssembly/r-wasm build environment"
     echo "Disabling plugins, S3, and GCS support (not available in wasm)"
-    CONFIGURE_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no"
+    # Disable functions not available in WASM, and force CCHmac to no
+    # (AC_CHECK_FUNC incorrectly detects it as available in emscripten,
+    # but CommonCrypto/CommonHMAC.h doesn't exist causing build failure)
+    CONFIGURE_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no"
     HTSLIB_PLUGINS="--disable-plugins"
     HTSLIB_S3="--disable-s3"
     HTSLIB_GCS="--disable-gcs"
@@ -279,7 +282,10 @@ fi
 BCFTOOLS_EXTRA_FLAGS=""
 if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
     echo "Detected WebAssembly/r-wasm build environment for bcftools"
-    BCFTOOLS_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no"
+    # Disable functions not available in WASM, and force CCHmac to no
+    # (AC_CHECK_FUNC incorrectly detects it as available in emscripten,
+    # but CommonCrypto/CommonHMAC.h doesn't exist causing build failure)
+    BCFTOOLS_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no"
 fi
 
 ./configure \
