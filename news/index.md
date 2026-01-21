@@ -15,7 +15,7 @@
 
 ## RBCFTools 1.23-0.0.2.9000 (development version)
 
-### Parquet to VCF conversion (bcf_writer)
+### Parquet to VCF conversion
 
 - [`parquet_to_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf.md) -
   Convert Parquet files back to VCF/VCF.GZ/BCF format:
