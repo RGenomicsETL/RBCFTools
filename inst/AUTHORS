@@ -6,6 +6,8 @@ Vendored components / Copyright holders
 
 see  bcftools-1.23/AUTHORS
 
+- BCFToolsScore plugin Author Giulio Genovese
+  MIT Licence
 
 - duckdb C API and C Extension API headers Authors 
    MIT Licence

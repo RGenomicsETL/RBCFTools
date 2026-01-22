@@ -9,7 +9,8 @@ Authors@R: c(
     person(given = "Zilong", family = "Li", email = "zilong.dk@gmail.com", role = c("cph"),
            comment = "Author of the vcfpp library from whom makefiles and configure strategy is borrowed"),
     person(given = "Duckdb C API and extension and API authors", role = "cph",
-           comment = "Authors of the duckdb extension and API used for parquet export"))
+           comment = "Authors of the duckdb extension and API used for parquet export"),
+    person(given = "Giulio", family = "Genovese", email = "giulio.genovese@gmail.com", role = "cph", comment = "Author of BCFTools munge plugin"))
 Description: Bundles the 'htslib' and 'bcftools' libraries and command lines tools for reading and
     manipulating VCF/BCF files. Includes streaming facilities from VCF to Apache Arrow 
     via 'nanoarrow', enabling export to Arrow IPC format and  Parquet format
@@ -20,7 +21,7 @@ Copyright: See inst/AUTHORS
 Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow, vctrs
 LinkingTo: nanoarrow
-SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma
+SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma, libsuitesparse-dev( optional for pgs plugin)
 Suggests: 
     tinytest,
     vcfppR,

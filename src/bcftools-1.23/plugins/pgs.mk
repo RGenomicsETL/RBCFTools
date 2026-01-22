@@ -1,7 +1,4 @@
 # The pgs plugin requires CHOLMOD library for sparse matrix operations
-# Only build if CHOLMOD is available
-ifndef HAVE_CHOLMOD
-# The pgs plugin requires CHOLMOD library for sparse matrix operations
 # Only build if HAVE_CHOLMOD is yes
 ifeq ($(HAVE_CHOLMOD),yes)
 plugins/pgs.so: plugins/pgs.c
