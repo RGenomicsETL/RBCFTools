@@ -1,5 +1,9 @@
 # Changelog
 
+## RBCFTools 1.23-0.0.3.1.9000
+
+- Vendored `bcftools` score plugin
+
 ## RBCFTools 1.23-0.0.3.1
 
 - Fixed `int64_t` format specifier in bcf_reader extension for macOS
