@@ -21,7 +21,7 @@ Copyright: See inst/AUTHORS
 Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow, vctrs
 LinkingTo: nanoarrow
-SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma, libsuitesparse-dev( optional for pgs plugin)
+SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other ssl library), liblzma, libsuitesparse-dev/libcholmod5 (optional for pgs plugin)
 Suggests: 
     tinytest,
     vcfppR,

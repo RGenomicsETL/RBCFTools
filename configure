@@ -75,28 +75,102 @@ else
 fi
 
 echo "Checking for system CHOLMOD..."
-if pkg-config --exists cholmod 2>/dev/null; then
-  echo "Found CHOLMOD via pkg-config"
-  # Test if we can actually compile with CHOLMOD
-  if echo '#include <cholmod.h>
-int main() { cholmod_common c; return 0; }' | \
-     ${CC} ${CFLAGS} $(pkg-config --cflags cholmod 2>/dev/null) -x c - $(pkg-config --libs cholmod 2>/dev/null) -o /dev/null 2>/dev/null; then
+
+# If user provided flags in environment, respect them (no root required)
+if [ -n "${CHOLMOD_CPPFLAGS+set}" ] || [ -n "${CHOLMOD_LIBS+set}" ]; then
+    echo "Using CHOLMOD flags from environment"
     HAVE_CHOLMOD="yes"
-    CHOLMOD_CPPFLAGS=$(pkg-config --cflags cholmod)
-    CHOLMOD_LIBS=$(pkg-config --libs cholmod)
-    echo "System CHOLMOD linking test passed - will use system version"
-  fi
 else
-  echo "System CHOLMOD not found via pkg-config - try systemic installation PATH or continue without CHOLMOD support"
-  if echo '#include <cholmod.h>
+    # Prefer pkg-config when available
+    if pkg-config --exists cholmod 2>/dev/null; then
+        echo "Found CHOLMOD via pkg-config"
+        if echo '#include <cholmod.h>
 int main() { cholmod_common c; return 0; }' | \
-     ${CC} ${CFLAGS} -x c - -lcholmod -o /dev/null 2>/dev/null; then
-    HAVE_CHOLMOD="yes"
-    CHOLMOD_LIBS="-lcholmod"
-    echo "System CHOLMOD linking test passed - will use system version"
-  else
-    echo "CHOLMOD linking test failed - continuing without CHOLMOD support"
-  fi
+             ${CC} ${CFLAGS} $(pkg-config --cflags cholmod 2>/dev/null) -x c - $(pkg-config --libs cholmod 2>/dev/null) -o /dev/null 2>/dev/null; then
+            HAVE_CHOLMOD="yes"
+            CHOLMOD_CPPFLAGS=$(pkg-config --cflags cholmod 2>/dev/null)
+            CHOLMOD_LIBS=$(pkg-config --libs cholmod 2>/dev/null)
+            echo "System CHOLMOD linking test passed - will use system version"
+        fi
+    else
+        echo "pkg-config didn't find cholmod; probing common user/local prefixes"
+        # User can set CHOLMOD_PREFIX to help (no root required)
+        PREFIXES="${CHOLMOD_PREFIX:-$HOME/.local /usr/local /opt/homebrew /home/linuxbrew/.linuxbrew /usr /opt}"
+        for p in $PREFIXES; do
+            CPP_CAND=""
+            LIB_CAND=""
+            if [ -f "$p/include/suitesparse/cholmod.h" ] || [ -f "$p/include/cholmod.h" ]; then
+                CPP_CAND="-I${p}/include"
+            fi
+            if ls "$p/lib"/libcholmod.* >/dev/null 2>&1; then
+                LIB_CAND="-L${p}/lib -lcholmod"
+            fi
+            if [ -n "$CPP_CAND" ] || [ -n "$LIB_CAND" ]; then
+                if echo '#include <cholmod.h>
+int main() { cholmod_common c; return 0; }' | \
+                     ${CC} ${CFLAGS} ${CPP_CAND} -x c - ${LIB_CAND} -o /dev/null 2>/dev/null; then
+                    HAVE_CHOLMOD="yes"
+                    CHOLMOD_CPPFLAGS="${CPP_CAND}"
+                    CHOLMOD_LIBS="${LIB_CAND}"
+                    echo "Detected CHOLMOD in $p"
+                    break
+                fi
+            fi
+        done
+
+        # Final fallback: try linking with -lcholmod from default system paths
+        if [ "${HAVE_CHOLMOD}" != "yes" ]; then
+            # On macOS we may need a BLAS/LAPACK framework (Accelerate); detect it
+            BLAS_FWK=""
+            if [ "$(uname)" = "Darwin" ]; then
+                # check common framework locations
+                for fwdir in /System/Library/Frameworks /Library/Frameworks; do
+                    if [ -d "${fwdir}/Accelerate.framework" ]; then
+                        # test compiler link with framework
+                        if echo 'int main(void){return 0;}' | ${CC} ${CFLAGS} -x c - -framework Accelerate -o /dev/null 2>/dev/null; then
+                            BLAS_FWK="-framework Accelerate"
+                            break
+                        fi
+                    fi
+                done
+            fi
+
+            # Try default -lcholmod first, if that fails include BLAS framework on macOS
+            if echo '#include <cholmod.h>
+int main() { cholmod_common c; return 0; }' | \
+                 ${CC} ${CFLAGS} -x c - -lcholmod ${BLAS_FWK} -o /dev/null 2>/dev/null; then
+                HAVE_CHOLMOD="yes"
+                CHOLMOD_LIBS="-lcholmod ${BLAS_FWK}"
+                CHOLMOD_CPPFLAGS=""
+                echo "Found CHOLMOD via linker -lcholmod${BLAS_FWK:+ with BLAS framework}"
+            else
+                echo "CHOLMOD linking test failed - continuing without CHOLMOD support"
+            fi
+        fi
+    fi
+fi
+
+# If found, export flags so downstream builds (bcftools) see them
+if [ "${HAVE_CHOLMOD}" = "yes" ]; then
+    export CHOLMOD_CPPFLAGS
+    export CHOLMOD_LIBS
+    # If on macOS and CHOLMOD was found but BLAS symbols unresolved, ensure framework included
+    if [ "$(uname)" = "Darwin" ]; then
+        # if CHOLMOD_LIBS doesn't already include a framework, attempt to detect Accelerate
+        case " ${CHOLMOD_LIBS} " in
+            *framework*) ;;
+            *)
+                if echo 'int main(void){return 0;}' | ${CC} ${CFLAGS} ${CHOLMOD_CPPFLAGS} -x c - ${CHOLMOD_LIBS} -o /dev/null 2>/dev/null; then
+                    : # CHOLMOD builds as-is
+                else
+                    if echo 'int main(void){return 0;}' | ${CC} ${CFLAGS} ${CHOLMOD_CPPFLAGS} -x c - ${CHOLMOD_LIBS} -framework Accelerate -o /dev/null 2>/dev/null; then
+                        CHOLMOD_LIBS="${CHOLMOD_LIBS} -framework Accelerate"
+                    fi
+                fi
+            ;;
+        esac
+    fi
+    echo "Using CHOLMOD flags: CHOLMOD_CPPFLAGS='${CHOLMOD_CPPFLAGS}' CHOLMOD_LIBS='${CHOLMOD_LIBS}'"
 fi
 
 
