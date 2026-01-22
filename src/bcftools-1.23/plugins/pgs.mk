@@ -1,0 +1,13 @@
+# The pgs plugin requires CHOLMOD library for sparse matrix operations
+# Only build if CHOLMOD is available
+ifndef HAVE_CHOLMOD
+# The pgs plugin requires CHOLMOD library for sparse matrix operations
+# Only build if HAVE_CHOLMOD is yes
+ifeq ($(HAVE_CHOLMOD),yes)
+plugins/pgs.so: plugins/pgs.c
+	$(CC) $(PLUGIN_FLAGS) $(CFLAGS) $(ALL_CPPFLAGS) $(EXTRA_CPPFLAGS) $(CHOLMOD_CPPFLAGS) $(LDFLAGS) -o $@ version.c $< $(PLUGIN_LIBS) $(LIBS) $(CHOLMOD_LIBS)
+else
+plugins/pgs.so:
+	@echo "Warning: pgs plugin requires CHOLMOD library, skipping build"
+	@touch $@
+endif

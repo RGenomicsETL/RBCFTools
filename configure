@@ -39,6 +39,10 @@ HAVE_GSL="no"
 USE_GPL=""
 GSL_LIBS=""
 GSL_CFLAGS=""
+#----------------- Check for CHOLMOD 
+HAVE_CHOLMOD="no"
+CHOLMOD_CPPFLAGS=""
+CHOLMOD_LIBS=""
 
 if command -v gsl-config >/dev/null 2>&1; then
   echo "Found GSL via gsl-config"
@@ -69,6 +73,32 @@ else
   echo "GSL development files not found. Install libgsl-dev (Debian/Ubuntu) or gsl-devel (RPM-based) for polysomy support."
   echo "Continuing with --disable-libgsl to prevent build failure."
 fi
+
+echo "Checking for system CHOLMOD..."
+if pkg-config --exists cholmod 2>/dev/null; then
+  echo "Found CHOLMOD via pkg-config"
+  # Test if we can actually compile with CHOLMOD
+  if echo '#include <cholmod.h>
+int main() { cholmod_common c; return 0; }' | \
+     ${CC} ${CFLAGS} $(pkg-config --cflags cholmod 2>/dev/null) -x c - $(pkg-config --libs cholmod 2>/dev/null) -o /dev/null 2>/dev/null; then
+    HAVE_CHOLMOD="yes"
+    CHOLMOD_CPPFLAGS=$(pkg-config --cflags cholmod)
+    CHOLMOD_LIBS=$(pkg-config --libs cholmod)
+    echo "System CHOLMOD linking test passed - will use system version"
+  fi
+else
+  echo "System CHOLMOD not found via pkg-config - try systemic installation PATH or continue without CHOLMOD support"
+  if echo '#include <cholmod.h>
+int main() { cholmod_common c; return 0; }' | \
+     ${CC} ${CFLAGS} -x c - -lcholmod -o /dev/null 2>/dev/null; then
+    HAVE_CHOLMOD="yes"
+    CHOLMOD_LIBS="-lcholmod"
+    echo "System CHOLMOD linking test passed - will use system version"
+  else
+    echo "CHOLMOD linking test failed - continuing without CHOLMOD support"
+  fi
+fi
+
 
 
 echo "----------Configuring HTSlib in $HTSLIB_DIR-----------------"
@@ -288,7 +318,8 @@ if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
     BCFTOOLS_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no"
 fi
 
-./configure \
+CHOLMOD_CPPFLAGS=$CHOLMOD_CPPFLAGS CHOLMOD_LIBS=$CHOLMOD_LIBS CHOLMOD_CPPFLAGS="${CHOLMOD_CPPFLAGS}" \
+    ./configure \
     ${CONFIGURE_ARGS} \
     ${BCFTOOLS_CONFIGURE_FLAGS} \
     CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
