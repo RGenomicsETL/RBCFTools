@@ -7,6 +7,6 @@ plugins/pgs.so: plugins/pgs.c
 	$(CC) $(PLUGIN_FLAGS) $(CFLAGS) $(ALL_CPPFLAGS) $(EXTRA_CPPFLAGS) $(CHOLMOD_CPPFLAGS) $(LDFLAGS) -o $@ version.c $< $(PLUGIN_LIBS) $(LIBS) $(CHOLMOD_LIBS)
 else
 plugins/pgs.so:
-	@echo "Warning: pgs plugin requires CHOLMOD library, skipping build"
+	@echo "notice plugin requires CHOLMOD library, skipping build"
 	@touch $@
 endif

@@ -431,3 +431,12 @@ sed \
     -e "s|@GSL_LIBS@|${GSL_LIBS}|g" \
     -e "s|@USE_GPL@|${USE_GPL}|g" \
     src/Makevars.in > src/Makevars
+
+# chech if inst/bcftools/libexec/bcftools/pgs.so is present and empty
+if [ -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
+    if [ ! -s "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
+        echo "Removing empty pgs plugin shared library"
+        rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" || true
+        rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.so" || true
+    fi
+fi
