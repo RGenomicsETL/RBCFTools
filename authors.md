@@ -16,6 +16,9 @@
 - **Duckdb C API and extension and API authors**. Copyright holder.  
   Authors of the duckdb extension and API used for parquet export
 
+- **Giulio Genovese**. Copyright holder.  
+  Author of BCFTools munge plugin
+
 ## Citation
 
 Source:
@@ -23,13 +26,13 @@ Source:
 
 Toure S (2026). *RBCFTools: 'BCFTools', 'libbcftools' and 'htslib'
 Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
-1.23-0.0.3.1, <https://github.com/RGenomicsETL/RBCFTools>.
+1.23-0.0.3.1.9000, <https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
       title = {RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 1.23-0.0.3.1},
+      note = {R package version 1.23-0.0.3.1.9000},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }
 
@@ -43,6 +46,8 @@ Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
 
     see  bcftools-1.23/AUTHORS
 
+    - BCFToolsScore plugin Author Giulio Genovese
+      MIT Licence
 
     - duckdb C API and C Extension API headers Authors
        MIT Licence
