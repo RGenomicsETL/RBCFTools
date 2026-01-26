@@ -24,6 +24,8 @@ RUN apt-get update \
         libbz2-dev \
         libssl-dev \
         libcurl4-openssl-dev \
+        libgsl-dev \
+        libxml2-dev \
         curl \
         rsync \
         unzip \
@@ -49,7 +51,7 @@ WORKDIR /package
 
 RUN R -e 'install.packages("tinytest")'
 RUN R -e 'install.packages("/package", repos = NULL)'
-RUN R -e "library('RBCFTools');tinytest::test_all('.')"
+RUN R -e "library('RBCFTools');tinytest::test_package('RBCFTools')"
 
 # clean up apt cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
