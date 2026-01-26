@@ -200,7 +200,6 @@ fi
     ${CONFIGURE_ARGS} \
     CFLAGS="${CFLAGS} -Wno-unused-function" \
     ${HTSLIB_PLUGINS} \
-    --enable-shared \
     ${HTSLIB_S3} \
     ${HTSLIB_GCS} \
     --prefix="${THISDir}/inst/htslib" \

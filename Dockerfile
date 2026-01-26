@@ -1,5 +1,6 @@
 FROM rocker/r2u:24.04
-
+LABEL maintainer="Sounkou Mahamane Toure <sounkoutoure@gmail.com>"
+LABEL description="Docker image for RBCFTools R package"
 # Build argument to switch between release and develop mode
 # Usage: docker build --build-arg BUILD_MODE=develop .
 ARG BUILD_MODE=release
@@ -26,26 +27,29 @@ RUN apt-get update \
         curl \
         rsync \
         unzip \
+        golang \
+        libsuitesparse-dev \
+        libcholmod5 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir /package
+WORKDIR /package
 # Copy local source (only used in develop mode)
-COPY . /package
+COPY ./DESCRIPTION /package
 
+# Install remotes
+RUN R -e 'install.packages("remotes")'
 # Install RBCFTools based on BUILD_MODE
-RUN if [ "$BUILD_MODE" = "develop" ]; then \
-        echo "Installing RBCFTools from local source..." && \
-        Rscript -e "install.packages('remotes')" && \
-        Rscript -e "remotes::install_deps('/package', dependencies = TRUE)" && \
-        R CMD INSTALL /package; \
-    else \
-        echo "Installing RBCFTools from R-universe..." && \
-        Rscript -e "install.packages('RBCFTools', repos = c('https://rgenomicsetl.r-universe.dev', 'https://cloud.r-project.org'))"; \
-    fi
-# INSTALL TInytest for testing
-RUN Rscript -e "install.packages(c('tinytest','vctrs', 'rlang','duckdb'))"
+
+RUN R -e "remotes::install_deps('.', dependencies = TRUE)"
 # Run the tinytest tests to verify installation
-RUN Rscript -e "tinytest::test_package('RBCFTools')"
+COPY . /package
+WORKDIR /package
+
+RUN R -e 'install.packages("tinytest")'
+RUN R -e 'install.packages("/package", repos = NULL)'
+RUN R -e "library('RBCFTools');tinytest::test_all('.')"
 
 # clean up apt cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

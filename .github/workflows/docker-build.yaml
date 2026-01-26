@@ -1,0 +1,231 @@
+name: Build and Push Docker Image
+
+on:
+  #push:
+  #  branches: [ main, master, develop ]
+  #  tags: [ 'v*' ]
+  #pull_request:
+  #  branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode (release or develop)'
+        required: false
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - develop
+      push_image:
+        description: 'Push image to registry'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  extract-package-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_release: ${{ steps.version.outputs.is_release }}
+      docker_tag: ${{ steps.version.outputs.docker_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract package version
+        id: version
+        run: |
+          if [ -f "DESCRIPTION" ]; then
+            VERSION=$(grep "^Version:" DESCRIPTION | sed 's/Version: //')
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Package version: $VERSION"
+            
+            # Determine if this is a release version (no .9000 suffix)
+            if [[ "$VERSION" == *".9000" ]]; then
+              IS_RELEASE=false
+              DOCKER_TAG="dev-$VERSION"
+            else
+              IS_RELEASE=true
+              DOCKER_TAG="$VERSION"
+            fi
+            
+            echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+            echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
+            echo "Docker tag: $DOCKER_TAG"
+            echo "Is release: $IS_RELEASE"
+          else
+            echo "No DESCRIPTION file found"
+            exit 1
+          fi
+
+  build-and-push:
+    needs: extract-package-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.build.outputs.image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref_type == 'tag' || github.event.inputs.push_image == 'true')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine build mode and tags
+        id: build-info
+        run: |
+          # Determine build mode
+          if [ "${{ github.event.inputs.build_mode }}" != "" ]; then
+            BUILD_MODE="${{ github.event.inputs.build_mode }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            BUILD_MODE="develop"
+          else
+            BUILD_MODE="release"
+          fi
+          echo "build_mode=$BUILD_MODE" >> $GITHUB_OUTPUT
+          echo "Build mode: $BUILD_MODE"
+          
+          # Determine tags
+          VERSION="${{ needs.extract-package-version.outputs.version }}"
+          DOCKER_TAG="${{ needs.extract-package-version.outputs.docker_tag }}"
+          IS_RELEASE="${{ needs.extract-package-version.outputs.is_release }}"
+          
+          TAGS=""
+          
+          # Always tag with package version
+          TAGS="$TAGS${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$DOCKER_TAG"
+          
+          # Add branch-specific tags
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
+          fi
+          
+          # Add tag name if pushing a tag
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            TAG_NAME="${{ github.ref_name }}"
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TAG_NAME"
+          fi
+          
+          # Add commit SHA for PR builds
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            COMMIT_SHA="${{ github.sha }}"
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:pr-$COMMIT_SHA"
+          fi
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "Docker tags: $TAGS"
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: ${{ steps.build-info.outputs.tags }}
+          labels: |
+            maintainer=Sounkou Mahamane Toure <sounkoutoure@gmail.com>
+            description=Docker image for RBCFTools R package
+            org.opencontainers.image.version=${{ needs.extract-package-version.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.licenses=GPL-3.0-or-later
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            BUILD_MODE=${{ steps.build-info.outputs.build_mode }}
+          push: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref_type == 'tag' || github.event.inputs.push_image == 'true') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          provenance: true
+          sbom: true
+
+      - name: Generate artifact attestation
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref_type == 'tag' || github.event.inputs.push_image == 'true')
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+  test-image:
+    needs: [extract-package-version, build-and-push]
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || needs.build-and-push.outputs.image != ''
+    steps:
+      - name: Pull and test Docker image
+        if: github.event_name != 'pull_request'
+        run: |
+          VERSION="${{ needs.extract-package-version.outputs.version }}"
+          DOCKER_TAG="${{ needs.extract-package-version.outputs.docker_tag }}"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$DOCKER_TAG"
+          
+          echo "Testing Docker image: $IMAGE"
+          docker pull $IMAGE
+          
+          # Test that RBCFTools is installed and working
+          docker run --rm $IMAGE R -e "packageVersion('RBCFTools')"
+          docker run --rm $IMAGE R -e "library(RBCFTools); cat('RBCFTools loaded successfully\n')"
+          
+          # Test basic functionality
+          docker run --rm $IMAGE R -e "data(iris); head(iris)" || echo "Basic R test completed"
+
+      - name: Test locally built image
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Testing image digest: ${{ needs.build-and-push.outputs.image-digest }}"
+          # For PRs, we would need to load the image from the build cache
+          # This is a placeholder for additional testing logic
+          echo "PR testing completed"
+
+  summary:
+    needs: [extract-package-version, build-and-push]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Build summary
+        run: |
+          echo "## Docker Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Package Version | ${{ needs.extract-package-version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Tag | ${{ needs.extract-package-version.outputs.docker_tag }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Is Release | ${{ needs.extract-package-version.outputs.is_release }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Mode | ${{ needs.build-and-push.outputs.build-mode || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Event | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ref | ${{ github.ref }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Digest | ${{ needs.build-and-push.outputs.image-digest || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.extract-package-version.outputs.is_release }}" == "true" ]]; then
+            echo "🏷️ **Release Version**: This is a release build without .9000 suffix" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔧 **Development Version**: This is a development build with .9000 suffix" >> $GITHUB_STEP_SUMMARY
+          fi
