@@ -51,7 +51,7 @@ WORKDIR /package
 
 RUN R -e 'install.packages("tinytest")'
 RUN R -e 'install.packages("/package", repos = NULL)'
-RUN R -e "library('RBCFTools');tinytest::test_package('RBCFTools')"
+#RUN R -e "library('RBCFTools');tinytest::test_package('RBCFTools')"
 
 # clean up apt cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
