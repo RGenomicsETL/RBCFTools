@@ -176,8 +176,25 @@ try(DBI::dbExecute(con, "INSTALL httpfs"), silent = TRUE)
 try(DBI::dbExecute(con, "LOAD httpfs"), silent = TRUE)
 
 # Install and load DuckLake from official extensions
-DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
-DBI::dbExecute(con, "LOAD ducklake")
+ducklake_error <- NULL
+ducklake_available <- tryCatch(
+  {
+    DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+    DBI::dbExecute(con, "LOAD ducklake")
+    TRUE
+  },
+  error = function(e) {
+    ducklake_error <<- conditionMessage(e)
+    FALSE
+  }
+)
+
+if (!ducklake_available) {
+  try(DBI::dbDisconnect(con, shutdown = TRUE), silent = TRUE)
+  try(duckdb::duckdb_shutdown(drv), silent = TRUE)
+  unlink(tmp_duckdb_file, recursive = TRUE)
+  exit_file(sprintf("DuckLake extension unavailable: %s", ducklake_error))
+}
 
 message("Creating secret for MinIO access")
 ducklake_create_s3_secret(
