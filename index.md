@@ -22,6 +22,7 @@ You can install the development version of RBCFTools from r-universe for
 unix-alikes (we do not support windows)
 
 ``` r
+
 install.packages(
     'RBCFTools',
     repos = c(
@@ -33,6 +34,7 @@ install.packages(
 ## Version Information
 
 ``` r
+
 library(RBCFTools)
 #> Loading required package: parallel
 # Get library versions
@@ -48,6 +50,7 @@ RBCFTools bundles bcftools and htslib command-line tools. Use the path
 functions to locate the executables
 
 ``` r
+
 bcftools_path()
 #> [1] "/usr/local/lib/R/site-library/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
@@ -68,6 +71,7 @@ htslib_tools()
 Check which features were compiled into htslib
 
 ``` r
+
 # Get all capabilities as a named list
 htslib_capabilities()
 #> $configure
@@ -107,6 +111,7 @@ htslib_feature_string()
 Use `HTS_FEATURE_*` constants to check for specific features
 
 ``` r
+
 # Check individual features
 htslib_has_feature(HTS_FEATURE_LIBCURL)  # Remote file access via libcurl
 #> [1] TRUE
@@ -130,6 +135,7 @@ With libcurl support, bcftools can directly query remote files. Here we
 count variants in a small region from the 1000 Genomes cohort VCF on S3:
 
 ``` r
+
 # Setup environment for remote file access (S3/GCS)
 setup_hts_env()
 
@@ -141,6 +147,7 @@ s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 ```
 
 ``` r
+
 # Use processx instead of system2
 res <- processx::run(
   bcftools_path(),
@@ -172,6 +179,7 @@ correcting non-conformant fields
 Open BCF as Arrow array stream and read the batches
 
 ``` r
+
 
 bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 stream <- vcf_open_arrow(bcf_file, batch_size = 100L)
@@ -248,6 +256,7 @@ stream$release()
 Convert entire BCF to data.frame
 
 ``` r
+
 options(warn = -1)  # Suppress warnings
 df <- vcf_to_arrow(bcf_file, as = "data.frame")
 df[, c("CHROM", "POS", "REF", "ALT", "QUAL")] |> head()
@@ -266,6 +275,7 @@ Arrow IPC (`.arrows`) format for interoperability with other Arrow tools
 using nanoarrow’s native streaming writer
 
 ``` r
+
 
 # Convert BCF to Arrow IPC
 ipc_file <- tempfile(fileext = ".arrows")
@@ -291,6 +301,7 @@ Parquet file and perform queries on the Parquet file. This involves VCF
 stream conversion to data.frame
 
 ``` r
+
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
@@ -391,6 +402,7 @@ nanoarrow
 extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 
 ``` r
+
 bcf_larger <- system.file("extdata", "1000G.ALL.2of4intersection.20100804.genotypes.bcf", package = "RBCFTools")
 outfile <-  tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(
@@ -410,6 +422,7 @@ SQL queries on BCF using DuckDB package. For now this is somewhat
 limited due to conversion from Arrow streams to data frame
 
 ``` r
+
 vcf_query_arrow(bcf_file, "SELECT CHROM, COUNT(*) as n FROM vcf GROUP BY CHROM")
 #>   CHROM  n
 #> 1     1 11
@@ -431,6 +444,7 @@ VCF/BCF files without Arrow conversion overhead. The extension uses the
 DuckDB C API and should be compatible with DuckDB v1.2.0+
 
 ``` r
+
 # Build extension (uses package's bundled htslib)
 build_dir <- file.path(tempdir(), "bcf_reader")
 ext_path <- bcf_reader_build(build_dir, verbose = FALSE)
@@ -514,6 +528,7 @@ for Arrow streams. By default it creates a **lazy view** that reads from
 the VCF on each query - instant to create with no memory overhead.
 
 ``` r
+
 # Build extension
 ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
 vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
@@ -550,6 +565,7 @@ For repeated queries on the same data, materialize to a table with
 `as_view = FALSE`:
 
 ``` r
+
 # Materialize to in-memory table (slower to create, fast queries)
 vcf <- vcf_open_duckdb(vcf_file, ext_path, as_view = FALSE)
 #> Created table 'variants' with 11 rows from 1000G_3samples.vcf.gz
@@ -580,6 +596,7 @@ vcf_close_duckdb(vcf)
 For large VCF files, use tidy format and parallel loading:
 
 ``` r
+
 # Tidy format with column selection
 vcf <- vcf_open_duckdb(
   vcf_file, ext_path,
@@ -608,6 +625,7 @@ single `SAMPLE_ID` column plus `FORMAT_<field>` columns - much faster
 than SQL-level UNNEST.
 
 ``` r
+
 # Build extension
 ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
 
@@ -658,6 +676,7 @@ information (INFO, FORMAT, FILTER definitions, contigs, samples)
 enabling round-trip back to VCF format.
 
 ``` r
+
 # Build extension
 ext_path <- bcf_reader_build(tempdir(), verbose = FALSE)
 vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools")
@@ -691,6 +710,7 @@ Stream remote VCF region directly from S3 using either `nanoarrow` based
 `vcf_stream` or `duckb` extension
 
 ``` r
+
 s3_vcf_uri <- paste0(s3_base, s3_path, s3_vcf_file)
 
 # Arrow stream
@@ -737,6 +757,7 @@ no index is needed. VCF files try `.tbi` first then fall back to `.csi`,
 while BCF files use `.csi` only.
 
 ``` r
+
 # Explicit index file path
 bcf_file <- system.file("extdata", "1000G_3samples.bcf", package = "RBCFTools")
 csi_index <- system.file("extdata", "1000G_3samples.bcf.csi", package = "RBCFTools")
@@ -777,6 +798,7 @@ lake has a local DuckDB metadata database in this example
 We start by seting up and configuring a `minio` server
 
 ``` r
+
 # DuckLake with S3-compatible storage using local MinIO
 bin_dir <- file.path(tempdir(), "ducklake_bins")
 dir.create(bin_dir, recursive = TRUE, showWarnings = FALSE)
@@ -866,6 +888,7 @@ mc_path <- mc_bin
 #### Attach a DuckLake
 
 ``` r
+
 con <- duckdb::dbConnect(duckdb::duckdb(config = list(
   allow_unsigned_extensions = "true",
   enable_external_access = "true"
@@ -919,6 +942,7 @@ DBI::dbExecute(con, "USE lake")
 ### Write a VCF into minio and register to the Lake
 
 ``` r
+
 # Ensure we are operating inside the DuckLake catalog
 DBI::dbExecute(con, "USE lake")
 #> [1] 0
@@ -949,6 +973,7 @@ DuckLake supports schema evolution via `ALTER TABLE`. Use
 files.
 
 ``` r
+
 DBI::dbExecute(con, "USE lake")
 #> [1] 0
 variants_count <- DBI::dbGetQuery(con, "SELECT COUNT(*) as n FROM variants")$n[1]
@@ -999,6 +1024,7 @@ variants_count_after
 ### List lake content
 
 ``` r
+
 DBI::dbExecute(con, "USE lake")
 #> [1] 0
 
@@ -1039,6 +1065,7 @@ DBI::dbGetQuery(con, "DESCRIBE variants") |>
 ```
 
 ``` r
+
 ducklake_list_files(con, "lake", "variants")
 #>                                                                                              data_file
 #> 1 s3://readme-demo-1768854112/data/main/variants/ducklake-019bd7eb-cae5-76fb-8753-ac68273e8a4c.parquet
@@ -1057,6 +1084,7 @@ ducklake_list_files(con, "lake", "variants")
 ### Snapshots and time travel
 
 ``` r
+
 ducklake_snapshots(con, "lake") |> head()
 #>   snapshot_id       snapshot_time schema_version
 #> 1           0 2026-01-19 20:21:52              0
@@ -1102,6 +1130,7 @@ ducklake_current_snapshot(con, "lake")
 ### Configuration
 
 ``` r
+
 ducklake_options(con, "lake")
 #>   option_name                                                      description
 #> 1  created_by                                  Tool used to write the DuckLake
@@ -1136,6 +1165,7 @@ ducklake_options(con, "lake")
 ```
 
 ``` r
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 tools::pskill(pid)
 ```
@@ -1156,6 +1186,7 @@ The package provides helpers for different metadata databases
 #### Direct Connection
 
 ``` r
+
 # DuckDB backend
 ducklake_connect_catalog(
   con,
@@ -1178,6 +1209,7 @@ ducklake_connect_catalog(
 ##### Secret-based Connection:\*\*
 
 ``` r
+
 # Create catalog secret
 ducklake_create_catalog_secret(
   con,

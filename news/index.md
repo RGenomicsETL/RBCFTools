@@ -2,6 +2,12 @@
 
 ## RBCFTools 1.23-0.0.3.1.9000
 
+- Added a webR/WebAssembly build path that links static HTSlib and omits
+  the unsupported command-line `bcftools` and dynamic-plugin side
+  modules.
+
+- Upgraded the vendored HTSlib source to 1.24.
+
 - Vendored `bcftools` score plugin
 
 ## RBCFTools 1.23-0.0.3.1

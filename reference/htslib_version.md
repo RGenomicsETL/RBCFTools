@@ -16,5 +16,5 @@ A character string containing the htslib version.
 
 ``` r
 htslib_version()
-#> [1] "1.23"
+#> [1] "1.24"
 ```

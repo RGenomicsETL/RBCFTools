@@ -24,7 +24,7 @@ Character vector of inferred types ("Integer", "Float", "String")
 Known integer fields: DISTANCE, STRAND, TSL, GENE_PHENO, HGVS_OFFSET,
 MOTIF_POS, existing\_*ORFs, SpliceAI_pred_DP\_*
 
-Known float fields: AF, **AF (e.g., gnomAD_AF), MAX_AF**,
+Known float fields: AF, AF (e.g., gnomAD_AF), MAX_AF,
 MOTIF_SCORE_CHANGE, SpliceAI_pred_DS\_\*
 
 All others default to String.

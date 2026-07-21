@@ -70,6 +70,7 @@ suffix) - Ideal for cohort analysis, MERGE operations, and per-sample
 queries
 
 ``` r
+
 # R wrapper
 vcf_to_parquet_duckdb("cohort.vcf.gz", "output.parquet", ext_path,
   tidy_format = TRUE
@@ -87,6 +88,7 @@ Output size exceeds 100MB per partition (DuckDB best practice)
 ### Partition Patterns
 
 ``` r
+
 # Single column partition (most common for tidy cohort data)
 vcf_to_parquet_duckdb("cohort.vcf.gz", "output_dir/", ext_path,
   tidy_format = TRUE,
@@ -251,6 +253,7 @@ CREATE SECRET s3_creds (
 ### 1. Error Handling for DuckLake
 
 ``` r
+
 # Always catch DuckDB extension errors
 tryCatch({
   DBI::dbExecute(con, attach_sql)
@@ -266,6 +269,7 @@ tryCatch({
 ### 2. Secret String Parsing
 
 ``` r
+
 # DuckLake secrets store data as semicolon-separated string
 # Format: "name=test;type=ducklake;provider=config;...;metadata_path=path;data_path=path"
 parse_secret_field <- function(secret_str, field_name) {
@@ -285,6 +289,7 @@ parse_secret_field <- function(secret_str, field_name) {
 ### 3. Connection String Formatting
 
 ``` r
+
 ducklake_format_connection_string <- function(backend, connection_string) {
   switch(backend,
     "duckdb" = connection_string,
@@ -298,6 +303,7 @@ ducklake_format_connection_string <- function(backend, connection_string) {
 ### 4. Option Filtering for ATTACH
 
 ``` r
+
 # Filter out unsupported options when using secrets
 build_attach_options <- function(opts, secret_name) {
   if (!is.null(secret_name)) {
@@ -329,6 +335,7 @@ build_attach_options <- function(opts, secret_name) {
 ### Debugging Checklist
 
 ``` r
+
 # 1. Check extension loading
 duckdb_extensions <- dbGetQuery(con, "SELECT * FROM duckdb_extensions()")
 if (!"ducklake" %in% duckdb_extensions$extensionname) {
@@ -354,6 +361,7 @@ tryCatch({
 ### Unit Tests for DuckLake Functions
 
 ``` r
+
 # Test connection string parsing
 expect_equal(ducklake_parse_connection_string("ducklake:secret_name")$backend, "secret")
 expect_equal(ducklake_parse_connection_string("ducklake:path/file.ducklake")$backend, "duckdb")
@@ -373,6 +381,7 @@ expect_error(
 ### Integration Tests
 
 ``` r
+
 # Test end-to-end workflow
 test_ducklake_workflow <- function() {
   # 1. Create S3 secret for cloud storage
@@ -423,19 +432,20 @@ test_ducklake_workflow <- function() {
 
 ### Parquet Optimization for VCF Data
 
-| Scenario                     | Recommended Settings                                         |
-|------------------------------|--------------------------------------------------------------|
-| Single sample, small VCF     | Default settings                                             |
-| Single sample, WGS           | `threads = 8`, default row_group_size                        |
-| Multi-sample cohort          | `tidy_format = TRUE`                                         |
-| Large cohort (\>100 samples) | `tidy_format = TRUE, partition_by = "SAMPLE_ID"`             |
-| Very large WGS cohort        | `tidy_format = TRUE, partition_by = c("CHROM", "SAMPLE_ID")` |
+| Scenario | Recommended Settings |
+|----|----|
+| Single sample, small VCF | Default settings |
+| Single sample, WGS | `threads = 8`, default row_group_size |
+| Multi-sample cohort | `tidy_format = TRUE` |
+| Large cohort (\>100 samples) | `tidy_format = TRUE, partition_by = "SAMPLE_ID"` |
+| Very large WGS cohort | `tidy_format = TRUE, partition_by = c("CHROM", "SAMPLE_ID")` |
 
 ## Extension Development
 
 ### Building with DuckLake Support
 
 ``` r
+
 # In RBCFTools build process
 bcf_reader_build <- function(build_dir) {
   # DuckDB extension API v1.3+
@@ -474,6 +484,7 @@ bcf_reader_build <- function(build_dir) {
 ### vcf_open_duckdb - Open VCF as DuckDB Table/View
 
 ``` r
+
 # Open as lazy view (default - instant creation, re-reads VCF each query)
 vcf <- vcf_open_duckdb("variants.vcf.gz", ext_path)
 DBI::dbGetQuery(vcf$con, "SELECT * FROM variants WHERE CHROM = '22'")
@@ -506,6 +517,7 @@ Returns a `vcf_duckdb` object with: - `con`: DuckDB connection -
 ### VCF Export Functions
 
 ``` r
+
 # Standard export
 vcf_to_parquet_duckdb(input_file, output_file, extension_path,
   columns = NULL,           # NULL = all columns
@@ -528,6 +540,7 @@ vcf_to_parquet_duckdb_parallel(input_file, output_file, extension_path,
 ### DuckLake Functions
 
 ``` r
+
 # Load VCF into DuckLake catalog
 ducklake_load_vcf(con, table, vcf_path, extension_path,
   tidy_format = FALSE,
