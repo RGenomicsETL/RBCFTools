@@ -41,6 +41,13 @@ vignettes/*.pdf
 *_cache/
 /cache/
 
+# HTSlib's ref_cache directories are vendored source, not generated R
+# Markdown caches.
+!src/bcftools-1.23/htslib-*/ref_cache/
+!src/bcftools-1.23/htslib-*/ref_cache/**
+!src/bcftools-1.23/htslib-*/test/ref_cache/
+!src/bcftools-1.23/htslib-*/test/ref_cache/**
+
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
