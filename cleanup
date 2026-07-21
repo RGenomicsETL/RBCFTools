@@ -6,7 +6,7 @@ THISDir=`realpath ${THISDir}`
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 rm -rf inst/bcftools
 rm -rf inst/htslib
-cd src/bcftools-1.23/htslib-1.23
+cd src/bcftools-1.23/htslib-1.24
 ${MAKE} clean
 cd ../../
 ${MAKE} clean

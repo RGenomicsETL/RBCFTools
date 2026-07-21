@@ -5,8 +5,21 @@ set -eu
 THISDir=`dirname $0`
 THISDir=`realpath ${THISDir}`
 
-# Capture configure arguments (--host, --build, etc.)
-CONFIGURE_ARGS="$@"
+# Preserve cross-compilation options and cache values independently. rwasm
+# passes a wasm host triplet even though `uname` remains that of the Linux
+# builder, so host detection is required in addition to checking the compiler.
+CONFIGURE_ARGS=""
+CONFIGURE_CACHE_VARS=""
+HOST_TRIPLET=""
+BUILD_TRIPLET=""
+for arg in "$@"; do
+  case "$arg" in
+    --host=*) HOST_TRIPLET="${arg#--host=}"; CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
+    --build=*) BUILD_TRIPLET="${arg#--build=}"; CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
+    [A-Za-z_]*=*) CONFIGURE_CACHE_VARS="${CONFIGURE_CACHE_VARS} ${arg}" ;;
+    *) CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
+  esac
+done
 
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 CC=`"${R_HOME}/bin/R" CMD config CC`
@@ -16,24 +29,44 @@ R_CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
 R_CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
 R_CPICFLAGS=`"${R_HOME}/bin/R" CMD config CPICFLAGS`
 R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
-HTSLIB_BUNDLED_MK=${THISDir}/inst/makefiles/htscodecs_bundled.mk
-RSCRIPT="${R_HOME}/bin/Rscript"
-hstlibversion="1.23"
-#--- get shared library extension
+
+BCFTOOLS_VERSION="1.23"
+HTSLIB_VERSION="1.24"
 if [ "$(uname)" = "Darwin" ]; then
      SHLIB_EXT="dylib"
 else
      SHLIB_EXT="so"
 fi
-# CFLAGS="${R_CFLAGS} ${R_CPICFLAGS} -fPIC -D_FILE_OFFSET_BITS=64"
 CFLAGS="-Wall -g -O2 -fPIC -D_FILE_OFFSET_BITS=64"
-# remove assert by defining NDEBUG
 CPPFLAGS="${R_CPPFLAGS} -DNDEBUG"
 LDFLAGS="${R_LDFLAGS}"
-HTSLIB_DIR="${THISDir}/src/bcftools-${hstlibversion}/htslib-${hstlibversion}"
-HTS_FILE_ARCHIVE="${THISDir}/src/bcftools-${hstlibversion}/libhts.a"
-HTS_FILE_SO="${THISDir}/src/bcftools-${hstlibversion}/libhts.${SHLIB_EXT}"
-BCFTOOLS_DIR="${THISDir}/src/bcftools-${hstlibversion}"
+HTSLIB_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}/htslib-${HTSLIB_VERSION}"
+BCFTOOLS_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}"
+
+WASM_BUILD=no
+if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
+  WASM_BUILD=yes
+fi
+if echo "${HOST_TRIPLET}" | grep -q "wasm" || echo "${HOST_TRIPLET}" | grep -q "emscripten"; then
+  WASM_BUILD=yes
+fi
+
+RPATH_FLAGS=""
+PKG_LIBS_EXTRA=""
+if [ "${WASM_BUILD}" = "yes" ]; then
+  # webR supplies these Emscripten ports. Forward them to HTSlib's nested
+  # configure and final link; configure probes otherwise see host libraries.
+  WASM_PORT_FLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1"
+  CFLAGS="${CFLAGS} ${WASM_PORT_FLAGS}"
+  LDFLAGS="${LDFLAGS} ${WASM_PORT_FLAGS}"
+else
+  if [ "$(uname)" = "Darwin" ]; then
+    RPATH_FLAGS="-Wl,-rpath,@loader_path/../bcftools/lib -Wl,-rpath,@loader_path/../htslib/lib"
+  else
+    RPATH_FLAGS="-Wl,--disable-new-dtags -Wl,-rpath,'\$\$ORIGIN/../bcftools/lib' -Wl,-rpath,'\$\$ORIGIN/../htslib/lib'"
+    PKG_LIBS_EXTRA="-Wl,--exclude-libs,ALL"
+  fi
+fi
 #--------------------- Check for GSL
 HAVE_GSL="no"
 USE_GPL=""
@@ -176,56 +209,58 @@ fi
 
 
 echo "----------Configuring HTSlib in $HTSLIB_DIR-----------------"
-cd $HTSLIB_DIR
+cd "${HTSLIB_DIR}"
 
-# Detect WebAssembly/r-wasm environment
-CONFIGURE_EXTRA_FLAGS=""
-HTSLIB_PLUGINS="--enable-plugins"
-HTSLIB_S3="--enable-s3"
-HTSLIB_GCS="--enable-gcs"
+HTSLIB_CONFIGURE_CACHE_VARS="${CONFIGURE_CACHE_VARS}"
+HTSLIB_CPPFLAGS="${CPPFLAGS}"
+HTSLIB_CONFIGURE_FLAGS="--enable-plugins --enable-s3 --enable-gcs"
+HTSLIB_LINK_LIBS=""
 
-if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
+if [ "${WASM_BUILD}" = "yes" ]; then
     echo "Detected WebAssembly/r-wasm build environment"
-    echo "Disabling plugins, S3, and GCS support (not available in wasm)"
-    # Disable functions not available in WASM, and force CCHmac to no
-    # (AC_CHECK_FUNC incorrectly detects it as available in emscripten,
-    # but CommonCrypto/CommonHMAC.h doesn't exist causing build failure)
-    CONFIGURE_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no"
-    HTSLIB_PLUGINS="--disable-plugins"
-    HTSLIB_S3="--disable-s3"
-    HTSLIB_GCS="--disable-gcs"
+    echo "Building static local-file HTSlib; disabling plugins and remote backends"
+    # Cross-compile cache values prevent configure from treating Emscripten
+    # link-only probes as runnable host capabilities.
+    HTSLIB_CONFIGURE_CACHE_VARS="${HTSLIB_CONFIGURE_CACHE_VARS} ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no ac_cv_func_srand48_deterministic=no"
+    HTSLIB_CPPFLAGS="${HTSLIB_CPPFLAGS} -include ${THISDir}/src/wasm_socket_compat.h"
+    HTSLIB_CONFIGURE_FLAGS="--disable-plugins --disable-libcurl --disable-s3 --disable-gcs --disable-lzma"
+    HTSLIB_LINK_LIBS="-lpthread"
+    ac_cv_search_recv="none required"
+    export ac_cv_search_recv
 fi
 
-./configure \
+env ${HTSLIB_CONFIGURE_CACHE_VARS} ./configure \
     ${CONFIGURE_ARGS} \
+    CC="${CC}" \
+    AR="${AR}" \
+    RANLIB="${RANLIB}" \
     CFLAGS="${CFLAGS} -Wno-unused-function" \
-    ${HTSLIB_PLUGINS} \
-    ${HTSLIB_S3} \
-    ${HTSLIB_GCS} \
+    CPPFLAGS="${HTSLIB_CPPFLAGS}" \
+    LDFLAGS="${LDFLAGS}" \
+    LIBS="${HTSLIB_LINK_LIBS}" \
     --prefix="${THISDir}/inst/htslib" \
-    ${CONFIGURE_EXTRA_FLAGS}
-
-## copy file instead of symbolic linking
-rm -f htscodecs.mk && cp "${HTSLIB_BUNDLED_MK}" htscodecs.mk
+    ${HTSLIB_CONFIGURE_FLAGS}
 
 export CC="${CC}"
-export CPPFLAGS="${CPPFLAGS}"
 export AR="${AR}"
 export RANLIB="${RANLIB}"
-${MAKE} libhts.a libhts.${SHLIB_EXT} install
+if [ "${WASM_BUILD}" = "yes" ]; then
+    ${MAKE} libhts.a
+    mkdir -p "${THISDir}/inst/htslib/lib" "${THISDir}/inst/htslib/include/htslib"
+    cp -f libhts.a "${THISDir}/inst/htslib/lib/libhts.a"
+    cp -f htslib/*.h "${THISDir}/inst/htslib/include/htslib/"
+else
+    ${MAKE} libhts.a libhts.${SHLIB_EXT} install
+fi
 
-# Fix dylib install names on macOS
-if [ "$(uname)" = "Darwin" ]; then
+# Fix dylib install names on macOS.
+if [ "${WASM_BUILD}" != "yes" ] && [ "$(uname)" = "Darwin" ]; then
     echo "Fixing dylib install names for macOS..."
     HTSLIB_INSTALL_DIR="${THISDir}/inst/htslib/lib"
-    
-    # Fix libhts.3.dylib install name to use @rpath
     if [ -f "${HTSLIB_INSTALL_DIR}/libhts.3.dylib" ]; then
         install_name_tool -id @rpath/libhts.3.dylib "${HTSLIB_INSTALL_DIR}/libhts.3.dylib"
         echo "Fixed libhts.3.dylib install name"
     fi
-    
-    # Also fix libhts.dylib symlink target if it exists
     if [ -f "${HTSLIB_INSTALL_DIR}/libhts.dylib" ] && [ ! -L "${HTSLIB_INSTALL_DIR}/libhts.dylib" ]; then
         install_name_tool -id @rpath/libhts.dylib "${HTSLIB_INSTALL_DIR}/libhts.dylib"
     fi
@@ -322,120 +357,73 @@ if [ -z "${SSL_LIBS}" ]; then
     fi
 fi
 
-EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl ${SSL_LIBS}"
-
-if grep -wq "#define HAVE_LIBDEFLATE 1" config.h;then
-    EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
-fi
-
-# bcftools static library build against htslib static library
-echo "----------Configuring BCFtools in $BCFTOOLS_DIR-----------------"
-cd  ${BCFTOOLS_DIR} || exit 1
-
-# Configure bcftools with proper installation directory and plugin paths
-BCFTOOLS_PREFIX="${THISDir}/inst/bcftools"
-BCFTOOLS_PLUGIN_DIR="plugins"
-
-# Add CHOLMOD and GSL flags if available  
-BCFTOOLS_CONFIGURE_FLAGS="--prefix=${BCFTOOLS_PREFIX}"
-
-echo "HAVE_GSL status: ${HAVE_GSL}"
-if [ "$HAVE_GSL" = "yes" ]; then
-    echo "Enabling GSL in bcftools configure with --enable-libgsl"
-    BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --enable-libgsl"
+if [ "${WASM_BUILD}" = "yes" ]; then
+    # The R bindings link only to HTSlib. Building the command-line bcftools
+    # program and dlopen plugins as Emscripten side modules is unsupported and
+    # causes duplicate HTSlib/port symbols at link time.
+    echo "Skipping bcftools CLI and plugin build for WebAssembly"
+    # RC_bcftools_version() only needs this generated build header; the R
+    # module does not link to libbcftools.
+    printf '#define BCFTOOLS_VERSION "%s"\n' "${BCFTOOLS_VERSION}" > "${BCFTOOLS_DIR}/version.h"
+    EXTRA_LIBS=""
+    HTSLIB_LINK_INPUT="${THISDir}/inst/htslib/lib/libhts.a"
 else
-    echo "Disabling GSL in bcftools configure with --disable-libgsl"
-    BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --disable-libgsl"
-fi
-echo "Final bcftools configure flags: ${BCFTOOLS_CONFIGURE_FLAGS}"
+    EXTRA_LIBS="-lz -lm -lbz2 -llzma -lcurl ${SSL_LIBS}"
+    if grep -wq "#define HAVE_LIBDEFLATE 1" config.h; then
+        EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
+    fi
+    HTSLIB_LINK_INPUT="-L${THISDir}/inst/htslib/lib -lhts"
 
+    echo "----------Configuring BCFtools in $BCFTOOLS_DIR-----------------"
+    cd "${BCFTOOLS_DIR}"
+    BCFTOOLS_CONFIGURE_FLAGS="--prefix=${THISDir}/inst/bcftools --with-htslib=${HTSLIB_DIR} --disable-configure-htslib"
+    if [ "${HAVE_GSL}" = "yes" ]; then
+        BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --enable-libgsl"
+        EXTRA_LIBS="${EXTRA_LIBS} ${GSL_LIBS}"
+        export USE_GPL=1
+        export GSL_CFLAGS="${GSL_CFLAGS}"
+        export GSL_LIBS="${GSL_LIBS}"
+    else
+        BCFTOOLS_CONFIGURE_FLAGS="${BCFTOOLS_CONFIGURE_FLAGS} --disable-libgsl"
+    fi
 
-# Add GSL libraries to EXTRA_LIBS for plugin compilation
-if [ "$HAVE_GSL" = "yes" ]; then
-    EXTRA_LIBS="${EXTRA_LIBS} ${GSL_LIBS}"
-fi
+    BCFTOOLS_WARN_FLAGS="-Wno-unused-variable"
+    if ${CC} --version 2>&1 | grep -qi "gcc\|g++"; then
+        BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-alloc-size-larger-than"
+    elif ${CC} --version 2>&1 | grep -qi "clang"; then
+        BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-unused-but-set-variable"
+    fi
 
-# Ensure GSL flags are available for bcftools configure
-if [ "$HAVE_GSL" = "yes" ]; then
-    export GSL_CFLAGS="${GSL_CFLAGS}"
-    export GSL_LIBS="${GSL_LIBS}"
-fi
+    CHOLMOD_CPPFLAGS="${CHOLMOD_CPPFLAGS}" CHOLMOD_LIBS="${CHOLMOD_LIBS}" \
+        ./configure \
+        ${CONFIGURE_ARGS} \
+        ${BCFTOOLS_CONFIGURE_FLAGS} \
+        CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
+        CPPFLAGS="${CPPFLAGS}" \
+        LDFLAGS="${LDFLAGS}" \
+        --enable-shared
 
-# Detect compiler type for platform-specific warning flags
-COMPILER_TYPE="unknown"
-if ${CC} --version 2>&1 | grep -qi "clang"; then
-    COMPILER_TYPE="clang"
-    echo "Detected Clang compiler"
-elif ${CC} --version 2>&1 | grep -qi "gcc\|g++"; then
-    COMPILER_TYPE="gcc"
-    echo "Detected GCC compiler"
-fi
-
-# Set warning suppression flags based on compiler
-BCFTOOLS_WARN_FLAGS="-Wno-unused-variable"
-if [ "${COMPILER_TYPE}" = "gcc" ]; then
-    # GCC-specific warning suppressions
-    BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-alloc-size-larger-than"
-elif [ "${COMPILER_TYPE}" = "clang" ]; then
-    # Clang-specific warning suppressions
-    BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-unused-but-set-variable"
-fi
-
-# Detect WebAssembly/r-wasm environment for bcftools
-BCFTOOLS_EXTRA_FLAGS=""
-if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
-    echo "Detected WebAssembly/r-wasm build environment for bcftools"
-    # Disable functions not available in WASM, and force CCHmac to no
-    # (AC_CHECK_FUNC incorrectly detects it as available in emscripten,
-    # but CommonCrypto/CommonHMAC.h doesn't exist causing build failure)
-    BCFTOOLS_EXTRA_FLAGS="ac_cv_func_getrandom=no ac_cv_func_fork=no ac_cv_func_vfork=no ac_cv_func_CCHmac=no"
-fi
-
-CHOLMOD_CPPFLAGS=$CHOLMOD_CPPFLAGS CHOLMOD_LIBS=$CHOLMOD_LIBS CHOLMOD_CPPFLAGS="${CHOLMOD_CPPFLAGS}" \
-    ./configure \
-    ${CONFIGURE_ARGS} \
-    ${BCFTOOLS_CONFIGURE_FLAGS} \
-    CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
-    CPPFLAGS="${CPPFLAGS}" \
-    LDFLAGS="${LDFLAGS}" \
-    --enable-shared \
-    ${BCFTOOLS_EXTRA_FLAGS}
-
-# Build the bcftools executable and plugins with dependency flags
-export CC="${CC}"
-export AR="${AR}"
-export RANLIB="${RANLIB}"
-
-if [ "$HAVE_GSL" = "yes" ]; then
-    export USE_GPL=1
-    export GSL_LIBS="${GSL_LIBS}"
-fi
-${MAKE} -f Makefile bcftools libbcftools.a libbcftools.${SHLIB_EXT}
-${MAKE} -f Makefile plugins
-${MAKE} -f Makefile install
-# if inst/bcftools/lib does not exist, create it
-# and copy libbcftools.a there
-if [ ! -d "${THISDir}/inst/bcftools/lib" ]; then
+    ${MAKE} -f Makefile bcftools libbcftools.a libbcftools.${SHLIB_EXT}
+    ${MAKE} -f Makefile plugins
+    ${MAKE} -f Makefile install
     mkdir -p "${THISDir}/inst/bcftools/lib"
+    cp "${BCFTOOLS_DIR}/libbcftools.a" "${THISDir}/inst/bcftools/lib/"
+    cp "${BCFTOOLS_DIR}/libbcftools.${SHLIB_EXT}" "${THISDir}/inst/bcftools/lib/"
 fi
-cp "${BCFTOOLS_DIR}/libbcftools.a" "${THISDir}/inst/bcftools/lib/"
-cp "${BCFTOOLS_DIR}/libbcftools.${SHLIB_EXT}" "${THISDir}/inst/bcftools/lib/"
 
-cd ${THISDir} || exit 1
+cd "${THISDir}"
 echo "Create Makevars file"
 sed \
     -e "s|@EXTRA_CPPFLAGS@|${CPPFLAGS}|g" \
     -e "s|@EXTRA_LIBS@|${EXTRA_LIBS}|g" \
-    -e "s|@HAVE_GSL@|${HAVE_GSL}|g" \
-    -e "s|@GSL_LIBS@|${GSL_LIBS}|g" \
-    -e "s|@USE_GPL@|${USE_GPL}|g" \
+    -e "s|@HTSLIB_LINK_INPUT@|${HTSLIB_LINK_INPUT}|g" \
+    -e "s|@PKG_LIBS_EXTRA@|${PKG_LIBS_EXTRA}|g" \
+    -e "s|@RPATH_FLAGS@|${RPATH_FLAGS}|g" \
     src/Makevars.in > src/Makevars
 
-# chech if inst/bcftools/libexec/bcftools/pgs.so is present and empty
-if [ -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
-    if [ ! -s "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
-        echo "Removing empty pgs plugin shared library"
-        rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" || true
-        rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.so" || true
-    fi
+if [ "${WASM_BUILD}" != "yes" ] && [ -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ] && \
+   [ ! -s "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
+    echo "Removing empty pgs plugin shared library"
+    rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" || true
+    rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.so" || true
 fi

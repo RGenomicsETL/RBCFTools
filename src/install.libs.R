@@ -11,7 +11,8 @@ headers <- list.files(
   recursive = TRUE
 )
 
-headers <- headers[!grepl("htslib-1.23", headers)]
+# HTSlib headers are staged separately under inst/htslib/include.
+headers <- headers[!grepl("htslib-1[.][0-9]+", headers)]
 headers_dest <- file.path(R_PACKAGE_DIR, "bcftools/include")
 for (h in headers) {
   # Get relative path from bcftools-1.23/

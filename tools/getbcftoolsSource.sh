@@ -1,19 +1,33 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
-# download bcftools from github
-version=1.23
-THISDir=`dirname $0`
-THISDir=`realpath ${THISDir}`
-bcftoolsVersion="1.23"
-# Download BCFToolsScore source as a tar.gz at the specified commit and unpack into plugins
-cd ${THISDir}/../src || exit 1
-echo "$PWD"
-ls -d ${PWD}/bcftools* | xargs -I {} -t rm -rf {} || true 
-ls -d ${PWD}/htslib-* | xargs -I {} -t rm -rf {} || true
-echo "Downloading bcftools version ${version} from GitHub"
-wget https://github.com/samtools/bcftools/releases/download/${version}/bcftools-${version}.tar.bz2
-echo "Unpacking bcftools version ${version}"
-tar -xjf bcftools-${version}.tar.bz2
-echo "Cleaning up"
-rm -f bcftools-${version}.tar.bz2 || true
-cd bcftools-${version} || exit 1
+
+# Recreate the bundled source tree from exact upstream release archives.
+BCFTOOLS_VERSION=1.23
+HTSLIB_VERSION=1.24
+HTSLIB_SHA256=28a8de191381c7a97a35675ceac76fa1ea95e7b678d6a2e9d600a7874e4077de
+
+THIS_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+SRC_DIR="${THIS_DIR}/../src"
+BCFTOOLS_DIR="${SRC_DIR}/bcftools-${BCFTOOLS_VERSION}"
+
+cd "${SRC_DIR}"
+rm -rf "${BCFTOOLS_DIR}"
+
+echo "Downloading bcftools ${BCFTOOLS_VERSION}"
+curl --fail --location --retry 3 \
+  --output "bcftools-${BCFTOOLS_VERSION}.tar.bz2" \
+  "https://github.com/samtools/bcftools/releases/download/${BCFTOOLS_VERSION}/bcftools-${BCFTOOLS_VERSION}.tar.bz2"
+tar -xjf "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
+rm -f "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
+
+rm -rf "${BCFTOOLS_DIR}"/htslib-*
+echo "Downloading htslib ${HTSLIB_VERSION}"
+curl --fail --location --retry 3 \
+  --output "htslib-${HTSLIB_VERSION}.tar.bz2" \
+  "https://github.com/samtools/htslib/releases/download/${HTSLIB_VERSION}/htslib-${HTSLIB_VERSION}.tar.bz2"
+printf '%s  %s\n' "${HTSLIB_SHA256}" "htslib-${HTSLIB_VERSION}.tar.bz2" | sha256sum -c -
+mkdir -p "${BCFTOOLS_DIR}/htslib-${HTSLIB_VERSION}"
+tar -xjf "htslib-${HTSLIB_VERSION}.tar.bz2" \
+  --strip-components=1 \
+  -C "${BCFTOOLS_DIR}/htslib-${HTSLIB_VERSION}"
+rm -f "htslib-${HTSLIB_VERSION}.tar.bz2"
