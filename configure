@@ -38,6 +38,12 @@ else
      SHLIB_EXT="so"
 fi
 CFLAGS="-Wall -g -O2 -fPIC -D_FILE_OFFSET_BITS=64"
+# HTSlib 1.24 and bcftools 1.23 have upstream const-correctness diagnostics
+# under GCC 15. Suppress only this third-party warning on GCC; Clang uses a
+# different warning name and does not emit it for these sources.
+if ${CC} --version 2>&1 | grep -qi "gcc"; then
+  CFLAGS="${CFLAGS} -Wno-discarded-qualifiers"
+fi
 CPPFLAGS="${R_CPPFLAGS} -DNDEBUG"
 LDFLAGS="${R_LDFLAGS}"
 HTSLIB_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}/htslib-${HTSLIB_VERSION}"
