@@ -6,7 +6,7 @@ THISDir=`realpath ${THISDir}`
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 rm -rf inst/bcftools
 rm -rf inst/htslib
-cd src/bcftools-1.23/htslib-1.24
+cd src/bcftools-1.24/htslib-1.24
 ${MAKE} clean
 cd ../../
 ${MAKE} clean
@@ -14,3 +14,26 @@ cd ${THISDir}
 rm src/*so || true
 rm src/*dylib || true
 rm src/*o || true
+find src -type f -name '*.pico' -delete
+rm -f src/Makevars
+rm -f src/bcftools-1.24/version.h
+rm -f src/bcftools-1.24/htslib-1.24/version.h
+rm -f src/bcftools-1.24/bcftools src/bcftools-1.24/libbcftools.a
+rm -f src/bcftools-1.24/libbcftools.so
+rm -f src/bcftools-1.24/config.h src/bcftools-1.24/config.log
+rm -f src/bcftools-1.24/config.mk src/bcftools-1.24/config.status
+rm -f src/bcftools-1.24/htslib-1.24/annot-tsv
+rm -f src/bcftools-1.24/htslib-1.24/bgzip
+rm -f src/bcftools-1.24/htslib-1.24/htsfile
+rm -f src/bcftools-1.24/htslib-1.24/tabix
+rm -f src/bcftools-1.24/htslib-1.24/hfile_*.so
+rm -f src/bcftools-1.24/htslib-1.24/libhts.a
+rm -f src/bcftools-1.24/htslib-1.24/libhts.so*
+rm -f src/bcftools-1.24/htslib-1.24/ref_cache/ref-cache
+rm -f src/bcftools-1.24/htslib-1.24/config.h
+rm -f src/bcftools-1.24/htslib-1.24/config.log
+rm -f src/bcftools-1.24/htslib-1.24/config.mk
+rm -f src/bcftools-1.24/htslib-1.24/config.status
+rm -f src/bcftools-1.24/htslib-1.24/htslib.pc.tmp
+rm -f src/bcftools-1.24/htslib-1.24/htslib_static.mk
+rm -f src/bcftools-1.24/htslib-1.24/hts-object-files

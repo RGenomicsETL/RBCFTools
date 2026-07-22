@@ -1,0 +1,20 @@
+--- a/Makefile
++++ b/Makefile
+@@ -203,6 +203,17 @@
+ 	$(AR) -rc $@ $(OBJS)
+ 	-$(RANLIB) $@
+ 
++ifeq "$(PLATFORM)" "Darwin"
++SHLIB_EXT = dylib
++SHLIB_FLAGS = -dynamiclib -install_name @rpath/libbcftools.$(SHLIB_EXT)
++else
++SHLIB_EXT = so
++SHLIB_FLAGS = -shared
++endif
++
++libbcftools.$(SHLIB_EXT): $(OBJS)
++	$(CC) $(SHLIB_FLAGS) -fPIC -o $@ $(OBJS) $(ALL_LDFLAGS) $(HTSLIB_LIB) $(ALL_LIBS) $(GSL_LIBS) $(PERL_LIBS) -lpthread
++
+ vcfplugin.o: EXTRA_CPPFLAGS += -DPLUGINPATH='"$(pluginpath)"'
+ 
+ %.dll: %.c version.h version.c libbcftools.a $(HTSLIB_DLL)

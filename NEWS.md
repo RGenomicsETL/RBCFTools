@@ -1,3 +1,12 @@
+# RBCFTools 1.24-0.0.3.1
+
+- Upgraded the vendored BCFtools source to 1.24, including the upstream
+  `bcftools csq --greedy` behavior used by Talos compatibility workflows.
+- Retained the Fedora/GCC 15 vendored-source warning suppression for
+  const-qualifier diagnostics.
+- Restored the package's shared `libbcftools` build artifact through a small
+  reproducible BCFtools 1.24 compatibility patch.
+
 # RBCFTools 1.23-0.0.3.1.9000
 
 - Added a webR/WebAssembly build path that links static HTSlib and omits the

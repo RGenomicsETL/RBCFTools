@@ -698,7 +698,7 @@ int main(void) {
     return(FALSE)
   }
 
-  # Version should be something like "1.23"
+  # Version should be something like "1.24"
   return(grepl("^[0-9]+\\.[0-9]+", run_output[1]))
 }
 

@@ -95,10 +95,10 @@ vep_get_schema <- function(filename, tag = NULL) {
 #'
 #' @details
 #' Known integer fields: DISTANCE, STRAND, TSL, GENE_PHENO, HGVS_OFFSET,
-#' MOTIF_POS, existing_*ORFs, SpliceAI_pred_DP_*
+#' MOTIF_POS, \code{existing_*ORFs}, \code{SpliceAI_pred_DP_*}
 #'
-#' Known float fields: AF, *_AF (e.g., gnomAD_AF), MAX_AF_*,
-#' MOTIF_SCORE_CHANGE, SpliceAI_pred_DS_*
+#' Known float fields: AF, \code{*_AF} (e.g., \code{gnomAD_AF}), \code{MAX_AF_*},
+#' MOTIF_SCORE_CHANGE, \code{SpliceAI_pred_DS_*}
 #'
 #' All others default to String.
 #'

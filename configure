@@ -30,7 +30,7 @@ R_CFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
 R_CPICFLAGS=`"${R_HOME}/bin/R" CMD config CPICFLAGS`
 R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
-BCFTOOLS_VERSION="1.23"
+BCFTOOLS_VERSION="1.24"
 HTSLIB_VERSION="1.24"
 if [ "$(uname)" = "Darwin" ]; then
      SHLIB_EXT="dylib"
@@ -38,7 +38,7 @@ else
      SHLIB_EXT="so"
 fi
 CFLAGS="-Wall -g -O2 -fPIC -D_FILE_OFFSET_BITS=64"
-# HTSlib 1.24 and bcftools 1.23 have upstream const-correctness diagnostics
+# HTSlib 1.24 and bcftools 1.24 have upstream const-correctness diagnostics
 # under GCC 15. Suppress only this third-party warning on GCC; Clang uses a
 # different warning name and does not emit it for these sources.
 if ${CC} --version 2>&1 | grep -qi "gcc"; then

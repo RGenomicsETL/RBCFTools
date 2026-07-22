@@ -1,10 +1,10 @@
 #!/usr/bin/bash
 set -euo pipefail
 # download bcftools from github
-version=1.23
+version=1.24
 THISDir=`dirname $0`
 THISDir=`realpath ${THISDir}`
-bcftoolsVersion="1.23"
+bcftoolsVersion="1.24"
 # Download BCFToolsScore source as a tar.gz at the specified commit and unpack into plugins
 commit=a9ffa435913101439974fce7c4812235b61e6df5
 cd $(dirname $0)/../src || exit 1

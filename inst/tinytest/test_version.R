@@ -91,7 +91,7 @@ expect_true(is.integer(HTS_FEATURE_LZMA))
 expect_true(is.integer(HTS_FEATURE_BZIP2))
 expect_true(is.integer(HTS_FEATURE_HTSCODECS))
 
-# Test version formats look reasonable (e.g., "1.23" pattern)
+# Test version formats look reasonable (e.g., "1.24" pattern)
 expect_true(
   grepl("^[0-9]+\\.[0-9]+", htslib_version()),
   info = "htslib_version() should match version pattern"

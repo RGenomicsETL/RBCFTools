@@ -10,7 +10,7 @@
 #include "htslib/hts.h"
 
 /* bcftools version from version.h */
-#include "bcftools-1.23/version.h"
+#include "bcftools-1.24/version.h"
 
 /*
  * RC_htslib_version
