@@ -16,5 +16,5 @@ A character string containing the bcftools version.
 
 ``` r
 bcftools_version()
-#> [1] "1.23"
+#> [1] "1.24"
 ```
