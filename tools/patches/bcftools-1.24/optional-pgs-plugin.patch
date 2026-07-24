@@ -1,0 +1,19 @@
+--- a/Makefile
++++ b/Makefile
+@@ -165,0 +166,4 @@
++# The pgs plugin depends on the optional SuiteSparse CHOLMOD development
++# headers and libraries.  The package-level configure script enables it only
++# after a compile-and-link probe succeeds.
++ENABLE_PGS_PLUGIN ?= no
+@@ -166,0 +171,3 @@
++ifneq "$(ENABLE_PGS_PLUGIN)" "yes"
++PLUGINC := $(filter-out plugins/pgs.c,$(PLUGINC))
++endif
+@@ -380 +387 @@
+-	$(INSTALL_PROGRAM) plugins/*$(PLUGIN_EXT) $(DESTDIR)$(plugindir)
++	$(INSTALL_PROGRAM) $(PLUGINS) $(DESTDIR)$(plugindir)
+--- a/plugins/pgs.mk
++++ b/plugins/pgs.mk
+@@ -2 +2 @@
+-	$(CC) $(PLUGIN_FLAGS) $(CFLAGS) $(ALL_CPPFLAGS) $(EXTRA_CPPFLAGS) $(LDFLAGS) -o $@ version.c $< $(PLUGIN_LIBS) $(LIBS) -lcholmod
++	$(CC) $(PLUGIN_FLAGS) $(CFLAGS) $(ALL_CPPFLAGS) $(EXTRA_CPPFLAGS) $(CHOLMOD_CPPFLAGS) $(LDFLAGS) -o $@ version.c $< $(PLUGIN_LIBS) $(LIBS) $(CHOLMOD_LIBS)

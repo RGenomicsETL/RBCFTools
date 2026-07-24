@@ -1,5 +1,7 @@
 # RBCFTools 1.24-0.0.3.1
 
+- Fixed installation on systems without the optional SuiteSparse CHOLMOD
+  development files by omitting only the `pgs` plugin.
 - Upgraded the vendored BCFtools source to 1.24, including the upstream
   `bcftools csq --greedy` behavior used by Talos compatibility workflows.
 - Retained the Fedora/GCC 15 vendored-source warning suppression for

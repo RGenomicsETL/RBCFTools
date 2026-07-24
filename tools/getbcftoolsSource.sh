@@ -23,6 +23,7 @@ tar -xjf "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
 rm -f "bcftools-${BCFTOOLS_VERSION}.tar.bz2"
 
 patch -d "${BCFTOOLS_DIR}" -p1 < "${THIS_DIR}/patches/bcftools-${BCFTOOLS_VERSION}/libbcftools-shared.patch"
+patch -d "${BCFTOOLS_DIR}" -p1 < "${THIS_DIR}/patches/bcftools-${BCFTOOLS_VERSION}/optional-pgs-plugin.patch"
 
 rm -rf "${BCFTOOLS_DIR}"/htslib-*
 echo "Downloading htslib ${HTSLIB_VERSION}"

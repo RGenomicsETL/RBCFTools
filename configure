@@ -78,10 +78,12 @@ HAVE_GSL="no"
 USE_GPL=""
 GSL_LIBS=""
 GSL_CFLAGS=""
-#----------------- Check for CHOLMOD 
+#----------------- Check for CHOLMOD
+# The pgs plugin is optional. Preserve explicit user flags, but do not treat
+# empty shell variables created here as evidence that CHOLMOD is available.
 HAVE_CHOLMOD="no"
-CHOLMOD_CPPFLAGS=""
-CHOLMOD_LIBS=""
+CHOLMOD_CPPFLAGS="${CHOLMOD_CPPFLAGS:-}"
+CHOLMOD_LIBS="${CHOLMOD_LIBS:-}"
 
 if command -v gsl-config >/dev/null 2>&1; then
   echo "Found GSL via gsl-config"
@@ -115,16 +117,26 @@ fi
 
 echo "Checking for system CHOLMOD..."
 
-# If user provided flags in environment, respect them (no root required)
-if [ -n "${CHOLMOD_CPPFLAGS+set}" ] || [ -n "${CHOLMOD_LIBS+set}" ]; then
-    echo "Using CHOLMOD flags from environment"
-    HAVE_CHOLMOD="yes"
+# If user provided flags in the environment, validate them before enabling
+# the optional plugin. A successful header-only compile is insufficient:
+# pgs also needs to resolve symbols from libcholmod.
+if [ -n "${CHOLMOD_CPPFLAGS}" ] || [ -n "${CHOLMOD_LIBS}" ]; then
+    echo "Testing CHOLMOD flags from environment"
+    if echo '#include <cholmod.h>
+int main(void) { cholmod_common c; return cholmod_start(&c) == 0; }' | \
+         ${CC} ${CFLAGS} ${CHOLMOD_CPPFLAGS} -x c - ${CHOLMOD_LIBS} -o /dev/null 2>/dev/null; then
+        HAVE_CHOLMOD="yes"
+    else
+        echo "CHOLMOD flags from environment failed to compile and link; pgs will be disabled"
+        CHOLMOD_CPPFLAGS=""
+        CHOLMOD_LIBS=""
+    fi
 else
     # Prefer pkg-config when available
     if pkg-config --exists cholmod 2>/dev/null; then
         echo "Found CHOLMOD via pkg-config"
         if echo '#include <cholmod.h>
-int main() { cholmod_common c; return 0; }' | \
+int main(void) { cholmod_common c; return cholmod_start(&c) == 0; }' | \
              ${CC} ${CFLAGS} $(pkg-config --cflags cholmod 2>/dev/null) -x c - $(pkg-config --libs cholmod 2>/dev/null) -o /dev/null 2>/dev/null; then
             HAVE_CHOLMOD="yes"
             CHOLMOD_CPPFLAGS=$(pkg-config --cflags cholmod 2>/dev/null)
@@ -138,15 +150,21 @@ int main() { cholmod_common c; return 0; }' | \
         for p in $PREFIXES; do
             CPP_CAND=""
             LIB_CAND=""
-            if [ -f "$p/include/suitesparse/cholmod.h" ] || [ -f "$p/include/cholmod.h" ]; then
+            if [ -f "$p/include/suitesparse/cholmod.h" ]; then
+                CPP_CAND="-I${p}/include/suitesparse"
+            elif [ -f "$p/include/cholmod.h" ]; then
                 CPP_CAND="-I${p}/include"
             fi
+            # The compiler also searches its standard library directories, so
+            # always probe -lcholmod even when the library is not directly in
+            # $p/lib (e.g. Debian multiarch installations).
+            LIB_CAND="-lcholmod"
             if ls "$p/lib"/libcholmod.* >/dev/null 2>&1; then
                 LIB_CAND="-L${p}/lib -lcholmod"
             fi
-            if [ -n "$CPP_CAND" ] || [ -n "$LIB_CAND" ]; then
+            if [ -n "$CPP_CAND" ]; then
                 if echo '#include <cholmod.h>
-int main() { cholmod_common c; return 0; }' | \
+int main(void) { cholmod_common c; return cholmod_start(&c) == 0; }' | \
                      ${CC} ${CFLAGS} ${CPP_CAND} -x c - ${LIB_CAND} -o /dev/null 2>/dev/null; then
                     HAVE_CHOLMOD="yes"
                     CHOLMOD_CPPFLAGS="${CPP_CAND}"
@@ -176,7 +194,7 @@ int main() { cholmod_common c; return 0; }' | \
 
             # Try default -lcholmod first, if that fails include BLAS framework on macOS
             if echo '#include <cholmod.h>
-int main() { cholmod_common c; return 0; }' | \
+int main(void) { cholmod_common c; return cholmod_start(&c) == 0; }' | \
                  ${CC} ${CFLAGS} -x c - -lcholmod ${BLAS_FWK} -o /dev/null 2>/dev/null; then
                 HAVE_CHOLMOD="yes"
                 CHOLMOD_LIBS="-lcholmod ${BLAS_FWK}"
@@ -189,10 +207,13 @@ int main() { cholmod_common c; return 0; }' | \
     fi
 fi
 
-# If found, export flags so downstream builds (bcftools) see them
+# Enable pgs only after a successful compile-and-link probe. Other BCFtools
+# plugins do not depend on CHOLMOD and remain available when it is absent.
+BCFTOOLS_MAKE_ARGS="ENABLE_PGS_PLUGIN=no"
 if [ "${HAVE_CHOLMOD}" = "yes" ]; then
     export CHOLMOD_CPPFLAGS
     export CHOLMOD_LIBS
+    BCFTOOLS_MAKE_ARGS="ENABLE_PGS_PLUGIN=yes"
     # If on macOS and CHOLMOD was found but BLAS symbols unresolved, ensure framework included
     if [ "$(uname)" = "Darwin" ]; then
         # if CHOLMOD_LIBS doesn't already include a framework, attempt to detect Accelerate
@@ -400,8 +421,7 @@ else
         BCFTOOLS_WARN_FLAGS="${BCFTOOLS_WARN_FLAGS} -Wno-unused-but-set-variable"
     fi
 
-    CHOLMOD_CPPFLAGS="${CHOLMOD_CPPFLAGS}" CHOLMOD_LIBS="${CHOLMOD_LIBS}" \
-        ./configure \
+    ./configure \
         ${CONFIGURE_ARGS} \
         ${BCFTOOLS_CONFIGURE_FLAGS} \
         CFLAGS="${CFLAGS} ${BCFTOOLS_WARN_FLAGS}" \
@@ -409,9 +429,9 @@ else
         LDFLAGS="${LDFLAGS}" \
         --enable-shared
 
-    ${MAKE} -f Makefile bcftools libbcftools.a libbcftools.${SHLIB_EXT}
-    ${MAKE} -f Makefile plugins
-    ${MAKE} -f Makefile install
+    ${MAKE} -f Makefile ${BCFTOOLS_MAKE_ARGS} bcftools libbcftools.a libbcftools.${SHLIB_EXT}
+    ${MAKE} -f Makefile ${BCFTOOLS_MAKE_ARGS} plugins
+    ${MAKE} -f Makefile ${BCFTOOLS_MAKE_ARGS} install
     mkdir -p "${THISDir}/inst/bcftools/lib"
     cp "${BCFTOOLS_DIR}/libbcftools.a" "${THISDir}/inst/bcftools/lib/"
     cp "${BCFTOOLS_DIR}/libbcftools.${SHLIB_EXT}" "${THISDir}/inst/bcftools/lib/"
@@ -426,10 +446,3 @@ sed \
     -e "s|@PKG_LIBS_EXTRA@|${PKG_LIBS_EXTRA}|g" \
     -e "s|@RPATH_FLAGS@|${RPATH_FLAGS}|g" \
     src/Makevars.in > src/Makevars
-
-if [ "${WASM_BUILD}" != "yes" ] && [ -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ] && \
-   [ ! -s "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" ]; then
-    echo "Removing empty pgs plugin shared library"
-    rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.${SHLIB_EXT}" || true
-    rm -f "${THISDir}/inst/bcftools/libexec/bcftools/pgs.so" || true
-fi

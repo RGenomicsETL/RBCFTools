@@ -163,7 +163,14 @@ print-%:
 
 # Plugin rules
 ifneq "$(PLUGINS_ENABLED)" "no"
+# The pgs plugin depends on the optional SuiteSparse CHOLMOD development
+# headers and libraries.  The package-level configure script enables it only
+# after a compile-and-link probe succeeds.
+ENABLE_PGS_PLUGIN ?= no
 PLUGINC = $(foreach dir, plugins, $(wildcard $(dir)/*.c))
+ifneq "$(ENABLE_PGS_PLUGIN)" "yes"
+PLUGINC := $(filter-out plugins/pgs.c,$(PLUGINC))
+endif
 PLUGINS = $(PLUGINC:.c=$(PLUGIN_EXT))
 PLUGINM = $(PLUGINC:.c=.mk)
 OBJS += $(PLUGIN_OBJS)
@@ -377,7 +384,7 @@ install: $(PROGRAMS) $(PLUGINS)
 	$(INSTALL_PROGRAM) $(PROGRAMS) $(DESTDIR)$(bindir)
 	$(INSTALL_SCRIPT) $(MISC_SCRIPTS) $(DESTDIR)$(misc_bindir)
 	$(INSTALL_MAN) doc/bcftools.1 $(DESTDIR)$(man1dir)
-	$(INSTALL_PROGRAM) plugins/*$(PLUGIN_EXT) $(DESTDIR)$(plugindir)
+	$(INSTALL_PROGRAM) $(PLUGINS) $(DESTDIR)$(plugindir)
 
 clean: testclean clean-plugins
 	-rm -f gmon.out *.o mpileup2/*.o *.a *~ $(PROGRAMS) version.h
