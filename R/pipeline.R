@@ -77,9 +77,19 @@ pipeline_stage <- function(command, args = character(), name = NULL) {
 #'   process's standard error.
 #' @param error_on_status Whether to raise an error when any stage exits with a
 #'   non-zero status.
+#' @param cpu_affinity Optional integer vector of logical CPU IDs. On Linux,
+#'   every stage is started through `taskset` with this same allowed CPU set.
+#'   Select one logical CPU per physical core when comparing thread budgets;
+#'   do not count SMT siblings as separate physical cores.
 #'
 #' @return A data frame with one row per stage and columns `stage`, `command`,
-#'   `status`, and `signal`.
+#'   `status`, `signal`, `peak_rss_kib`, and `peak_threads`. The
+#'   `wall_seconds`, `pipeline_peak_rss_kib`, `pipeline_peak_threads`, and
+#'   `cpu_affinity` attributes describe the whole pipeline. On Linux, memory
+#'   and thread counts are sampled every 10 ms from each live stage. Pipeline
+#'   peak RSS is the largest simultaneous sum of stage resident sets; it is
+#'   aggregate RSS, not unique proportional set size. Unsupported platforms
+#'   return `NA` for sampled metrics.
 #'
 #' @examples
 #' output <- tempfile(fileext = ".txt")
@@ -95,7 +105,7 @@ pipeline_stage <- function(command, args = character(), name = NULL) {
 #'
 #' @export
 run_pipeline <- function(stages, stdin = NULL, stdout = NULL, stderr = NULL,
-                         error_on_status = TRUE) {
+                         error_on_status = TRUE, cpu_affinity = NULL) {
   if (inherits(stages, "rbcftools_pipeline_stage")) {
     stages <- list(stages)
   }
@@ -136,10 +146,32 @@ run_pipeline <- function(stages, stdin = NULL, stdout = NULL, stderr = NULL,
 
   commands <- vapply(stages, `[[`, character(1L), "command")
   arguments <- lapply(stages, `[[`, "args")
+  native_commands <- commands
+  native_arguments <- arguments
+  if (!is.null(cpu_affinity)) {
+    if (!is.numeric(cpu_affinity) || length(cpu_affinity) == 0L || anyNA(cpu_affinity)) {
+      stop("cpu_affinity must be NULL or a non-empty integer vector", call. = FALSE)
+    }
+    if (any(cpu_affinity < 0) || any(cpu_affinity != as.integer(cpu_affinity))) {
+      stop("cpu_affinity values must be non-negative CPU IDs", call. = FALSE)
+    }
+    cpu_affinity <- unique(as.integer(cpu_affinity))
+    taskset <- unname(Sys.which("taskset"))
+    if (!nzchar(taskset)) {
+      stop("cpu_affinity requires the Linux taskset executable", call. = FALSE)
+    }
+    cpu_list <- paste(cpu_affinity, collapse = ",")
+    native_commands[] <- taskset
+    native_arguments <- Map(
+      function(command, args) c("--cpu-list", cpu_list, command, args),
+      commands,
+      arguments
+    )
+  }
   native <- .Call(
     RC_exec_pipeline,
-    unname(commands),
-    arguments,
+    unname(native_commands),
+    native_arguments,
     redirections$stdin,
     redirections$stdout,
     redirections$stderr
@@ -149,8 +181,14 @@ run_pipeline <- function(stages, stdin = NULL, stdout = NULL, stderr = NULL,
     command = unname(commands),
     status = native$status,
     signal = native$signal,
+    peak_rss_kib = native$stage_peak_rss_kib,
+    peak_threads = native$stage_peak_threads,
     stringsAsFactors = FALSE
   )
+  attr(result, "wall_seconds") <- native$wall_seconds
+  attr(result, "pipeline_peak_rss_kib") <- native$pipeline_peak_rss_kib
+  attr(result, "pipeline_peak_threads") <- native$pipeline_peak_threads
+  attr(result, "cpu_affinity") <- cpu_affinity
 
   failed <- which(result$status != 0L)
   if (error_on_status && length(failed) > 0L) {

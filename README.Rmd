@@ -65,7 +65,7 @@ htslib_tools()
 
 ## Generic executable pipelines
 
-`pipeline_stage()` and `run_pipeline()` connect arbitrary executables without constructing a shell command. Arguments are passed directly to each process, every stage's status is returned, and binary data moves through operating-system pipes rather than through R strings.
+`pipeline_stage()` and `run_pipeline()` connect arbitrary executables without constructing a shell command. Arguments are passed directly to each process, every stage's status is returned, and binary data moves through operating-system pipes rather than through R strings. On Linux, `cpu_affinity` starts every concurrent stage under the same `taskset` CPU set, while the result records native wall time, per-stage peak RSS, and the largest simultaneous sum of stage RSS sampled from `/proc` every 10 ms.
 
 ```{r pipeline-basic}
 pipeline_output <- tempfile()
@@ -80,65 +80,144 @@ readLines(pipeline_output)
 pipeline_status
 ```
 
-A BWA or Rminibwa mapper that emits SAM can feed Samtools directly. Samtools duplicate marking requires name sorting and `fixmate -m` before coordinate sorting; omitting those steps does not produce a valid `samtools markdup` input.
+A BWA or Rminibwa mapper that emits SAM can feed Samtools directly. Samtools duplicate marking requires name sorting and `fixmate -m` before coordinate sorting; omitting those steps does not produce a valid `samtools markdup` input. These examples are executed when the README is rendered. They build a deterministic reference, map real paired FASTQ records with both executables, mark duplicates, create indexes, and query the resulting BAM files. Rendering therefore requires BWA and Rminibwa rather than silently substituting a mock mapper.
 
-```{r pipeline-samtools-markdup, eval=FALSE}
-threads <- "8"
-mapper <- pipeline_stage(
-  "bwa",
-  c("mem", "-t", threads, reference_fasta, reads_1, reads_2),
-  name = "bwa mem"
-)
-# Or use the executable exported by Rminibwa:
-mapper <- pipeline_stage(
-  Rminibwa::minibwa_path(),
-  c("map", "-t", threads, index_prefix, reads_1, reads_2),
-  name = "minibwa map"
-)
+```{r pipeline-alignment-fixture}
+stopifnot(nzchar(Sys.which("bwa")), requireNamespace("Rminibwa", quietly = TRUE))
+threads <- "2"
+pipeline_dir <- tempfile("rbcftools-pipeline-")
+dir.create(pipeline_dir)
+reference_fasta <- file.path(pipeline_dir, "reference.fa")
+reads_1 <- file.path(pipeline_dir, "reads_1.fastq")
+reads_2 <- file.path(pipeline_dir, "reads_2.fastq")
 
+set.seed(240814L)
+reference_sequence <- paste0(sample(c("A", "C", "G", "T"), 50000L, replace = TRUE), collapse = "")
+starts <- rep(501L + seq.int(0L, 19L) * 2000L, each = 2L)
+inserts <- rep(300L + seq.int(0L, 19L) %% 5L * 10L, each = 2L)
+read_1 <- substring(reference_sequence, starts, starts + 99L)
+reverse_complement <- function(x) {
+  paste0(rev(strsplit(chartr("ACGT", "TGCA", x), "", fixed = TRUE)[[1L]]), collapse = "")
+}
+read_2 <- vapply(
+  seq_along(starts),
+  function(i) reverse_complement(substring(
+    reference_sequence,
+    starts[[i]] + inserts[[i]] - 100L,
+    starts[[i]] + inserts[[i]] - 1L
+  )),
+  character(1L)
+)
+read_names <- sprintf("INST:1:FC:1:1101:%d:%d", 100L + seq_along(starts), 200L + seq_along(starts))
+write_fastq <- function(path, names, reads, mate) {
+  records <- unlist(Map(
+    function(name, read) c(paste0("@", name, "/", mate), read, "+", strrep("I", nchar(read))),
+    names,
+    reads
+  ), use.names = FALSE)
+  writeLines(records, path, useBytes = TRUE)
+}
+writeLines(c(">chr1", reference_sequence), reference_fasta, useBytes = TRUE)
+write_fastq(reads_1, read_names, read_1, 1L)
+write_fastq(reads_2, read_names, read_2, 2L)
+data.frame(reference_bases = nchar(reference_sequence), read_pairs = length(read_names))
+```
+
+The BWA stream exercises the full Samtools-compatible duplicate-marking chain and then indexes the output:
+
+```{r pipeline-samtools-markdup}
+bwa_log <- file.path(pipeline_dir, "bwa.log")
+bwa_output <- file.path(pipeline_dir, "bwa.samtools-markdup.bam")
 run_pipeline(
+  pipeline_stage("bwa", c("index", reference_fasta), name = "bwa index"),
+  stderr = bwa_log
+)
+bwa_status <- run_pipeline(
   list(
-    mapper,
-    pipeline_stage(samtools_path(), c("sort", "-n", "-@", threads, "-O", "BAM", "-o", "-", "-")),
-    pipeline_stage(samtools_path(), c("fixmate", "-m", "-@", threads, "-", "-")),
-    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-O", "BAM", "-o", "-", "-")),
-    pipeline_stage(samtools_path(), c("markdup", "-@", threads, "-", output_bam))
+    pipeline_stage(
+      "bwa",
+      c("mem", "-t", threads, reference_fasta, reads_1, reads_2),
+      name = "bwa mem"
+    ),
+    pipeline_stage(samtools_path(), c("sort", "-n", "-@", threads, "-O", "BAM", "-o", "-", "-"), name = "name sort"),
+    pipeline_stage(samtools_path(), c("fixmate", "-m", "-@", threads, "-", "-"), name = "fixmate"),
+    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-O", "BAM", "-o", "-", "-"), name = "coordinate sort"),
+    pipeline_stage(samtools_path(), c("markdup", "-@", threads, "-", bwa_output), name = "markdup")
   ),
-  stderr = paste0(output_bam, ".pipeline.log")
+  stderr = bwa_log
 )
-run_pipeline(
-  pipeline_stage(samtools_path(), c("index", "-@", threads, output_bam))
+bwa_index_status <- run_pipeline(
+  pipeline_stage(samtools_path(), c("index", "-@", threads, bwa_output), name = "index")
+)
+bwa_status
+bwa_index_status
+data.frame(
+  alignments = as.integer(system2(samtools_path(), c("view", "-c", bwa_output), stdout = TRUE)),
+  duplicate_alignments = as.integer(system2(samtools_path(), c("view", "-c", "-f", "1024", bwa_output), stdout = TRUE)),
+  bam_bytes = file.info(bwa_output)$size,
+  index_exists = file.exists(paste0(bwa_output, ".bai"))
 )
 ```
 
-FastDup rereads a coordinate-sorted input and therefore forms an explicit file-dependent step rather than a streaming stage:
+FastDup rereads a coordinate-sorted input and therefore forms an explicit file-dependent step rather than a streaming stage. Here the mapper is the actual executable exported by Rminibwa:
 
-```{r pipeline-fastdup, eval=FALSE}
-sorted_bam <- tempfile(fileext = ".bam")
+```{r pipeline-fastdup}
+minibwa_log <- file.path(pipeline_dir, "minibwa.log")
+minibwa_index <- file.path(pipeline_dir, "minibwa-index")
+minibwa_sorted <- file.path(pipeline_dir, "minibwa.sorted.bam")
+fastdup_output <- file.path(pipeline_dir, "minibwa.fastdup.bam")
 run_pipeline(
-  list(
-    mapper,
-    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-o", sorted_bam, "-"))
+  pipeline_stage(
+    Rminibwa::minibwa_path(),
+    c("index", "-t", threads, reference_fasta, minibwa_index),
+    name = "minibwa index"
   ),
-  stderr = paste0(sorted_bam, ".pipeline.log")
+  stderr = minibwa_log
 )
-run_pipeline(
+minibwa_status <- run_pipeline(
+  list(
+    pipeline_stage(
+      Rminibwa::minibwa_path(),
+      c("map", "-t", threads, minibwa_index, reads_1, reads_2),
+      name = "minibwa map"
+    ),
+    pipeline_stage(
+      samtools_path(),
+      c("sort", "-@", threads, "-o", minibwa_sorted, "-"),
+      name = "coordinate sort"
+    )
+  ),
+  stderr = minibwa_log
+)
+fastdup_status <- run_pipeline(
   pipeline_stage(
     fastdup_path(),
     c(
-      "--input", sorted_bam,
-      "--output", output_bam,
-      "--metrics", paste0(output_bam, ".metrics"),
+      "--input", minibwa_sorted,
+      "--output", fastdup_output,
+      "--metrics", paste0(fastdup_output, ".metrics"),
       "--num-threads", threads,
       "--tagging-policy", "All"
-    )
+    ),
+    name = "fastdup"
   ),
-  stderr = paste0(output_bam, ".fastdup.log")
+  stderr = paste0(fastdup_output, ".log")
 )
-run_pipeline(
-  pipeline_stage(samtools_path(), c("index", "-@", threads, output_bam))
+fastdup_index_status <- run_pipeline(
+  pipeline_stage(samtools_path(), c("index", "-@", threads, fastdup_output), name = "index")
+)
+minibwa_status
+fastdup_status
+fastdup_index_status
+data.frame(
+  alignments = as.integer(system2(samtools_path(), c("view", "-c", fastdup_output), stdout = TRUE)),
+  duplicate_alignments = as.integer(system2(samtools_path(), c("view", "-c", "-f", "1024", fastdup_output), stdout = TRUE)),
+  bam_bytes = file.info(fastdup_output)$size,
+  index_exists = file.exists(paste0(fastdup_output, ".bai"))
 )
 ```
+
+The rendered benchmarks execute the same pipelines on a [complete 10,110,535-pair HG02088 exome](benchmarks/hg02088-exome-pipelines/README.md) and on the pinned [Zenodo HG002 one-million-pair WGS dataset](benchmarks/hg002-wgs-1m-pipelines/README.md). Both map against a full human reference with BWA and Rminibwa, then compare Samtools `markdup` with the patched FastDup on each prepared BAM.
 
 ## Capabilities
 
@@ -515,35 +594,53 @@ minio_bin <- Sys.which('minio')
 mc_bin <- Sys.which('mc')
 
 # Start MinIO (ephemeral) and configure mc
+stopifnot(nzchar(minio_bin), nzchar(mc_bin))
 data_dir <- file.path(tempdir(), "ducklake_minio")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-port <- as.integer(Sys.getenv("RBCFTOOLS_README_MINIO_PORT", "9000"))
+port_text <- Sys.getenv("RBCFTOOLS_README_MINIO_PORT")
+if (!nzchar(port_text)) {
+  python_bin <- Sys.which("python3")
+  stopifnot(nzchar(python_bin))
+  port_text <- trimws(processx::run(
+    python_bin,
+    c("-c", paste0(
+      "import socket; s=socket.socket(); s.bind(('127.0.0.1',0)); ",
+      "print(s.getsockname()[1]); s.close()"
+    ))
+  )$stdout)
+}
+port <- as.integer(port_text)
+stopifnot(!is.na(port), port > 0L, port <= 65535L)
 endpoint <- sprintf("127.0.0.1:%d", port)
 
-# Start MinIO server in background
-cmd <- sprintf(
-  "%s server %s --address %s > /dev/null 2>&1 & echo $!",
-  shQuote(minio_bin),
-  shQuote(data_dir),
-  endpoint
+# Start MinIO as an owned child process; processx also cleans it up if rendering
+# exits before the explicit cleanup chunk.
+minio_log <- tempfile("rbcftools-minio-", fileext = ".log")
+minio_process <- processx::process$new(
+  minio_bin,
+  c("server", data_dir, "--address", endpoint),
+  stdout = minio_log,
+  stderr = "2>&1",
+  cleanup = TRUE
 )
-pid_output <- processx::run("sh", c("-c", cmd), echo = FALSE)$stdout
-pid <- as.integer(pid_output)
+pid <- minio_process$get_pid()
 pid
-# Give MinIO time to start
-Sys.sleep(10)
 
-# Configure mc alias
-# remove previous alias
-processx::run(
-  mc_bin,
-  c("alias", "remove", "ducklake_local"),
-  error_on_status = FALSE,
-  echo = FALSE
-)
-mc_cmd_args <- c("alias", "set", "ducklake_local", 
-                  paste0("http://", endpoint), "minioadmin", "minioadmin")
-processx::run(mc_bin, mc_cmd_args, echo = FALSE)
+# Poll readiness rather than relying on a fixed sleep.
+mc_cmd_args <- c("alias", "set", "ducklake_local",
+                 paste0("http://", endpoint), "minioadmin", "minioadmin")
+mc_ready <- NULL
+for (attempt in seq_len(100L)) {
+  mc_ready <- processx::run(
+    mc_bin, mc_cmd_args, error_on_status = FALSE, echo = FALSE
+  )
+  if (identical(mc_ready$status, 0L)) break
+  if (!minio_process$is_alive()) {
+    stop("MinIO exited before becoming ready; see ", minio_log)
+  }
+  Sys.sleep(0.1)
+}
+stopifnot(identical(mc_ready$status, 0L))
 
 # Create bucket with unique name
 bucket <- sprintf("readme-demo-%d", as.integer(Sys.time()))
@@ -697,7 +794,8 @@ ducklake_options(con, "lake")
 
 ```{r ducklake-cleanup, eval=TRUE}
 DBI::dbDisconnect(con, shutdown = TRUE)
-tools::pskill(pid)
+minio_process$kill()
+minio_process$wait()
 ```
 
 ### Supported Metadata Databases

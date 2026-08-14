@@ -1,0 +1,4 @@
+doi,record_url,file,url,bytes,md5,records,role
+,https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/dna/,Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz,https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz,894694851,1ce2a22a571b715a56b44c7e8ab1380d,583,reference_sequences
+10.5281/zenodo.19703025,https://zenodo.org/records/19703025,HG002.WGS-1M_1.fq.gz,https://zenodo.org/api/records/19703025/files/HG002.WGS-1M_1.fq.gz/content,70196167,d57b90f5ae2266e23604471c8d7bdc27,1000000,read1
+10.5281/zenodo.19703025,https://zenodo.org/records/19703025,HG002.WGS-1M_2.fq.gz,https://zenodo.org/api/records/19703025/files/HG002.WGS-1M_2.fq.gz/content,72385151,eeeadb9f5e46d06f8a53c4af46804e36,1000000,read2

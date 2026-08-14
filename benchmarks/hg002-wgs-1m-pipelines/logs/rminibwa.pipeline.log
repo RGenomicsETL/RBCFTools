@@ -1,0 +1,22 @@
+[M::main_map::6.866*0.55] index loaded
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (8, 288893, 120, 4)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (275, 368, 499); mean and std.dev: (399.32, 162.38)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 1171)
+[M::worker_pipeline::23.064*4.20] mapped 100000052 bp in 662252 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (9, 288380, 139, 7)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (276, 369, 501); mean and std.dev: (400.74, 162.73)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 1176)
+[M::worker_pipeline::38.205*4.90] mapped 100000052 bp in 662252 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (2, 288737, 124, 8)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (276, 369, 502); mean and std.dev: (401.50, 164.20)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 1180)
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 5771, 4, 0)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (282, 373, 503); mean and std.dev: (403.04, 160.93)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 1166)
+[M::worker_pipeline::52.329*5.16] mapped 100000052 bp in 662252 sequences
+[M::worker_pipeline::52.341*5.16] mapped 1999844 bp in 13244 sequences
+[M::main] Version: 0.7-r421
+[M::main] CMD: /usr/local/lib/R/site-library/Rminibwa/bin/minibwa map -t 6 /root/RBCFTools/.benchmarks/hg002-wgs-1m-pinned/rminibwa-reference /root/RBCFTools/.benchmarks/zenodo-hg002-wgs-1m/input/HG002.WGS-1M_1.fq.gz /root/RBCFTools/.benchmarks/zenodo-hg002-wgs-1m/input/HG002.WGS-1M_2.fq.gz
+[M::main] Real time: 52.568 sec; CPU: 270.101 sec; Peak RSS: 8.167 GB
+[bam_sort_core] merging from 0 files and 2 in-memory blocks...
+[bam_sort_core] merging from 0 files and 2 in-memory blocks...

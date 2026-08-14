@@ -1,0 +1,90 @@
+[M::main_map::7.712*0.52] index loaded
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 429069, 13, 3)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 228); mean and std.dev: (192.52, 56.82)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 459)
+[M::worker_pipeline::13.722*2.49] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 428634, 17, 0)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (191.87, 56.30)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::worker_pipeline::17.783*3.26] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (3, 428195, 11, 0)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 226); mean and std.dev: (191.22, 55.96)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 454)
+[M::worker_pipeline::21.966*3.75] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (2, 428360, 13, 3)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 225); mean and std.dev: (190.82, 55.49)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 450)
+[M::worker_pipeline::25.917*4.05] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (3, 427071, 13, 2)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 181, 225); mean and std.dev: (190.32, 55.39)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 450)
+[M::worker_pipeline::30.328*4.31] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 429087, 19, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 228); mean and std.dev: (192.44, 56.65)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 459)
+[M::worker_pipeline::34.317*4.49] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 429202, 14, 3)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (192.11, 56.43)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::worker_pipeline::38.456*4.63] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (3, 428978, 13, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 183, 227); mean and std.dev: (191.93, 56.47)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 458)
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 429077, 12, 3)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 226); mean and std.dev: (191.27, 55.99)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 454)
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 427919, 13, 2)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 181, 225); mean and std.dev: (190.55, 55.55)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 450)
+[M::worker_pipeline::54.150*4.41] mapped 100000100 bp in 990100 sequences
+[M::worker_pipeline::54.723*4.39] mapped 100000100 bp in 990100 sequences
+[M::worker_pipeline::55.342*4.37] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 428334, 15, 0)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (192.11, 56.32)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::worker_pipeline::60.554*4.50] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (3, 429124, 14, 2)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (192.13, 56.44)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::worker_pipeline::64.596*4.59] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 428396, 7, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 183, 227); mean and std.dev: (191.87, 56.42)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 458)
+[M::worker_pipeline::68.755*4.66] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (2, 428099, 10, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 226); mean and std.dev: (191.15, 55.86)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 454)
+[M::worker_pipeline::72.842*4.73] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (3, 426642, 9, 2)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 181, 224); mean and std.dev: (190.14, 55.06)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 446)
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 426847, 4, 0)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (191.96, 56.20)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 425963, 9, 4)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 228); mean and std.dev: (192.74, 56.91)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 459)
+[M::worker_pipeline::87.861*4.64] mapped 100000100 bp in 990100 sequences
+[M::worker_pipeline::88.449*4.63] mapped 100000100 bp in 990100 sequences
+[M::worker_pipeline::89.091*4.62] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 425528, 14, 4)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (151, 183, 227); mean and std.dev: (192.24, 56.41)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 455)
+[M::worker_pipeline::94.490*4.69] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (2, 425473, 13, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 226); mean and std.dev: (191.45, 56.07)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 454)
+[M::worker_pipeline::98.669*4.74] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 425755, 9, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 226); mean and std.dev: (191.16, 55.91)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 454)
+[M::worker_pipeline::102.749*4.78] mapped 100000100 bp in 990100 sequences
+[M::mb_pestat] # candidate unique pairs for (FF, FR, RF, RR): (1, 179932, 4, 1)
+[M::mb_pestat::FR] (25, 50, 75) percentile: (150, 182, 225); mean and std.dev: (190.70, 55.47)
+[M::mb_pestat::FR] low and high boundaries for proper pairs: (1, 450)
+[M::worker_pipeline::103.242*4.78] mapped 42326070 bp in 419070 sequences
+[M::main] Version: 0.7-r421
+[M::main] CMD: /usr/local/lib/R/site-library/Rminibwa/bin/minibwa map -t 6 /root/RBCFTools/.benchmarks/hg02088-exome-pinned/rminibwa-reference /root/Rdragmap/.checks/real-human/input/SRR716421_1.filt.fastq.gz /root/Rdragmap/.checks/real-human/input/SRR716421_2.filt.fastq.gz
+[M::main] Real time: 103.461 sec; CPU: 493.299 sec; Peak RSS: 8.339 GB
+[bam_sort_core] merging from 2 files and 2 in-memory blocks...
+[bam_sort_core] merging from 2 files and 2 in-memory blocks...

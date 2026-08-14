@@ -1,0 +1,35 @@
+[2026-08-14 15:12:03.739] [fastdup] [info] fast markduplicates start
+[2026-08-14 15:12:04.003] [fastdup] [info] 1681975 reads processed in 0 round
+[2026-08-14 15:12:04.008] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.2599487
+[2026-08-14 15:12:04.008] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.2967389
+[2026-08-14 15:12:04.008] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.737927
+[2026-08-14 15:12:04.008] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.8190014
+[2026-08-14 15:12:04.008] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.3472844
+[2026-08-14 15:12:04.009] [fastdup] [warning] A field parsed out of a read name was expected to contain an integer and did not. READ_NAME_REGEX: (?:.*:)?([0-9]+)[^:]*:([0-9]+)[^:]*:([0-9]+)[^:]*$; Read name: SRR716421.9296670
+[2026-08-14 15:12:04.338] [fastdup] [info] 1677456 reads processed in 1 round
+[2026-08-14 15:12:04.621] [fastdup] [info] 1714284 reads processed in 2 round
+[2026-08-14 15:12:04.894] [fastdup] [info] 1705060 reads processed in 3 round
+[2026-08-14 15:12:05.164] [fastdup] [info] 1690713 reads processed in 4 round
+[2026-08-14 15:12:05.428] [fastdup] [info] 1672799 reads processed in 5 round
+[2026-08-14 15:12:05.696] [fastdup] [info] 1688065 reads processed in 6 round
+[2026-08-14 15:12:05.939] [fastdup] [info] 1702478 reads processed in 7 round
+[2026-08-14 15:12:06.186] [fastdup] [info] 1685787 reads processed in 8 round
+[2026-08-14 15:12:06.434] [fastdup] [info] 1667749 reads processed in 9 round
+[2026-08-14 15:12:06.687] [fastdup] [info] 1705236 reads processed in 10 round
+[2026-08-14 15:12:06.931] [fastdup] [info] 1634174 reads processed in 11 round
+[2026-08-14 15:12:07.036] [fastdup] [info] 20225776 total reads processed
+[2026-08-14 15:12:07.165] [fastdup] [info] 467238 duplicate reads found
+[2026-08-14 15:12:07.165] [fastdup] [info] 0 optical reads found
+[2026-08-14 15:12:08.566] [fastdup] [info] write 1681975 reads to output
+[2026-08-14 15:12:09.858] [fastdup] [info] write 1677456 reads to output
+[2026-08-14 15:12:11.396] [fastdup] [info] write 1714284 reads to output
+[2026-08-14 15:12:12.916] [fastdup] [info] write 1705060 reads to output
+[2026-08-14 15:12:14.578] [fastdup] [info] write 1690713 reads to output
+[2026-08-14 15:12:16.148] [fastdup] [info] write 1672799 reads to output
+[2026-08-14 15:12:17.633] [fastdup] [info] write 1688065 reads to output
+[2026-08-14 15:12:19.193] [fastdup] [info] write 1702478 reads to output
+[2026-08-14 15:12:20.784] [fastdup] [info] write 1685787 reads to output
+[2026-08-14 15:12:22.115] [fastdup] [info] write 1667749 reads to output
+[2026-08-14 15:12:23.426] [fastdup] [info] write 1705236 reads to output
+[2026-08-14 15:12:24.760] [fastdup] [info] write 1634174 reads to output
+[2026-08-14 15:12:24.847] [fastdup] [info] fast markduplicates end

@@ -10,4 +10,4 @@ Patches: 0001-use-external-htslib.patch, 0002-wide-optical-coordinates.patch, 00
 VendoredScope: FastDup sources and required bundled header libraries; upstream HTSlib and test data omitted
 HTSlib: src/bcftools-1.24/htslib-1.24 (configured once by RBCFTools)
 VendoredAtUTC: 2026-08-14 11:18:46 UTC
-License: GPL-3.0
+License: MIT

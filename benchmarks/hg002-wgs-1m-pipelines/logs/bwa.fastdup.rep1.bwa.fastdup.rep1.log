@@ -1,0 +1,9 @@
+[2026-08-14 16:15:08.171] [fastdup] [info] fast markduplicates start
+[2026-08-14 16:15:08.424] [fastdup] [info] 1294420 reads processed in 0 round
+[2026-08-14 16:15:08.622] [fastdup] [info] 717964 reads processed in 1 round
+[2026-08-14 16:15:08.699] [fastdup] [info] 2012384 total reads processed
+[2026-08-14 16:15:08.848] [fastdup] [info] 132044 duplicate reads found
+[2026-08-14 16:15:08.848] [fastdup] [info] 20098 optical reads found
+[2026-08-14 16:15:10.117] [fastdup] [info] write 1294420 reads to output
+[2026-08-14 16:15:10.667] [fastdup] [info] write 717964 reads to output
+[2026-08-14 16:15:10.717] [fastdup] [info] fast markduplicates end

@@ -1,6 +1,8 @@
 ^AGENTS.md$
 ^\.codex$
 ^\.pi$
+^\.benchmarks$
+^benchmarks$
 ^Dockerfile$
 ^test_script\.R$
 ^tt\.parquet$

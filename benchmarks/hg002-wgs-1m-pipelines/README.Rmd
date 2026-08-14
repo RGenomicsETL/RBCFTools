@@ -1,0 +1,220 @@
+---
+output:
+  github_document:
+    toc: false
+    html_preview: false
+---
+
+<!-- Generated as README.md from README.Rmd. Edit README.Rmd or ../run-short-read-pipelines.R, then rerun the benchmark. -->
+
+# HG002 WGS one-million-pair executable-pipeline benchmark
+
+This is an executed real-human-data benchmark of the generic RBCFTools process
+pipeline, not a synthetic package fixture. It maps all one million NovaSeq WGS
+read pairs in the pinned Zenodo HG002 artifact with BWA and Rminibwa, prepares one valid
+name-sort/`fixmate -m`/coordinate-sort BAM per mapper, and runs both Samtools
+`markdup` and the RBCFTools-patched FastDup against each prepared BAM.
+
+Large references, FASTQs, indexes, and BAMs remain outside Git. [`../run-short-read-pipelines.R`](../run-short-read-pipelines.R) records
+results incrementally, validates every BAM and index, records duplicate-QNAME
+digests, retains text logs/metrics, and removes bulk outputs after successful
+validation.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+performance <- read.csv("performance.csv", stringsAsFactors = FALSE, check.names = FALSE)
+validation <- read.csv("validation.csv", stringsAsFactors = FALSE, check.names = FALSE)
+environment <- readLines("environment.txt")
+environment <- strsplit(environment, "=", fixed = TRUE)
+environment <- setNames(
+  vapply(environment, function(x) paste(x[-1L], collapse = "="), character(1L)),
+  vapply(environment, `[[`, character(1L), 1L)
+)
+```
+
+## Inputs and executable authorities
+
+The full human reference is the Ensembl release 116 GRCh38 primary assembly:
+
+- <https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz>
+- 194 sequences and 3,099,750,718 unpadded bases.
+
+The reads are the complete paired WGS subset published by Heng Li as **Small
+short- and long-read datasets**, DOI
+[10.5281/zenodo.19703025](https://doi.org/10.5281/zenodo.19703025), under
+CC BY 4.0:
+
+- mate 1: `HG002.WGS-1M_1.fq.gz`, 70,196,167 bytes;
+- mate 2: `HG002.WGS-1M_2.fq.gz`, 72,385,151 bytes;
+- workload: 1,000,000 records in each mate (2,000,000 input reads).
+
+The record's `map.mak` targets a local `hs38.fa`. This benchmark declares the
+exact full GRCh38 reference above rather than silently assuming that local
+filename's sequence content. Stable input locators, checksums, and workload
+roles are also recorded in [`input-manifest.csv`](input-manifest.csv).
+
+```{r environment-table}
+knitr::kable(
+  data.frame(
+    Field = c(
+      "Run UTC", "Host", "Platform", "CPU", "Logical CPUs", "Memory bytes",
+      "Kernel", "RBCFTools", "RBCFTools commit", "Source tree state", "FastDup", "Samtools", "Rminibwa",
+      "Pinned logical CPUs", "Physical-core sibling sets", "Pinned CPU max frequencies (kHz)",
+      "Mapper/marker threads",
+      "Sort threads per sort", "Fixmate threads", "Marker repetitions", "Cache policy",
+      "Reference bytes", "Mate 1 bytes", "Mate 2 bytes"
+    ),
+    Value = c(
+      environment[["run_utc"]], environment[["host"]], environment[["platform"]],
+      environment[["cpu_model"]], environment[["logical_cpus"]],
+      format(as.numeric(environment[["memory_bytes"]]), big.mark = ",", scientific = FALSE),
+      environment[["kernel"]], environment[["rbcftools_version"]],
+      environment[["rbcftools_commit"]], environment[["rbcftools_tree_state"]],
+      environment[["fastdup_version"]],
+      environment[["samtools_version"]], environment[["minibwa_version"]],
+      environment[["cpu_affinity"]], environment[["cpu_thread_siblings"]],
+      environment[["cpu_max_frequency_khz"]], environment[["threads"]], environment[["sort_threads"]], environment[["fixmate_threads"]],
+      environment[["marker_repetitions"]], environment[["cache_policy"]],
+      format(as.numeric(environment[["reference_bytes"]]), big.mark = ",", scientific = FALSE),
+      format(as.numeric(environment[["read1_bytes"]]), big.mark = ",", scientific = FALSE),
+      format(as.numeric(environment[["read2_bytes"]]), big.mark = ",", scientific = FALSE)
+    )
+  ),
+  align = c("l", "r")
+)
+```
+
+## Executed method
+
+For each mapper, the benchmark builds a full GRCh38 index or explicitly records reuse of a prebuilt index, then executes:
+
+```text
+BWA mem or minibwa map
+  | samtools sort -n
+  | samtools fixmate -m
+  | samtools sort (coordinate)
+  > prepared.bam
+```
+
+That one prepared BAM is then consumed independently by:
+
+```text
+samtools markdup prepared.bam samtools.bam
+samtools index samtools.bam
+
+fastdup --input prepared.bam --output fastdup.bam ...
+samtools index fastdup.bam
+```
+
+This isolates duplicate-marker time from mapping and sort time while also
+exercising the complete executable pipeline. FastDup receives a seekable file
+because its algorithm rereads coordinate-sorted input; it is not represented
+as a streaming stage.
+
+Every timed process is confined to the same explicit logical-CPU set with
+`run_pipeline(cpu_affinity = ...)`. The selected IDs contain one SMT sibling
+from each physical core; the runner rejects duplicate `thread_siblings_list`
+values. All concurrently active stages share that one CPU set, so pipeline
+stages cannot silently multiply the benchmark's physical-core budget. Internal
+thread flags are still recorded because they describe scheduling demand, not
+additional entitled cores.
+
+RBCFTools samples each live stage's Linux `/proc/<pid>/status` every 10 ms.
+`pipeline_peak_rss_kib` is the largest simultaneous sum of stage RSS values;
+it is aggregate RSS and may double-count shared pages, rather than unique PSS.
+`pipeline_peak_threads` is the largest simultaneous sum of live stage thread
+counts. These are pipeline-level high-water marks; GNU `time -v` around only
+one sibling process would not measure them.
+
+## Measured wall time
+
+```{r performance-table}
+shown <- performance
+shown$wall_seconds <- ifelse(is.na(shown$wall_seconds), "", sprintf("%.3f", shown$wall_seconds))
+shown$peak_rss_kib <- ifelse(
+  is.na(shown$peak_rss_kib),
+  "",
+  sprintf("%.3f", shown$peak_rss_kib / 1024^2)
+)
+shown$output_bytes <- ifelse(
+  is.na(shown$output_bytes),
+  "",
+  format(shown$output_bytes, big.mark = ",", scientific = FALSE)
+)
+names(shown) <- c(
+  "Mapper", "Phase", "Tool", "Repetition", "Cache", "Wall seconds",
+  "Peak aggregate RSS (GiB)", "Peak simultaneous threads", "Pinned CPUs",
+  "Internal thread configuration", "Stage statuses", "Output bytes"
+)
+knitr::kable(shown, align = c("l", "l", "l", "r", "l", "r", "r", "r", "l", "l", "l", "r"))
+```
+
+```{r marker-comparison}
+marker_rows <- subset(performance, phase == "duplicate marking")
+marker_summary <- do.call(
+  rbind,
+  lapply(split(marker_rows, list(marker_rows$mapper, marker_rows$tool), drop = TRUE), function(x) {
+    data.frame(
+      Mapper = x$mapper[[1L]],
+      Tool = x$tool[[1L]],
+      `Minimum wall (s)` = min(x$wall_seconds),
+      `Median wall (s)` = median(x$wall_seconds),
+      `Maximum wall (s)` = max(x$wall_seconds),
+      `Median peak RSS (GiB)` = median(x$peak_rss_kib) / 1024^2,
+      `Median peak threads` = median(x$peak_threads),
+      check.names = FALSE
+    )
+  })
+)
+marker_summary[3:7] <- lapply(marker_summary[3:7], function(x) sprintf("%.3f", x))
+row.names(marker_summary) <- NULL
+knitr::kable(marker_summary, align = c("l", "l", "r", "r", "r", "r", "r"))
+```
+
+Duplicate-marker runs use three repetitions with alternating tool order and a
+cold page cache before each timed phase. The table establishes what was
+observed for this real HG002 WGS subset on one pinned host; it does not claim a
+general speedup outside the declared workload and resource contract.
+
+## Output validation
+
+Every output passed `samtools quickcheck`, was indexed by the bundled Samtools,
+and was scanned to count all records and duplicate-flagged records. Duplicate
+QNAMEs were deduplicated, sorted, and hashed so marker agreement is auditable
+without retaining multi-gigabyte BAMs.
+
+```{r validation-table}
+shown_validation <- validation
+shown_validation$bam_bytes <- format(shown_validation$bam_bytes, big.mark = ",", scientific = FALSE)
+shown_validation$bai_bytes <- format(shown_validation$bai_bytes, big.mark = ",", scientific = FALSE)
+names(shown_validation) <- c(
+  "Mapper", "Marker", "Repetition", "Records", "Duplicate records", "Duplicate QNAMEs",
+  "Duplicate-QNAME SHA-256", "BAM bytes", "BAI bytes", "Quickcheck"
+)
+knitr::kable(shown_validation, align = c("l", "l", "r", "r", "r", "r", "l", "r", "r", "l"))
+```
+
+```{r duplicate-agreement}
+samtools_validation <- subset(validation, marker == "samtools")
+fastdup_validation <- subset(validation, marker == "fastdup")
+agreement <- merge(
+  samtools_validation,
+  fastdup_validation,
+  by = c("mapper", "repetition"),
+  suffixes = c(".samtools", ".fastdup")
+)
+agreement <- data.frame(
+  Mapper = agreement$mapper,
+  Repetition = agreement$repetition,
+  `Same duplicate-record count` = agreement$duplicate_records.samtools == agreement$duplicate_records.fastdup,
+  `Same duplicate-QNAME count` = agreement$duplicate_qnames.samtools == agreement$duplicate_qnames.fastdup,
+  `Same duplicate-QNAME digest` = agreement$duplicate_qname_sha256.samtools == agreement$duplicate_qname_sha256.fastdup,
+  check.names = FALSE
+)
+knitr::kable(agreement, align = c("l", "r", "l", "l", "l"))
+```
+
+Matching duplicate counts alone do not prove identical decisions; matching the
+sorted unique-QNAME digest provides a stronger marker-level comparison. Any
+intentional differences caused by the RBCFTools FastDup corrections remain
+governed by the package root `ERRATA.md`.

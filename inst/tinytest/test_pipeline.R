@@ -1,7 +1,7 @@
 library(RBCFTools)
 library(tinytest)
 
-required <- Sys.which(c("printf", "grep", "cat", "tr", "false"))
+required <- Sys.which(c("printf", "grep", "cat", "tr", "false", "sleep"))
 if (any(!nzchar(required))) {
   exit_file("Pipeline test executables are unavailable")
 }
@@ -22,6 +22,21 @@ expect_identical(readLines(output), "beta")
 expect_identical(status$stage, c("producer", "filter"))
 expect_identical(status$status, c(0L, 0L))
 expect_identical(status$signal, c(0L, 0L))
+expect_true(attr(status, "wall_seconds") > 0)
+
+measured <- run_pipeline(pipeline_stage("sleep", "0.05", name = "measured sleep"))
+if (identical(Sys.info()[["sysname"]], "Linux")) {
+  expect_true(measured$peak_rss_kib[[1L]] > 0)
+  expect_true(attr(measured, "pipeline_peak_rss_kib") > 0)
+  expect_true(measured$peak_threads[[1L]] >= 1L)
+  expect_true(attr(measured, "pipeline_peak_threads") >= 1L)
+} else {
+  expect_true(is.na(measured$peak_rss_kib[[1L]]))
+  expect_true(is.na(attr(measured, "pipeline_peak_rss_kib")))
+  expect_true(is.na(measured$peak_threads[[1L]]))
+  expect_true(is.na(attr(measured, "pipeline_peak_threads")))
+}
+expect_true(attr(measured, "wall_seconds") >= 0.04)
 
 input <- tempfile()
 translated <- tempfile()
@@ -74,3 +89,20 @@ expect_error(
 )
 expect_error(run_pipeline(list()), "one or more")
 expect_error(run_pipeline(stage, error_on_status = NA), "TRUE or FALSE")
+expect_error(run_pipeline(stage, cpu_affinity = -1L), "non-negative")
+
+if (identical(Sys.info()[["sysname"]], "Linux") && nzchar(Sys.which("taskset"))) {
+  affinity_output <- system2("taskset", c("-pc", Sys.getpid()), stdout = TRUE)
+  affinity_list <- sub("^.*: ", "", affinity_output[[1L]])
+  first_range <- strsplit(affinity_list, ",", fixed = TRUE)[[1L]][[1L]]
+  first_cpu <- as.integer(sub("-.*$", "", first_range))
+  pinned_output <- tempfile()
+  pinned <- run_pipeline(
+    pipeline_stage("grep", c("Cpus_allowed_list", "/proc/self/status")),
+    stdout = pinned_output,
+    cpu_affinity = first_cpu
+  )
+  expect_true(grepl(sprintf("[[:space:]]%d$", first_cpu), readLines(pinned_output)))
+  expect_identical(attr(pinned, "cpu_affinity"), first_cpu)
+  expect_identical(pinned$command, unname(Sys.which("grep")))
+}

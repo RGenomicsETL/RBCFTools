@@ -13,7 +13,14 @@
   bundled executables with external mappers such as BWA or the executable from
   Rminibwa. Streaming stages use operating-system pipes and return every stage's
   exit status; file-dependent FastDup and indexing steps run subsequently as
-  one-stage pipelines.
+  one-stage pipelines. `cpu_affinity` now confines every concurrent stage to
+  one declared Linux CPU set, and pipeline results report sampled per-stage and
+  simultaneous aggregate peak RSS and thread counts plus native wall time.
+- Added rendered, executable benchmark reports for the complete 10,110,535-pair
+  HG02088 exome and the pinned Zenodo HG002 one-million-pair WGS dataset. The
+  runner uses one SMT sibling per physical core, cold-cache timed phases,
+  alternating duplicate-marker order, three marker repetitions, BAM/index
+  validation, and duplicate-QNAME decision digests.
 - Added `fastdup_path()`, `fastdup_bin_dir()`, `fastdup_tools()`, and
   `fastdup_version()`.
 

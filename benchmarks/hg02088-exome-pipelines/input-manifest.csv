@@ -1,0 +1,4 @@
+source,file,url,bytes,md5,records,role
+1000_Genomes_phase2_reference,hs37d5.fa.gz,https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz,892591376,735d4f0d7f2f693ab77f70e7983c6e2c,86,reference_sequences
+1000_Genomes_phase3_HG02088_SRR716421,SRR716421_1.filt.fastq.gz,https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/data/HG02088/sequence_read/SRR716421_1.filt.fastq.gz,852214060,5ac6d9bacd7f1ddec11a4841c16af71f,10110535,read1
+1000_Genomes_phase3_HG02088_SRR716421,SRR716421_2.filt.fastq.gz,https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/data/HG02088/sequence_read/SRR716421_2.filt.fastq.gz,864944265,b02258ed0c13f55fa32a14ee8f05581c,10110535,read2

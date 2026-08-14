@@ -8,4 +8,4 @@ ArchiveSHA256: bb5df2ae50c7213c46cee4638e3798427a92cbda2e76ad204514735c080ac0f7
 VendoredSource: src/fastdup-1.0.0
 PatchDirectory: tools/patches/fastdup
 Patches: 0001-use-external-htslib.patch, 0002-wide-optical-coordinates.patch, 0003-separate-libraries.patch, 0004-honor-tagging-policy.patch
-License: GPL-3.0
+License: MIT

@@ -1,0 +1,29 @@
+"mapper","phase","tool","repetition","cache_state","wall_seconds","peak_rss_kib","peak_threads","cpu_affinity","thread_configuration","stage_status","output_bytes"
+"rminibwa","reference index","minibwa index",1,"cold",382.268221864,58465796,1,"0,2,4,6,8,10","minibwa_index=6","minibwa index=0",NA
+"rminibwa","map and prepare","mapper + samtools",1,"cold",68.846583782,9343124,16,"0,2,4,6,8,10","mapper=6;name_sort=2;fixmate=1;coordinate_sort=2","minibwa map=0;name sort=0;fixmate=0;coordinate sort=0",177654881
+"rminibwa","duplicate marking","samtools markdup",1,"cold",2.163623454,12948,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",178179877
+"rminibwa","index","samtools index",1,"cold",0.243850238,21120,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086112
+"rminibwa","duplicate marking","FastDup",1,"cold",2.754213167,1446436,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",179049910
+"rminibwa","index","samtools index",1,"cold",0.222431292,21120,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086224
+"rminibwa","duplicate marking","FastDup",2,"cold",3.099015615,1461468,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",179049910
+"rminibwa","index","samtools index",2,"cold",0.254123671,21120,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086224
+"rminibwa","duplicate marking","samtools markdup",2,"cold",2.205773543,13060,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",178179877
+"rminibwa","index","samtools index",2,"cold",0.233867235,21280,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086112
+"rminibwa","duplicate marking","samtools markdup",3,"cold",2.368144647,12640,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",178179877
+"rminibwa","index","samtools index",3,"cold",0.224187463,21280,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086112
+"rminibwa","duplicate marking","FastDup",3,"cold",2.622502173,1457352,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",179049910
+"rminibwa","index","samtools index",3,"cold",0.254750093,21440,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4086224
+"bwa","reference index","bwa index",1,"cold",2166.490992441,4544724,1,"0,2,4,6,8,10","bwa_index=1","bwa index=0",NA
+"bwa","map and prepare","mapper + samtools",1,"cold",127.750734864,7060960,15,"0,2,4,6,8,10","mapper=6;name_sort=2;fixmate=1;coordinate_sort=2","bwa mem=0;name sort=0;fixmate=0;coordinate sort=0",185649200
+"bwa","duplicate marking","samtools markdup",1,"cold",2.039138502,12640,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",186201911
+"bwa","index","samtools index",1,"cold",0.283982025,21280,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4092544
+"bwa","duplicate marking","FastDup",1,"cold",2.5710053,1412460,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",187191318
+"bwa","index","samtools index",1,"cold",0.201864125,21280,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4093064
+"bwa","duplicate marking","FastDup",2,"cold",2.977886057,1466284,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",187191318
+"bwa","index","samtools index",2,"cold",0.305083131,20960,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4093064
+"bwa","duplicate marking","samtools markdup",2,"cold",1.777714972,12944,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",186201911
+"bwa","index","samtools index",2,"cold",0.192415385,21120,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4092544
+"bwa","duplicate marking","samtools markdup",3,"cold",2.38774364,12800,9,"0,2,4,6,8,10","markdup=6","samtools markdup=0",186201911
+"bwa","index","samtools index",3,"cold",0.232587768,20960,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4092544
+"bwa","duplicate marking","FastDup",3,"cold",2.531743639,1473256,26,"0,2,4,6,8,10","fastdup=6","fastdup=0",187191318
+"bwa","index","samtools index",3,"cold",0.202313505,21280,8,"0,2,4,6,8,10","samtools_index=6","samtools index=0",4093064
