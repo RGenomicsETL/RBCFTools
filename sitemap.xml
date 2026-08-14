@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/404.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/ERRATA.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/LICENSE.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/authors.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/copilot-instructions.html</loc></url>
@@ -40,6 +41,10 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_set_option.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_snapshots.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_bin_dir.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_path.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_tools.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_version.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/format_kv_metadata_sql.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.html</loc></url>
@@ -60,9 +65,11 @@
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf_tidy.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf_wide.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/pipeline_stage.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.html</loc></url>
+<url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/run_pipeline.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/samtools_bin_dir.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/samtools_path.html</loc></url>
 <url><loc>https://rgenomicsetl.github.io/RBCFTools/reference/samtools_tools.html</loc></url>

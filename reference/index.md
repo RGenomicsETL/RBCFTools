@@ -68,6 +68,14 @@
   : List DuckLake snapshots
 - [`ducklake_update_secret()`](https://rgenomicsetl.github.io/RBCFTools/reference/ducklake_update_secret.md)
   : Update an existing DuckLake catalog secret
+- [`fastdup_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_bin_dir.md)
+  : Get Path to FastDup Binary Directory
+- [`fastdup_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_path.md)
+  : Get Path to FastDup Executable
+- [`fastdup_tools()`](https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_tools.md)
+  : List Available FastDup Executables
+- [`fastdup_version()`](https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_version.md)
+  : Get FastDup Version
 - [`htsfile_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/htsfile_path.md)
   : Get Path to htsfile Executable
 - [`htslib_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/htslib_bin_dir.md)
@@ -109,12 +117,16 @@
   : Read Parquet key-value metadata
 - [`parquet_to_vcf()`](https://rgenomicsetl.github.io/RBCFTools/reference/parquet_to_vcf.md)
   : Convert Parquet back to VCF/BCF format
+- [`pipeline_stage()`](https://rgenomicsetl.github.io/RBCFTools/reference/pipeline_stage.md)
+  : Define an Executable Pipeline Stage
 - [`print(`*`<vcf_duckdb>`*`)`](https://rgenomicsetl.github.io/RBCFTools/reference/print.vcf_duckdb.md)
   : Print method for vcf_duckdb objects
 - [`print_makevars_config()`](https://rgenomicsetl.github.io/RBCFTools/reference/print_makevars_config.md)
   : Print Makevars Configuration for LinkingTo
 - [`ref_cache_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.md)
   : Get Path to ref-cache Executable
+- [`run_pipeline()`](https://rgenomicsetl.github.io/RBCFTools/reference/run_pipeline.md)
+  : Run an External Executable Pipeline
 - [`samtools_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_bin_dir.md)
   : Get Path to Samtools Binary Directory
 - [`samtools_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_path.md)
