@@ -115,6 +115,14 @@
   : Print Makevars Configuration for LinkingTo
 - [`ref_cache_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/ref_cache_path.md)
   : Get Path to ref-cache Executable
+- [`samtools_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_bin_dir.md)
+  : Get Path to Samtools Binary Directory
+- [`samtools_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_path.md)
+  : Get Path to Samtools Executable
+- [`samtools_tools()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_tools.md)
+  : List Available Samtools Executables
+- [`samtools_version()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_version.md)
+  : Get Samtools Version
 - [`setup_hts_env()`](https://rgenomicsetl.github.io/RBCFTools/reference/setup_hts_env.md)
   : Setup Environment for Remote File Access
 - [`tabix_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/tabix_path.md)

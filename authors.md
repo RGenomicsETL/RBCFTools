@@ -9,6 +9,9 @@
   Robert M, Pierre Lindenbaum**. Copyright holder.  
   Authors of included htslib library and bcftools command line tools
 
+- **Genome Research Ltd.**. Copyright holder.  
+  Copyright holder of the included Samtools source
+
 - **Zilong Li**. Copyright holder.  
   Author of the vcfpp library from whom makefiles and configure strategy
   is borrowed
@@ -24,15 +27,15 @@
 Source:
 [`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
 
-Toure S (2026). *RBCFTools: 'BCFTools', 'libbcftools' and 'htslib'
-Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
-1.24-0.0.3.1, <https://github.com/RGenomicsETL/RBCFTools>.
+Toure S (2026). *RBCFTools: Bundled 'Samtools', 'BCFtools', and 'HTSlib'
+Genomics Utilities*. R package version 1.24-0.0.3.1.9000,
+<https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
-      title = {RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors},
+      title = {RBCFTools: Bundled 'Samtools', 'BCFtools', and 'HTSlib' Genomics Utilities},
       author = {Sounkou Mahamane Toure},
       year = {2026},
-      note = {R package version 1.24-0.0.3.1},
+      note = {R package version 1.24-0.0.3.1.9000},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }
 
@@ -44,7 +47,11 @@ Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors*. R package version
 
     - bcftools/htslib Authors
 
-    see  bcftools-1.24/AUTHORS
+    see src/bcftools-1.24/AUTHORS
+
+    - Samtools Authors and Genome Research Ltd. (2008-2026)
+
+    see src/samtools-1.24/AUTHORS and src/samtools-1.24/LICENSE
 
     - BCFToolsScore plugin Author Giulio Genovese
       MIT Licence

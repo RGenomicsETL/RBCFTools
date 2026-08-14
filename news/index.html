@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RBCFTools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.24-0.0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.24-0.0.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,10 @@
       <small>Source: <a href="https://github.com/RGenomicsETL/RBCFTools/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.24-0.0.3.1.9000" id="rbcftools-124-00319000-development-version">RBCFTools 1.24-0.0.3.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-124-00319000-development-version"></a></h2>
+<ul><li>Added the bundled Samtools 1.24 executable on native Unix builds, compiled against the same canonical vendored HTSlib 1.24 source and static library as the rest of the package. New <code><a href="../reference/samtools_path.html">samtools_path()</a></code>, <code><a href="../reference/samtools_bin_dir.html">samtools_bin_dir()</a></code>, <code><a href="../reference/samtools_tools.html">samtools_tools()</a></code>, and <code><a href="../reference/samtools_version.html">samtools_version()</a></code> helpers expose the executable.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.24-0.0.3.1" id="rbcftools-124-0031">RBCFTools 1.24-0.0.3.1<a class="anchor" aria-label="anchor" href="#rbcftools-124-0031"></a></h2>
 <ul><li>Fixed installation on systems without the optional SuiteSparse CHOLMOD development files by omitting only the <code>pgs</code> plugin.</li>

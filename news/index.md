@@ -1,5 +1,17 @@
 # Changelog
 
+## RBCFTools 1.24-0.0.3.1.9000 (development version)
+
+- Added the bundled Samtools 1.24 executable on native Unix builds,
+  compiled against the same canonical vendored HTSlib 1.24 source and
+  static library as the rest of the package. New
+  [`samtools_path()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_path.md),
+  [`samtools_bin_dir()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_bin_dir.md),
+  [`samtools_tools()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_tools.md),
+  and
+  [`samtools_version()`](https://rgenomicsetl.github.io/RBCFTools/reference/samtools_version.md)
+  helpers expose the executable.
+
 ## RBCFTools 1.24-0.0.3.1
 
 - Fixed installation on systems without the optional SuiteSparse CHOLMOD
