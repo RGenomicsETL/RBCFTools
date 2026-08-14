@@ -1,5 +1,6 @@
 ^AGENTS.md$
 ^\.codex$
+^\.pi$
 ^Dockerfile$
 ^test_script\.R$
 ^tt\.parquet$
@@ -45,6 +46,8 @@ DONTCHECKMEIN.R
 ^src/bcftools-1\.24/htslib-1\.24/htslib\.pc\.tmp$
 ^src/bcftools-1\.24/htslib-1\.24/htslib_static\.mk$
 ^src/bcftools-1\.24/htslib-1\.24/hts-object-files$
+^src/samtools-1\.24/config\.(h|log|mk|status)$
+^src/samtools-1\.24/(samtools|libst\.a|version\.h)$
 ^man/figures/.*$
 ^inst/benchmarks/.*\.html$
 ^inst/duckdb_bcf_reader_extension/build/.*$
@@ -59,6 +62,7 @@ DONTCHECKMEIN.R
 ^[.]?air[.]toml$
 ^inst/bcftools/.*$
 ^inst/htslib/.*$
+^inst/samtools/.*$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$

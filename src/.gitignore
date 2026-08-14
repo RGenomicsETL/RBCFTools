@@ -3,6 +3,8 @@
 *.dll
 *.pico
 bcftools
+samtools
+libst.a
 libbcftools.a
 libbcftools.so*
 libhts.a
@@ -22,3 +24,4 @@ htslib_static.mk
 hts-object-files
 bcftools-1.24/version.h
 bcftools-1.24/htslib-1.24/version.h
+samtools-1.24/version.h

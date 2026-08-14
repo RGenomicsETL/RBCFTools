@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![R-universe version](https://RGenomicsETL.r-universe.dev/RBCFTools/badges/version)](https://RGenomicsETL.r-universe.dev/RBCFTools)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [bcftools](https://github.com/samtools/bcftools) and [htslib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF files. The package bundles these libraries and command-line tools (bcftools, bgzip, tabix), so no external installation is required. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
+RBCFTools provides R bindings to [Samtools](https://github.com/samtools/samtools), [BCFtools](https://github.com/samtools/bcftools), and [HTSlib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF and SAM/BAM/CRAM files. The package bundles these libraries and command-line tools (samtools, bcftools, bgzip, tabix), so no external installation is required. Samtools and BCFtools are compiled against the same vendored HTSlib source and build. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
 
 ## Installation
 
@@ -40,19 +40,22 @@ install.packages(
 ```{r versions}
 library(RBCFTools)
 # Get library versions
+samtools_version()
 bcftools_version()
 htslib_version()
 ```
 
 ## Tool Paths
 
-RBCFTools bundles bcftools and htslib command-line tools. Use the path functions to locate the executables
+RBCFTools bundles Samtools, BCFtools, and HTSlib command-line tools. Use the path functions to locate the executables.
 
 ```{r paths}
+samtools_path()
 bcftools_path()
 bgzip_path()
 tabix_path()
 # List all available tools
+samtools_tools()
 bcftools_tools()
 htslib_tools()
 ```
@@ -434,7 +437,7 @@ mc_bin <- Sys.which('mc')
 # Start MinIO (ephemeral) and configure mc
 data_dir <- file.path(tempdir(), "ducklake_minio")
 dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-port <- 9000
+port <- as.integer(Sys.getenv("RBCFTOOLS_README_MINIO_PORT", "9000"))
 endpoint <- sprintf("127.0.0.1:%d", port)
 
 # Start MinIO server in background
@@ -486,7 +489,7 @@ stopifnot(DBI::dbIsValid(con))
 
 DBI::dbExecute(con, "INSTALL httpfs")
 DBI::dbExecute(con, "LOAD httpfs")
-DBI::dbExecute(con, "INSTALL ducklake FROM core_nightly")
+DBI::dbExecute(con, "INSTALL ducklake")
 DBI::dbExecute(con, "LOAD ducklake")
 
 # Provide S3 credentials/endpoints for MinIO
@@ -706,11 +709,15 @@ rm -f $OUT_PQ
 
 ## References
 
-- [bcftools documentation](https://samtools.github.io/bcftools/)
+- [Samtools documentation](https://www.htslib.org/doc/samtools.html)
 
-- [bcftools GitHub](https://github.com/samtools/bcftools)
+- [Samtools GitHub](https://github.com/samtools/samtools)
 
-- [htslib GitHub](https://github.com/samtools/htslib)
+- [BCFtools documentation](https://samtools.github.io/bcftools/)
+
+- [BCFtools GitHub](https://github.com/samtools/bcftools)
+
+- [HTSlib GitHub](https://github.com/samtools/htslib)
 
 - [arrow-nanoarrow](https://arrow.apache.org/nanoarrow/)
 

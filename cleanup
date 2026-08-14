@@ -6,11 +6,24 @@ THISDir=`realpath ${THISDir}`
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 rm -rf inst/bcftools
 rm -rf inst/htslib
+rm -rf inst/samtools
+if [ -f src/samtools-1.24/config.mk ]; then
+    cd src/samtools-1.24
+    ${MAKE} clean >/dev/null 2>&1
+    cd "${THISDir}"
+fi
+rm -f src/samtools-1.24/config.h
+rm -f src/samtools-1.24/config.log
+rm -f src/samtools-1.24/config.mk
+rm -f src/samtools-1.24/config.status
+rm -f src/samtools-1.24/samtools
+rm -f src/samtools-1.24/version.h
+rm -f src/samtools-1.24/libst.a
 cd src/bcftools-1.24/htslib-1.24
 ${MAKE} clean
-cd ../../
+cd ..
 ${MAKE} clean
-cd ${THISDir}
+cd "${THISDir}"
 rm src/*so || true
 rm src/*dylib || true
 rm src/*o || true

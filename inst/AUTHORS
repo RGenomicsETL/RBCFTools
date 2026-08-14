@@ -4,7 +4,11 @@ Vendored components / Copyright holders
 
 - bcftools/htslib Authors
 
-see  bcftools-1.24/AUTHORS
+see src/bcftools-1.24/AUTHORS
+
+- Samtools Authors and Genome Research Ltd. (2008-2026)
+
+see src/samtools-1.24/AUTHORS and src/samtools-1.24/LICENSE
 
 - BCFToolsScore plugin Author Giulio Genovese
   MIT Licence

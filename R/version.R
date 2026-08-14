@@ -1,8 +1,7 @@
 # Version and Capability Functions
 #
-# Functions to retrieve version information and capabilities of the
-
-# bundled htslib and bcftools libraries.
+# Functions to retrieve version information and capabilities of the bundled
+# samtools, htslib, and bcftools software.
 
 #' Get htslib Version
 #'
@@ -30,6 +29,35 @@ htslib_version <- function() {
 #' @export
 bcftools_version <- function() {
   .Call(RC_bcftools_version)
+}
+
+#' Get Samtools Version
+#'
+#' Runs the bundled Samtools executable and returns its version.
+#'
+#' @return A character string containing the Samtools version, or `NA` when
+#'   the executable is unavailable on the current build.
+#'
+#' @examples
+#' samtools_version()
+#'
+#' @export
+samtools_version <- function() {
+  executable <- samtools_path()
+  if (nchar(executable) == 0) {
+    return(NA_character_)
+  }
+
+  output <- system2(executable, "--version", stdout = TRUE, stderr = TRUE)
+  status <- attr(output, "status", exact = TRUE)
+  if (!is.null(status) && status != 0L) {
+    stop("Unable to query the bundled Samtools version", call. = FALSE)
+  }
+  if (length(output) == 0L || !startsWith(output[[1L]], "samtools ")) {
+    stop("The bundled Samtools executable returned an invalid version", call. = FALSE)
+  }
+
+  sub("^samtools[[:space:]]+", "", output[[1L]])
 }
 
 #' Get htslib Features Bitfield

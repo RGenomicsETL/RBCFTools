@@ -32,6 +32,7 @@ R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
 BCFTOOLS_VERSION="1.24"
 HTSLIB_VERSION="1.24"
+SAMTOOLS_VERSION="1.24"
 if [ "$(uname)" = "Darwin" ]; then
      SHLIB_EXT="dylib"
 else
@@ -48,6 +49,7 @@ CPPFLAGS="${R_CPPFLAGS} -DNDEBUG"
 LDFLAGS="${R_LDFLAGS}"
 HTSLIB_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}/htslib-${HTSLIB_VERSION}"
 BCFTOOLS_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}"
+SAMTOOLS_DIR="${THISDir}/src/samtools-${SAMTOOLS_VERSION}"
 
 WASM_BUILD=no
 if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
@@ -385,10 +387,10 @@ if [ -z "${SSL_LIBS}" ]; then
 fi
 
 if [ "${WASM_BUILD}" = "yes" ]; then
-    # The R bindings link only to HTSlib. Building the command-line bcftools
-    # program and dlopen plugins as Emscripten side modules is unsupported and
-    # causes duplicate HTSlib/port symbols at link time.
-    echo "Skipping bcftools CLI and plugin build for WebAssembly"
+    # The R bindings link only to HTSlib. Building the Samtools and BCFtools
+    # command-line programs or dlopen plugins as Emscripten side modules is
+    # unsupported and causes duplicate HTSlib/port symbols at link time.
+    echo "Skipping Samtools and BCFtools CLI and plugin builds for WebAssembly"
     # RC_bcftools_version() only needs this generated build header; the R
     # module does not link to libbcftools.
     printf '#define BCFTOOLS_VERSION "%s"\n' "${BCFTOOLS_VERSION}" > "${BCFTOOLS_DIR}/version.h"
@@ -400,6 +402,32 @@ else
         EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
     fi
     HTSLIB_LINK_INPUT="-L${THISDir}/inst/htslib/lib -lhts"
+
+    echo "----------Configuring Samtools in $SAMTOOLS_DIR-----------------"
+    cd "${SAMTOOLS_DIR}"
+    if [ -f config.mk ]; then
+        ${MAKE} clean >/dev/null 2>&1
+    fi
+    env ${CONFIGURE_CACHE_VARS} ./configure \
+        ${CONFIGURE_ARGS} \
+        CC="${CC}" \
+        AR="${AR}" \
+        RANLIB="${RANLIB}" \
+        CFLAGS="${CFLAGS}" \
+        CPPFLAGS="${CPPFLAGS}" \
+        LDFLAGS="${LDFLAGS}" \
+        --prefix="${THISDir}/inst/samtools" \
+        --with-htslib="${HTSLIB_DIR}" \
+        --disable-configure-htslib
+
+    SAMTOOLS_HTSDIR=$(sed -n 's/^HTSDIR *= *//p' config.mk)
+    if [ "${SAMTOOLS_HTSDIR}" != "${HTSLIB_DIR}" ]; then
+        echo "ERROR: Samtools did not select the canonical HTSlib source tree" >&2
+        exit 1
+    fi
+    ${MAKE} samtools
+    mkdir -p "${THISDir}/inst/samtools/bin"
+    cp -f "${SAMTOOLS_DIR}/samtools" "${THISDir}/inst/samtools/bin/samtools"
 
     echo "----------Configuring BCFtools in $BCFTOOLS_DIR-----------------"
     cd "${BCFTOOLS_DIR}"

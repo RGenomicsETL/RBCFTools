@@ -1,6 +1,7 @@
 # Path Functions
 #
-# Functions to locate bundled bcftools and htslib executables and directories.
+# Functions to locate bundled samtools, bcftools, and htslib executables and
+# directories.
 
 #' Setup Environment for Remote File Access
 #'
@@ -66,6 +67,56 @@ bcftools_path <- function() {
 #' @export
 bcftools_bin_dir <- function() {
   system.file("bcftools", "bin", package = "RBCFTools")
+}
+
+#' Get Path to Samtools Executable
+#'
+#' Returns the path to the bundled Samtools executable.
+#'
+#' @return A character string containing the path to the executable, or an
+#'   empty string on builds that do not provide command-line executables.
+#'
+#' @examples
+#' samtools_path()
+#'
+#' @export
+samtools_path <- function() {
+  system.file("samtools", "bin", "samtools", package = "RBCFTools")
+}
+
+#' Get Path to Samtools Binary Directory
+#'
+#' Returns the path to the directory containing the bundled Samtools
+#' executable.
+#'
+#' @return A character string containing the path to the Samtools binary
+#'   directory, or an empty string when it is unavailable.
+#'
+#' @examples
+#' samtools_bin_dir()
+#'
+#' @export
+samtools_bin_dir <- function() {
+  system.file("samtools", "bin", package = "RBCFTools")
+}
+
+#' List Available Samtools Executables
+#'
+#' Lists the executables in the bundled Samtools binary directory.
+#'
+#' @return A character vector of available executable names.
+#'
+#' @examples
+#' samtools_tools()
+#'
+#' @export
+samtools_tools <- function() {
+  bin_dir <- samtools_bin_dir()
+  if (nchar(bin_dir) == 0) {
+    return(character(0))
+  }
+
+  list.files(bin_dir)
 }
 
 #' Get Path to bcftools Plugins Directory

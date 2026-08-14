@@ -4,15 +4,18 @@
 \name{RBCFTools-package}
 \alias{RBCFTools}
 \alias{RBCFTools-package}
-\title{RBCFTools: 'BCFTools', 'libbcftools' and 'htslib' Wrappers and 'BCF'/'VCF' to 'Parquet' Convertors}
+\title{RBCFTools: Bundled 'Samtools', 'BCFtools', and 'HTSlib' Genomics Utilities}
 \description{
-Bundles the 'htslib' and 'bcftools' libraries and command lines tools for reading and manipulating VCF/BCF files. Includes streaming facilities from VCF to Apache Arrow via 'nanoarrow', enabling export to Arrow IPC format and Parquet format using 'duckdb' including a 'bcf_reader' extension. Utilities for reading and writing VCF/BCF files into 'DuckLake' provided.
+Bundles the 'Samtools' and 'BCFtools' command-line executables together with the 'HTSlib' and 'libbcftools' libraries for reading and manipulating VCF, BCF, SAM, BAM, and CRAM files. 'Samtools' and 'BCFtools' are built against one shared vendored 'HTSlib' source. Provides streaming facilities from VCF and BCF to Apache Arrow via 'nanoarrow', export to Arrow IPC and Parquet via 'duckdb', a native 'bcf_reader' extension, and utilities for reading and writing VCF and BCF data in 'DuckLake'.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/RGenomicsETL/RBCFTools}
   \item \url{https://rgenomicsetl.github.io/RBCFTools/}
+  \item \url{https://github.com/samtools/samtools}
+  \item \url{https://github.com/samtools/bcftools}
+  \item \url{https://github.com/samtools/htslib}
   \item Report bugs at \url{https://github.com/RGenomicsETL/RBCFTools/issues}
 }
 
@@ -23,6 +26,7 @@ Useful links:
 Other contributors:
 \itemize{
   \item Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas Davies, Robert M, Pierre Lindenbaum (Authors of included htslib library and bcftools command line tools) [copyright holder]
+  \item Genome Research Ltd. (Copyright holder of the included Samtools source) [copyright holder]
   \item Zilong Li \email{zilong.dk@gmail.com} (Author of the vcfpp library from whom makefiles and configure strategy is borrowed) [copyright holder]
   \item Duckdb C API and extension and API authors (Authors of the duckdb extension and API used for parquet export) [copyright holder]
 }
