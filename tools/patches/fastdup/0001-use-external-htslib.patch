@@ -1,0 +1,39 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5882289..0310940 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 4.1)
++cmake_minimum_required(VERSION 3.16)
+ project(FastDup)
+ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index cddd288..00d7257 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -10,12 +10,11 @@ set(KTHREAD_FILE ${PROJECT_SOURCE_DIR}/ext/klib/kthread.c)
+ 
+ # including path
+ include_directories("${PROJECT_SOURCE_DIR}/ext")
+-include_directories("${PROJECT_SOURCE_DIR}/ext/htslib")
++set(FASTDUP_HTSLIB_ROOT "${PROJECT_SOURCE_DIR}/ext/htslib" CACHE PATH
++    "Path to the configured HTSlib source/build tree")
++include_directories("${FASTDUP_HTSLIB_ROOT}")
+ include_directories("${PROJECT_SOURCE_DIR}/src")
+ 
+-# linking path
+-link_directories("${PROJECT_SOURCE_DIR}/ext/htslib")
+-
+ # program name
+ set(PG_NAME "fastdup")
+ 
+@@ -23,7 +22,7 @@ set(PG_NAME "fastdup")
+ add_executable(${PG_NAME} ${MAIN_SRC} ${UTIL_SRC} ${MARKDUP_SRC} ${KTHREAD_FILE})
+ 
+ # link htslib
+-target_link_libraries(${PG_NAME} libhts.a ${CMAKE_DL_LIBS})
++target_link_libraries(${PG_NAME} "${FASTDUP_HTSLIB_ROOT}/libhts.a" ${CMAKE_DL_LIBS})
+ 
+ # lib pthread
+ find_package(Threads REQUIRED)

@@ -7,6 +7,8 @@ MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 rm -rf inst/bcftools
 rm -rf inst/htslib
 rm -rf inst/samtools
+rm -rf inst/fastdup
+rm -rf src/fastdup-1.0.0/build
 if [ -f src/samtools-1.24/config.mk ]; then
     cd src/samtools-1.24
     ${MAKE} clean >/dev/null 2>&1

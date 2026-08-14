@@ -1,0 +1,31 @@
+diff --git a/src/markdup/markdup.cpp b/src/markdup/markdup.cpp
+index 8273064..d74635f 100644
+--- a/src/markdup/markdup.cpp
++++ b/src/markdup/markdup.cpp
+@@ -230,17 +230,15 @@ int MarkDuplicates() {
+                 // 
+                 bw->SetDuplicateReadFlag(true);
+ 
+-                uint8_t *oldTagVal = bam_aux_get(bw->b, nsgv::gMdArg.DUPLICATE_TYPE_TAG.c_str());
+-                if (oldTagVal != NULL) bam_aux_del(bw->b, oldTagVal);
+-
+-                if (isOpticalDup)
+-                    bam_aux_append(bw->b, nsgv::gMdArg.DUPLICATE_TYPE_TAG.c_str(), 'Z',
+-                                   nsgv::gMdArg.DUPLICATE_TYPE_SEQUENCING.size() + 1,
+-                                   (const uint8_t *)nsgv::gMdArg.DUPLICATE_TYPE_SEQUENCING.c_str());
+-                else
+-                    bam_aux_append(bw->b, nsgv::gMdArg.DUPLICATE_TYPE_TAG.c_str(), 'Z',
+-                                   nsgv::gMdArg.DUPLICATE_TYPE_LIBRARY.size() + 1,
+-                                   (const uint8_t *)nsgv::gMdArg.DUPLICATE_TYPE_LIBRARY.c_str());
++                if (nsgv::gMdArg.TAGGING_POLICY == nsmd::DuplicateTaggingPolicy::All ||
++                    (nsgv::gMdArg.TAGGING_POLICY == nsmd::DuplicateTaggingPolicy::OpticalOnly && isOpticalDup)) {
++                    uint8_t *oldTagVal = bam_aux_get(bw->b, nsgv::gMdArg.DUPLICATE_TYPE_TAG.c_str());
++                    if (oldTagVal != NULL) bam_aux_del(bw->b, oldTagVal);
++                    const string &duplicateType = isOpticalDup ? nsgv::gMdArg.DUPLICATE_TYPE_SEQUENCING
++                                                               : nsgv::gMdArg.DUPLICATE_TYPE_LIBRARY;
++                    bam_aux_append(bw->b, nsgv::gMdArg.DUPLICATE_TYPE_TAG.c_str(), 'Z', duplicateType.size() + 1,
++                                   (const uint8_t *)duplicateType.c_str());
++                }
+ 
+                 // 
+                 if (!bw->IsSecondaryOrSupplementary() && !bw->GetReadUnmappedFlag()) {

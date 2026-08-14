@@ -10,6 +10,10 @@ see src/bcftools-1.24/AUTHORS
 
 see src/samtools-1.24/AUTHORS and src/samtools-1.24/LICENSE
 
+- FastDup Author Zhonghai Zhang; source copyright notice ICT
+
+see src/fastdup-1.0.0/LICENSE and src/fastdup-1.0.0/README.md
+
 - BCFToolsScore plugin Author Giulio Genovese
   MIT Licence
 

@@ -4,9 +4,9 @@
 \name{RBCFTools-package}
 \alias{RBCFTools}
 \alias{RBCFTools-package}
-\title{RBCFTools: Bundled 'Samtools', 'BCFtools', and 'HTSlib' Genomics Utilities}
+\title{RBCFTools: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities}
 \description{
-Bundles the 'Samtools' and 'BCFtools' command-line executables together with the 'HTSlib' and 'libbcftools' libraries for reading and manipulating VCF, BCF, SAM, BAM, and CRAM files. 'Samtools' and 'BCFtools' are built against one shared vendored 'HTSlib' source. Provides streaming facilities from VCF and BCF to Apache Arrow via 'nanoarrow', export to Arrow IPC and Parquet via 'duckdb', a native 'bcf_reader' extension, and utilities for reading and writing VCF and BCF data in 'DuckLake'.
+Bundles patched 'FastDup', 'Samtools', and 'BCFtools' command-line executables together with the 'HTSlib' and 'libbcftools' libraries for reading and manipulating VCF, BCF, SAM, BAM, and CRAM files. All bundled executables are built against one shared vendored 'HTSlib' source. Provides shell-free pipelines for composing bundled or external executables. Also provides streaming facilities from VCF and BCF to Apache Arrow via 'nanoarrow', export to Arrow IPC and Parquet via 'duckdb', a native 'bcf_reader' extension, and utilities for reading and writing VCF and BCF data in 'DuckLake'.
 }
 \seealso{
 Useful links:
@@ -14,6 +14,7 @@ Useful links:
   \item \url{https://github.com/RGenomicsETL/RBCFTools}
   \item \url{https://rgenomicsetl.github.io/RBCFTools/}
   \item \url{https://github.com/samtools/samtools}
+  \item \url{https://github.com/zzhofict/FastDup}
   \item \url{https://github.com/samtools/bcftools}
   \item \url{https://github.com/samtools/htslib}
   \item Report bugs at \url{https://github.com/RGenomicsETL/RBCFTools/issues}
@@ -23,12 +24,20 @@ Useful links:
 \author{
 \strong{Maintainer}: Sounkou Mahamane Toure \email{sounkoutoure@gmail.com}
 
+Authors:
+\itemize{
+  \item Sounkou Mahamane Toure \email{sounkoutoure@gmail.com}
+  \item Zhonghai Zhang (Author of the included FastDup source)
+}
+
 Other contributors:
 \itemize{
   \item Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas Davies, Robert M, Pierre Lindenbaum (Authors of included htslib library and bcftools command line tools) [copyright holder]
   \item Genome Research Ltd. (Copyright holder of the included Samtools source) [copyright holder]
+  \item ICT (Copyright notice in the included FastDup source) [copyright holder]
   \item Zilong Li \email{zilong.dk@gmail.com} (Author of the vcfpp library from whom makefiles and configure strategy is borrowed) [copyright holder]
   \item Duckdb C API and extension and API authors (Authors of the duckdb extension and API used for parquet export) [copyright holder]
+  \item Giulio Genovese \email{giulio.genovese@gmail.com} (Author of BCFTools munge plugin) [copyright holder]
 }
 
 }

@@ -1,0 +1,173 @@
+diff --git a/src/markdup/markdup.cpp b/src/markdup/markdup.cpp
+index b6b2de9..6e02a79 100644
+--- a/src/markdup/markdup.cpp
++++ b/src/markdup/markdup.cpp
+@@ -71,8 +71,8 @@ int MarkDuplicates() {
+     }
+     hts_set_opt(nsgv::gInBamFp, HTS_OPT_BLOCK_SIZE, BAM_BLOCK_SIZE);
+     nsgv::gInBamHeader = sam_hdr_read(nsgv::gInBamFp);  // header
+-    // (libraryId)
+-    nsgv::gMetrics.LIBRARY = sam_hdr_line_name(nsgv::gInBamHeader, "RG", 0);
++    initializeLibraryIds();
++    nsgv::gMetrics.LIBRARY = "Aggregate";
+ 
+     /*  */
+     htsThreadPool htsPoolRead = {NULL, 0};   // ，
+diff --git a/src/markdup/md_funcs.cpp b/src/markdup/md_funcs.cpp
+index cad85f4..6b5c58d 100644
+--- a/src/markdup/md_funcs.cpp
++++ b/src/markdup/md_funcs.cpp
+@@ -6,6 +6,7 @@
+ #include <util/murmur3.h>
+ #include <util/profiling.h>
+ 
++#include <cstdlib>
+ #include <iostream>
+ #include <map>
+ #include <set>
+@@ -21,14 +22,52 @@ using std::cerr;
+ using std::endl;
+ using std::map;
+ using std::set;
++using std::string;
+ using std::unordered_map;
+ using std::vector;
+ 
+ namespace nsgv {
+ extern MarkDupsArg gMdArg;
+ extern DuplicationMetrics gMetrics;
++extern sam_hdr_t *gInBamHeader;
+ };
+ 
++static unordered_map<string, int32_t> sLibraryByReadGroup;
++
++void initializeLibraryIds() {
++    sLibraryByReadGroup.clear();
++    unordered_map<string, int32_t> idsByLibrary;
++    int32_t nextId = 1;
++    const int readGroupCount = sam_hdr_count_lines(nsgv::gInBamHeader, "RG");
++    for (int i = 0; i < readGroupCount; ++i) {
++        kstring_t readGroup = KS_INITIALIZE;
++        kstring_t library = KS_INITIALIZE;
++        if (sam_hdr_find_tag_pos(nsgv::gInBamHeader, "RG", i, "ID", &readGroup) == 0) {
++            string libraryName = "Unknown Library";
++            if (sam_hdr_find_tag_pos(nsgv::gInBamHeader, "RG", i, "LB", &library) == 0 && library.l > 0) {
++                libraryName.assign(library.s, library.l);
++            }
++            int32_t libraryId = 0;
++            if (libraryName != "Unknown Library") {
++                auto inserted = idsByLibrary.emplace(libraryName, nextId);
++                if (inserted.second) ++nextId;
++                libraryId = inserted.first->second;
++            }
++            sLibraryByReadGroup[string(readGroup.s, readGroup.l)] = libraryId;
++        }
++        free(readGroup.s);
++        free(library.s);
++    }
++}
++
++static int32_t getLibraryId(BamWrap &bw) {
++    const uint8_t *tag = bam_aux_get(bw.b, "RG");
++    const char *readGroup = tag == nullptr ? nullptr : bam_aux2Z(tag);
++    if (readGroup == nullptr) return 0;
++    auto found = sLibraryByReadGroup.find(readGroup);
++    return found == sLibraryByReadGroup.end() ? 0 : found->second;
++}
++
+ /*
+  * read
+  */
+@@ -76,6 +115,7 @@ int16_t computeDuplicateScore(BamWrap &bw) {
+ void buildReadEnds(BamWrap &bw, int64_t index, ReadNameParser &rnParser, ReadEnds *pKey) {
+     auto &k = *pKey;
+     auto &bc = bw.b->core;
++    k.libraryId = getLibraryId(bw);
+     k.read1FirstOfPair = bw.GetFirstOfPairFlag();
+     k.read1ReferenceIndex = bc.tid;
+     k.read1Coordinate = (bc.flag & BAM_FREVERSE) ? bw.GetUnclippedEnd() : bw.GetUnclippedStart();
+diff --git a/src/markdup/md_funcs.h b/src/markdup/md_funcs.h
+index b3ff9c5..30152d0 100644
+--- a/src/markdup/md_funcs.h
++++ b/src/markdup/md_funcs.h
+@@ -100,6 +100,8 @@ struct Graph {           // set？
+ /*
+  * read
+  */
++void initializeLibraryIds();
++
+ int16_t computeDuplicateScore(BamWrap &bw);
+ 
+ /*
+diff --git a/src/markdup/md_pipeline.cpp b/src/markdup/md_pipeline.cpp
+index 51e87ed..78f8712 100644
+--- a/src/markdup/md_pipeline.cpp
++++ b/src/markdup/md_pipeline.cpp
+@@ -271,7 +271,7 @@ static void mtGenerateReadEnds(void *data, long idx, int tid) {
+             buildReadEnds(*bw, bamIdx, rnParser, &fragEnd);
+             frags.push_back(fragEnd);                                     // frag
+             if (bw->GetReadPairedFlag() && !bw->GetMateUnmappedFlag()) {  // pairendread
+-                string key = bw->query_name();
++                string key = std::to_string(fragEnd.libraryId) + '\x1f' + bw->query_name();
+                 if (unpairedDic.find(key) == unpairedDic.end()) {
+                     unpairedDic[key] = {taskSeq, fragEnd};
+                 } else {  // pairend
+diff --git a/src/markdup/read_ends.h b/src/markdup/read_ends.h
+index 7c43e33..67b9952 100644
+--- a/src/markdup/read_ends.h
++++ b/src/markdup/read_ends.h
+@@ -44,7 +44,7 @@ struct ReadEnds : PhysicalLocation {
+     /* ReadEnds */
+     /** Little struct-like class to hold read pair (and fragment) end data for
+      * duplicate marking. */
+-    // int16_t libraryId; // ，
++    int32_t libraryId = 0;
+     int8_t orientation = -1;
+     int32_t read1ReferenceIndex = -1;
+     int32_t read1Coordinate = -1;
+@@ -101,7 +101,8 @@ struct ReadEnds : PhysicalLocation {
+     static bool AreComparableForDuplicates(const ReadEnds &lhs, const ReadEnds &rhs, bool compareRead2) {
+         bool areComparable = true;
+         areComparable = lhs.read1ReferenceIndex == rhs.read1ReferenceIndex &&
+-                        lhs.read1Coordinate == rhs.read1Coordinate && lhs.orientation == rhs.orientation;
++                        lhs.read1Coordinate == rhs.read1Coordinate && lhs.libraryId == rhs.libraryId &&
++                        lhs.orientation == rhs.orientation;
+         if (areComparable && compareRead2) {
+             areComparable =
+                 lhs.read2ReferenceIndex == rhs.read2ReferenceIndex && lhs.read2Coordinate == rhs.read2Coordinate;
+@@ -128,6 +129,8 @@ struct ReadEnds : PhysicalLocation {
+             if (comp == 0)
+                 comp = a.read2Coordinate - b.read2Coordinate;
+         }
++        if (comp == 0)
++            comp = a.libraryId - b.libraryId;
+         if (comp == 0)
+             comp = a.orientation - b.orientation;
+ 
+@@ -138,6 +141,8 @@ struct ReadEnds : PhysicalLocation {
+         int comp = a.read1ReferenceIndex - b.read1ReferenceIndex;
+         if (comp == 0)
+             comp = a.read1Coordinate - b.read1Coordinate;
++        if (comp == 0)
++            comp = a.libraryId - b.libraryId;
+         if (comp == 0)  // ，bam，read2ReferenceIndex,
+             comp = a.orientation - b.orientation;
+         if (comp == 0)
+@@ -165,6 +170,8 @@ struct ReadEnds : PhysicalLocation {
+             comp = a.read2ReferenceIndex - b.read2ReferenceIndex;
+         if (comp == 0)
+             comp = a.read2Coordinate - b.read2Coordinate;
++        if (comp == 0)
++            comp = a.libraryId - b.libraryId;
+         if (comp == 0)  // ，，
+             comp = a.orientation - b.orientation;
+ //        if (comp == 0)
+@@ -188,6 +195,8 @@ struct ReadEnds : PhysicalLocation {
+             comp = a.read2ReferenceIndex - b.read2ReferenceIndex;
+         if (comp == 0)
+             comp = a.read2Coordinate - b.read2Coordinate;
++        if (comp == 0)
++            comp = a.libraryId - b.libraryId;
+         if (comp == 0)  // ，，
+             comp = a.orientation - b.orientation;
+         return comp < 0;

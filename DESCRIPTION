@@ -1,6 +1,6 @@
 Package: RBCFTools
-Title: Bundled 'Samtools', 'BCFtools', and 'HTSlib' Genomics Utilities
-Version: 1.24-0.0.3.1.9000
+Title: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities
+Version: 1.24-1.0.0.9000
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
     email = "sounkoutoure@gmail.com", role = c("aut", "cre")),
@@ -8,16 +8,22 @@ Authors@R: c(
            comment = "Authors of included htslib library and bcftools command line tools"),
     person(given = "Genome Research Ltd.", role = "cph",
            comment = "Copyright holder of the included Samtools source"),
+    person(given = "Zhonghai", family = "Zhang", role = "aut",
+           comment = "Author of the included FastDup source"),
+    person(given = "ICT", role = "cph",
+           comment = "Copyright notice in the included FastDup source"),
     person(given = "Zilong", family = "Li", email = "zilong.dk@gmail.com", role = c("cph"),
            comment = "Author of the vcfpp library from whom makefiles and configure strategy is borrowed"),
     person(given = "Duckdb C API and extension and API authors", role = "cph",
            comment = "Authors of the duckdb extension and API used for parquet export"),
     person(given = "Giulio", family = "Genovese", email = "giulio.genovese@gmail.com", role = "cph", comment = "Author of BCFTools munge plugin"))
-Description: Bundles the 'Samtools' and 'BCFtools' command-line executables
-    together with the 'HTSlib' and 'libbcftools' libraries for reading and
-    manipulating VCF, BCF, SAM, BAM, and CRAM files. 'Samtools' and 'BCFtools'
-    are built against one shared vendored 'HTSlib' source. Provides streaming
-    facilities from VCF and BCF to Apache Arrow via 'nanoarrow', export to Arrow
+Description: Bundles patched 'FastDup', 'Samtools', and 'BCFtools'
+    command-line executables together with the 'HTSlib' and 'libbcftools'
+    libraries for reading and manipulating VCF, BCF, SAM, BAM, and CRAM files.
+    All bundled executables are built against one shared vendored 'HTSlib'
+    source. Provides shell-free pipelines for composing bundled or external
+    executables. Also provides streaming facilities from VCF and BCF to Apache
+    Arrow via 'nanoarrow', export to Arrow
     IPC and Parquet via 'duckdb', a native 'bcf_reader' extension, and utilities
     for reading and writing VCF and BCF data in 'DuckLake'.
 License: GPL (>= 3)
@@ -25,9 +31,9 @@ Copyright: See inst/AUTHORS
 Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow, vctrs
 LinkingTo: nanoarrow
-SystemRequirements: GNU make, pkg-config, libcurl, libgsl, libdeflate,
-    libbzip2, libzlib, libssl-dev (or other SSL library), liblzma, ncurses,
-    libsuitesparse-dev/libcholmod5 (optional for pgs plugin)
+SystemRequirements: GNU make, CMake (>= 3.16), C++17, pkg-config, libcurl,
+    libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other SSL library),
+    liblzma, ncurses, libsuitesparse-dev/libcholmod5 (optional for pgs plugin)
 Suggests: 
     tinytest,
     vcfppR,
@@ -38,6 +44,7 @@ OS_type: unix
 URL: https://github.com/RGenomicsETL/RBCFTools,
     https://rgenomicsetl.github.io/RBCFTools/,
     https://github.com/samtools/samtools,
+    https://github.com/zzhofict/FastDup,
     https://github.com/samtools/bcftools,
     https://github.com/samtools/htslib
 BugReports: https://github.com/RGenomicsETL/RBCFTools/issues

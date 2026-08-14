@@ -1,7 +1,7 @@
 # Version and Capability Functions
 #
 # Functions to retrieve version information and capabilities of the bundled
-# samtools, htslib, and bcftools software.
+# fastdup, samtools, htslib, and bcftools software.
 
 #' Get htslib Version
 #'
@@ -58,6 +58,35 @@ samtools_version <- function() {
   }
 
   sub("^samtools[[:space:]]+", "", output[[1L]])
+}
+
+#' Get FastDup Version
+#'
+#' Runs the bundled FastDup executable and returns its upstream version.
+#'
+#' @return A character string containing the FastDup version, or `NA` when the
+#'   executable is unavailable on the current build.
+#'
+#' @examples
+#' fastdup_version()
+#'
+#' @export
+fastdup_version <- function() {
+  executable <- fastdup_path()
+  if (nchar(executable) == 0) {
+    return(NA_character_)
+  }
+
+  output <- system2(executable, "--version", stdout = TRUE, stderr = TRUE)
+  status <- attr(output, "status", exact = TRUE)
+  if (!is.null(status) && status != 0L) {
+    stop("Unable to query the bundled FastDup version", call. = FALSE)
+  }
+  if (length(output) == 0L || !nzchar(trimws(output[[1L]]))) {
+    stop("The bundled FastDup executable returned an invalid version", call. = FALSE)
+  }
+
+  trimws(output[[1L]])
 }
 
 #' Get htslib Features Bitfield

@@ -23,6 +23,10 @@ done
 
 MAKE=`"${R_HOME}/bin/R" CMD config MAKE`
 CC=`"${R_HOME}/bin/R" CMD config CC`
+CXX17=`"${R_HOME}/bin/R" CMD config CXX17`
+CXX17FLAGS=`"${R_HOME}/bin/R" CMD config CXX17FLAGS`
+CMAKE_CC=${CC%% *}
+CMAKE_CXX17=${CXX17%% *}
 AR=`"${R_HOME}/bin/R" CMD config AR`
 RANLIB=`"${R_HOME}/bin/R" CMD config RANLIB`
 R_CPPFLAGS=`"${R_HOME}/bin/R" CMD config CPPFLAGS`
@@ -33,6 +37,8 @@ R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 BCFTOOLS_VERSION="1.24"
 HTSLIB_VERSION="1.24"
 SAMTOOLS_VERSION="1.24"
+FASTDUP_VERSION="1.0.0"
+CMAKE=${CMAKE:-cmake}
 if [ "$(uname)" = "Darwin" ]; then
      SHLIB_EXT="dylib"
 else
@@ -50,6 +56,7 @@ LDFLAGS="${R_LDFLAGS}"
 HTSLIB_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}/htslib-${HTSLIB_VERSION}"
 BCFTOOLS_DIR="${THISDir}/src/bcftools-${BCFTOOLS_VERSION}"
 SAMTOOLS_DIR="${THISDir}/src/samtools-${SAMTOOLS_VERSION}"
+FASTDUP_DIR="${THISDir}/src/fastdup-${FASTDUP_VERSION}"
 
 WASM_BUILD=no
 if echo "${CC}" | grep -q "emcc" || echo "${CC}" | grep -q "wasm"; then
@@ -387,10 +394,11 @@ if [ -z "${SSL_LIBS}" ]; then
 fi
 
 if [ "${WASM_BUILD}" = "yes" ]; then
-    # The R bindings link only to HTSlib. Building the Samtools and BCFtools
-    # command-line programs or dlopen plugins as Emscripten side modules is
-    # unsupported and causes duplicate HTSlib/port symbols at link time.
-    echo "Skipping Samtools and BCFtools CLI and plugin builds for WebAssembly"
+    # The R bindings link only to HTSlib. Building the FastDup, Samtools, and
+    # BCFtools command-line programs or dlopen plugins as Emscripten side
+    # modules is unsupported and causes duplicate HTSlib/port symbols at link
+    # time.
+    echo "Skipping FastDup, Samtools, and BCFtools CLI and plugin builds for WebAssembly"
     # RC_bcftools_version() only needs this generated build header; the R
     # module does not link to libbcftools.
     printf '#define BCFTOOLS_VERSION "%s"\n' "${BCFTOOLS_VERSION}" > "${BCFTOOLS_DIR}/version.h"
@@ -428,6 +436,28 @@ else
     ${MAKE} samtools
     mkdir -p "${THISDir}/inst/samtools/bin"
     cp -f "${SAMTOOLS_DIR}/samtools" "${THISDir}/inst/samtools/bin/samtools"
+
+    if ! command -v "${CMAKE}" >/dev/null 2>&1; then
+        echo "ERROR: CMake is required to build FastDup" >&2
+        exit 1
+    fi
+    echo "----------Configuring FastDup in $FASTDUP_DIR-----------------"
+    rm -rf "${FASTDUP_DIR}/build"
+    "${CMAKE}" -S "${FASTDUP_DIR}" -B "${FASTDUP_DIR}/build" \
+        -DFASTDUP_HTSLIB_ROOT="${HTSLIB_DIR}" \
+        -DCMAKE_INSTALL_PREFIX="${THISDir}/inst/fastdup" \
+        -DCMAKE_C_COMPILER="${CMAKE_CC}" \
+        -DCMAKE_CXX_COMPILER="${CMAKE_CXX17}" \
+        -DCMAKE_C_FLAGS="${CFLAGS}" \
+        -DCMAKE_CXX_FLAGS="${CXX17FLAGS} -fPIC" \
+        -DCMAKE_EXE_LINKER_FLAGS="${LDFLAGS}"
+    "${CMAKE}" --build "${FASTDUP_DIR}/build" --target fastdup
+    if ! grep -Fq "FASTDUP_HTSLIB_ROOT:PATH=${HTSLIB_DIR}" "${FASTDUP_DIR}/build/CMakeCache.txt"; then
+        echo "ERROR: FastDup did not select the canonical HTSlib source tree" >&2
+        exit 1
+    fi
+    rm -rf "${THISDir}/inst/fastdup"
+    "${CMAKE}" --install "${FASTDUP_DIR}/build" --strip
 
     echo "----------Configuring BCFtools in $BCFTOOLS_DIR-----------------"
     cd "${BCFTOOLS_DIR}"

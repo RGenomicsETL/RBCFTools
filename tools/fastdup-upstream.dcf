@@ -1,0 +1,11 @@
+Component: FastDup
+Version: 1.0.0
+Repository: https://github.com/zzhofict/FastDup
+Commit: 7b3f62587283a257fd38c5c20ceeda0364c285ef
+Date: 2026-01-21
+ArchiveURL: https://github.com/zzhofict/FastDup/archive/7b3f62587283a257fd38c5c20ceeda0364c285ef.tar.gz
+ArchiveSHA256: bb5df2ae50c7213c46cee4638e3798427a92cbda2e76ad204514735c080ac0f7
+VendoredSource: src/fastdup-1.0.0
+PatchDirectory: tools/patches/fastdup
+Patches: 0001-use-external-htslib.patch, 0002-wide-optical-coordinates.patch, 0003-separate-libraries.patch, 0004-honor-tagging-policy.patch
+License: GPL-3.0

@@ -1,7 +1,7 @@
 # Path Functions
 #
-# Functions to locate bundled samtools, bcftools, and htslib executables and
-# directories.
+# Functions to locate bundled fastdup, samtools, bcftools, and htslib
+# executables and directories.
 
 #' Setup Environment for Remote File Access
 #'
@@ -112,6 +112,51 @@ samtools_bin_dir <- function() {
 #' @export
 samtools_tools <- function() {
   bin_dir <- samtools_bin_dir()
+  if (nchar(bin_dir) == 0) {
+    return(character(0))
+  }
+
+  list.files(bin_dir)
+}
+
+#' Get Path to FastDup Executable
+#'
+#' Returns the path to the bundled, RBCFTools-patched FastDup executable.
+#'
+#' @return A character string containing the executable path, or an empty
+#'   string on builds that do not provide command-line executables.
+#'
+#' @examples
+#' fastdup_path()
+#'
+#' @export
+fastdup_path <- function() {
+  system.file("fastdup", "bin", "fastdup", package = "RBCFTools")
+}
+
+#' Get Path to FastDup Binary Directory
+#'
+#' @return A character string containing the FastDup binary directory, or an
+#'   empty string when it is unavailable.
+#'
+#' @examples
+#' fastdup_bin_dir()
+#'
+#' @export
+fastdup_bin_dir <- function() {
+  system.file("fastdup", "bin", package = "RBCFTools")
+}
+
+#' List Available FastDup Executables
+#'
+#' @return A character vector of available executable names.
+#'
+#' @examples
+#' fastdup_tools()
+#'
+#' @export
+fastdup_tools <- function() {
+  bin_dir <- fastdup_bin_dir()
   if (nchar(bin_dir) == 0) {
     return(character(0))
   }

@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![R-universe version](https://RGenomicsETL.r-universe.dev/RBCFTools/badges/version)](https://RGenomicsETL.r-universe.dev/RBCFTools)
 <!-- badges: end -->
 
-RBCFTools provides R bindings to [Samtools](https://github.com/samtools/samtools), [BCFtools](https://github.com/samtools/bcftools), and [HTSlib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF and SAM/BAM/CRAM files. The package bundles these libraries and command-line tools (samtools, bcftools, bgzip, tabix), so no external installation is required. Samtools and BCFtools are compiled against the same vendored HTSlib source and build. When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
+RBCFTools provides [FastDup](https://github.com/zzhofict/FastDup), [Samtools](https://github.com/samtools/samtools), [BCFtools](https://github.com/samtools/bcftools), and [HTSlib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF and SAM/BAM/CRAM files. The package bundles these libraries and command-line tools (fastdup, samtools, bcftools, bgzip, tabix), so no external installation is required. All bundled tools are compiled against the same vendored HTSlib source and build. FastDup carries an explicit, tested RBCFTools patch overlay documented in [ERRATA.md](ERRATA.md). When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
 
 ## Installation
 
@@ -39,7 +39,8 @@ install.packages(
 
 ```{r versions}
 library(RBCFTools)
-# Get library versions
+# Get bundled software versions
+fastdup_version()
 samtools_version()
 bcftools_version()
 htslib_version()
@@ -47,17 +48,96 @@ htslib_version()
 
 ## Tool Paths
 
-RBCFTools bundles Samtools, BCFtools, and HTSlib command-line tools. Use the path functions to locate the executables.
+RBCFTools bundles FastDup, Samtools, BCFtools, and HTSlib command-line tools. Use the path functions to locate the executables.
 
 ```{r paths}
+fastdup_path()
 samtools_path()
 bcftools_path()
 bgzip_path()
 tabix_path()
 # List all available tools
+fastdup_tools()
 samtools_tools()
 bcftools_tools()
 htslib_tools()
+```
+
+## Generic executable pipelines
+
+`pipeline_stage()` and `run_pipeline()` connect arbitrary executables without constructing a shell command. Arguments are passed directly to each process, every stage's status is returned, and binary data moves through operating-system pipes rather than through R strings.
+
+```{r pipeline-basic}
+pipeline_output <- tempfile()
+pipeline_status <- run_pipeline(
+  list(
+    pipeline_stage("printf", c("alpha\\nbeta\\n")),
+    pipeline_stage("grep", "beta")
+  ),
+  stdout = pipeline_output
+)
+readLines(pipeline_output)
+pipeline_status
+```
+
+A BWA or Rminibwa mapper that emits SAM can feed Samtools directly. Samtools duplicate marking requires name sorting and `fixmate -m` before coordinate sorting; omitting those steps does not produce a valid `samtools markdup` input.
+
+```{r pipeline-samtools-markdup, eval=FALSE}
+threads <- "8"
+mapper <- pipeline_stage(
+  "bwa",
+  c("mem", "-t", threads, reference_fasta, reads_1, reads_2),
+  name = "bwa mem"
+)
+# Or use the executable exported by Rminibwa:
+mapper <- pipeline_stage(
+  Rminibwa::minibwa_path(),
+  c("map", "-t", threads, index_prefix, reads_1, reads_2),
+  name = "minibwa map"
+)
+
+run_pipeline(
+  list(
+    mapper,
+    pipeline_stage(samtools_path(), c("sort", "-n", "-@", threads, "-O", "BAM", "-o", "-", "-")),
+    pipeline_stage(samtools_path(), c("fixmate", "-m", "-@", threads, "-", "-")),
+    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-O", "BAM", "-o", "-", "-")),
+    pipeline_stage(samtools_path(), c("markdup", "-@", threads, "-", output_bam))
+  ),
+  stderr = paste0(output_bam, ".pipeline.log")
+)
+run_pipeline(
+  pipeline_stage(samtools_path(), c("index", "-@", threads, output_bam))
+)
+```
+
+FastDup rereads a coordinate-sorted input and therefore forms an explicit file-dependent step rather than a streaming stage:
+
+```{r pipeline-fastdup, eval=FALSE}
+sorted_bam <- tempfile(fileext = ".bam")
+run_pipeline(
+  list(
+    mapper,
+    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-o", sorted_bam, "-"))
+  ),
+  stderr = paste0(sorted_bam, ".pipeline.log")
+)
+run_pipeline(
+  pipeline_stage(
+    fastdup_path(),
+    c(
+      "--input", sorted_bam,
+      "--output", output_bam,
+      "--metrics", paste0(output_bam, ".metrics"),
+      "--num-threads", threads,
+      "--tagging-policy", "All"
+    )
+  ),
+  stderr = paste0(output_bam, ".fastdup.log")
+)
+run_pipeline(
+  pipeline_stage(samtools_path(), c("index", "-@", threads, output_bam))
+)
 ```
 
 ## Capabilities
@@ -712,6 +792,10 @@ rm -f $OUT_PQ
 - [Samtools documentation](https://www.htslib.org/doc/samtools.html)
 
 - [Samtools GitHub](https://github.com/samtools/samtools)
+
+- [FastDup GitHub](https://github.com/zzhofict/FastDup)
+
+- [FastDup overlay errata](ERRATA.md)
 
 - [BCFtools documentation](https://samtools.github.io/bcftools/)
 

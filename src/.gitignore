@@ -4,6 +4,7 @@
 *.pico
 bcftools
 samtools
+fastdup-1.0.0/build/
 libst.a
 libbcftools.a
 libbcftools.so*

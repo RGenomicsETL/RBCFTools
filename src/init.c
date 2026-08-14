@@ -14,6 +14,8 @@ extern SEXP RC_htslib_features(void);
 extern SEXP RC_htslib_feature_string(void);
 extern SEXP RC_htslib_has_feature(SEXP feature_id);
 extern SEXP RC_htslib_capabilities(void);
+extern SEXP RC_exec_pipeline(SEXP commands, SEXP arguments, SEXP input_path,
+                             SEXP output_path, SEXP error_path);
 
 /* Declare external functions from vcf_arrow_r.c */
 extern SEXP vcf_to_arrow_stream(SEXP filename_sexp, SEXP batch_size_sexp,
@@ -46,6 +48,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"RC_htslib_feature_string", (DL_FUNC)&RC_htslib_feature_string, 0},
     {"RC_htslib_has_feature", (DL_FUNC)&RC_htslib_has_feature, 1},
     {"RC_htslib_capabilities", (DL_FUNC)&RC_htslib_capabilities, 0},
+    {"RC_exec_pipeline", (DL_FUNC)&RC_exec_pipeline, 5},
     /* VCF Arrow stream functions */
     {"vcf_to_arrow_stream", (DL_FUNC)&vcf_to_arrow_stream, 12},
     {"vcf_arrow_get_schema", (DL_FUNC)&vcf_arrow_get_schema, 1},

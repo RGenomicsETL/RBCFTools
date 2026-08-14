@@ -1,3 +1,22 @@
+# RBCFTools 1.24-1.0.0.9000 (development version)
+
+## FastDup and generic executable pipelines
+
+- Added the RBCFTools-patched FastDup 1.0.0 executable. FastDup is built
+  against the package's canonical HTSlib 1.24 source; its upstream HTSlib copy
+  is excluded.
+- Added a hash-locked FastDup vendor receipt and an explicit four-patch overlay
+  that supports external HTSlib ownership, fixes signed-16-bit optical
+  coordinate overflow, isolates duplicate sets by SAM `LB`, and honors
+  `--tagging-policy`. See `ERRATA.md`.
+- Added shell-free `pipeline_stage()` and `run_pipeline()` APIs for composing
+  bundled executables with external mappers such as BWA or the executable from
+  Rminibwa. Streaming stages use operating-system pipes and return every stage's
+  exit status; file-dependent FastDup and indexing steps run subsequently as
+  one-stage pipelines.
+- Added `fastdup_path()`, `fastdup_bin_dir()`, `fastdup_tools()`, and
+  `fastdup_version()`.
+
 # RBCFTools 1.24-0.0.3.1.9000 (development version)
 
 - Added the bundled Samtools 1.24 executable on native Unix builds, compiled
