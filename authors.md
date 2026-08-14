@@ -59,7 +59,10 @@ Toure S, Zhang Z (2026). *RBCFTools: Bundled 'FastDup', 'Samtools',
 
     see src/samtools-1.24/AUTHORS and src/samtools-1.24/LICENSE
 
-    - FastDup Author Zhonghai Zhang; source copyright notice ICT
+    - FastDup Authors Zhonghai Zhang and Yewen Li
+      Copyright (c) 2025 Institute of Computing Technology,
+      Chinese Academy of Science
+      MIT License
 
     see src/fastdup-1.0.0/LICENSE and src/fastdup-1.0.0/README.md
 

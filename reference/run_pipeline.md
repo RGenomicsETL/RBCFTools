@@ -13,7 +13,8 @@ run_pipeline(
   stdin = NULL,
   stdout = NULL,
   stderr = NULL,
-  error_on_status = TRUE
+  error_on_status = TRUE,
+  cpu_affinity = NULL
 )
 ```
 
@@ -44,10 +45,23 @@ run_pipeline(
 
   Whether to raise an error when any stage exits with a non-zero status.
 
+- cpu_affinity:
+
+  Optional integer vector of logical CPU IDs. On Linux, every stage is
+  started through `taskset` with this same allowed CPU set. Select one
+  logical CPU per physical core when comparing thread budgets; do not
+  count SMT siblings as separate physical cores.
+
 ## Value
 
 A data frame with one row per stage and columns `stage`, `command`,
-`status`, and `signal`.
+`status`, `signal`, `peak_rss_kib`, and `peak_threads`. The
+`wall_seconds`, `pipeline_peak_rss_kib`, `pipeline_peak_threads`, and
+`cpu_affinity` attributes describe the whole pipeline. On Linux, memory
+and thread counts are sampled every 10 ms from each live stage. Pipeline
+peak RSS is the largest simultaneous sum of stage resident sets; it is
+aggregate RSS, not unique proportional set size. Unsupported platforms
+return `NA` for sampled metrics.
 
 ## Details
 
@@ -70,7 +84,7 @@ result <- run_pipeline(
 readLines(output)
 #> [1] "beta"
 result
-#>    stage         command status signal
-#> 1 printf /usr/bin/printf      0      0
-#> 2   grep   /usr/bin/grep      0      0
+#>    stage         command status signal peak_rss_kib peak_threads
+#> 1 printf /usr/bin/printf      0      0          204            1
+#> 2   grep   /usr/bin/grep      0      0           96            1
 ```
