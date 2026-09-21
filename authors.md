@@ -30,7 +30,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/v1.24-1.1.0/DESCRIPTION)
 
 Toure S, Zhang Z, Li Y (2026). *RBCFTools: Bundled 'FastDup',
 'Samtools', 'BCFtools', and 'HTSlib' Utilities*. R package version
