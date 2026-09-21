@@ -1,17 +1,18 @@
 Package: RBCFTools
 Title: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities
-Version: 1.24-1.0.0.9000
+Version: 1.24-1.1.0
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
     email = "sounkoutoure@gmail.com", role = c("aut", "cre")),
-    person( given = "Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas Davies, Robert M, Pierre Lindenbaum",  role = "cph",
-           comment = "Authors of included htslib library and bcftools command line tools"),
     person(given = "Genome Research Ltd.", role = "cph",
-           comment = "Copyright holder of the included Samtools source"),
+           comment = "Copyright holder of the included HTSlib, BCFtools, and Samtools source"),
     person(given = "Zhonghai", family = "Zhang", role = "aut",
            comment = "Author of the included FastDup source"),
-    person(given = "ICT", role = "cph",
-           comment = "Copyright notice in the included FastDup source"),
+    person(given = "Yewen", family = "Li", role = "aut",
+           comment = "Author of the included FastDup source"),
+    person(given = "Institute of Computing Technology, Chinese Academy of Science",
+           role = "cph",
+           comment = "Copyright holder of the included FastDup source"),
     person(given = "Zilong", family = "Li", email = "zilong.dk@gmail.com", role = c("cph"),
            comment = "Author of the vcfpp library from whom makefiles and configure strategy is borrowed"),
     person(given = "Duckdb C API and extension and API authors", role = "cph",

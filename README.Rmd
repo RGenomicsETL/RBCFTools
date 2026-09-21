@@ -11,6 +11,9 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+if ("shared_home" %in% names(formals(duckdb::duckdb))) {
+  Sys.setenv(DUCKDB_R_HOME = path.expand("~/.duckdb"))
+}
 ```
 
 # RBCFTools
@@ -20,11 +23,11 @@ knitr::opts_chunk$set(
 [![R-universe version](https://RGenomicsETL.r-universe.dev/RBCFTools/badges/version)](https://RGenomicsETL.r-universe.dev/RBCFTools)
 <!-- badges: end -->
 
-RBCFTools provides [FastDup](https://github.com/zzhofict/FastDup), [Samtools](https://github.com/samtools/samtools), [BCFtools](https://github.com/samtools/bcftools), and [HTSlib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF and SAM/BAM/CRAM files. The package bundles these libraries and command-line tools (fastdup, samtools, bcftools, bgzip, tabix), so no external installation is required. All bundled tools are compiled against the same vendored HTSlib source and build. FastDup carries an explicit, tested RBCFTools patch overlay documented in [ERRATA.md](ERRATA.md). When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](inst/duckdb_bcf_reader_extension/) extension bundled in this package.
+RBCFTools provides [FastDup](https://github.com/zzhofict/FastDup), [Samtools](https://github.com/samtools/samtools), [BCFtools](https://github.com/samtools/bcftools), and [HTSlib](https://github.com/samtools/htslib), the standard tools for reading and manipulating VCF/BCF and SAM/BAM/CRAM files. The package bundles these libraries and command-line tools (fastdup, samtools, bcftools, bgzip, tabix), so no external installation is required. All bundled tools are compiled against the same vendored HTSlib source and build. FastDup carries an explicit, tested RBCFTools patch overlay documented in [ERRATA.md](ERRATA.md). When compiled with libcurl, remote file access from S3, GCS, and HTTP URLs is supported. The package also includes support for streaming VCF/BCF to Apache Arrow (IPC) format via [nanoarrow](https://arrow.apache.org/nanoarrow/), with export to Parquet format using [duckdb](https://duckdb.org/) via either the [DuckDB nanoarrow extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html) or a [`bcf_reader`](https://github.com/RGenomicsETL/RBCFTools/tree/v1.24-1.1.0/inst/duckdb_bcf_reader_extension) extension bundled in this package.
 
 ## Installation
 
-You can install the development version of RBCFTools from r-universe for unix-alikes (we do not support windows)
+You can install RBCFTools from r-universe on Unix-alike systems. Windows is not supported.
  
 ```r
 install.packages(
@@ -217,7 +220,7 @@ data.frame(
 )
 ```
 
-The rendered benchmarks execute the same pipelines on a [complete 10,110,535-pair HG02088 exome](benchmarks/hg02088-exome-pipelines/README.md) and on the pinned [Zenodo HG002 one-million-pair WGS dataset](benchmarks/hg002-wgs-1m-pipelines/README.md). Both map against a full human reference with BWA and Rminibwa, then compare Samtools `markdup` with the patched FastDup on each prepared BAM.
+The rendered benchmarks execute the same pipelines on a [complete 10,110,535-pair HG02088 exome](https://github.com/RGenomicsETL/RBCFTools/blob/v1.24-1.1.0/benchmarks/hg02088-exome-pipelines/README.md) and on the pinned [Zenodo HG002 one-million-pair WGS dataset](https://github.com/RGenomicsETL/RBCFTools/blob/v1.24-1.1.0/benchmarks/hg002-wgs-1m-pipelines/README.md). Both map against a full human reference with BWA and Rminibwa, then compare Samtools `markdup` with the patched FastDup on each prepared BAM.
 
 ## Capabilities
 
@@ -279,7 +282,7 @@ res$stdou
 
 
 
-RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [DuckDB](https://github.com/duckdb/duckdb-r) and Parquet format conversion when serializing to Arrow IPC. We also support the [`bcf_reader`](inst/duckdb_bcf_reader_extension/) DuckDB extension to read directly into DuckDB.
+RBCFTools provides streaming VCF/BCF to Apache Arrow Stream conversion via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables integration with tools like [DuckDB](https://github.com/duckdb/duckdb-r) and Parquet format conversion when serializing to Arrow IPC. We also support the [`bcf_reader`](https://github.com/RGenomicsETL/RBCFTools/tree/v1.24-1.1.0/inst/duckdb_bcf_reader_extension) DuckDB extension to read directly into DuckDB.
 
 The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec conformance checks on headers (similar to htslib's `bcf_hdr_check_sanity()`) and emit R warnings or DuckDB logs when correcting non-conformant fields
 
