@@ -19,13 +19,13 @@ format using [duckdb](https://duckdb.org/) via either the [DuckDB
 nanoarrow
 extension](https://duckdb.org/community_extensions/extensions/nanoarrow.html)
 or a
-[`bcf_reader`](https://rgenomicsetl.github.io/RBCFTools/inst/duckdb_bcf_reader_extension/)
+[`bcf_reader`](https://github.com/RGenomicsETL/RBCFTools/tree/v1.24-1.1.0/inst/duckdb_bcf_reader_extension)
 extension bundled in this package.
 
 ## Installation
 
-You can install the development version of RBCFTools from r-universe for
-unix-alikes (we do not support windows)
+You can install RBCFTools from r-universe on Unix-alike systems. Windows
+is not supported.
 
 ``` r
 
@@ -62,15 +62,15 @@ tools. Use the path functions to locate the executables.
 ``` r
 
 fastdup_path()
-#> [1] "/tmp/RBCFTools-instrumented-lib/RBCFTools/fastdup/bin/fastdup"
+#> [1] "/tmp/RBCFTools-release-lib/RBCFTools/fastdup/bin/fastdup"
 samtools_path()
-#> [1] "/tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools"
+#> [1] "/tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools"
 bcftools_path()
-#> [1] "/tmp/RBCFTools-instrumented-lib/RBCFTools/bcftools/bin/bcftools"
+#> [1] "/tmp/RBCFTools-release-lib/RBCFTools/bcftools/bin/bcftools"
 bgzip_path()
-#> [1] "/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/bin/bgzip"
+#> [1] "/tmp/RBCFTools-release-lib/RBCFTools/htslib/bin/bgzip"
 tabix_path()
-#> [1] "/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/bin/tabix"
+#> [1] "/tmp/RBCFTools-release-lib/RBCFTools/htslib/bin/tabix"
 # List all available tools
 fastdup_tools()
 #> [1] "fastdup"
@@ -111,8 +111,8 @@ readLines(pipeline_output)
 #> [1] "beta"
 pipeline_status
 #>    stage         command status signal peak_rss_kib peak_threads
-#> 1 printf /usr/bin/printf      0      0         1280            1
-#> 2   grep   /usr/bin/grep      0      0           NA            1
+#> 1 printf /usr/bin/printf      0      0          640            1
+#> 2   grep   /usr/bin/grep      0      0          160            1
 ```
 
 A BWA or Rminibwa mapper that emits SAM can feed Samtools directly.
@@ -180,7 +180,7 @@ run_pipeline(
   stderr = bwa_log
 )
 #>       stage      command status signal peak_rss_kib peak_threads
-#> 1 bwa index /usr/bin/bwa      0      0         2720            1
+#> 1 bwa index /usr/bin/bwa      0      0         2880            1
 bwa_status <- run_pipeline(
   list(
     pipeline_stage(
@@ -199,27 +199,21 @@ bwa_index_status <- run_pipeline(
   pipeline_stage(samtools_path(), c("index", "-@", threads, bwa_output), name = "index")
 )
 bwa_status
-#>             stage
-#> 1         bwa mem
-#> 2       name sort
-#> 3         fixmate
-#> 4 coordinate sort
-#> 5         markdup
-#>                                                           command status signal
-#> 1                                                    /usr/bin/bwa      0      0
-#> 2 /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0      0
-#> 3 /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0      0
-#> 4 /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0      0
-#> 5 /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0      0
-#>   peak_rss_kib peak_threads
-#> 1         2560            3
-#> 2         3520            7
-#> 3         3200            5
-#> 4         3840            7
-#> 5         3520            5
+#>             stage                                                    command
+#> 1         bwa mem                                               /usr/bin/bwa
+#> 2       name sort /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools
+#> 3         fixmate /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools
+#> 4 coordinate sort /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools
+#> 5         markdup /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools
+#>   status signal peak_rss_kib peak_threads
+#> 1      0      0         2080            1
+#> 2      0      0         3680            7
+#> 3      0      0         3360            5
+#> 4      0      0         3840            7
+#> 5      0      0         3520            5
 bwa_index_status
-#>   stage                                                         command status
-#> 1 index /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0
+#>   stage                                                    command status
+#> 1 index /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools      0
 #>   signal peak_rss_kib peak_threads
 #> 1      0           NA            1
 data.frame(
@@ -229,7 +223,7 @@ data.frame(
   index_exists = file.exists(paste0(bwa_output, ".bai"))
 )
 #>   alignments duplicate_alignments bam_bytes index_exists
-#> 1         80                   40      2820         TRUE
+#> 1         80                   40      2814         TRUE
 ```
 
 FastDup rereads a coordinate-sorted input and therefore forms an
@@ -253,7 +247,7 @@ run_pipeline(
 #>           stage                                            command status
 #> 1 minibwa index /usr/local/lib/R/site-library/Rminibwa/bin/minibwa      0
 #>   signal peak_rss_kib peak_threads
-#> 1      0          160            1
+#> 1      0           NA            1
 minibwa_status <- run_pipeline(
   list(
     pipeline_stage(
@@ -287,23 +281,20 @@ fastdup_index_status <- run_pipeline(
   pipeline_stage(samtools_path(), c("index", "-@", threads, fastdup_output), name = "index")
 )
 minibwa_status
-#>             stage
-#> 1     minibwa map
-#> 2 coordinate sort
-#>                                                           command status signal
-#> 1              /usr/local/lib/R/site-library/Rminibwa/bin/minibwa      0      0
-#> 2 /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0      0
-#>   peak_rss_kib peak_threads
-#> 1        26080            1
-#> 2         3680            7
+#>             stage                                                    command
+#> 1     minibwa map         /usr/local/lib/R/site-library/Rminibwa/bin/minibwa
+#> 2 coordinate sort /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools
+#>   status signal peak_rss_kib peak_threads
+#> 1      0      0        30400            1
+#> 2      0      0         3840            7
 fastdup_status
-#>     stage                                                       command status
-#> 1 fastdup /tmp/RBCFTools-instrumented-lib/RBCFTools/fastdup/bin/fastdup      0
+#>     stage                                                  command status
+#> 1 fastdup /tmp/RBCFTools-release-lib/RBCFTools/fastdup/bin/fastdup      0
 #>   signal peak_rss_kib peak_threads
-#> 1      0         5600            7
+#> 1      0         5760            7
 fastdup_index_status
-#>   stage                                                         command status
-#> 1 index /tmp/RBCFTools-instrumented-lib/RBCFTools/samtools/bin/samtools      0
+#>   stage                                                    command status
+#> 1 index /tmp/RBCFTools-release-lib/RBCFTools/samtools/bin/samtools      0
 #>   signal peak_rss_kib peak_threads
 #> 1      0           NA            1
 data.frame(
@@ -313,14 +304,14 @@ data.frame(
   index_exists = file.exists(paste0(fastdup_output, ".bai"))
 )
 #>   alignments duplicate_alignments bam_bytes index_exists
-#> 1         80                   40      3030         TRUE
+#> 1         80                   40      3026         TRUE
 ```
 
 The rendered benchmarks execute the same pipelines on a [complete
 10,110,535-pair HG02088
-exome](https://rgenomicsetl.github.io/RBCFTools/benchmarks/hg02088-exome-pipelines/README.md)
+exome](https://github.com/RGenomicsETL/RBCFTools/blob/v1.24-1.1.0/benchmarks/hg02088-exome-pipelines/README.md)
 and on the pinned [Zenodo HG002 one-million-pair WGS
-dataset](https://rgenomicsetl.github.io/RBCFTools/benchmarks/hg002-wgs-1m-pipelines/README.md).
+dataset](https://github.com/RGenomicsETL/RBCFTools/blob/v1.24-1.1.0/benchmarks/hg002-wgs-1m-pipelines/README.md).
 Both map against a full human reference with BWA and Rminibwa, then
 compare Samtools `markdup` with the patched FastDup on each prepared
 BAM.
@@ -362,7 +353,7 @@ htslib_capabilities()
 
 # Human-readable feature string
 htslib_feature_string()
-#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.7"
+#> [1] "build=configure libcurl=yes S3=yes GCS=yes libdeflate=yes lzma=yes bzip2=yes plugins=yes plugin-path=/tmp/RBCFTools-release-lib/RBCFTools/htslib/libexec/htslib: htscodecs=1.6.7"
 ```
 
 ### Feature Constants
@@ -425,7 +416,7 @@ via [nanoarrow](https://arrow.apache.org/nanoarrow/). This enables
 integration with tools like [DuckDB](https://github.com/duckdb/duckdb-r)
 and Parquet format conversion when serializing to Arrow IPC. We also
 support the
-[`bcf_reader`](https://rgenomicsetl.github.io/RBCFTools/inst/duckdb_bcf_reader_extension/)
+[`bcf_reader`](https://github.com/RGenomicsETL/RBCFTools/tree/v1.24-1.1.0/inst/duckdb_bcf_reader_extension)
 DuckDB extension to read directly into DuckDB.
 
 The `nanoarrow` stream conversion and `bcf_reader` perform VCF spec
@@ -564,7 +555,7 @@ stream conversion to data.frame
 
 parquet_file <- tempfile(fileext = ".parquet")
 vcf_to_parquet_arrow(bcf_file, parquet_file, compression = "snappy")
-#> Wrote 11 rows to /tmp/RtmpDddu3f/file33343c5f14c117.parquet
+#> Wrote 11 rows to /tmp/RtmpbCM10v/file87124578c2b33.parquet
 con <- duckdb::dbConnect(duckdb::duckdb())
 pq_bcf <- DBI::dbGetQuery(con, sprintf("SELECT * FROM '%s' LIMIT 100", parquet_file))
 pq_me <- DBI::dbGetQuery(
@@ -582,13 +573,13 @@ pq_bcf[, c("CHROM", "POS", "REF", "ALT")] |>
 #> 5     1 13327   G   C
 #> 6     1 14699   C   G
 pq_me |> head()
-#>                                    file_name row_group_id row_group_num_rows
-#> 1 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
-#> 2 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
-#> 3 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
-#> 4 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
-#> 5 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
-#> 6 /tmp/RtmpDddu3f/file33343c5f14c117.parquet            0                 11
+#>                                   file_name row_group_id row_group_num_rows
+#> 1 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
+#> 2 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
+#> 3 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
+#> 4 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
+#> 5 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
+#> 6 /tmp/RtmpbCM10v/file87124578c2b33.parquet            0                 11
 #>   row_group_num_columns row_group_bytes column_id file_offset num_values
 #> 1                    36            3135         0           0         11
 #> 2                    36            3135         1           0         11
@@ -672,7 +663,7 @@ vcf_to_parquet_arrow(
     row_group_size = 100000L,
     compression = "zstd"
 )
-#> Wrote 11 rows to /tmp/RtmpDddu3f/file33343c4c8622e3.parquet (streaming mode)
+#> Wrote 11 rows to /tmp/RtmpbCM10v/file871242d5570cf.parquet (streaming mode)
 ```
 
 ### Query VCF with duckdb after converting the Stream
@@ -756,7 +747,7 @@ DBI::dbExecute(con, sprintf("
 
 # Verify parquet file size
 file.info(parquet_out)$size
-#> [1] 3998896
+#> [1] 3998897
 
 # Same query on Parquet file
 DBI::dbGetQuery(con, sprintf("
@@ -894,7 +885,7 @@ tidy_out <- tempfile(fileext = ".parquet")
 
 # Use tidy_format parameter directly
 vcf_to_parquet_duckdb(vcf_3samples, tidy_out, extension_path = ext_path, tidy_format = TRUE)
-#> Wrote: /tmp/RtmpDddu3f/file33343c5a3b2312.parquet
+#> Wrote: /tmp/RtmpbCM10v/file871242626f4da.parquet
 
 # Query the tidy output
 con <- duckdb::dbConnect(duckdb::duckdb())
@@ -943,7 +934,7 @@ vcf_file <- system.file("extdata", "1000G_3samples.vcf.gz", package = "RBCFTools
 # Export with embedded VCF header (default)
 parquet_out <- tempfile(fileext = ".parquet")
 vcf_to_parquet_duckdb(vcf_file, parquet_out, ext_path)
-#> Wrote: /tmp/RtmpDddu3f/file33343cecc4a91.parquet
+#> Wrote: /tmp/RtmpbCM10v/file87124616a104b.parquet
 
 # Read back the metadata
 meta <- parquet_kv_metadata(parquet_out)
@@ -952,10 +943,10 @@ print(meta)
 #> 1        vcf_header
 #> 2 RBCFTools_version
 #> 3       tidy_format
-#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     value
-#> 1 ##fileformat=VCFv4.0\\x0A##FILTER=<ID=PASS,Description=\\x22All filters passed\\x22>\\x0A##filedat=20101112\\x0A##datarelease=20100804\\x0A##samples=629\\x0A##contig=<ID=1,length=249250621>\\x0A##description=\\x22Where BI calls are present, genotypes and alleles are from BI.  In there absence, UM genotypes are used.  If neither are available, no genotype information is present and the alleles are from the NCBI calls.\\x22\\x0A##FORMAT=<ID=AD,Number=A,Type=Integer,Description=\\x22Allelic depths for the ref and alt alleles in the order listed\\x22>\\x0A##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\\x22Read Depth (only filtered reads used for calling)\\x22>\\x0A##FORMAT=<ID=GL,Number=G,Type=Float,Description=\\x22Log-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\\x22>\\x0A##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\\x22Genotype Quality\\x22>\\x0A##FORMAT=<ID=GT,Number=A,Type=String,Description=\\x22Genotype\\x22>\\x0A##FORMAT=<ID=GD,Number=1,Type=Float,Description=\\x22Genotype dosage.  Expected count of non-ref alleles [0,2]\\x22>\\x0A##FORMAT=<ID=OG,Number=1,Type=String,Description=\\x22Original Genotype input to Beagle\\x22>\\x0A##INFO=<ID=AF,Number=.,Type=Float,Description=\\x22Allele Frequency, for each ALT allele, in the same order as listed\\x22>\\x0A##INFO=<ID=DP,Number=1,Type=Integer,Description=\\x22Total Depth\\x22>\\x0A##INFO=<ID=CB,Number=.,Type=String,Description=\\x22List of centres that called, UM (University of Michigan), BI (Broad Institute), BC (Boston College), NCBI\\x22>\\x0A##INFO=<ID=EUR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on European Samples\\x22>\\x0A##INFO=<ID=AFR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on AFRICAN Samples\\x22>\\x0A##INFO=<ID=ASN_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on Asian Samples\\x22>\\x0A##bcftools_viewVersion=1.9-321-g5774f32+htslib-1.10.2-22-gbfc9f0d\\x0A##bcftools_viewCommand=view -O b -o 1000G.ALL.2of4intersection.20100804.genotypes.bcf 1000G.ALL.2of4intersection.20100804.genotypes.vcf; Date=Fri Apr 24 20:53:38 2020\\x0A##INFO=<ID=AC,Number=A,Type=Integer,Description=\\x22Allele count in genotypes\\x22>\\x0A##INFO=<ID=AN,Number=1,Type=Integer,Description=\\x22Total number of alleles in called genotypes\\x22>\\x0A##bcftools_viewVersion=1.23+htslib-1.23\\x0A##bcftools_viewCommand=view -s HG00098,HG00100,HG00106 -O b -o inst/extdata/1000G_3samples.bcf inst/extdata/1000G.ALL.2of4intersection.20100804.genotypes.bcf; Date=Sat Jan  3 14:41:16 2026\\x0A##bcftools_viewCommand=view -O z -o 1000G_3samples.vcf.gz 1000G_3samples.bcf; Date=Wed Jan  7 14:39:56 2026\\x0A##bcftools_viewVersion=1.24+htslib-1.24\\x0A##bcftools_viewCommand=view -h /tmp/RBCFTools-instrumented-lib/RBCFTools/extdata/1000G_3samples.vcf.gz; Date=Fri Aug 14 16:18:54 2026\\x0A#CHROM\\x09POS\\x09ID\\x09REF\\x09ALT\\x09QUAL\\x09FILTER\\x09INFO\\x09FORMAT\\x09HG00098\\x09HG00100\\x09HG00106
-#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         1.24.1.0.0.9000
-#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   false
+#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                value
+#> 1 ##fileformat=VCFv4.0\\x0A##FILTER=<ID=PASS,Description=\\x22All filters passed\\x22>\\x0A##filedat=20101112\\x0A##datarelease=20100804\\x0A##samples=629\\x0A##contig=<ID=1,length=249250621>\\x0A##description=\\x22Where BI calls are present, genotypes and alleles are from BI.  In there absence, UM genotypes are used.  If neither are available, no genotype information is present and the alleles are from the NCBI calls.\\x22\\x0A##FORMAT=<ID=AD,Number=A,Type=Integer,Description=\\x22Allelic depths for the ref and alt alleles in the order listed\\x22>\\x0A##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\\x22Read Depth (only filtered reads used for calling)\\x22>\\x0A##FORMAT=<ID=GL,Number=G,Type=Float,Description=\\x22Log-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\\x22>\\x0A##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\\x22Genotype Quality\\x22>\\x0A##FORMAT=<ID=GT,Number=A,Type=String,Description=\\x22Genotype\\x22>\\x0A##FORMAT=<ID=GD,Number=1,Type=Float,Description=\\x22Genotype dosage.  Expected count of non-ref alleles [0,2]\\x22>\\x0A##FORMAT=<ID=OG,Number=1,Type=String,Description=\\x22Original Genotype input to Beagle\\x22>\\x0A##INFO=<ID=AF,Number=.,Type=Float,Description=\\x22Allele Frequency, for each ALT allele, in the same order as listed\\x22>\\x0A##INFO=<ID=DP,Number=1,Type=Integer,Description=\\x22Total Depth\\x22>\\x0A##INFO=<ID=CB,Number=.,Type=String,Description=\\x22List of centres that called, UM (University of Michigan), BI (Broad Institute), BC (Boston College), NCBI\\x22>\\x0A##INFO=<ID=EUR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on European Samples\\x22>\\x0A##INFO=<ID=AFR_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on AFRICAN Samples\\x22>\\x0A##INFO=<ID=ASN_R2,Number=1,Type=Float,Description=\\x22R2 From Beagle based on Asian Samples\\x22>\\x0A##bcftools_viewVersion=1.9-321-g5774f32+htslib-1.10.2-22-gbfc9f0d\\x0A##bcftools_viewCommand=view -O b -o 1000G.ALL.2of4intersection.20100804.genotypes.bcf 1000G.ALL.2of4intersection.20100804.genotypes.vcf; Date=Fri Apr 24 20:53:38 2020\\x0A##INFO=<ID=AC,Number=A,Type=Integer,Description=\\x22Allele count in genotypes\\x22>\\x0A##INFO=<ID=AN,Number=1,Type=Integer,Description=\\x22Total number of alleles in called genotypes\\x22>\\x0A##bcftools_viewVersion=1.23+htslib-1.23\\x0A##bcftools_viewCommand=view -s HG00098,HG00100,HG00106 -O b -o inst/extdata/1000G_3samples.bcf inst/extdata/1000G.ALL.2of4intersection.20100804.genotypes.bcf; Date=Sat Jan  3 14:41:16 2026\\x0A##bcftools_viewCommand=view -O z -o 1000G_3samples.vcf.gz 1000G_3samples.bcf; Date=Wed Jan  7 14:39:56 2026\\x0A##bcftools_viewVersion=1.24+htslib-1.24\\x0A##bcftools_viewCommand=view -h /tmp/RBCFTools-release-lib/RBCFTools/extdata/1000G_3samples.vcf.gz; Date=Mon Sep 21 20:54:51 2026\\x0A#CHROM\\x09POS\\x09ID\\x09REF\\x09ALT\\x09QUAL\\x09FILTER\\x09INFO\\x09FORMAT\\x09HG00098\\x09HG00100\\x09HG00106
+#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         1.24.1.1.0
+#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              false
 
 # Extract the VCF header (stored with escaped newlines)
 vcf_header <- meta[meta$key == "vcf_header", "value"]
@@ -1098,7 +1089,7 @@ minio_process <- processx::process$new(
 )
 pid <- minio_process$get_pid()
 pid
-#> [1] 3356302
+#> [1] 553812
 
 # Poll readiness rather than relying on a fixed sleep.
 mc_cmd_args <- c("alias", "set", "ducklake_local",
@@ -1124,7 +1115,7 @@ processx::run(mc_bin, bucket_cmd_args, echo = FALSE)
 #> [1] 0
 #>
 #> $stdout
-#> [1] "Bucket created successfully `ducklake_local/readme-demo-1786717138`.\n"
+#> [1] "Bucket created successfully `ducklake_local/readme-demo-1790016895`.\n"
 #>
 #> $stderr
 #> [1] ""
@@ -1205,7 +1196,7 @@ DBI::dbExecute(con, "USE lake")
 # Load variants via fast VCF to Parquet conversion
 vcf_file <- system.file("extdata", "test_deep_variant.vcf.gz", package = "RBCFTools")
 ext_path <- bcf_reader_build(tempdir())
-#> bcf_reader extension already exists at: /tmp/RtmpDddu3f/build/bcf_reader.duckdb_extension
+#> bcf_reader extension already exists at: /tmp/RtmpbCM10v/build/bcf_reader.duckdb_extension
 #> Use force=TRUE to rebuild.
 ducklake_load_vcf(
   con,
@@ -1215,7 +1206,7 @@ ducklake_load_vcf(
   threads = 1,
   tidy_format = TRUE
 )
-#> Wrote: /tmp/RtmpDddu3f/variants_20260814_161858.parquet
+#> Wrote: /tmp/RtmpbCM10v/variants_20260921_205455.parquet
 #> Note: method with signature 'DBIConnection#Id' chosen for function 'dbExistsTable',
 #>  target signature 'duckdb_connection#Id'.
 #>  "duckdb_connection#ANY" would also be valid
@@ -1238,7 +1229,7 @@ variants_count
 vcf_file2 <- system.file("extdata", "test_vep.vcf", package = "RBCFTools")
 local_parquet2 <- tempfile(fileext = ".parquet")
 vcf_to_parquet_duckdb(vcf_file2, local_parquet2, extension_path = ext_path, tidy_format = TRUE)
-#> Wrote: /tmp/RtmpDddu3f/file33343c6971d4f7.parquet
+#> Wrote: /tmp/RtmpbCM10v/file8712452bdfb7.parquet
 
 DBI::dbGetQuery(con, sprintf("SELECT COUNT(*) as n FROM read_parquet('%s')", local_parquet2))
 #>     n
@@ -1251,7 +1242,7 @@ processx::run(mc_bin, mc_cmd_args, echo = FALSE)
 #> [1] 0
 #>
 #> $stdout
-#> [1] "`/tmp/RtmpDddu3f/file33343c6971d4f7.parquet` -> `ducklake_local/readme-demo-1786717138/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬────────────┐\n│ Total      │ Transferred │ Duration │ Speed      │\n│ 122.89 KiB │ 122.89 KiB  │ 00m00s   │ 9.60 MiB/s │\n└────────────┴─────────────┴──────────┴────────────┘\n"
+#> [1] "`/tmp/RtmpbCM10v/file8712452bdfb7.parquet` -> `ducklake_local/readme-demo-1790016895/data/variants/variants_vep.parquet`\n┌────────────┬─────────────┬──────────┬─────────────┐\n│ Total      │ Transferred │ Duration │ Speed       │\n│ 122.88 KiB │ 122.88 KiB  │ 00m00s   │ 13.13 MiB/s │\n└────────────┴─────────────┴──────────┴─────────────┘\n"
 #>
 #> $stderr
 #> [1] ""
@@ -1323,11 +1314,11 @@ DBI::dbGetQuery(con, "DESCRIBE variants") |>
 
 ducklake_list_files(con, "lake", "variants")
 #>                                                                                              data_file
-#> 1 s3://readme-demo-1786717138/data/main/variants/ducklake-01a000a3-f013-74a8-a0ab-0bad064b92b8.parquet
-#> 2                                       s3://readme-demo-1786717138/data/variants/variants_vep.parquet
+#> 1 s3://readme-demo-1790016895/data/main/variants/ducklake-01a0c552-3e09-7317-93a0-70ced91b4aad.parquet
+#> 2                                       s3://readme-demo-1790016895/data/variants/variants_vep.parquet
 #>   data_file_size_bytes data_file_footer_size data_file_encryption_key
-#> 1              5752058                  6207                     NULL
-#> 2               125839                 16932                     NULL
+#> 1              5752059                  6208                     NULL
+#> 2               125830                 16923                     NULL
 #>   delete_file delete_file_size_bytes delete_file_footer_size
 #> 1        <NA>                     NA                      NA
 #> 2        <NA>                     NA                      NA
@@ -1342,12 +1333,12 @@ ducklake_list_files(con, "lake", "variants")
 
 ducklake_snapshots(con, "lake") |> head()
 #>   snapshot_id       snapshot_time schema_version
-#> 1           0 2026-08-14 14:18:58              0
-#> 2           1 2026-08-14 14:18:58              1
-#> 3           2 2026-08-14 14:18:59              2
-#> 4           3 2026-08-14 14:18:59              3
-#> 5           4 2026-08-14 14:18:59              4
-#> 6           5 2026-08-14 14:18:59              5
+#> 1           0 2026-09-21 18:54:55              0
+#> 2           1 2026-09-21 18:54:56              1
+#> 3           2 2026-09-21 18:54:56              2
+#> 4           3 2026-09-21 18:54:56              3
+#> 5           4 2026-09-21 18:54:56              4
+#> 6           5 2026-09-21 18:54:56              5
 #>                                                  changes author commit_message
 #> 1                                  schemas_created, main   <NA>           <NA>
 #> 2 tables_created, tables_inserted_into, main.variants, 1   <NA>           <NA>
@@ -1364,12 +1355,12 @@ ducklake_snapshots(con, "lake") |> head()
 #> 6              <NA>
 ducklake_snapshots(con, "lake") |> tail()
 #>    snapshot_id       snapshot_time schema_version                 changes
-#> 84          83 2026-08-14 14:19:00             83       tables_altered, 1
-#> 85          84 2026-08-14 14:19:00             84       tables_altered, 1
-#> 86          85 2026-08-14 14:19:00             85       tables_altered, 1
-#> 87          86 2026-08-14 14:19:00             86       tables_altered, 1
-#> 88          87 2026-08-14 14:19:00             87       tables_altered, 1
-#> 89          88 2026-08-14 14:19:00             87 tables_inserted_into, 1
+#> 84          83 2026-09-21 18:54:58             83       tables_altered, 1
+#> 85          84 2026-09-21 18:54:58             84       tables_altered, 1
+#> 86          85 2026-09-21 18:54:58             85       tables_altered, 1
+#> 87          86 2026-09-21 18:54:58             86       tables_altered, 1
+#> 88          87 2026-09-21 18:54:58             87       tables_altered, 1
+#> 89          88 2026-09-21 18:54:58             87 tables_inserted_into, 1
 #>    author commit_message commit_extra_info
 #> 84   <NA>           <NA>              <NA>
 #> 85   <NA>           <NA>              <NA>
@@ -1393,8 +1384,8 @@ ducklake_options(con, "lake")
 #> 3   encrypted Whether or not to encrypt Parquet files written to the data path
 #> 4     version                                          DuckLake format version
 #>                               value  scope scope_entry
-#> 1                 DuckDB 14eca11bd9 GLOBAL        <NA>
-#> 2 s3://readme-demo-1786717138/data/ GLOBAL        <NA>
+#> 1                 DuckDB d8cdaa33fd GLOBAL        <NA>
+#> 2 s3://readme-demo-1790016895/data/ GLOBAL        <NA>
 #> 3                             false GLOBAL        <NA>
 #> 4                               1.0 GLOBAL        <NA>
 ducklake_set_option(con, "lake", "parquet_compression", "zstd")
@@ -1412,8 +1403,8 @@ ducklake_options(con, "lake")
 #> 4 Compression algorithm for Parquet files (uncompressed, snappy, gzip, zstd, brotli, lz4, lz4_raw)
 #> 5                                                                          DuckLake format version
 #>                               value  scope scope_entry
-#> 1                 DuckDB 14eca11bd9 GLOBAL        <NA>
-#> 2 s3://readme-demo-1786717138/data/ GLOBAL        <NA>
+#> 1                 DuckDB d8cdaa33fd GLOBAL        <NA>
+#> 2 s3://readme-demo-1790016895/data/ GLOBAL        <NA>
 #> 3                             false GLOBAL        <NA>
 #> 4                              zstd GLOBAL        <NA>
 #> 5                               1.0 GLOBAL        <NA>
@@ -1518,70 +1509,70 @@ $SCRIPT info -i $OUT_PQ
 
 rm -f $OUT_PQ
 #>
-#> real 0m1.740s
-#> user 0m4.077s
-#> sys  0m1.988s
+#> real 0m1.765s
+#> user 0m4.008s
+#> sys  0m2.062s
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/Rtmp0UHcS7
+#>   Build directory: /tmp/Rtmp3Cvq7b
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/Rtmp0UHcS7
-#>   Using htslib from: /tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib
+#>   Build directory: /tmp/Rtmp3Cvq7b
+#>   Using htslib from: /tmp/RBCFTools-release-lib/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make: Entering directory '/tmp/Rtmp0UHcS7'
+#> make: Entering directory '/tmp/Rtmp3Cvq7b'
 #> rm -rf build
-#> make: Leaving directory '/tmp/Rtmp0UHcS7'
-#> make: Entering directory '/tmp/Rtmp0UHcS7'
+#> make: Leaving directory '/tmp/Rtmp3Cvq7b'
+#> make: Entering directory '/tmp/Rtmp3Cvq7b'
 #> mkdir -p build
-#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
-#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
-#> gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib -Wl,-rpath,/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib -lhts
+#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-release-lib/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
+#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-release-lib/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
+#> gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/tmp/RBCFTools-release-lib/RBCFTools/htslib/lib -Wl,-rpath,/tmp/RBCFTools-release-lib/RBCFTools/htslib/lib -lhts
 #> Creating DuckDB extension with metadata...
 #> Created: build/bcf_reader.duckdb_extension
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make: Leaving directory '/tmp/Rtmp0UHcS7'
-#> Extension built: /tmp/Rtmp0UHcS7/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/Rtmp0UHcS7/build/bcf_reader.duckdb_extension
+#> make: Leaving directory '/tmp/Rtmp3Cvq7b'
+#> Extension built: /tmp/Rtmp3Cvq7b/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmp3Cvq7b/build/bcf_reader.duckdb_extension
 #>
 #> Converting VCF to Parquet (DuckDB mode)...
-#>   Input: /tmp/RBCFTools-instrumented-lib/RBCFTools/extdata/test_deep_variant.vcf.gz
-#>   Output: /tmp/tmp.frcJbabSEU.parquet
+#>   Input: /tmp/RBCFTools-release-lib/RBCFTools/extdata/test_deep_variant.vcf.gz
+#>   Output: /tmp/tmp.inEkw2M2iq.parquet
 #>   Compression: zstd
 #>   Row group size: 100000
 #>   Threads: 4
 #>   Format: tidy (one row per variant-sample)
 #> Processing 25 contigs (out of 86 in header) using 4 threads (DuckDB mode)
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0004.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0003.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0002.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0001.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0008.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0007.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0006.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0005.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0012.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0010.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0011.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0009.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0013.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0014.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0016.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0015.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0018.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0020.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0017.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0019.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0024.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0022.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0021.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0023.parquet
-#> Wrote: /tmp/Rtmp0UHcS7/vcf_duckdb_parallel_33379e5b6530f5/contig_0025.parquet
-#> Merging temporary Parquet files... to /tmp/tmp.frcJbabSEU.parquet
-#> Merged 25 parquet files -> tmp.frcJbabSEU.parquet (368319 rows)
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0004.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0003.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0002.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0001.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0008.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0006.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0007.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0005.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0012.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0010.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0011.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0009.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0014.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0013.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0015.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0016.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0018.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0020.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0017.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0019.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0022.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0024.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0021.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0023.parquet
+#> Wrote: /tmp/Rtmp3Cvq7b/vcf_duckdb_parallel_874737635866/contig_0025.parquet
+#> Merging temporary Parquet files... to /tmp/tmp.inEkw2M2iq.parquet
+#> Merged 25 parquet files -> tmp.inEkw2M2iq.parquet (368319 rows)
 #>
 #> ✓ Conversion complete!
-#>   Time: 1.03 seconds
+#>   Time: 1.05 seconds
 #>   Output size: 3.77 MB
 #> Running query on Parquet file...
 #>   CHROM    POS   ID REF ALT QUAL  FILTER INFO_END         SAMPLE_ID FORMAT_GT
@@ -1622,29 +1613,29 @@ rm -f $OUT_PQ
 #> 16     FORMAT_PL   INTEGER[]  YES <NA>    <NA>  <NA>
 #> 17 FORMAT_MED_DP     INTEGER  YES <NA>    <NA>  <NA>
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpJDiFh4
+#>   Build directory: /tmp/Rtmp0Sps3f
 #> Building bcf_reader extension...
-#>   Build directory: /tmp/RtmpJDiFh4
-#>   Using htslib from: /tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib
+#>   Build directory: /tmp/Rtmp0Sps3f
+#>   Using htslib from: /tmp/RBCFTools-release-lib/RBCFTools/htslib/lib
 #>   Running: make with explicit htslib paths
-#> make: Entering directory '/tmp/RtmpJDiFh4'
+#> make: Entering directory '/tmp/Rtmp0Sps3f'
 #> rm -rf build
-#> make: Leaving directory '/tmp/RtmpJDiFh4'
-#> make: Entering directory '/tmp/RtmpJDiFh4'
+#> make: Leaving directory '/tmp/Rtmp0Sps3f'
+#> make: Entering directory '/tmp/Rtmp0Sps3f'
 #> mkdir -p build
-#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
-#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
-#> gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib -Wl,-rpath,/tmp/RBCFTools-instrumented-lib/RBCFTools/htslib/lib -lhts
+#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-release-lib/RBCFTools/htslib/include -I. -c bcf_reader.c -o build/bcf_reader.o
+#> gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -I/tmp/RBCFTools-release-lib/RBCFTools/htslib/include -I. -c vep_parser.c -o build/vep_parser.o
+#> gcc -shared -fPIC -o build/libbcf_reader.so build/bcf_reader.o build/vep_parser.o -L/tmp/RBCFTools-release-lib/RBCFTools/htslib/lib -Wl,-rpath,/tmp/RBCFTools-release-lib/RBCFTools/htslib/lib -lhts
 #> Creating DuckDB extension with metadata...
 #> Created: build/bcf_reader.duckdb_extension
 #>   Platform: linux_amd64
 #>   DuckDB Version: v1.2.0
 #>   Extension Version: 1.0.0
-#> make: Leaving directory '/tmp/RtmpJDiFh4'
-#> Extension built: /tmp/RtmpJDiFh4/build/bcf_reader.duckdb_extension
-#> ✓ Extension ready: /tmp/RtmpJDiFh4/build/bcf_reader.duckdb_extension
+#> make: Leaving directory '/tmp/Rtmp0Sps3f'
+#> Extension built: /tmp/Rtmp0Sps3f/build/bcf_reader.duckdb_extension
+#> ✓ Extension ready: /tmp/Rtmp0Sps3f/build/bcf_reader.duckdb_extension
 #>
-#> VCF DuckDB Schema for: /tmp/RBCFTools-instrumented-lib/RBCFTools/extdata/test_deep_variant.vcf.gz
+#> VCF DuckDB Schema for: /tmp/RBCFTools-release-lib/RBCFTools/extdata/test_deep_variant.vcf.gz
 #>
 #>                      column_name column_type
 #>                            CHROM   character
@@ -1663,7 +1654,7 @@ rm -f $OUT_PQ
 #>     FORMAT_VAF_test_deep_variant        list
 #>      FORMAT_PL_test_deep_variant        list
 #>  FORMAT_MED_DP_test_deep_variant     integer
-#> Parquet File Information: /tmp/tmp.frcJbabSEU.parquet
+#> Parquet File Information: /tmp/tmp.inEkw2M2iq.parquet
 #>
 #> File size: 3.77 MB
 #> Total rows: 368319

@@ -1,6 +1,6 @@
 # Changelog
 
-## RBCFTools 1.24-1.0.0.9000 (development version)
+## RBCFTools 1.24-1.1.0 (2026-09-21)
 
 ### FastDup and generic executable pipelines
 
@@ -36,7 +36,7 @@
   and
   [`fastdup_version()`](https://rgenomicsetl.github.io/RBCFTools/reference/fastdup_version.md).
 
-## RBCFTools 1.24-0.0.3.1.9000 (development version)
+### Samtools 1.24
 
 - Added the bundled Samtools 1.24 executable on native Unix builds,
   compiled against the same canonical vendored HTSlib 1.24 source and

@@ -85,6 +85,6 @@ readLines(output)
 #> [1] "beta"
 result
 #>    stage         command status signal peak_rss_kib peak_threads
-#> 1 printf /usr/bin/printf      0      0          204            1
-#> 2   grep   /usr/bin/grep      0      0           96            1
+#> 1 printf /usr/bin/printf      0      0            8            1
+#> 2   grep   /usr/bin/grep      0      0           84            1
 ```

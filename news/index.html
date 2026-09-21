@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">RBCFTools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.24-1.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.24-1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,20 +33,20 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.24-1.0.0.9000" id="rbcftools-124-1009000-development-version">RBCFTools 1.24-1.0.0.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-124-1009000-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.24-1.1.0" id="rbcftools-124-110-2026-09-21">RBCFTools 1.24-1.1.0 (2026-09-21)<a class="anchor" aria-label="anchor" href="#rbcftools-124-110-2026-09-21"></a></h2>
 <div class="section level3">
-<h3 id="fastdup-and-generic-executable-pipelines-1-24-1-0-0-9000">FastDup and generic executable pipelines<a class="anchor" aria-label="anchor" href="#fastdup-and-generic-executable-pipelines-1-24-1-0-0-9000"></a></h3>
+<h3 id="fastdup-and-generic-executable-pipelines-1-24-1-1-0">FastDup and generic executable pipelines<a class="anchor" aria-label="anchor" href="#fastdup-and-generic-executable-pipelines-1-24-1-1-0"></a></h3>
 <ul><li>Added the RBCFTools-patched FastDup 1.0.0 executable. FastDup is built against the package’s canonical HTSlib 1.24 source; its upstream HTSlib copy is excluded.</li>
 <li>Added a hash-locked FastDup vendor receipt and an explicit four-patch overlay that supports external HTSlib ownership, fixes signed-16-bit optical coordinate overflow, isolates duplicate sets by SAM <code>LB</code>, and honors <code>--tagging-policy</code>. See <code>ERRATA.md</code>.</li>
 <li>Added shell-free <code><a href="../reference/pipeline_stage.html">pipeline_stage()</a></code> and <code><a href="../reference/run_pipeline.html">run_pipeline()</a></code> APIs for composing bundled executables with external mappers such as BWA or the executable from Rminibwa. Streaming stages use operating-system pipes and return every stage’s exit status; file-dependent FastDup and indexing steps run subsequently as one-stage pipelines. <code>cpu_affinity</code> now confines every concurrent stage to one declared Linux CPU set, and pipeline results report sampled per-stage and simultaneous aggregate peak RSS and thread counts plus native wall time.</li>
 <li>Added rendered, executable benchmark reports for the complete 10,110,535-pair HG02088 exome and the pinned Zenodo HG002 one-million-pair WGS dataset. The runner uses one SMT sibling per physical core, cold-cache timed phases, alternating duplicate-marker order, three marker repetitions, BAM/index validation, and duplicate-QNAME decision digests.</li>
 <li>Added <code><a href="../reference/fastdup_path.html">fastdup_path()</a></code>, <code><a href="../reference/fastdup_bin_dir.html">fastdup_bin_dir()</a></code>, <code><a href="../reference/fastdup_tools.html">fastdup_tools()</a></code>, and <code><a href="../reference/fastdup_version.html">fastdup_version()</a></code>.</li>
 </ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.24-0.0.3.1.9000" id="rbcftools-124-00319000-development-version">RBCFTools 1.24-0.0.3.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-124-00319000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="samtools-1-24-1-1-0">Samtools 1.24<a class="anchor" aria-label="anchor" href="#samtools-1-24-1-1-0"></a></h3>
 <ul><li>Added the bundled Samtools 1.24 executable on native Unix builds, compiled against the same canonical vendored HTSlib 1.24 source and static library as the rest of the package. New <code><a href="../reference/samtools_path.html">samtools_path()</a></code>, <code><a href="../reference/samtools_bin_dir.html">samtools_bin_dir()</a></code>, <code><a href="../reference/samtools_tools.html">samtools_tools()</a></code>, and <code><a href="../reference/samtools_version.html">samtools_version()</a></code> helpers expose the executable.</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.24-0.0.3.1" id="rbcftools-124-0031">RBCFTools 1.24-0.0.3.1<a class="anchor" aria-label="anchor" href="#rbcftools-124-0031"></a></h2>
 <ul><li>Fixed installation on systems without the optional SuiteSparse CHOLMOD development files by omitting only the <code>pgs</code> plugin.</li>
@@ -280,7 +280,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Sounkou Mahamane Toure, Zhonghai Zhang.</p>
+  <p>Developed by Sounkou Mahamane Toure, Zhonghai Zhang, Yewen Li.</p>
 </div>
 
 <div class="pkgdown-footer-right">

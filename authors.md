@@ -4,19 +4,18 @@
 
 - **Sounkou Mahamane Toure**. Author, maintainer.
 
-- **Bonfield, James K and Marshall, John and Danecek, Petr and Li, Heng
-  and Ohan, Valeriu and Whitwham, Andrew and Keane, Thomas Davies,
-  Robert M, Pierre Lindenbaum**. Copyright holder.  
-  Authors of included htslib library and bcftools command line tools
-
 - **Genome Research Ltd.**. Copyright holder.  
-  Copyright holder of the included Samtools source
+  Copyright holder of the included HTSlib, BCFtools, and Samtools source
 
 - **Zhonghai Zhang**. Author.  
   Author of the included FastDup source
 
-- **ICT**. Copyright holder.  
-  Copyright notice in the included FastDup source
+- **Yewen Li**. Author.  
+  Author of the included FastDup source
+
+- **Institute of Computing Technology, Chinese Academy of Science**.
+  Copyright holder.  
+  Copyright holder of the included FastDup source
 
 - **Zilong Li**. Copyright holder.  
   Author of the vcfpp library from whom makefiles and configure strategy
@@ -33,15 +32,15 @@
 Source:
 [`DESCRIPTION`](https://github.com/RGenomicsETL/RBCFTools/blob/main/DESCRIPTION)
 
-Toure S, Zhang Z (2026). *RBCFTools: Bundled 'FastDup', 'Samtools',
-'BCFtools', and 'HTSlib' Utilities*. R package version 1.24-1.0.0.9000,
-<https://github.com/RGenomicsETL/RBCFTools>.
+Toure S, Zhang Z, Li Y (2026). *RBCFTools: Bundled 'FastDup',
+'Samtools', 'BCFtools', and 'HTSlib' Utilities*. R package version
+1.24-1.1.0, <https://github.com/RGenomicsETL/RBCFTools>.
 
     @Manual{,
       title = {RBCFTools: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities},
-      author = {Sounkou Mahamane Toure and Zhonghai Zhang},
+      author = {Sounkou Mahamane Toure and Zhonghai Zhang and Yewen Li},
       year = {2026},
-      note = {R package version 1.24-1.0.0.9000},
+      note = {R package version 1.24-1.1.0},
       url = {https://github.com/RGenomicsETL/RBCFTools},
     }
 
