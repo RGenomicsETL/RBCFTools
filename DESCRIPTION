@@ -1,6 +1,6 @@
 Package: RBCFTools
 Title: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities
-Version: 1.24-1.1.1
+Version: 1.24-1.1.1.9000
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
     email = "sounkoutoure@gmail.com", role = c("aut", "cre")),

@@ -1,3 +1,5 @@
+# RBCFTools 1.24-1.1.1.9000 (development version)
+
 # RBCFTools 1.24-1.1.1 (2026-10-01)
 
 ## Package-specific native HTSlib identity
