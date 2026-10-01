@@ -13,5 +13,5 @@ all: $(SHLIB)
 
 ifeq ($(shell uname -s),Darwin)
 # Fix the reference to libhts to use @rpath instead of an absolute path.
-	install_name_tool -change $(HTSLIB_DIR)/lib/libhts.3.dylib @rpath/libhts.3.dylib $(SHLIB)
+	install_name_tool -change $(HTSLIB_DIR)/lib/libhts.@HTSLIB_SOVERSION@.dylib @rpath/libhts.@HTSLIB_SOVERSION@.dylib $(SHLIB)
 endif

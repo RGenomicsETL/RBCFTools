@@ -36,6 +36,7 @@ R_LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
 BCFTOOLS_VERSION="1.24"
 HTSLIB_VERSION="1.24"
+HTSLIB_SOVERSION="RBCFTools.${HTSLIB_VERSION}"
 SAMTOOLS_VERSION="1.24"
 FASTDUP_VERSION="1.0.0"
 CMAKE=${CMAKE:-cmake}
@@ -286,16 +287,32 @@ if [ "${WASM_BUILD}" = "yes" ]; then
     cp -f libhts.a "${THISDir}/inst/htslib/lib/libhts.a"
     cp -f htslib/*.h "${THISDir}/inst/htslib/include/htslib/"
 else
-    ${MAKE} libhts.a libhts.${SHLIB_EXT} install
+    # Give the shared library and its ELF symbol versions a package identity.
+    # Plugins link to the same implementation as the R bindings.
+    rm -f libhts.${SHLIB_EXT} hfile_*.so
+    if [ "$(uname)" = "Linux" ]; then
+        sed 's/HTSLIB_/RBCFTOOLS_HTSLIB_/g' htslib.map > rbcftools_htslib.map
+        ${MAKE} LIBHTS_SOVERSION="${HTSLIB_SOVERSION}" \
+            VERSION_SCRIPT_LDFLAGS="-Wl,--version-script,${HTSLIB_DIR}/rbcftools_htslib.map" \
+            libhts.a libhts.${SHLIB_EXT} install
+    else
+        ${MAKE} LIBHTS_SOVERSION="${HTSLIB_SOVERSION}" libhts.a libhts.${SHLIB_EXT} install
+    fi
 fi
 
 # Fix dylib install names on macOS.
 if [ "${WASM_BUILD}" != "yes" ] && [ "$(uname)" = "Darwin" ]; then
     echo "Fixing dylib install names for macOS..."
     HTSLIB_INSTALL_DIR="${THISDir}/inst/htslib/lib"
-    if [ -f "${HTSLIB_INSTALL_DIR}/libhts.3.dylib" ]; then
-        install_name_tool -id @rpath/libhts.3.dylib "${HTSLIB_INSTALL_DIR}/libhts.3.dylib"
-        echo "Fixed libhts.3.dylib install name"
+    HTSLIB_DYLIB="libhts.${HTSLIB_SOVERSION}.dylib"
+    if [ -f "${HTSLIB_INSTALL_DIR}/${HTSLIB_DYLIB}" ]; then
+        install_name_tool -id "@rpath/${HTSLIB_DYLIB}" "${HTSLIB_INSTALL_DIR}/${HTSLIB_DYLIB}"
+        for plugin in "${THISDir}/inst/htslib/libexec/htslib/"*.so; do
+            if [ -f "${plugin}" ]; then
+                install_name_tool -change "${HTSLIB_INSTALL_DIR}/${HTSLIB_DYLIB}" \
+                    "@loader_path/../../lib/${HTSLIB_DYLIB}" "${plugin}"
+            fi
+        done
     fi
     if [ -f "${HTSLIB_INSTALL_DIR}/libhts.dylib" ] && [ ! -L "${HTSLIB_INSTALL_DIR}/libhts.dylib" ]; then
         install_name_tool -id @rpath/libhts.dylib "${HTSLIB_INSTALL_DIR}/libhts.dylib"
@@ -501,6 +518,7 @@ sed \
     -e "s|@EXTRA_CPPFLAGS@|${CPPFLAGS}|g" \
     -e "s|@EXTRA_LIBS@|${EXTRA_LIBS}|g" \
     -e "s|@HTSLIB_LINK_INPUT@|${HTSLIB_LINK_INPUT}|g" \
+    -e "s|@HTSLIB_SOVERSION@|${HTSLIB_SOVERSION}|g" \
     -e "s|@PKG_LIBS_EXTRA@|${PKG_LIBS_EXTRA}|g" \
     -e "s|@RPATH_FLAGS@|${RPATH_FLAGS}|g" \
     src/Makevars.in > src/Makevars

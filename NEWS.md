@@ -1,3 +1,14 @@
+# RBCFTools 1.24-1.1.1 (2026-10-01)
+
+## Package-specific native HTSlib identity
+
+- Bundled HTSlib uses a package-specific shared-library name and Linux ELF
+  symbol versions. The R bindings, bundled DuckDB `bcf_reader` extension, and
+  HTSlib plugins resolve to the package's own build while retaining remote-access
+  support.
+- Load-order tests verify VCF row counts and runtime HTSlib versions for
+  RBCFTools and Rduckhts against single-package baselines.
+
 # RBCFTools 1.24-1.1.0 (2026-09-21)
 
 ## FastDup and generic executable pipelines

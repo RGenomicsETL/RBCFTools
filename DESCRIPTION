@@ -1,6 +1,6 @@
 Package: RBCFTools
 Title: Bundled 'FastDup', 'Samtools', 'BCFtools', and 'HTSlib' Utilities
-Version: 1.24-1.1.0
+Version: 1.24-1.1.1
 Authors@R: c(
     person(given = "Sounkou Mahamane", family = "Toure", 
     email = "sounkoutoure@gmail.com", role = c("aut", "cre")),
@@ -32,6 +32,7 @@ Copyright: See inst/AUTHORS
 Depends: R (>= 4.4.0), parallel
 Imports: nanoarrow, vctrs
 LinkingTo: nanoarrow
+Enhances: Rduckhts
 SystemRequirements: GNU make, CMake (>= 3.16), C++17, pkg-config, libcurl,
     libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other SSL library),
     liblzma, ncurses, libsuitesparse-dev/libcholmod5 (optional for pgs plugin)

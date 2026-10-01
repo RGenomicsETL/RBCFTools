@@ -49,6 +49,7 @@ rm -f src/bcftools-1.24/htslib-1.24/config.h
 rm -f src/bcftools-1.24/htslib-1.24/config.log
 rm -f src/bcftools-1.24/htslib-1.24/config.mk
 rm -f src/bcftools-1.24/htslib-1.24/config.status
+rm -f src/bcftools-1.24/htslib-1.24/rbcftools_htslib.map
 rm -f src/bcftools-1.24/htslib-1.24/htslib.pc.tmp
 rm -f src/bcftools-1.24/htslib-1.24/htslib_static.mk
 rm -f src/bcftools-1.24/htslib-1.24/hts-object-files
