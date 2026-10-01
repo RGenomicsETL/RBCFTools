@@ -86,5 +86,5 @@ readLines(output)
 result
 #>    stage         command status signal peak_rss_kib peak_threads
 #> 1 printf /usr/bin/printf      0      0            8            1
-#> 2   grep   /usr/bin/grep      0      0           20            1
+#> 2   grep   /usr/bin/grep      0      0           96            1
 ```
