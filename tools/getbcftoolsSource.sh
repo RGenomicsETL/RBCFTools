@@ -36,3 +36,5 @@ tar -xjf "htslib-${HTSLIB_VERSION}.tar.bz2" \
   --strip-components=1 \
   -C "${BCFTOOLS_DIR}/htslib-${HTSLIB_VERSION}"
 rm -f "htslib-${HTSLIB_VERSION}.tar.bz2"
+
+patch -d "${BCFTOOLS_DIR}/htslib-${HTSLIB_VERSION}" -p1 < "${THIS_DIR}/patches/htslib-${HTSLIB_VERSION}/isal-bgzf.patch"

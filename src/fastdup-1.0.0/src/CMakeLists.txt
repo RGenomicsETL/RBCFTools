@@ -51,6 +51,12 @@ else()
     message(WARNING "libdeflate is not found")
 endif()
 
+# lib isal (HTSlib configured with ISA-L uses it for BGZF blocks)
+find_library(IsalLib isal)
+if(IsalLib)
+    target_link_libraries(${PG_NAME} ${IsalLib})
+endif()
+
 # lib lzma
 find_package(LibLZMA MODULE)
 if (LibLZMA_FOUND)

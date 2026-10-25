@@ -1,0 +1,410 @@
+ISA-L compression and decompression for BGZF blocks in HTSlib 1.24.
+
+Port of the open HTSlib pull request https://github.com/samtools/htslib/pull/1908
+(head a11ed5e3c3c2bad07e8691479ce6e3099ee741a0): bgzf.c and configure.ac,
+without its CI workflow change. Changes to the pull request:
+
+- _bgzf_compress_isal() returns -1 when the level buffer allocation fails.
+- Without libdeflate, the zlib bgzf_compress() places the ISA-L branch after
+  the stored-block branch; the pull request's placement does not compile.
+- hts_feature_string() reports isal=yes or isal=no, so `samtools --version`
+  shows whether ISA-L is used.
+
+configure and config.h.in are regenerated with GNU Autoconf 2.73
+(autoconf && autoheader), which reproduces the HTSlib 1.24 release files
+byte for byte before this patch.
+
+diff --git a/bgzf.c b/bgzf.c
+index bf5e331..0fcfe2d 100644
+--- a/bgzf.c
++++ b/bgzf.c
+@@ -41,6 +41,11 @@
+ #include <libdeflate.h>
+ #endif
+ 
++#ifdef HAVE_ISAL
++#include <isa-l.h>
++#include <isa-l/crc.h>
++#endif
++
+ #include "htslib/hts.h"
+ #include "htslib/bgzf.h"
+ #include "htslib/hfile.h"
+@@ -554,11 +559,73 @@ BGZF *bgzf_hopen(hFILE *hfp, const char *mode)
+     return fp;
+ }
+ 
+-#ifdef HAVE_LIBDEFLATE
++#if HAVE_ISAL
++uint32_t hts_crc32(uint32_t crc, const void *buf, size_t len) {
++    return crc32_gzip_refl(crc, buf, len);
++}
++#elif HAVE_LIBDEFLATE
+ uint32_t hts_crc32(uint32_t crc, const void *buf, size_t len) {
+     return libdeflate_crc32(crc, buf, len);
+ }
++#else
++uint32_t hts_crc32(uint32_t crc, const void *buf, size_t len) {
++    return crc32(crc, buf, len);
++}
++#endif
+ 
++#if HAVE_ISAL
++static int _bgzf_compress_isal(uint8_t *dst, size_t *dlen, const void *src, size_t slen, int level)
++{
++    if (level < 0 || level > 3) {
++        return -1;
++    }
++    struct isal_zstream *z = malloc(sizeof(struct isal_zstream));
++    if (z == NULL) {
++        return -1;
++    }
++    static int level_buf_sizes[] = {
++        ISAL_DEF_LVL0_DEFAULT,
++        ISAL_DEF_LVL1_DEFAULT,
++        ISAL_DEF_LVL2_DEFAULT,
++        ISAL_DEF_LVL3_DEFAULT
++    };
++    size_t level_buf_size = level_buf_sizes[level];
++    uint8_t *level_buf = malloc(level_buf_size);
++    if (level_buf == NULL) {
++        free(z);
++        return -1;
++    }
++    isal_deflate_stateless_init(z);
++    z->level = level;
++    z->level_buf = level_buf;
++    z->level_buf_size = level_buf_size;
++    z->gzip_flag = IGZIP_GZIP_NO_HDR;  // Also calculates length and CRC
++    z->next_in = (uint8_t *)src;
++    z->avail_in = slen;
++    z->next_out = dst + BLOCK_HEADER_LENGTH;
++    z->avail_out = *dlen - BLOCK_HEADER_LENGTH;
++    z->flush = FULL_FLUSH;
++    z->end_of_stream = 1;
++
++    /* isal_deflate_stateless will throw an overflow error when there is not
++     * enough room in the output buffer */
++    int ret = isal_deflate_stateless(z);
++    if (ret != COMP_OK) {
++        hts_log_error("Call to _bgzf_compress_isal failed");
++        free(level_buf);
++        free(z);
++        return -1;
++    }
++    *dlen = z->next_out - (uint8_t *)dst;
++    free(level_buf);
++    free(z);
++    memcpy(dst, g_magic, BLOCK_HEADER_LENGTH); // the last two bytes are a place holder for the length of the block
++    packInt16(&dst[16], *dlen - 1); // write the compressed length; -1 to fit 2 bytes
++    return 0;
++}
++#endif
++
++#if HAVE_LIBDEFLATE
+ int bgzf_compress(void *_dst, size_t *dlen, const void *src, size_t slen, int level)
+ {
+     if (slen == 0) {
+@@ -582,6 +649,13 @@ int bgzf_compress(void *_dst, size_t *dlen, const void *src, size_t slen, int le
+ 
+     } else {
+         level = level > 0 ? level : 6; // libdeflate doesn't honour -1 as default
++
++        #if HAVE_ISAL
++        if (level == 1 || level == 2) {
++            return _bgzf_compress_isal(dst, dlen, src, slen, level);
++        }
++        #endif
++
+         // NB levels go up to 12 here.
+         int lvl_map[] = {0,1,2,3,5,6,7,8,10,12};
+         level = lvl_map[level>9 ?9 :level];
+@@ -618,9 +692,6 @@ int bgzf_compress(void *_dst, size_t *dlen, const void *src, size_t slen, int le
+ 
+ #else
+ 
+-uint32_t hts_crc32(uint32_t crc, const void *buf, size_t len) {
+-    return crc32(crc, buf, len);
+-}
+ 
+ int bgzf_compress(void *_dst, size_t *dlen, const void *src, size_t slen, int level)
+ {
+@@ -637,7 +708,13 @@ int bgzf_compress(void *_dst, size_t *dlen, const void *src, size_t slen, int le
+         u16_to_le(~slen, &dst[BLOCK_HEADER_LENGTH+3]); // ones-complement length
+         memcpy(dst + BLOCK_HEADER_LENGTH+5, src, slen);
+         *dlen = slen+5 + BLOCK_HEADER_LENGTH + BLOCK_FOOTER_LENGTH;
+-    } else {
++    }
++    #if HAVE_ISAL
++    else if (level == 1 || level == 2) {
++        return _bgzf_compress_isal(dst, dlen, src, slen, level);
++    }
++    #endif
++    else {
+         // compress the body
+         zs.zalloc = NULL; zs.zfree = NULL;
+         zs.msg = NULL;
+@@ -726,7 +803,46 @@ static int deflate_block(BGZF *fp, int block_length)
+     return comp_size;
+ }
+ 
+-#ifdef HAVE_LIBDEFLATE
++#ifdef HAVE_ISAL
++static int bgzf_uncompress(uint8_t *dst, size_t *dlen,
++                           const uint8_t *src, size_t slen,
++                           uint32_t expected_crc) {
++    struct inflate_state *z = malloc(sizeof(struct inflate_state));
++    if (z == NULL) {
++        hts_log_error("Allocating isal inflate state failed");
++        return -1;
++    }
++    isal_inflate_init(z);
++    z->next_in = (uint8_t *)src;
++    z->avail_in = slen;
++    z->next_out = dst;
++    z->avail_out = *dlen;
++    z->crc_flag = ISAL_GZIP_NO_HDR;
++
++    /* isal_deflate_stateless will throw an overflow error when there is not
++     * enough room in the output buffer */
++    int ret = isal_inflate_stateless(z);
++    if (ret != ISAL_DECOMP_OK) {
++        hts_log_error("Inflate operation failed: %d", ret);
++        free(z);
++        return -1;
++
++    }
++    *dlen =  z->next_out - dst;
++    uint32_t crc = z->crc;
++    free(z);
++    #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
++    // Pretend the CRC was OK so the fuzzer doesn't have to get it right
++    crc = expected_crc;
++    #endif
++    if (crc != expected_crc) {
++        hts_log_error("CRC32 checksum mismatch");
++        return -2;
++    }
++    return 0;
++}
++
++#elif HAVE_LIBDEFLATE
+ 
+ static int bgzf_uncompress(uint8_t *dst, size_t *dlen,
+                            const uint8_t *src, size_t slen,
+diff --git a/config.h.in b/config.h.in
+index 7fc0bbd..8f64992 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -100,6 +100,9 @@
+ /* Define to 1 if you have the <inttypes.h> header file. */
+ #undef HAVE_INTTYPES_H
+ 
++/* Define if ISAL is available. */
++#undef HAVE_ISAL
++
+ /* Define to 1 if you have the 'bz2' library (-lbz2). */
+ #undef HAVE_LIBBZ2
+ 
+diff --git a/configure b/configure
+index 3406d40..89046d1 100755
+--- a/configure
++++ b/configure
+@@ -731,6 +731,7 @@ enable_lzma
+ enable_plugins
+ with_external_htscodecs
+ with_libdeflate
++with_isal
+ with_plugin_dir
+ with_plugin_path
+ enable_ref_cache
+@@ -1390,6 +1391,8 @@ Optional Packages:
+   --with-external-htscodecs
+                           get htscodecs functions from a shared library
+   --with-libdeflate       use libdeflate for faster crc and deflate algorithms
++  --with-isal             use isal for faster crc and faster deflate at
++                          compression level 1 and 2.
+   --with-plugin-dir=DIR   plugin installation location [LIBEXECDIR/htslib]
+   --with-plugin-path=PATH default HTS_PATH plugin search path [PLUGINDIR]
+ 
+@@ -5459,6 +5462,17 @@ fi
+ 
+ 
+ 
++# Check whether --with-isal was given.
++if test ${with_isal+y}
++then :
++  withval=$with_isal;
++else case e in #(
++  e) with_isal=check ;;
++esac
++fi
++
++
++
+ # Check whether --with-plugin-dir was given.
+ if test ${with_plugin_dir+y}
+ then :
+@@ -6914,6 +6928,101 @@ esac
+ fi
+ fi
+ 
++if test "x$with_isal" != "xno"
++then :
++  isal=ok
++   ac_fn_c_check_header_compile "$LINENO" "isa-l.h" "ac_cv_header_isa_l_h" ";
++"
++if test "x$ac_cv_header_isa_l_h" = xyes
++then :
++
++else case e in #(
++  e) isal='missing header' ;;
++esac
++fi
++
++   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for isal_deflate_stateless in -lisal" >&5
++printf %s "checking for isal_deflate_stateless in -lisal... " >&6; }
++if test ${ac_cv_lib_isal_isal_deflate_stateless+y}
++then :
++  printf %s "(cached) " >&6
++else case e in #(
++  e) ac_check_lib_save_LIBS=$LIBS
++LIBS="-lisal  $LIBS"
++cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++
++/* Override any GCC internal prototype to avoid an error.
++   Use char because int might match the return type of a GCC
++   builtin and then its argument prototype would still apply.
++   The 'extern "C"' is for builds by C++ compilers;
++   although this is not generally supported in C code supporting it here
++   has little cost and some practical benefit (sr 110532).  */
++#ifdef __cplusplus
++extern "C"
++#endif
++char isal_deflate_stateless (void);
++int
++main (void)
++{
++return isal_deflate_stateless ();
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_link "$LINENO"
++then :
++  ac_cv_lib_isal_isal_deflate_stateless=yes
++else case e in #(
++  e) ac_cv_lib_isal_isal_deflate_stateless=no ;;
++esac
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.beam \
++    conftest$ac_exeext conftest.$ac_ext
++LIBS=$ac_check_lib_save_LIBS ;;
++esac
++fi
++{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_isal_isal_deflate_stateless" >&5
++printf '%s\n' "$ac_cv_lib_isal_isal_deflate_stateless" >&6; }
++if test "x$ac_cv_lib_isal_isal_deflate_stateless" = xyes
++then :
++  :
++else case e in #(
++  e) isal='missing library' ;;
++esac
++fi
++
++   if test "$isal" = "ok"
++then :
++
++printf '%s\n' "#define HAVE_ISAL 1" >>confdefs.h
++
++     LIBS="-lisal $LIBS"
++     private_LIBS="$private_LIBS -lisal"
++     static_LIBS="$static_LIBS -lisal"
++else case e in #(
++  e) if test "x$with_isal" != "xcheck"
++then :
++  cat > config.mk <<'EOF'
++ifneq ($(MAKECMDGOALS),distclean)
++$(error Resolve configure error first)
++endif
++EOF
++   as_fn_error $? "isal development files not found: $isal
++
++You requested isal, but do not have the required header / library
++files.  The source for isal is available from
++<https://github.com/intel/isa-l>.  You may have to adjust
++search paths in CPPFLAGS and/or LDFLAGS if the header and library
++are not currently on them.
++
++Either configure with --without-isal or resolve this error to build
++HTSlib." "$LINENO" 5
++fi ;;
++esac
++fi
++fi
++
+ libcurl=disabled
+ if test "$enable_libcurl" != no; then
+   libcurl_devel=ok
+diff --git a/configure.ac b/configure.ac
+index 399e506..526b774 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -286,6 +286,11 @@ AC_ARG_WITH([libdeflate],
+                   [use libdeflate for faster crc and deflate algorithms])],
+   [], [with_libdeflate=check])
+ 
++AC_ARG_WITH([isal],
++  [AS_HELP_STRING([--with-isal],
++                  [use isal for faster crc and faster deflate at compression level 1 and 2.])],
++  [], [with_isal=check])
++
+ AC_ARG_WITH([plugin-dir],
+   [AS_HELP_STRING([--with-plugin-dir=DIR],
+                   [plugin installation location [LIBEXECDIR/htslib]])],
+@@ -568,6 +573,27 @@ are not currently on them.
+ Either configure with --without-libdeflate or resolve this error to build
+ HTSlib.])])])])
+ 
++AS_IF([test "x$with_isal" != "xno"],
++  [isal=ok
++   AC_CHECK_HEADER([isa-l.h],[],[isal='missing header'],[;])
++   AC_CHECK_LIB([isal], [isal_deflate_stateless],[:],[isal='missing library'])
++   AS_IF([test "$isal" = "ok"],
++    [AC_DEFINE([HAVE_ISAL], 1, [Define if ISAL is available.])
++     LIBS="-lisal $LIBS"
++     private_LIBS="$private_LIBS -lisal"
++     static_LIBS="$static_LIBS -lisal"],
++    [AS_IF([test "x$with_isal" != "xcheck"],
++       [MSG_ERROR([isal development files not found: $isal
++
++You requested isal, but do not have the required header / library
++files.  The source for isal is available from
++<https://github.com/intel/isa-l>.  You may have to adjust
++search paths in CPPFLAGS and/or LDFLAGS if the header and library
++are not currently on them.
++
++Either configure with --without-isal or resolve this error to build
++HTSlib.])])])])
++
+ libcurl=disabled
+ if test "$enable_libcurl" != no; then
+   libcurl_devel=ok
+diff --git a/hts.c b/hts.c
+index e8d9d91..79b73b9 100644
+--- a/hts.c
++++ b/hts.c
+@@ -201,6 +201,12 @@ const char *hts_feature_string(void) {
+     "libdeflate=no "
+ #endif
+ 
++#ifdef HAVE_ISAL
++    "isal=yes "
++#else
++    "isal=no "
++#endif
++
+ #ifdef HAVE_LIBLZMA
+     "lzma=yes "
+ #else

@@ -426,6 +426,12 @@ else
     if grep -wq "#define HAVE_LIBDEFLATE 1" config.h; then
         EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
     fi
+    # HTSlib's configure enables ISA-L for BGZF blocks when it finds libisal
+    # (--with-isal=check); pass --without-isal in the configure arguments to
+    # disable it.
+    if grep -wq "#define HAVE_ISAL 1" config.h; then
+        EXTRA_LIBS="${EXTRA_LIBS} -lisal"
+    fi
     HTSLIB_LINK_INPUT="-L${THISDir}/inst/htslib/lib -lhts"
 
     echo "----------Configuring Samtools in $SAMTOOLS_DIR-----------------"

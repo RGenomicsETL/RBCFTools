@@ -21,6 +21,7 @@ RUN apt-get update \
         wget \
         liblzma-dev \
         libdeflate-dev \
+        libisal-dev \
         libbz2-dev \
         libssl-dev \
         libcurl4-openssl-dev \

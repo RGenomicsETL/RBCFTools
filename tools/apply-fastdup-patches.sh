@@ -19,7 +19,8 @@ PATCH_DIR="${ROOT_DIR}/tools/patches/fastdup"
 EXPECTED_PATCHES='0001-use-external-htslib.patch
 0002-wide-optical-coordinates.patch
 0003-separate-libraries.patch
-0004-honor-tagging-policy.patch'
+0004-honor-tagging-policy.patch
+0005-link-isal.patch'
 ACTUAL_PATCHES=$(find "${PATCH_DIR}" -type f -name '*.patch' -exec basename {} \; | LC_ALL=C sort)
 
 if [ "${ACTUAL_PATCHES}" != "${EXPECTED_PATCHES}" ]; then

@@ -731,6 +731,7 @@ enable_lzma
 enable_plugins
 with_external_htscodecs
 with_libdeflate
+with_isal
 with_plugin_dir
 with_plugin_path
 enable_ref_cache
@@ -1390,6 +1391,8 @@ Optional Packages:
   --with-external-htscodecs
                           get htscodecs functions from a shared library
   --with-libdeflate       use libdeflate for faster crc and deflate algorithms
+  --with-isal             use isal for faster crc and faster deflate at
+                          compression level 1 and 2.
   --with-plugin-dir=DIR   plugin installation location [LIBEXECDIR/htslib]
   --with-plugin-path=PATH default HTS_PATH plugin search path [PLUGINDIR]
 
@@ -5459,6 +5462,17 @@ fi
 
 
 
+# Check whether --with-isal was given.
+if test ${with_isal+y}
+then :
+  withval=$with_isal;
+else case e in #(
+  e) with_isal=check ;;
+esac
+fi
+
+
+
 # Check whether --with-plugin-dir was given.
 if test ${with_plugin_dir+y}
 then :
@@ -6908,6 +6922,101 @@ search paths in CPPFLAGS and/or LDFLAGS if the header and library
 are not currently on them.
 
 Either configure with --without-libdeflate or resolve this error to build
+HTSlib." "$LINENO" 5
+fi ;;
+esac
+fi
+fi
+
+if test "x$with_isal" != "xno"
+then :
+  isal=ok
+   ac_fn_c_check_header_compile "$LINENO" "isa-l.h" "ac_cv_header_isa_l_h" ";
+"
+if test "x$ac_cv_header_isa_l_h" = xyes
+then :
+
+else case e in #(
+  e) isal='missing header' ;;
+esac
+fi
+
+   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for isal_deflate_stateless in -lisal" >&5
+printf %s "checking for isal_deflate_stateless in -lisal... " >&6; }
+if test ${ac_cv_lib_isal_isal_deflate_stateless+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lisal  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char isal_deflate_stateless (void);
+int
+main (void)
+{
+return isal_deflate_stateless ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_isal_isal_deflate_stateless=yes
+else case e in #(
+  e) ac_cv_lib_isal_isal_deflate_stateless=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_isal_isal_deflate_stateless" >&5
+printf '%s\n' "$ac_cv_lib_isal_isal_deflate_stateless" >&6; }
+if test "x$ac_cv_lib_isal_isal_deflate_stateless" = xyes
+then :
+  :
+else case e in #(
+  e) isal='missing library' ;;
+esac
+fi
+
+   if test "$isal" = "ok"
+then :
+
+printf '%s\n' "#define HAVE_ISAL 1" >>confdefs.h
+
+     LIBS="-lisal $LIBS"
+     private_LIBS="$private_LIBS -lisal"
+     static_LIBS="$static_LIBS -lisal"
+else case e in #(
+  e) if test "x$with_isal" != "xcheck"
+then :
+  cat > config.mk <<'EOF'
+ifneq ($(MAKECMDGOALS),distclean)
+$(error Resolve configure error first)
+endif
+EOF
+   as_fn_error $? "isal development files not found: $isal
+
+You requested isal, but do not have the required header / library
+files.  The source for isal is available from
+<https://github.com/intel/isa-l>.  You may have to adjust
+search paths in CPPFLAGS and/or LDFLAGS if the header and library
+are not currently on them.
+
+Either configure with --without-isal or resolve this error to build
 HTSlib." "$LINENO" 5
 fi ;;
 esac
