@@ -12,10 +12,14 @@ CONFIGURE_ARGS=""
 CONFIGURE_CACHE_VARS=""
 HOST_TRIPLET=""
 BUILD_TRIPLET=""
+# ISA-L for BGZF blocks is opt-in: --with-isal in the configure arguments, or
+# RBCFTOOLS_WITH_ISAL=yes in the environment. The option goes to HTSlib only.
+HTSLIB_ISAL_ARG="--with-isal=${RBCFTOOLS_WITH_ISAL:-no}"
 for arg in "$@"; do
   case "$arg" in
     --host=*) HOST_TRIPLET="${arg#--host=}"; CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
     --build=*) BUILD_TRIPLET="${arg#--build=}"; CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
+    --with-isal|--with-isal=*|--without-isal) HTSLIB_ISAL_ARG="${arg}" ;;
     [A-Za-z_]*=*) CONFIGURE_CACHE_VARS="${CONFIGURE_CACHE_VARS} ${arg}" ;;
     *) CONFIGURE_ARGS="${CONFIGURE_ARGS} ${arg}" ;;
   esac
@@ -276,7 +280,13 @@ env ${HTSLIB_CONFIGURE_CACHE_VARS} ./configure \
     LDFLAGS="${LDFLAGS}" \
     LIBS="${HTSLIB_LINK_LIBS}" \
     --prefix="${THISDir}/inst/htslib" \
-    ${HTSLIB_CONFIGURE_FLAGS}
+    ${HTSLIB_CONFIGURE_FLAGS} \
+    ${HTSLIB_ISAL_ARG}
+
+HTSLIB_HAVE_ISAL=OFF
+if grep -wq "#define HAVE_ISAL 1" config.h; then
+    HTSLIB_HAVE_ISAL=ON
+fi
 
 export CC="${CC}"
 export AR="${AR}"
@@ -426,10 +436,7 @@ else
     if grep -wq "#define HAVE_LIBDEFLATE 1" config.h; then
         EXTRA_LIBS="${EXTRA_LIBS} -ldeflate"
     fi
-    # HTSlib's configure enables ISA-L for BGZF blocks when it finds libisal
-    # (--with-isal=check); pass --without-isal in the configure arguments to
-    # disable it.
-    if grep -wq "#define HAVE_ISAL 1" config.h; then
+    if [ "${HTSLIB_HAVE_ISAL}" = ON ]; then
         EXTRA_LIBS="${EXTRA_LIBS} -lisal"
     fi
     HTSLIB_LINK_INPUT="-L${THISDir}/inst/htslib/lib -lhts"
@@ -468,6 +475,7 @@ else
     rm -rf "${FASTDUP_DIR}/build"
     "${CMAKE}" -S "${FASTDUP_DIR}" -B "${FASTDUP_DIR}/build" \
         -DFASTDUP_HTSLIB_ROOT="${HTSLIB_DIR}" \
+        -DFASTDUP_WITH_ISAL="${HTSLIB_HAVE_ISAL}" \
         -DCMAKE_INSTALL_PREFIX="${THISDir}/inst/fastdup" \
         -DCMAKE_C_COMPILER="${CMAKE_CC}" \
         -DCMAKE_CXX_COMPILER="${CMAKE_CXX17}" \

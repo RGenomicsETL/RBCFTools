@@ -15,9 +15,9 @@ and SHA-256 are declared in `tools/fastdup-upstream.dcf`.
 4. `0004-honor-tagging-policy.patch` writes `DT` only when requested by
    `--tagging-policy`, with Picard's `DontTag`, `OpticalOnly`, and `All`
    semantics.
-5. `0005-link-isal.patch` links `libisal` when it is present. RBCFTools' HTSlib
-   uses ISA-L for BGZF blocks when its configure finds the library, and FastDup
-   links the static `libhts.a`.
+5. `0005-link-isal.patch` adds the CMake option `FASTDUP_WITH_ISAL` (default
+   `OFF`), which links `libisal`. FastDup links the static `libhts.a`, and
+   RBCFTools turns the option on when its HTSlib was configured with ISA-L.
 
 Run `tools/vendor-fastdup.R` to reacquire, verify, prune, patch, and replace the
 vendored source. Run `tools/apply-fastdup-patches.sh --check SOURCE_DIR` to

@@ -460,11 +460,15 @@ htslib_libs <- function(static = FALSE) {
 # in the installed htslib.pc (static_libs). The webR build installs no
 # htslib.pc and keeps the fixed list.
 htslib_static_deps <- function() {
+  fixed_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate"
   pc_file <- file.path(htslib_lib_dir(), "pkgconfig", "htslib.pc")
   if (!file.exists(pc_file)) {
-    return("-lpthread -lz -lm -lbz2 -llzma -ldeflate")
+    return(fixed_deps)
   }
   static_libs <- grep("^static_libs=", readLines(pc_file), value = TRUE)
+  if (length(static_libs) == 0L) {
+    return(fixed_deps)
+  }
   sub("^static_libs=", "", static_libs[[1L]])
 }
 
