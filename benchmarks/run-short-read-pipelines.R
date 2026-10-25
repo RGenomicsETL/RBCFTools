@@ -350,12 +350,12 @@ for (mapper in c("rminibwa", "bwa")) {
         mapper_stage,
         pipeline_stage(
           executables[["samtools"]],
-          c("sort", "-n", "-@", sort_threads, "-m", "1G", "-O", "BAM", "-o", "-", "-"),
+          c("sort", "-n", "-u", "-@", sort_threads, "-m", "1G", "-o", "-", "-"),
           name = "name sort"
         ),
         pipeline_stage(
           executables[["samtools"]],
-          c("fixmate", "-m", "-@", fixmate_threads, "-", "-"),
+          c("fixmate", "-m", "-u", "-@", fixmate_threads, "-", "-"),
           name = "fixmate"
         ),
         pipeline_stage(
