@@ -23,8 +23,10 @@ and `-l` library names.
 ## Details
 
 For dynamic linking, returns `-L<libdir> -lhts`. For static linking,
-also includes the dependent libraries:
-`-lpthread -lz -lm -lbz2 -llzma -ldeflate`.
+also includes the dependent libraries that HTSlib's configure recorded
+in the bundled `htslib.pc`, for example
+`-lpthread -lz -lm -lbz2 -llzma -ldeflate`, and `-lisal` when HTSlib was
+built with ISA-L.
 
 ## Examples
 

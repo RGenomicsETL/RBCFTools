@@ -59,8 +59,10 @@ path and <code>-l</code> library names.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For dynamic linking, returns <code>-L&lt;libdir&gt; -lhts</code>.
-For static linking, also includes the dependent libraries:
-<code>-lpthread -lz -lm -lbz2 -llzma -ldeflate</code>.</p>
+For static linking, also includes the dependent libraries that HTSlib's
+configure recorded in the bundled <code>htslib.pc</code>, for example
+<code>-lpthread -lz -lm -lbz2 -llzma -ldeflate</code>, and <code>-lisal</code> when HTSlib was
+built with ISA-L.</p>
     </div>
 
     <div class="section level2">

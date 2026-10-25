@@ -34,6 +34,12 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.24-1.1.1.9000" id="rbcftools-124-1119000-development-version">RBCFTools 1.24-1.1.1.9000 (development version)<a class="anchor" aria-label="anchor" href="#rbcftools-124-1119000-development-version"></a></h2>
+<div class="section level3">
+<h3 id="opt-in-isa-l-for-bgzf-blocks-1-24-1-1-1-9000">Opt-in ISA-L for BGZF blocks<a class="anchor" aria-label="anchor" href="#opt-in-isa-l-for-bgzf-blocks-1-24-1-1-1-9000"></a></h3>
+<ul><li>The bundled HTSlib 1.24 carries the open HTSlib pull request <a href="https://github.com/samtools/htslib/pull/1908" class="external-link">samtools/htslib#1908</a> as <code>tools/patches/htslib-1.24/isal-bgzf.patch</code>. ISA-L is off by default. Install with <code>--configure-args=--with-isal</code>, or set <code>RBCFTOOLS_WITH_ISAL=yes</code>, to build with ISA-L (<code>libisal-dev</code>). Then BGZF blocks are decompressed with ISA-L, and compression levels 1 and 2 use ISA-L. Other levels still use libdeflate, or zlib without libdeflate. The bundled <code>bgzip</code>, <code>tabix</code>, Samtools, BCFtools, FastDup and the R bindings all use it. <code><a href="../reference/htslib_feature_string.html">htslib_feature_string()</a></code> and <code>samtools --version</code> report <code>isal=yes</code> or <code>isal=no</code>.</li>
+<li>
+<code>htslib_libs(static = TRUE)</code> reports the static dependencies that HTSlib’s configure recorded in <code>htslib.pc</code>, including <code>-lisal</code> when it is used.</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.24-1.1.1" id="rbcftools-124-111-2026-10-01">RBCFTools 1.24-1.1.1 (2026-10-01)<a class="anchor" aria-label="anchor" href="#rbcftools-124-111-2026-10-01"></a></h2>
