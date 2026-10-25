@@ -19,8 +19,10 @@ Returns the linker flags needed to link against htslib.
 }
 \details{
 For dynamic linking, returns \verb{-L<libdir> -lhts}.
-For static linking, also includes the dependent libraries:
-\code{-lpthread -lz -lm -lbz2 -llzma -ldeflate}.
+For static linking, also includes the dependent libraries that HTSlib's
+configure recorded in the bundled \code{htslib.pc}, for example
+\code{-lpthread -lz -lm -lbz2 -llzma -ldeflate}, and \code{-lisal} when HTSlib was
+built with ISA-L.
 }
 \examples{
 htslib_libs()

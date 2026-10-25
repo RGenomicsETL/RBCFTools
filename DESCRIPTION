@@ -35,7 +35,8 @@ LinkingTo: nanoarrow
 Enhances: Rduckhts
 SystemRequirements: GNU make, CMake (>= 3.16), C++17, pkg-config, libcurl,
     libgsl, libdeflate, libbzip2, libzlib, libssl-dev (or other SSL library),
-    liblzma, ncurses, libsuitesparse-dev/libcholmod5 (optional for pgs plugin)
+    liblzma, ncurses, libsuitesparse-dev/libcholmod5 (optional for pgs plugin),
+    libisal-dev (optional, opt-in with --with-isal: ISA-L for BGZF blocks)
 Suggests: 
     tinytest,
     vcfppR,

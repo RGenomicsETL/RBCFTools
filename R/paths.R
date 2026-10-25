@@ -421,8 +421,10 @@ htslib_cflags <- function() {
 #'
 #' @details
 #' For dynamic linking, returns `-L<libdir> -lhts`.
-#' For static linking, also includes the dependent libraries:
-#' `-lpthread -lz -lm -lbz2 -llzma -ldeflate`.
+#' For static linking, also includes the dependent libraries that HTSlib's
+#' configure recorded in the bundled `htslib.pc`, for example
+#' `-lpthread -lz -lm -lbz2 -llzma -ldeflate`, and `-lisal` when HTSlib was
+#' built with ISA-L.
 #'
 #' @examples
 #' htslib_libs()
@@ -441,7 +443,7 @@ htslib_libs <- function(static = FALSE) {
   if (static) {
     # Additional libraries needed for static linking
     # Note: -ldl is only needed on Linux; macOS has dlopen in libc
-    static_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate"
+    static_deps <- htslib_static_deps()
 
     # Add -ldl on Linux/non-macOS systems
     if (.Platform$OS.type == "unix" && Sys.info()["sysname"] != "Darwin") {
@@ -452,6 +454,22 @@ htslib_libs <- function(static = FALSE) {
   } else {
     base_libs
   }
+}
+
+# Libraries that a static libhts.a needs, as HTSlib's configure recorded them
+# in the installed htslib.pc (static_libs). The webR build installs no
+# htslib.pc and keeps the fixed list.
+htslib_static_deps <- function() {
+  fixed_deps <- "-lpthread -lz -lm -lbz2 -llzma -ldeflate"
+  pc_file <- file.path(htslib_lib_dir(), "pkgconfig", "htslib.pc")
+  if (!file.exists(pc_file)) {
+    return(fixed_deps)
+  }
+  static_libs <- grep("^static_libs=", readLines(pc_file), value = TRUE)
+  if (length(static_libs) == 0L) {
+    return(fixed_deps)
+  }
+  sub("^static_libs=", "", static_libs[[1L]])
 }
 
 #' Get Linker Flags for bcftools Library

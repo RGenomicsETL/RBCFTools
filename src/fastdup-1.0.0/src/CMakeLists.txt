@@ -51,6 +51,16 @@ else()
     message(WARNING "libdeflate is not found")
 endif()
 
+# lib isal (when the external HTSlib was configured with ISA-L)
+option(FASTDUP_WITH_ISAL "Link libisal for an HTSlib built with ISA-L" OFF)
+if(FASTDUP_WITH_ISAL)
+    find_library(IsalLib isal)
+    if(NOT IsalLib)
+        message(FATAL_ERROR "FASTDUP_WITH_ISAL is ON but libisal is not found")
+    endif()
+    target_link_libraries(${PG_NAME} ${IsalLib})
+endif()
+
 # lib lzma
 find_package(LibLZMA MODULE)
 if (LibLZMA_FOUND)

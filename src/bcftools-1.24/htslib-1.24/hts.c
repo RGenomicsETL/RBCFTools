@@ -201,6 +201,12 @@ const char *hts_feature_string(void) {
     "libdeflate=no "
 #endif
 
+#ifdef HAVE_ISAL
+    "isal=yes "
+#else
+    "isal=no "
+#endif
+
 #ifdef HAVE_LIBLZMA
     "lzma=yes "
 #else

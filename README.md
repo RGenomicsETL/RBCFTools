@@ -44,6 +44,16 @@ install.packages(
       )
 ```
 
+To build from source with [ISA-L](https://github.com/intel/isa-l) for
+BGZF compression levels 1 and 2 (for example, Samtools temporary files),
+install `libisal-dev` and pass `--with-isal`, or set
+`RBCFTOOLS_WITH_ISAL=yes` in the environment. ISA-L is off by default.
+
+``` r
+install.packages("RBCFTools", type = "source", configure.args = "--with-isal",
+  repos = c("https://rgenomicsetl.r-universe.dev", "https://cloud.r-project.org"))
+```
+
 ## Version Information
 
 ``` r

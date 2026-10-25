@@ -254,6 +254,9 @@ expect_silent(
 # This test actually compiles a simple C program against htslib to verify
 # the linking information is correct and usable.
 
+# Libraries that the static libhts.a needs, as HTSlib's configure recorded them.
+static_deps <- RBCFTools:::htslib_static_deps()
+
 test_compile_against_htslib <- function() {
   # Skip if we don't have the necessary directories
   if (nchar(htslib_include_dir()) == 0 || nchar(htslib_lib_dir()) == 0) {
@@ -304,24 +307,26 @@ int main(void) {
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   if (nchar(ldl_flag) > 0) {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      "%s %s %s -o %s %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
       lib_path,
+      static_deps,
       ldl_flag
     )
   } else {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      "%s %s %s -o %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
-      lib_path
+      lib_path,
+      static_deps
     )
   }
 
@@ -642,24 +647,26 @@ int main(void) {
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   if (nchar(ldl_flag) > 0) {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      "%s %s %s -o %s %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
       lib_path,
+      static_deps,
       ldl_flag
     )
   } else {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      "%s %s %s -o %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
-      lib_path
+      lib_path,
+      static_deps
     )
   }
 
@@ -780,24 +787,26 @@ int main(void) {
   ldl_flag <- if (Sys.info()["sysname"] == "Darwin") "" else "-ldl"
   if (nchar(ldl_flag) > 0) {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate %s",
+      "%s %s %s -o %s %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
       lib_path,
+      static_deps,
       ldl_flag
     )
   } else {
     compile_cmd <- sprintf(
-      "%s %s %s -o %s %s %s -lpthread -lz -lm -lbz2 -llzma -ldeflate",
+      "%s %s %s -o %s %s %s %s",
       cc,
       cflags,
       htslib_cflags(),
       test_exe,
       test_c_file,
-      lib_path
+      lib_path,
+      static_deps
     )
   }
 
