@@ -1,5 +1,14 @@
 # RBCFTools 1.24-1.1.1.9000 (development version)
 
+## Uncompressed BAM between piped Samtools stages
+
+- The README duplicate-marking example and
+  `benchmarks/run-short-read-pipelines.R` pass `-u` to every Samtools stage
+  that writes to a pipe. Before, each pipe carried BAM at the default
+  compression level. On 16.8 million chr20 records with six cores,
+  `sort -n | fixmate -m | sort` took 144 s that way and 69 s with `-u`. The
+  published benchmark results were measured before this change.
+
 ## Opt-in ISA-L for BGZF blocks
 
 - The bundled HTSlib 1.24 carries the open HTSlib pull request

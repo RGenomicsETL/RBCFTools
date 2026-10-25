@@ -90,11 +90,13 @@ For each mapper, the benchmark builds a full GRCh38 index or explicitly records 
 
 ```text
 BWA mem or minibwa map
-  | samtools sort -n
-  | samtools fixmate -m
+  | samtools sort -n -u
+  | samtools fixmate -m -u
   | samtools sort (coordinate)
   > prepared.bam
 ```
+
+The name sort and `fixmate` pass uncompressed BAM (`-u`) to the next stage.
 
 That one prepared BAM is then consumed independently by:
 

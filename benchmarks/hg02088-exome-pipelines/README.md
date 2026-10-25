@@ -81,6 +81,11 @@ BWA mem or minibwa map
   > prepared.bam
 ```
 
+These results were measured with BAM at the default compression level
+between the name sort, `fixmate` and coordinate sort stages. The runner
+now passes uncompressed BAM (`-u`) between them; rerun the benchmark to
+measure it.
+
 That one prepared BAM is then consumed independently by:
 
 ``` text

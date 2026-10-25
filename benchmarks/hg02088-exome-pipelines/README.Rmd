@@ -88,11 +88,13 @@ The mapping and preparation phase then executes:
 
 ```text
 BWA mem or minibwa map
-  | samtools sort -n
-  | samtools fixmate -m
+  | samtools sort -n -u
+  | samtools fixmate -m -u
   | samtools sort (coordinate)
   > prepared.bam
 ```
+
+The name sort and `fixmate` pass uncompressed BAM (`-u`) to the next stage.
 
 That one prepared BAM is then consumed independently by:
 

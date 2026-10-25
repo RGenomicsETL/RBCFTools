@@ -198,9 +198,9 @@ bwa_status <- run_pipeline(
       c("mem", "-t", threads, reference_fasta, reads_1, reads_2),
       name = "bwa mem"
     ),
-    pipeline_stage(samtools_path(), c("sort", "-n", "-@", threads, "-O", "BAM", "-o", "-", "-"), name = "name sort"),
-    pipeline_stage(samtools_path(), c("fixmate", "-m", "-@", threads, "-", "-"), name = "fixmate"),
-    pipeline_stage(samtools_path(), c("sort", "-@", threads, "-O", "BAM", "-o", "-", "-"), name = "coordinate sort"),
+    pipeline_stage(samtools_path(), c("sort", "-n", "-u", "-@", threads, "-o", "-", "-"), name = "name sort"),
+    pipeline_stage(samtools_path(), c("fixmate", "-m", "-u", "-@", threads, "-", "-"), name = "fixmate"),
+    pipeline_stage(samtools_path(), c("sort", "-u", "-@", threads, "-o", "-", "-"), name = "coordinate sort"),
     pipeline_stage(samtools_path(), c("markdup", "-@", threads, "-", bwa_output), name = "markdup")
   ),
   stderr = bwa_log
